@@ -5,6 +5,7 @@
   --color-background: #ffffff;
   --color-foreground: #171717;
   --color-inda-white: #fafafa;
+  --color-primary: #ebea98;
   --color-inda-teal: #54a6a6;
   --color-inda-gray: #eaeaea;
   --color-inda-light: #f7fafc;
@@ -32,10 +33,5 @@ body {
 }
 
 button {
-  background-color: var(--inda-teal);
-  color: var(--inda-white);
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
   cursor: pointer;
 }

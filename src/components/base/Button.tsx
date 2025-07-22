@@ -1,8 +1,10 @@
 import React from "react";
 
+type ButtonVariant = "primary" | "secondary" | "raw";
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   children: React.ReactNode;
-  variant?: "primary" | "secondary";
+  variant?: ButtonVariant;
+  className?: string;
 };
 
 const Button: React.FC<ButtonProps> = ({
@@ -11,13 +13,20 @@ const Button: React.FC<ButtonProps> = ({
   className = "",
   ...props
 }) => {
+  if (variant === "raw") {
+    return (
+      <button className={className} {...props}>
+        {children}
+      </button>
+    );
+  }
   const base = "px-4 py-2 rounded font-semibold transition cursor-pointer";
-  const styles =
+  const styleClass =
     variant === "primary"
       ? "bg-inda-teal text-inda-white hover:bg-inda-dark"
       : "bg-inda-gray text-inda-dark hover:bg-inda-teal";
   return (
-    <button className={`${base} ${styles} ${className}`} {...props}>
+    <button className={`${base} ${styleClass} ${className}`} {...props}>
       {children}
     </button>
   );

@@ -10,7 +10,8 @@ type TextSize =
   | "3xl"
   | "4xl"
   | "5xl"
-  | "6xl";
+  | "6xl"
+  | "7xl";
 
 type TextProps = {
   as?: "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
