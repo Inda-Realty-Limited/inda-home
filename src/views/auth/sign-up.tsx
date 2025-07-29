@@ -1,3 +1,4 @@
+import { useRegisterMutation } from "@/api";
 import { Button, Container, Footer, Input, Navbar } from "@/components";
 import React, { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
@@ -16,9 +17,15 @@ import {
 
 const Signup: React.FC = () => {
   const [step, setStep] = useState(1);
+  const [email, setEmail] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [password, setPassword] = useState("");
   const [lookingToDo, setLookingToDo] = useState("");
   const [hearAboutUs, setHearAboutUs] = useState("");
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+
+  const registerMutation = useRegisterMutation();
 
   const lookingToDoOptions = [
     { value: "buy", label: "Buy a home to live in", icon: <FiHome /> },
@@ -113,7 +120,20 @@ const Signup: React.FC = () => {
               <h1 className="text-center font-bold text-2xl mb-8">
                 Sign up with email
               </h1>
-              <form className="w-full flex flex-col gap-6">
+              <form
+                className="w-full flex flex-col gap-6"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  registerMutation.mutate({
+                    email,
+                    firstName,
+                    lastName,
+                    password,
+                    howDidYouHearAboutUs: hearAboutUs,
+                    todo: lookingToDo,
+                  });
+                }}
+              >
                 <div className="flex flex-col gap-2">
                   <label htmlFor="email" className="text-gray-700 font-medium">
                     Email
@@ -126,6 +146,8 @@ const Signup: React.FC = () => {
                       id="email"
                       type="email"
                       placeholder="Email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
                       className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] shadow focus:ring-2 focus:ring-[#4EA8A1] pl-10 pr-4 py-3 transition-all duration-200"
                     />
                   </div>
@@ -145,6 +167,8 @@ const Signup: React.FC = () => {
                       id="firstName"
                       type="text"
                       placeholder="First Name"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
                       className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] shadow focus:ring-2 focus:ring-[#4EA8A1] pl-10 pr-4 py-3 transition-all duration-200"
                     />
                   </div>
@@ -164,6 +188,8 @@ const Signup: React.FC = () => {
                       id="lastName"
                       type="text"
                       placeholder="Last Name"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
                       className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] shadow focus:ring-2 focus:ring-[#4EA8A1] pl-10 pr-4 py-3 transition-all duration-200"
                     />
                   </div>
@@ -183,6 +209,8 @@ const Signup: React.FC = () => {
                       id="password"
                       type="password"
                       placeholder="Password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                       className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] shadow focus:ring-2 focus:ring-[#4EA8A1] pl-10 pr-4 py-3 transition-all duration-200"
                     />
                   </div>
@@ -295,9 +323,25 @@ const Signup: React.FC = () => {
                     )}
                   </div>
                 </div>
-                <Button className="w-full bg-[#4EA8A1] text-white py-3 rounded-full font-semibold mt-4 shadow-lg text-base hover:bg-[#39948b] transition-all duration-200">
-                  Continue
+                <Button
+                  className="w-full bg-[#4EA8A1] text-white py-3 rounded-full font-semibold mt-4 shadow-lg text-base hover:bg-[#39948b] transition-all duration-200"
+                  type="submit"
+                  disabled={registerMutation.isPending}
+                >
+                  {registerMutation.isPending ? "Signing up..." : "Continue"}
                 </Button>
+                {registerMutation.isError && (
+                  <div className="text-red-500 text-sm mt-2">
+                    {registerMutation.error instanceof Error
+                      ? registerMutation.error.message
+                      : "Sign up failed. Please try again."}
+                  </div>
+                )}
+                {registerMutation.isSuccess && (
+                  <div className="text-green-600 text-sm mt-2">
+                    Sign up successful!
+                  </div>
+                )}
               </form>
               <span className="text-sm text-gray-600 mt-6">
                 Already have an account?{" "}
