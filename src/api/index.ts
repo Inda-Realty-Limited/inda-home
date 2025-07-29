@@ -1,19 +1,13 @@
 import { getToken } from "@/helpers";
-import { useMutation } from "@tanstack/react-query";
 import axios, { AxiosResponse } from "axios";
-import { register, RegisterPayload } from "./auth";
 
-export const useRegisterMutation = () =>
-  useMutation({
-    mutationFn: (payload: RegisterPayload) => register(payload),
-  });
-
-const BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:3000/api";
+const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
-  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
 apiClient.interceptors.request.use(

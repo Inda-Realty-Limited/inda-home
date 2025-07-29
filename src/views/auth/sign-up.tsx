@@ -1,6 +1,8 @@
-import { useRegisterMutation } from "@/api";
+import { register, RegisterPayload } from "@/api/auth";
 import { Button, Container, Footer, Input, Navbar } from "@/components";
-import React, { useState } from "react";
+import { useToast } from "@/components/ToastProvider";
+import { useMutation } from "@tanstack/react-query";
+import React, { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import {
   FiBriefcase,
@@ -24,8 +26,49 @@ const Signup: React.FC = () => {
   const [lookingToDo, setLookingToDo] = useState("");
   const [hearAboutUs, setHearAboutUs] = useState("");
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  // OTP state
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const otpInputs = Array.from({ length: 6 }, (_, i) =>
+    React.createRef<HTMLInputElement>()
+  );
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const toast = useToast();
+
+  const useRegisterMutation = () =>
+    useMutation({
+      mutationFn: async (payload: RegisterPayload) => await register(payload),
+    });
 
   const registerMutation = useRegisterMutation();
+  useEffect(() => {
+    if (registerMutation.isSuccess) {
+      toast.showToast(
+        "Sign up successful! Please verify your email.",
+        2500,
+        "success"
+      );
+      setTimeout(() => setStep(3), 800);
+    } else if (registerMutation.isError) {
+      toast.showToast(
+        registerMutation.error instanceof Error
+          ? registerMutation.error.message
+          : "Sign up failed. Please try again.",
+        3000,
+        "error"
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [registerMutation.isSuccess, registerMutation.isError]);
+
+  const [verifyOtpApi, setVerifyOtpApi] = useState<any>(null);
+  const [requestResetApi, setRequestResetApi] = useState<any>(null);
+  useEffect(() => {
+    import("@/api/auth").then((mod) => {
+      setVerifyOtpApi(() => mod.verifyOtp);
+      setRequestResetApi(() => mod.requestResetPassword);
+    });
+  }, []);
 
   const lookingToDoOptions = [
     { value: "buy", label: "Buy a home to live in", icon: <FiHome /> },
@@ -134,6 +177,7 @@ const Signup: React.FC = () => {
                   });
                 }}
               >
+                {/* ...existing form fields... */}
                 <div className="flex flex-col gap-2">
                   <label htmlFor="email" className="text-gray-700 font-medium">
                     Email
@@ -330,18 +374,6 @@ const Signup: React.FC = () => {
                 >
                   {registerMutation.isPending ? "Signing up..." : "Continue"}
                 </Button>
-                {registerMutation.isError && (
-                  <div className="text-red-500 text-sm mt-2">
-                    {registerMutation.error instanceof Error
-                      ? registerMutation.error.message
-                      : "Sign up failed. Please try again."}
-                  </div>
-                )}
-                {registerMutation.isSuccess && (
-                  <div className="text-green-600 text-sm mt-2">
-                    Sign up successful!
-                  </div>
-                )}
               </form>
               <span className="text-sm text-gray-600 mt-6">
                 Already have an account?{" "}
@@ -354,6 +386,127 @@ const Signup: React.FC = () => {
               </span>
             </div>
           </>
+        )}
+
+        {step === 3 && (
+          <div className="flex flex-col items-center w-full max-w-[480px] mx-auto animate-fade-in">
+            <div className="w-full rounded-3xl px-0 py-0 flex flex-col items-center">
+              <h1 className="text-center font-bold text-3xl mb-3 text-inda-dark tracking-tight">
+                Verify your email
+              </h1>
+              <p className="text-center text-gray-600 mb-8 text-base">
+                Enter the 6-digit code sent to{" "}
+                <span className="font-semibold text-[#4EA8A1]">{email}</span>
+              </p>
+              <form
+                className="w-full flex flex-col gap-7"
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  setOtpLoading(true);
+                  const code = otp.join("");
+                  if (code.length !== 6) {
+                    toast.showToast(
+                      "Please enter the 6-digit code.",
+                      2500,
+                      "error"
+                    );
+                    setOtpLoading(false);
+                    return;
+                  }
+                  if (!verifyOtpApi) {
+                    toast.showToast("Please wait, loading...", 2000, "error");
+                    setOtpLoading(false);
+                    return;
+                  }
+                  try {
+                    await verifyOtpApi({ email, code });
+                    setOtpLoading(false);
+                    toast.showToast("Email verified!", 2000, "success");
+                  } catch (err: any) {
+                    setOtpLoading(false);
+                    toast.showToast(
+                      err?.response?.data?.message ||
+                        err?.message ||
+                        "Invalid code. Please try again.",
+                      2500,
+                      "error"
+                    );
+                  }
+                }}
+              >
+                <div className="flex justify-center gap-4 mb-2">
+                  {otp.map((digit, idx) => (
+                    <input
+                      key={idx}
+                      ref={otpInputs[idx]}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, "");
+                        if (!val) return;
+                        const newOtp = [...otp];
+                        newOtp[idx] = val;
+                        setOtp(newOtp);
+                        if (idx < 5 && val) otpInputs[idx + 1].current?.focus();
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Backspace") {
+                          if (otp[idx]) {
+                            const newOtp = [...otp];
+                            newOtp[idx] = "";
+                            setOtp(newOtp);
+                          } else if (idx > 0) {
+                            otpInputs[idx - 1].current?.focus();
+                          }
+                        }
+                      }}
+                      className={`w-14 h-16 text-3xl text-center rounded-xl border-2 transition-all duration-200 outline-none bg-[#F9F9F9] focus:ring-2 focus:ring-[#4EA8A1] border-[#e0e0e0] focus:border-[#4EA8A1] ${
+                        digit ? "border-[#4EA8A1] bg-white" : ""
+                      }`}
+                      style={{
+                        letterSpacing: "2px",
+                        boxShadow: digit ? "0 2px 12px #4ea8a12a" : undefined,
+                      }}
+                    />
+                  ))}
+                </div>
+                {/* All error/success handled by toast, no inline text */}
+                <Button
+                  className="w-full bg-[#4EA8A1] text-white py-3 rounded-full font-semibold shadow-lg text-base hover:bg-[#39948b] transition-all duration-200 mt-2"
+                  type="submit"
+                  disabled={otpLoading}
+                >
+                  {otpLoading ? "Verifying..." : "Verify"}
+                </Button>
+              </form>
+              <button
+                className="mt-6 text-[#4EA8A1] font-semibold hover:underline text-sm disabled:opacity-60"
+                type="button"
+                disabled={resendLoading}
+                onClick={async () => {
+                  if (!requestResetApi) return;
+                  setResendLoading(true);
+                  try {
+                    await requestResetApi({ email });
+                    toast.showToast("Verification code resent!", 2000, "info");
+                  } catch (err: any) {
+                    toast.showToast(
+                      err?.response?.data?.message ||
+                        err?.message ||
+                        "Failed to resend code.",
+                      2500,
+                      "error"
+                    );
+                  }
+                  setResendLoading(false);
+                }}
+              >
+                {resendLoading ? "Resending..." : "Resend code"}
+              </button>
+            </div>
+          </div>
         )}
       </div>
       <Footer />

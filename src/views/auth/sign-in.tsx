@@ -1,10 +1,49 @@
+import { login } from "@/api/auth";
 import { Button, Container, Footer, Input, Navbar } from "@/components";
+import { useToast } from "@/components/ToastProvider";
+import { setToken } from "@/helpers";
+import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/router";
 import React, { useState } from "react";
 import { FiLock, FiMail } from "react-icons/fi";
 
 const SignIn: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const toast = useToast();
+  const router = useRouter();
+
+  // Store token securely using setToken helper
+  const handleSuccess = (data: any) => {
+    if (data?.token) {
+      setToken(data.token);
+      toast.showToast("Sign in successful!", 2000, "success");
+      setTimeout(() => {
+        router.push("/");
+      }, 800);
+    } else {
+      toast.showToast("Sign in failed: No token returned.", 2500, "error");
+    }
+  };
+
+  const handleError = (error: any) => {
+    toast.showToast(
+      error?.response?.data?.message || error?.message || "Sign in failed.",
+      2500,
+      "error"
+    );
+  };
+
+  const loginMutation = useMutation({
+    mutationFn: login,
+    onSuccess: handleSuccess,
+    onError: handleError,
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    loginMutation.mutate({ email, password });
+  };
 
   return (
     <Container noPadding className="min-h-screen bg-white text-inda-dark">
@@ -12,7 +51,7 @@ const SignIn: React.FC = () => {
       <div className="flex flex-col bg-[#E5E5E573] items-center justify-center rounded-3xl flex-1 w-[50%] mx-auto py-12 overflow-y-auto h-[64.5vh] max-h-[64.5vh]">
         <div className="flex flex-col items-center w-full max-w-[480px] mx-auto">
           <h1 className="text-center font-bold text-3xl mb-8">Welcome Back!</h1>
-          <form className="w-full flex flex-col gap-6">
+          <form className="w-full flex flex-col gap-6" onSubmit={handleSubmit}>
             <div className="flex flex-col gap-2">
               <label htmlFor="email" className="text-gray-700 font-medium">
                 Email
@@ -57,8 +96,12 @@ const SignIn: React.FC = () => {
                 Forgot password?
               </a>
             </div>
-            <Button className="w-full bg-[#4EA8A1] text-white py-3 rounded-full font-semibold shadow-lg text-base hover:bg-[#39948b] transition-all duration-200">
-              Continue
+            <Button
+              className="w-full bg-[#4EA8A1] text-white py-3 rounded-full font-semibold shadow-lg text-base hover:bg-[#39948b] transition-all duration-200"
+              type="submit"
+              disabled={loginMutation.isPending}
+            >
+              {loginMutation.isPending ? "Signing in..." : "Continue"}
             </Button>
           </form>
           <span className="text-sm text-gray-600 mt-6">
