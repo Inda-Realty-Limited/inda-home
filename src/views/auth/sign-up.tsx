@@ -6,6 +6,7 @@ import {
   FiChevronDown,
   FiGlobe,
   FiHome,
+  FiLock,
   FiMail,
   FiSearch,
   FiTag,
@@ -168,17 +169,20 @@ const Signup: React.FC = () => {
                   </div>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <label htmlFor="phone" className="text-gray-700 font-medium">
-                    Phone Number
+                  <label
+                    htmlFor="password"
+                    className="text-gray-700 font-medium"
+                  >
+                    Password
                   </label>
                   <div className="relative flex items-center">
                     <span className="absolute left-4 text-gray-400">
-                      <FiTag />
+                      <FiLock />
                     </span>
                     <Input
-                      id="phone"
-                      type="tel"
-                      placeholder="Phone Number"
+                      id="password"
+                      type="password"
+                      placeholder="Password"
                       className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] shadow focus:ring-2 focus:ring-[#4EA8A1] pl-10 pr-4 py-3 transition-all duration-200"
                     />
                   </div>
