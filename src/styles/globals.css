@@ -1,14 +1,32 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap");
 @import "tailwindcss";
+
+@keyframes marquee {
+  0% {
+    transform: translateX(-50%);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+.marquee {
+  min-width: 400vw;
+  will-change: transform;
+  display: flex;
+  animation: marquee 32s linear infinite;
+}
 
 @theme inline {
   --color-background: #ffffff;
   --color-foreground: #171717;
   --color-inda-white: #fafafa;
+  --color-primary: #ebea98;
   --color-inda-teal: #54a6a6;
   --color-inda-gray: #eaeaea;
   --color-inda-light: #f7fafc;
   --color-inda-yellow: #f3f1a0;
-  --color-inda-dark: #151a1e;
+  --color-inda-dark: #101820;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -25,16 +43,17 @@
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--foreground);
+  color: var(--background);
+  margin: 0;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1.5;
+  font-weight: 400;
+  overflow: hidden;
+  font-family: "Inter", sans-serif;
 }
 
 button {
-  background-color: var(--inda-teal);
-  color: var(--inda-white);
-  border: none;
-  padding: 10px 20px;
-  border-radius: 5px;
   cursor: pointer;
 }
