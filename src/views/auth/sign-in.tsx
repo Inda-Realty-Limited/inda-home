@@ -46,73 +46,89 @@ const SignIn: React.FC = () => {
   };
 
   return (
-    <Container noPadding className="min-h-screen bg-white text-inda-dark">
+    <Container
+      noPadding
+      className="min-h-screen md:h-screen bg-white overflow-hidden text-inda-dark flex flex-col justify-between"
+    >
       <Navbar variant="signIn" />
-      <div className="flex flex-col bg-[#E5E5E573] items-center justify-center rounded-3xl flex-1 w-[50%] mx-auto py-12 overflow-y-auto h-[64.5vh] max-h-[64.5vh]">
-        <div className="flex flex-col items-center w-full max-w-[480px] mx-auto">
-          <h1 className="text-center font-bold text-3xl mb-8">Welcome Back!</h1>
-          <form className="w-full flex flex-col gap-6" onSubmit={handleSubmit}>
-            <div className="flex flex-col gap-2">
-              <label htmlFor="email" className="text-gray-700 font-medium">
-                Email
-              </label>
-              <div className="relative flex items-center">
-                <span className="absolute left-4 text-gray-400">
-                  <FiMail />
-                </span>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] shadow focus:ring-2 focus:ring-[#4EA8A1] pl-10 pr-4 py-3 transition-all duration-200"
-                />
+      <div className="flex-1 flex items-center justify-center py-8 sm:py-12">
+        <div className="flex flex-col bg-[#E5E5E573] items-center justify-center rounded-3xl w-[95%] sm:w-[85%] md:w-[75%] lg:w-[65%] xl:w-[50%] mx-auto py-8 sm:py-12 px-4 sm:px-6">
+          <div className="flex flex-col items-center w-full max-w-[320px] sm:max-w-[400px] md:max-w-[480px] mx-auto">
+            <h1 className="text-center font-bold text-2xl sm:text-3xl mb-6 sm:mb-8">
+              Welcome Back!
+            </h1>
+            <form
+              className="w-full flex flex-col gap-4 sm:gap-6"
+              onSubmit={handleSubmit}
+            >
+              <div className="flex flex-col gap-1 sm:gap-2">
+                <label
+                  htmlFor="email"
+                  className="text-gray-700 font-medium text-sm sm:text-base"
+                >
+                  Email
+                </label>
+                <div className="relative flex items-center">
+                  <span className="absolute left-3 sm:left-4 text-gray-400 text-sm sm:text-base">
+                    <FiMail />
+                  </span>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base"
+                  />
+                </div>
               </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              <label htmlFor="password" className="text-gray-700 font-medium">
-                Password
-              </label>
-              <div className="relative flex items-center">
-                <span className="absolute left-4 text-gray-400">
-                  <FiLock />
-                </span>
-                <Input
-                  id="password"
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] shadow focus:ring-2 focus:ring-[#4EA8A1] pl-10 pr-4 py-3 transition-all duration-200"
-                />
+              <div className="flex flex-col gap-1 sm:gap-2">
+                <label
+                  htmlFor="password"
+                  className="text-gray-700 font-medium text-sm sm:text-base"
+                >
+                  Password
+                </label>
+                <div className="relative flex items-center">
+                  <span className="absolute left-3 sm:left-4 text-gray-400 text-sm sm:text-base">
+                    <FiLock />
+                  </span>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base"
+                  />
+                </div>
               </div>
-            </div>
-            <div className="flex justify-end">
-              <a
-                href="#"
-                className="text-sm text-[#4EA8A1] font-semibold hover:underline transition-all duration-200"
+              <div className="flex justify-end">
+                <a
+                  href="#"
+                  className="text-xs sm:text-sm text-[#4EA8A1] font-semibold hover:underline transition-all duration-200"
+                >
+                  Forgot password?
+                </a>
+              </div>
+              <Button
+                className="w-full bg-[#4EA8A1] text-white py-2.5 sm:py-3 rounded-full font-semibold text-sm sm:text-base hover:bg-[#39948b] transition-all duration-200"
+                type="submit"
+                disabled={loginMutation.isPending}
               >
-                Forgot password?
+                {loginMutation.isPending ? "Signing in..." : "Continue"}
+              </Button>
+            </form>
+            <span className="text-xs sm:text-sm text-gray-600 mt-4 sm:mt-6 text-center">
+              Don't have an account?{" "}
+              <a
+                href="/auth/signup"
+                className="text-[#4EA8A1] font-semibold hover:underline transition-all duration-200"
+              >
+                Sign Up
               </a>
-            </div>
-            <Button
-              className="w-full bg-[#4EA8A1] text-white py-3 rounded-full font-semibold shadow-lg text-base hover:bg-[#39948b] transition-all duration-200"
-              type="submit"
-              disabled={loginMutation.isPending}
-            >
-              {loginMutation.isPending ? "Signing in..." : "Continue"}
-            </Button>
-          </form>
-          <span className="text-sm text-gray-600 mt-6">
-            Don't have an account?{" "}
-            <a
-              href="/auth/signup"
-              className="text-[#4EA8A1] font-semibold hover:underline transition-all duration-200"
-            >
-              Sign Up
-            </a>
-          </span>
+            </span>
+          </div>
         </div>
       </div>
       <Footer />

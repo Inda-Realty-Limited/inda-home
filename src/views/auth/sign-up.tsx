@@ -120,394 +120,420 @@ const Signup: React.FC = () => {
   return (
     <Container
       noPadding
-      className={`${
-        step === 2 ? "min-h-screen" : "h-screen"
-      } bg-white text-inda-dark`}
+      className="min-h-screen bg-white overflow-hidden text-inda-dark flex flex-col"
     >
       <Navbar variant="signUp" />
-      <div
-        className={`flex flex-col bg-[#E5E5E573] items-center justify-center rounded-3xl flex-1 w-[50%] mx-auto py-12 overflow-y-auto ${
-          step === 2 ? "h-full" : "h-[64.5vh] max-h-[64.5vh]"
-        }`}
-      >
-        {step === 1 && (
-          <>
-            <h1 className="text-inda-dark text-center font-medium text-3xl sm:text-4xl md:text-5xl mb-6">
-              See the truth behind that listing today!
-            </h1>
-            <p className="text-inda-dark font-medium text-center text-lg sm:text-xl mb-10 max-w-xl">
-              No noise. No spam. Just clarity where it matters most.
-            </p>
-            <div className="flex flex-col gap-6 w-full max-w-[480px] mx-auto justify-center">
-              <button
-                onClick={() => {}}
-                className="bg-[#F9F9F9] text-inda-dark font-medium text-xl rounded-full w-full h-[64px] shadow-md transition-colors duration-200 ease-in-out sm:w-auto hover:opacity-75 flex items-center justify-center gap-3"
-              >
-                <FcGoogle className="w-6 h-6" />
-                Continue with Google
-              </button>
-              <button
-                onClick={() => {
-                  setStep(2);
-                }}
-                className="bg-[#4EA8A1] text-white font-medium text-xl rounded-full px-10 py-5 shadow-md transition-colors duration-200 ease-in-out w-full sm:w-auto hover:opacity-75"
-              >
-                Use Email Instead
-              </button>
-            </div>
-          </>
-        )}
-        {step === 2 && (
-          <>
-            <div className="flex flex-col items-center w-full max-w-[480px] mx-auto">
-              <h1 className="text-center font-bold text-2xl mb-8">
-                Sign up with email
+      <div className="flex-1 flex items-center justify-center py-8 sm:py-12">
+        <div
+          className={`flex flex-col bg-[#E5E5E573] items-center justify-center rounded-3xl w-[95%] sm:w-[85%] md:w-[75%] lg:w-[65%] xl:w-[50%] mx-auto py-8 sm:py-12 px-4 sm:px-6 ${
+            step === 2 ? "overflow-y-auto max-h-fit" : ""
+          }`}
+        >
+          {step === 1 && (
+            <>
+              <h1 className="text-inda-dark text-center font-medium text-2xl sm:text-3xl md:text-4xl lg:text-5xl mb-4 sm:mb-6 leading-tight max-w-4xl">
+                See the truth behind that listing today!
               </h1>
-              <form
-                className="w-full flex flex-col gap-6"
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  registerMutation.mutate({
-                    email,
-                    firstName,
-                    lastName,
-                    password,
-                    howDidYouHearAboutUs: hearAboutUs,
-                    todo: lookingToDo,
-                  });
-                }}
-              >
-                {/* ...existing form fields... */}
-                <div className="flex flex-col gap-2">
-                  <label htmlFor="email" className="text-gray-700 font-medium">
-                    Email
-                  </label>
-                  <div className="relative flex items-center">
-                    <span className="absolute left-4 text-gray-400">
-                      <FiMail />
-                    </span>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="Email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] shadow focus:ring-2 focus:ring-[#4EA8A1] pl-10 pr-4 py-3 transition-all duration-200"
-                    />
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label
-                    htmlFor="firstName"
-                    className="text-gray-700 font-medium"
-                  >
-                    First Name
-                  </label>
-                  <div className="relative flex items-center">
-                    <span className="absolute left-4 text-gray-400">
-                      <FiUser />
-                    </span>
-                    <Input
-                      id="firstName"
-                      type="text"
-                      placeholder="First Name"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] shadow focus:ring-2 focus:ring-[#4EA8A1] pl-10 pr-4 py-3 transition-all duration-200"
-                    />
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label
-                    htmlFor="lastName"
-                    className="text-gray-700 font-medium"
-                  >
-                    Last Name
-                  </label>
-                  <div className="relative flex items-center">
-                    <span className="absolute left-4 text-gray-400">
-                      <FiUser />
-                    </span>
-                    <Input
-                      id="lastName"
-                      type="text"
-                      placeholder="Last Name"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] shadow focus:ring-2 focus:ring-[#4EA8A1] pl-10 pr-4 py-3 transition-all duration-200"
-                    />
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label
-                    htmlFor="password"
-                    className="text-gray-700 font-medium"
-                  >
-                    Password
-                  </label>
-                  <div className="relative flex items-center">
-                    <span className="absolute left-4 text-gray-400">
-                      <FiLock />
-                    </span>
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="Password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] shadow focus:ring-2 focus:ring-[#4EA8A1] pl-10 pr-4 py-3 transition-all duration-200"
-                    />
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label
-                    htmlFor="lookingToDo"
-                    className="text-gray-700 font-medium"
-                  >
-                    What are you looking to do?
-                  </label>
-                  <div className="relative">
-                    <button
-                      type="button"
-                      className="w-full flex items-center justify-between rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] shadow px-4 py-3 transition-all duration-200 focus:ring-2 focus:ring-[#4EA8A1] text-left"
-                      onClick={() =>
-                        setOpenDropdown(
-                          openDropdown === "lookingToDo" ? null : "lookingToDo"
-                        )
-                      }
-                    >
-                      <span className="flex items-center gap-2">
-                        {
-                          lookingToDoOptions.find(
-                            (opt) => opt.value === lookingToDo
-                          )?.icon
-                        }
-                        {lookingToDo ? (
-                          lookingToDoOptions.find(
-                            (opt) => opt.value === lookingToDo
-                          )?.label
-                        ) : (
-                          <span className="text-gray-400">
-                            Select an option
-                          </span>
-                        )}
-                      </span>
-                      <FiChevronDown />
-                    </button>
-                    {openDropdown === "lookingToDo" && (
-                      <div className="absolute z-10 mt-2 w-full bg-white rounded-xl shadow-lg border border-[#e0e0e0]">
-                        {lookingToDoOptions.map((opt) => (
-                          <div
-                            key={opt.value}
-                            className="px-4 py-3 flex items-center gap-2 cursor-pointer hover:bg-[#F9F9F9] transition"
-                            onClick={() => {
-                              setLookingToDo(opt.value);
-                              setOpenDropdown(null);
-                            }}
-                          >
-                            {opt.icon}
-                            <span>{opt.label}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="flex flex-col gap-2">
-                  <label
-                    htmlFor="hearAboutUs"
-                    className="text-gray-700 font-medium"
-                  >
-                    How did you hear about us?
-                  </label>
-                  <div className="relative">
-                    <button
-                      type="button"
-                      className="w-full flex items-center justify-between rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] shadow px-4 py-3 transition-all duration-200 focus:ring-2 focus:ring-[#4EA8A1] text-left"
-                      onClick={() =>
-                        setOpenDropdown(
-                          openDropdown === "hearAboutUs" ? null : "hearAboutUs"
-                        )
-                      }
-                    >
-                      <span className="flex items-center gap-2">
-                        {
-                          hearAboutUsOptions.find(
-                            (opt) => opt.value === hearAboutUs
-                          )?.icon
-                        }
-                        {hearAboutUs ? (
-                          hearAboutUsOptions.find(
-                            (opt) => opt.value === hearAboutUs
-                          )?.label
-                        ) : (
-                          <span className="text-gray-400">
-                            Select an option
-                          </span>
-                        )}
-                      </span>
-                      <FiChevronDown />
-                    </button>
-                    {openDropdown === "hearAboutUs" && (
-                      <div className="absolute z-10 mt-2 w-full bg-white rounded-xl shadow-lg border border-[#e0e0e0]">
-                        {hearAboutUsOptions.map((opt) => (
-                          <div
-                            key={opt.value}
-                            className="px-4 py-3 flex items-center gap-2 cursor-pointer hover:bg-[#F9F9F9] transition"
-                            onClick={() => {
-                              setHearAboutUs(opt.value);
-                              setOpenDropdown(null);
-                            }}
-                          >
-                            {opt.icon}
-                            <span>{opt.label}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <Button
-                  className="w-full bg-[#4EA8A1] text-white py-3 rounded-full font-semibold mt-4 shadow-lg text-base hover:bg-[#39948b] transition-all duration-200"
-                  type="submit"
-                  disabled={registerMutation.isPending}
-                >
-                  {registerMutation.isPending ? "Signing up..." : "Continue"}
-                </Button>
-              </form>
-              <span className="text-sm text-gray-600 mt-6">
-                Already have an account?{" "}
-                <a
-                  href="/auth/signin"
-                  className="text-[#4EA8A1] font-semibold hover:underline transition-all duration-200"
-                >
-                  Log in
-                </a>
-              </span>
-            </div>
-          </>
-        )}
-
-        {step === 3 && (
-          <div className="flex flex-col items-center w-full max-w-[480px] mx-auto animate-fade-in">
-            <div className="w-full rounded-3xl px-0 py-0 flex flex-col items-center">
-              <h1 className="text-center font-bold text-3xl mb-3 text-inda-dark tracking-tight">
-                Verify your email
-              </h1>
-              <p className="text-center text-gray-600 mb-8 text-base">
-                Enter the 6-digit code sent to{" "}
-                <span className="font-semibold text-[#4EA8A1]">{email}</span>
+              <p className="text-inda-dark font-medium text-center text-base sm:text-lg md:text-xl mb-8 sm:mb-10 max-w-xl px-2">
+                No noise. No spam. Just clarity where it matters most.
               </p>
-              <form
-                className="w-full flex flex-col gap-7"
-                onSubmit={async (e) => {
-                  e.preventDefault();
-                  setOtpLoading(true);
-                  const code = otp.join("");
-                  if (code.length !== 6) {
-                    toast.showToast(
-                      "Please enter the 6-digit code.",
-                      2500,
-                      "error"
-                    );
-                    setOtpLoading(false);
-                    return;
-                  }
-                  if (!verifyOtpApi) {
-                    toast.showToast("Please wait, loading...", 2000, "error");
-                    setOtpLoading(false);
-                    return;
-                  }
-                  try {
-                    await verifyOtpApi({ email, code });
-                    setOtpLoading(false);
-                    toast.showToast("Email verified!", 2000, "success");
-                  } catch (err: any) {
-                    setOtpLoading(false);
-                    toast.showToast(
-                      err?.response?.data?.message ||
-                        err?.message ||
-                        "Invalid code. Please try again.",
-                      2500,
-                      "error"
-                    );
-                  }
-                }}
-              >
-                <div className="flex justify-center gap-4 mb-2">
-                  {otp.map((digit, idx) => (
-                    <input
-                      key={idx}
-                      ref={otpInputs[idx]}
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={1}
-                      value={digit}
-                      onChange={(e) => {
-                        const val = e.target.value.replace(/[^0-9]/g, "");
-                        if (!val) return;
-                        const newOtp = [...otp];
-                        newOtp[idx] = val;
-                        setOtp(newOtp);
-                        if (idx < 5 && val) otpInputs[idx + 1].current?.focus();
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Backspace") {
-                          if (otp[idx]) {
-                            const newOtp = [...otp];
-                            newOtp[idx] = "";
-                            setOtp(newOtp);
-                          } else if (idx > 0) {
-                            otpInputs[idx - 1].current?.focus();
-                          }
-                        }
-                      }}
-                      className={`w-14 h-16 text-3xl text-center rounded-xl border-2 transition-all duration-200 outline-none bg-[#F9F9F9] focus:ring-2 focus:ring-[#4EA8A1] border-[#e0e0e0] focus:border-[#4EA8A1] ${
-                        digit ? "border-[#4EA8A1] bg-white" : ""
-                      }`}
-                      style={{
-                        letterSpacing: "2px",
-                        boxShadow: digit ? "0 2px 12px #4ea8a12a" : undefined,
-                      }}
-                    />
-                  ))}
-                </div>
-                {/* All error/success handled by toast, no inline text */}
-                <Button
-                  className="w-full bg-[#4EA8A1] text-white py-3 rounded-full font-semibold shadow-lg text-base hover:bg-[#39948b] transition-all duration-200 mt-2"
-                  type="submit"
-                  disabled={otpLoading}
+              <div className="flex flex-col gap-4 sm:gap-6 w-full max-w-[320px] sm:max-w-[400px] md:max-w-[480px] mx-auto justify-center">
+                <button
+                  onClick={() => {}}
+                  className="bg-[#F9F9F9] text-inda-dark font-medium text-lg sm:text-xl rounded-full w-full h-[56px] sm:h-[64px] transition-all duration-200 ease-in-out hover:bg-[#F0F0F0] hover:scale-[0.98] active:scale-[0.96] flex items-center justify-center gap-2 sm:gap-3"
                 >
-                  {otpLoading ? "Verifying..." : "Verify"}
-                </Button>
-              </form>
-              <button
-                className="mt-6 text-[#4EA8A1] font-semibold hover:underline text-sm disabled:opacity-60"
-                type="button"
-                disabled={resendLoading}
-                onClick={async () => {
-                  if (!requestResetApi) return;
-                  setResendLoading(true);
-                  try {
-                    await requestResetApi({ email });
-                    toast.showToast("Verification code resent!", 2000, "info");
-                  } catch (err: any) {
-                    toast.showToast(
-                      err?.response?.data?.message ||
-                        err?.message ||
-                        "Failed to resend code.",
-                      2500,
-                      "error"
-                    );
-                  }
-                  setResendLoading(false);
-                }}
-              >
-                {resendLoading ? "Resending..." : "Resend code"}
-              </button>
+                  <FcGoogle className="w-5 h-5 sm:w-6 sm:h-6" />
+                  Continue with Google
+                </button>
+                <button
+                  onClick={() => {
+                    setStep(2);
+                  }}
+                  className="bg-[#4EA8A1] text-white font-medium text-lg sm:text-xl rounded-full w-full h-[56px] sm:h-[64px] transition-all duration-200 ease-in-out hover:bg-[#45968f] hover:scale-[0.98] active:scale-[0.96]"
+                >
+                  Use Email Instead
+                </button>
+              </div>
+            </>
+          )}
+          {step === 2 && (
+            <>
+              <div className="flex flex-col items-center w-full max-w-[320px] sm:max-w-[400px] py-8 sm:py-12 md:max-w-[480px] mx-auto">
+                <h1 className="text-center font-bold text-xl sm:text-2xl mb-6 sm:mb-8">
+                  Sign up with email
+                </h1>
+                <form
+                  className="w-full flex flex-col gap-4 sm:gap-6"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    registerMutation.mutate({
+                      email,
+                      firstName,
+                      lastName,
+                      password,
+                      howDidYouHearAboutUs: hearAboutUs,
+                      todo: lookingToDo,
+                    });
+                  }}
+                >
+                  {/* Email Field */}
+                  <div className="flex flex-col gap-1 sm:gap-2">
+                    <label
+                      htmlFor="email"
+                      className="text-gray-700 font-medium text-sm sm:text-base"
+                    >
+                      Email
+                    </label>
+                    <div className="relative flex items-center">
+                      <span className="absolute left-3 sm:left-4 text-gray-400 text-sm sm:text-base">
+                        <FiMail />
+                      </span>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="Email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base"
+                      />
+                    </div>
+                  </div>
+                  {/* First Name Field */}
+                  <div className="flex flex-col gap-1 sm:gap-2">
+                    <label
+                      htmlFor="firstName"
+                      className="text-gray-700 font-medium text-sm sm:text-base"
+                    >
+                      First Name
+                    </label>
+                    <div className="relative flex items-center">
+                      <span className="absolute left-3 sm:left-4 text-gray-400 text-sm sm:text-base">
+                        <FiUser />
+                      </span>
+                      <Input
+                        id="firstName"
+                        type="text"
+                        placeholder="First Name"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base"
+                      />
+                    </div>
+                  </div>
+                  {/* Last Name Field */}
+                  <div className="flex flex-col gap-1 sm:gap-2">
+                    <label
+                      htmlFor="lastName"
+                      className="text-gray-700 font-medium text-sm sm:text-base"
+                    >
+                      Last Name
+                    </label>
+                    <div className="relative flex items-center">
+                      <span className="absolute left-3 sm:left-4 text-gray-400 text-sm sm:text-base">
+                        <FiUser />
+                      </span>
+                      <Input
+                        id="lastName"
+                        type="text"
+                        placeholder="Last Name"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base"
+                      />
+                    </div>
+                  </div>
+                  {/* Password Field */}
+                  <div className="flex flex-col gap-1 sm:gap-2">
+                    <label
+                      htmlFor="password"
+                      className="text-gray-700 font-medium text-sm sm:text-base"
+                    >
+                      Password
+                    </label>
+                    <div className="relative flex items-center">
+                      <span className="absolute left-3 sm:left-4 text-gray-400 text-sm sm:text-base">
+                        <FiLock />
+                      </span>
+                      <Input
+                        id="password"
+                        type="password"
+                        placeholder="Password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base"
+                      />
+                    </div>
+                  </div>
+                  {/* What are you looking to do dropdown */}
+                  <div className="flex flex-col gap-1 sm:gap-2">
+                    <label
+                      htmlFor="lookingToDo"
+                      className="text-gray-700 font-medium text-sm sm:text-base"
+                    >
+                      What are you looking to do?
+                    </label>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        className="w-full flex items-center justify-between rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] px-3 sm:px-4 py-2.5 sm:py-3 transition-all duration-200 focus:ring-2 focus:ring-[#4EA8A1] text-left text-sm sm:text-base"
+                        onClick={() =>
+                          setOpenDropdown(
+                            openDropdown === "lookingToDo"
+                              ? null
+                              : "lookingToDo"
+                          )
+                        }
+                      >
+                        <span className="flex items-center gap-2">
+                          {
+                            lookingToDoOptions.find(
+                              (opt) => opt.value === lookingToDo
+                            )?.icon
+                          }
+                          {lookingToDo ? (
+                            <span className="truncate">
+                              {
+                                lookingToDoOptions.find(
+                                  (opt) => opt.value === lookingToDo
+                                )?.label
+                              }
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">
+                              Select an option
+                            </span>
+                          )}
+                        </span>
+                        <FiChevronDown className="flex-shrink-0" />
+                      </button>
+                      {openDropdown === "lookingToDo" && (
+                        <div className="absolute z-10 mt-2 w-full bg-white rounded-xl shadow-lg border border-[#e0e0e0] max-h-48 overflow-y-auto">
+                          {lookingToDoOptions.map((opt) => (
+                            <div
+                              key={opt.value}
+                              className="px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 cursor-pointer hover:bg-[#F9F9F9] transition text-sm sm:text-base"
+                              onClick={() => {
+                                setLookingToDo(opt.value);
+                                setOpenDropdown(null);
+                              }}
+                            >
+                              {opt.icon}
+                              <span className="truncate">{opt.label}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {/* How did you hear about us dropdown */}
+                  <div className="flex flex-col gap-1 sm:gap-2">
+                    <label
+                      htmlFor="hearAboutUs"
+                      className="text-gray-700 font-medium text-sm sm:text-base"
+                    >
+                      How did you hear about us?
+                    </label>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        className="w-full flex items-center justify-between rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] px-3 sm:px-4 py-2.5 sm:py-3 transition-all duration-200 focus:ring-2 focus:ring-[#4EA8A1] text-left text-sm sm:text-base"
+                        onClick={() =>
+                          setOpenDropdown(
+                            openDropdown === "hearAboutUs"
+                              ? null
+                              : "hearAboutUs"
+                          )
+                        }
+                      >
+                        <span className="flex items-center gap-2">
+                          {
+                            hearAboutUsOptions.find(
+                              (opt) => opt.value === hearAboutUs
+                            )?.icon
+                          }
+                          {hearAboutUs ? (
+                            <span className="truncate">
+                              {
+                                hearAboutUsOptions.find(
+                                  (opt) => opt.value === hearAboutUs
+                                )?.label
+                              }
+                            </span>
+                          ) : (
+                            <span className="text-gray-400">
+                              Select an option
+                            </span>
+                          )}
+                        </span>
+                        <FiChevronDown className="flex-shrink-0" />
+                      </button>
+                      {openDropdown === "hearAboutUs" && (
+                        <div className="absolute z-10 mt-2 w-full bg-white rounded-xl shadow-lg border border-[#e0e0e0] max-h-48 overflow-y-auto">
+                          {hearAboutUsOptions.map((opt) => (
+                            <div
+                              key={opt.value}
+                              className="px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 cursor-pointer hover:bg-[#F9F9F9] transition text-sm sm:text-base"
+                              onClick={() => {
+                                setHearAboutUs(opt.value);
+                                setOpenDropdown(null);
+                              }}
+                            >
+                              {opt.icon}
+                              <span className="truncate">{opt.label}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <Button
+                    className="w-full bg-[#4EA8A1] text-white py-2.5 sm:py-3 rounded-full font-semibold mt-3 sm:mt-4 text-sm sm:text-base hover:bg-[#39948b] transition-all duration-200"
+                    type="submit"
+                    disabled={registerMutation.isPending}
+                  >
+                    {registerMutation.isPending ? "Signing up..." : "Continue"}
+                  </Button>
+                </form>
+                <span className="text-xs sm:text-sm text-gray-600 mt-4 sm:mt-6 text-center">
+                  Already have an account?{" "}
+                  <a
+                    href="/auth/signin"
+                    className="text-[#4EA8A1] font-semibold hover:underline transition-all duration-200"
+                  >
+                    Log in
+                  </a>
+                </span>
+              </div>
+            </>
+          )}
+
+          {step === 3 && (
+            <div className="flex flex-col items-center w-full max-w-[95%] sm:max-w-[85%] md:max-w-[75%] lg:max-w-[480px] mx-auto animate-fade-in">
+              <div className="w-full rounded-3xl px-0 py-0 flex flex-col items-center">
+                <h1 className="text-center font-bold text-2xl sm:text-3xl md:text-4xl mb-3 text-inda-dark tracking-tight">
+                  Verify your email
+                </h1>
+                <p className="text-center text-gray-600 mb-6 sm:mb-8 text-sm sm:text-base px-4 sm:px-0">
+                  Enter the 6-digit code sent to{" "}
+                  <span className="font-semibold text-[#4EA8A1] break-all">
+                    {email}
+                  </span>
+                </p>
+                <form
+                  className="w-full flex flex-col gap-5 sm:gap-7"
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    setOtpLoading(true);
+                    const code = otp.join("");
+                    if (code.length !== 6) {
+                      toast.showToast(
+                        "Please enter the 6-digit code.",
+                        2500,
+                        "error"
+                      );
+                      setOtpLoading(false);
+                      return;
+                    }
+                    if (!verifyOtpApi) {
+                      toast.showToast("Please wait, loading...", 2000, "error");
+                      setOtpLoading(false);
+                      return;
+                    }
+                    try {
+                      await verifyOtpApi({ email, code });
+                      setOtpLoading(false);
+                      toast.showToast("Email verified!", 2000, "success");
+                    } catch (err: any) {
+                      setOtpLoading(false);
+                      toast.showToast(
+                        err?.response?.data?.message ||
+                          err?.message ||
+                          "Invalid code. Please try again.",
+                        2500,
+                        "error"
+                      );
+                    }
+                  }}
+                >
+                  <div className="flex justify-center gap-2 sm:gap-3 md:gap-4 mb-2">
+                    {otp.map((digit, idx) => (
+                      <input
+                        key={idx}
+                        ref={otpInputs[idx]}
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={1}
+                        value={digit}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/[^0-9]/g, "");
+                          if (!val) return;
+                          const newOtp = [...otp];
+                          newOtp[idx] = val;
+                          setOtp(newOtp);
+                          if (idx < 5 && val)
+                            otpInputs[idx + 1].current?.focus();
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Backspace") {
+                            if (otp[idx]) {
+                              const newOtp = [...otp];
+                              newOtp[idx] = "";
+                              setOtp(newOtp);
+                            } else if (idx > 0) {
+                              otpInputs[idx - 1].current?.focus();
+                            }
+                          }
+                        }}
+                        className={`w-10 h-12 sm:w-12 sm:h-14 md:w-14 md:h-16 text-xl sm:text-2xl md:text-3xl text-center rounded-xl border-2 transition-all duration-200 outline-none bg-[#F9F9F9] focus:ring-2 focus:ring-[#4EA8A1] border-[#e0e0e0] focus:border-[#4EA8A1] ${
+                          digit ? "border-[#4EA8A1] bg-white" : ""
+                        }`}
+                        style={{
+                          letterSpacing: "2px",
+                        }}
+                      />
+                    ))}
+                  </div>
+                  {/* All error/success handled by toast, no inline text */}
+                  <Button
+                    className="w-full bg-[#4EA8A1] text-white py-2.5 sm:py-3 rounded-full font-semibold text-sm sm:text-base hover:bg-[#39948b] transition-all duration-200 mt-2"
+                    type="submit"
+                    disabled={otpLoading}
+                  >
+                    {otpLoading ? "Verifying..." : "Verify"}
+                  </Button>
+                </form>
+                <button
+                  className="mt-4 sm:mt-6 text-[#4EA8A1] font-semibold hover:underline text-xs sm:text-sm disabled:opacity-60"
+                  type="button"
+                  disabled={resendLoading}
+                  onClick={async () => {
+                    if (!requestResetApi) return;
+                    setResendLoading(true);
+                    try {
+                      await requestResetApi({ email });
+                      toast.showToast(
+                        "Verification code resent!",
+                        2000,
+                        "info"
+                      );
+                    } catch (err: any) {
+                      toast.showToast(
+                        err?.response?.data?.message ||
+                          err?.message ||
+                          "Failed to resend code.",
+                        2500,
+                        "error"
+                      );
+                    }
+                    setResendLoading(false);
+                  }}
+                >
+                  {resendLoading ? "Resending..." : "Resend code"}
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
       <Footer />
     </Container>

@@ -1,7 +1,8 @@
 import { Button, Container, Footer, Input, Navbar, Text } from "@/components";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-import { useState } from "react";
+import { useRouter } from "next/router";
+import React, { useState as useFAQState, useState } from "react";
 import { BiSearchAlt2 } from "react-icons/bi";
 import {
   FiBarChart2,
@@ -22,6 +23,7 @@ const sampleData = [
 ];
 
 const Landing: React.FC = () => {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const filtered = sampleData.filter((item) =>
     item.name.toLowerCase().includes(search.toLowerCase())
@@ -30,75 +32,94 @@ const Landing: React.FC = () => {
     <Container noPadding className="min-h-screen bg-[#F9F9F9] text-inda-dark">
       <Navbar />
       <motion.section
-        className="flex flex-col items-center justify-center min-h-[70vh] relative z-10 overflow-hidden"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.5 }}
+        className="flex flex-col items-center justify-center min-h-[70vh] relative z-10 overflow-hidden px-4 sm:px-6 lg:px-8"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: -20 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
       >
-        <Text
-          as="p"
-          size="7xl"
-          className="font-extrabold text-center text-7xl mb-4 text-inda-dark leading-tight"
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
         >
-          Know before you buy
-        </Text>
-        <Text
-          as="p"
-          size="2xl"
-          className="font-medium text-center text-2xl mb-10 text-inda-dark/80 tracking-widest"
+          <p className="font-extrabold text-center text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl mb-4 text-inda-dark leading-tight">
+            Know before you buy
+          </p>
+        </motion.div>
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.4 }}
         >
-          Inda reveals hidden risks, fake prices, and shady listings — in
-          seconds.
-        </Text>
-        <div className="flex flex-col sm:flex-row items-center space-x-3 w-full max-w-[50%] mx-auto">
-          <div className="relative flex items-center w-full sm:w-[90%]">
-            <span className="absolute left-6 flex items-center">
-              <BiSearchAlt2 className="text-[#ACAFB2] text-3xl" />
+          <Text
+            as="p"
+            size="2xl"
+            className="font-medium text-center text-base sm:text-lg md:text-xl lg:text-2xl mb-8 md:mb-10 text-inda-dark/80 tracking-wide max-w-3xl mx-auto px-4"
+          >
+            Inda reveals hidden risks, fake prices, and shady listings — in
+            seconds.
+          </Text>
+        </motion.div>
+        <motion.div
+          className="flex flex-col sm:flex-row items-center gap-3 sm:gap-3 w-full max-w-[90%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-[60%] xl:max-w-[50%] mx-auto"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 0.6 }}
+        >
+          <div className="relative flex items-center w-full sm:w-[85%] lg:w-[90%]">
+            <span className="absolute left-4 sm:left-6 flex items-center z-10">
+              <BiSearchAlt2 className="text-[#ACAFB2] text-2xl sm:text-3xl" />
             </span>
             <Input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search any listing, agent, developer, address or link"
-              className="w-full rounded-full pl-14 pr-8 py-5 text-[22px] placeholder:text-[#10182054] placeholder:text-md font-medium text-inda-dark/80 focus:outline-none"
+              className="w-full rounded-full pl-12 sm:pl-14 pr-6 sm:pr-8 py-4 sm:py-5 text-lg sm:text-xl md:text-[22px] placeholder:text-[#10182054] placeholder:text-sm sm:placeholder:text-md font-medium text-inda-dark/80 focus:outline-none transition-all duration-300 focus:ring-2 focus:ring-inda-teal/20"
             />
-            <span className="absolute right-6"></span>
           </div>
           <Button
+            onClick={() => {
+              router.push("/result");
+            }}
             variant="primary"
-            className="rounded-full font-semibold px-14 py-5 text-xl whitespace-nowrap flex items-center justify-center w-full sm:w-auto min-w-[180px]"
+            className="rounded-full font-semibold px-8 sm:px-12 md:px-14 py-4 sm:py-5 text-lg sm:text-xl whitespace-nowrap flex items-center justify-center w-full sm:w-auto min-w-[160px] sm:min-w-[180px] transition-all duration-300 hover:scale-105 hover:shadow-lg"
           >
             Run Check
           </Button>
-        </div>
+        </motion.div>
         {/* Results area below input, always fixed under input, with animation */}
-        <div className="w-full max-w-[50%] mx-auto mt-8">
+        <div className="w-full max-w-[90%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-[60%] xl:max-w-[50%] mx-auto mt-6 sm:mt-8">
           <AnimatePresence>
             {search ? (
               filtered.length > 0 ? (
                 <motion.ul
-                  className="bg-white/80 backdrop-blur rounded-xl shadow-lg p-2 flex flex-col gap-2"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  transition={{ duration: 0.3 }}
+                  className="bg-white/80 backdrop-blur rounded-xl shadow-lg p-2 flex flex-col gap-2 max-h-80 overflow-y-auto"
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
                 >
-                  {filtered.map((item) => (
+                  {filtered.map((item, index) => (
                     <motion.li
                       key={item.id}
-                      className="flex items-center gap-3 py-3 px-4 rounded-lg hover:bg-inda-light/60 transition"
+                      className="flex items-center gap-3 py-3 px-4 rounded-lg hover:bg-inda-light/60 transition cursor-pointer"
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       exit={{ opacity: 0, x: -10 }}
-                      transition={{ duration: 0.2 }}
+                      transition={{ duration: 0.2, delay: index * 0.05 }}
+                      whileHover={{
+                        scale: 1.02,
+                        transition: { duration: 0.2 },
+                      }}
                     >
-                      <span className="text-inda-teal text-xl flex items-center justify-center w-8 h-8 bg-inda-light rounded-full">
+                      <span className="text-inda-teal text-lg sm:text-xl flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-inda-light rounded-full">
                         {item.type === "listing" && <FiHome />}
                         {item.type === "agent" && <FiUser />}
                         {item.type === "developer" && <FiBriefcase />}
                       </span>
-                      <span className="text-base text-inda-dark/90 font-normal">
+                      <span className="text-sm sm:text-base text-inda-dark/90 font-normal flex-1">
                         {item.name}
                       </span>
                       <span className="text-xs text-inda-teal bg-inda-light px-2 py-1 rounded ml-auto font-medium">
@@ -109,13 +130,13 @@ const Landing: React.FC = () => {
                 </motion.ul>
               ) : (
                 <motion.div
-                  className="bg-white/80 backdrop-blur rounded-xl shadow-lg p-6 text-center text-inda-dark/60"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 20 }}
-                  transition={{ duration: 0.3 }}
+                  className="bg-white/80 backdrop-blur rounded-xl shadow-lg p-4 sm:p-6 text-center text-inda-dark/60"
+                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 20, scale: 0.95 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
                 >
-                  No results found.
+                  <p className="text-sm sm:text-base">No results found.</p>
                 </motion.div>
               )
             ) : null}
@@ -123,12 +144,25 @@ const Landing: React.FC = () => {
         </div>
       </motion.section>
 
-      <section className="w-full flex flex-col items-center justify-center min-h-[60vh] py-20 rounded-t-[48px] mt-[-48px] relative z-0 overflow-x-hidden">
-        <Text className="text-inda-dark/80 text-center font-bold text-3xl md:text-3xl lg:text-6xl mb-20 leading-tight">
-          Would you invest in an asset
-          <br />
-          without knowing its true worth?
-        </Text>
+      <motion.section
+        className="w-full flex flex-col items-center justify-center min-h-[60vh] py-12 sm:py-16 md:py-20 rounded-t-[32px] sm:rounded-t-[48px] mt-[-32px] sm:mt-[-48px] relative z-0 overflow-x-hidden px-4 sm:px-6 lg:px-8"
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.3 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+        >
+          <Text className="text-inda-dark/80 text-center font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl mb-12 sm:mb-16 md:mb-20 leading-tight max-w-4xl mx-auto px-4">
+            Would you invest in an asset
+            <br />
+            without knowing its true worth?
+          </Text>
+        </motion.div>
         <section className="relative flex flex-col items-center justify-center w-full px-0">
           <div className="relative w-full h-[140px] flex items-center justify-center">
             <div className="absolute left-1/2 top-0 w-[120vw] -translate-x-1/2 rotate-[-3deg] z-10 shadow-md overflow-x-hidden">
@@ -227,31 +261,56 @@ const Landing: React.FC = () => {
             </div>
           </div>
         </section>
-      </section>
+      </motion.section>
 
-      <section className="w-full flex flex-col items-center justify-center py-24 ">
-        <Text className="text-inda-dark text-center font-extrabold text-2xl sm:text-3xl md:text-4xl lg:text-4xl mb-6">
-          Here's How <span className="text-inda-teal">INDA</span> Works
-        </Text>
-        <div className="flex flex-col items-center w-full max-w-[50%]">
-          <div className="flex flex-col items-center w-full max-w-[500px] mx-auto mb-10">
-            <div className="bg-[#FFFDAE] rounded-full w-full text-center px-8 py-4 font-semibold text-inda-dark z-10 text-xl sm:text-2xl md:text-3xl lg:text-3xl">
+      <motion.section
+        className="w-full flex flex-col items-center justify-center py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8"
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+        >
+          <Text className="text-inda-dark text-center font-extrabold text-xl sm:text-2xl md:text-3xl lg:text-4xl mb-6 sm:mb-8">
+            Here's How <span className="text-inda-teal">INDA</span> Works
+          </Text>
+        </motion.div>
+        <div className="flex flex-col items-center w-full max-w-7xl">
+          <motion.div
+            className="flex flex-col items-center w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto mb-8 sm:mb-10 md:mb-12"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+          >
+            <div className="bg-[#FFFDAE] rounded-full w-full text-center px-6 sm:px-8 py-3 sm:py-4 font-semibold text-inda-dark z-10 text-lg sm:text-xl md:text-2xl lg:text-3xl">
               Step One
             </div>
 
-            <div className="w-4/5 h-[20px] bg-[#E5E5E5] z-0"></div>
-            <div className="bg-[#4EA8A1DB] rounded-t-[44px] rounded-b-none w-full px-[20%] pt-7 pb-4 flex flex-col items-center ">
-              <span className="text-white font-semibold mb-2 text-center text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl">
+            <div className="w-4/5 h-[15px] sm:h-[20px] bg-[#E5E5E5] z-0"></div>
+            <div className="bg-[#4EA8A1DB] rounded-t-[32px] sm:rounded-t-[44px] rounded-b-none w-full px-[15%] sm:px-[20%] pt-5 sm:pt-7 pb-3 sm:pb-4 flex flex-col items-center">
+              <span className="text-white font-semibold mb-2 text-center text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl">
                 Type Anything in the Search Bar
               </span>
             </div>
-            <div className="bg-[#E5E5E5] rounded-t-none w-full p-5 px-[15%] text-center text-inda-dark/90 border-t-0 text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl">
+            <div className="bg-[#E5E5E5] rounded-t-none w-full p-4 sm:p-5 px-[10%] sm:px-[15%] text-center text-inda-dark/90 border-t-0 text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl">
               Enter a name, address, or link. <b>Inda</b> suggests results as
               you type.
             </div>
-          </div>
-          <div className="flex flex-col md:flex-row gap-8 w-full items-start justify-center">
-            <div className="flex flex-col items-center w-full max-w-[500px] mx-auto mb-10">
+          </motion.div>
+          <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 w-full items-start justify-center">
+            <motion.div
+              className="flex flex-col items-center w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto mb-8 sm:mb-10"
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.6 }}
+            >
               <div className="bg-[#FFFDAE] rounded-full w-full text-center px-8 py-4 font-semibold text-inda-dark z-10 text-xl sm:text-2xl md:text-3xl lg:text-3xl">
                 Step Two
               </div>
@@ -265,296 +324,459 @@ const Landing: React.FC = () => {
                   Inda Understands Your Search Type
                 </span>
               </div>
-            </div>
-            <div className="flex flex-col items-center w-full max-w-[500px] mx-auto mb-10">
-              <div className="bg-[#FFFDAE] rounded-full w-full text-center px-8 py-4 font-semibold text-inda-dark z-10 text-xl sm:text-2xl md:text-3xl lg:text-3xl">
+            </motion.div>
+            <motion.div
+              className="flex flex-col items-center w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto mb-8 sm:mb-10"
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.8 }}
+            >
+              <div className="bg-[#FFFDAE] rounded-full w-full text-center px-6 sm:px-8 py-3 sm:py-4 font-semibold text-inda-dark z-10 text-lg sm:text-xl md:text-2xl lg:text-3xl">
                 Step Three
               </div>
-              <div className="w-4/5 h-[20px] bg-[#66B3AD] z-0"></div>
-              <div className="bg-[#E5E5E5] w-full p-5 px-[15%] text-center text-inda-dark/90 border-t-0 text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl">
+              <div className="w-4/5 h-[15px] sm:h-[20px] bg-[#66B3AD] z-0"></div>
+              <div className="bg-[#E5E5E5] w-full p-4 sm:p-5 px-[10%] sm:px-[15%] text-center text-inda-dark/90 border-t-0 text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl">
                 Get clear info, ratings, reviews, red flags, and AI insights to
                 help you decide with confidence.
               </div>
-              <div className="bg-[#4EA8A1DB] text-white px-[20%] rounded-b-[44px] w-full pt-7 pb-4 flex flex-col items-center ">
-                <span className="text-white font-semibold mb-2 text-center text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl">
+              <div className="bg-[#4EA8A1DB] text-white px-[15%] sm:px-[20%] rounded-b-[32px] sm:rounded-b-[44px] w-full pt-5 sm:pt-7 pb-3 sm:pb-4 flex flex-col items-center">
+                <span className="text-white font-semibold mb-2 text-center text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl">
                   See a Smart Summary with Full Details
                 </span>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
-      </section>
+      </motion.section>
       {/* Inda Report Preview Section */}
-      <section className="w-full flex flex-col px-[10%] items-start pt-8 justify-center h-[465px] bg-[#1018200A]">
-        <p className="text-inda-dark font-bold text-4xl mb-6">
+      <motion.section
+        className="w-full flex flex-col px-4 sm:px-6 md:px-8 lg:px-[10%] items-start pt-6 sm:pt-8 justify-center min-h-[400px] sm:min-h-[465px] bg-[#1018200A]"
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
+        <motion.p
+          className="text-inda-dark font-bold text-2xl sm:text-3xl md:text-4xl mb-4 sm:mb-6"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+        >
           See an Inda Report in Action
-        </p>
-        <div className="flex flex-col md:flex-row items-start w-full gap-8">
-          <div
-            className="flex-col items-center justify-center"
-            style={{ height: 320 }}
+        </motion.p>
+        <div className="flex flex-col lg:flex-row items-start w-full gap-6 sm:gap-8">
+          <motion.div
+            className="flex-col items-center justify-center w-full lg:w-auto"
+            initial={{ opacity: 0, x: -30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.4 }}
           >
             <Image
               src="/assets/images/home.png"
               width={540}
               height={238}
               alt="Modern house preview"
-              className="rounded-lg object-cover"
-              style={{
-                width: 540,
-                height: 238,
-                minWidth: 540,
-                minHeight: 238,
-              }}
+              className="rounded-lg object-cover w-full max-w-[540px] h-auto aspect-[540/238]"
             />
-          </div>
-          <div className=" flex flex-col space-y-3 items-start justify-between pl-12">
-            <h3 className="text-inda-dark font-bold text-[28px] mb-1">
+          </motion.div>
+          <motion.div
+            className="flex flex-col space-y-3 items-start justify-between lg:pl-8 xl:pl-12"
+            initial={{ opacity: 0, x: 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+          >
+            <h3 className="text-inda-dark font-bold text-xl sm:text-2xl md:text-[28px] mb-1">
               Property Report Preview
             </h3>
-            <p className="text-[#101820BD] text-xl max-w-md">
+            <p className="text-[#101820BD] text-base sm:text-lg md:text-xl max-w-md">
               Get a detailed report on any property, agent or development
               company—including verification status, legal risks, ROI
               projections, and agent trust ratings.
             </p>
             <a
               href="#"
-              className="bg-[#0A1A22] text-white text-xl px-10 h-[67px] flex items-center justify-center rounded-full hover:bg-[#11242e] transition"
+              className="bg-[#0A1A22] text-white text-lg sm:text-xl px-8 sm:px-10 h-[56px] sm:h-[67px] flex items-center justify-center rounded-full hover:bg-[#11242e] transition-all duration-300 hover:scale-105"
             >
               See full report sample
             </a>
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
-      <section className="w-full py-20 px-[10%]">
-        <Text className="text-inda-dark font-bold text-3xl sm:text-3xl mb-6">
-          Features
-        </Text>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <motion.section
+        className="w-full py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-8 lg:px-[10%]"
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+        >
+          <Text className="text-inda-dark font-bold text-2xl sm:text-3xl mb-6 sm:mb-8">
+            Features
+          </Text>
+        </motion.div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Feature 1 */}
-          <div className="bg-[#54B1AD] rounded-2xl p-8 flex flex-col items-start gap-6 min-h-[150px]">
-            <span className="text-white text-3xl">
+          <motion.div
+            className="bg-[#54B1AD] rounded-2xl p-6 sm:p-8 flex flex-col items-start gap-4 sm:gap-6 min-h-[140px] sm:min-h-[150px] group hover:scale-105 transition-all duration-300 cursor-pointer"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+          >
+            <span className="text-white text-2xl sm:text-3xl group-hover:scale-110 transition-transform duration-300">
               <BiSearchAlt2 />
             </span>
-            <span className="text-white text-2xl font-medium">
+            <span className="text-white text-xl sm:text-2xl font-medium">
               Verify Any Listing
             </span>
-          </div>
+          </motion.div>
           {/* Feature 2 */}
-          <div className="bg-[#54B1AD] rounded-2xl p-8 flex flex-col items-start gap-6 min-h-[150px]">
-            <span className="text-white text-3xl">
+          <motion.div
+            className="bg-[#54B1AD] rounded-2xl p-6 sm:p-8 flex flex-col items-start gap-4 sm:gap-6 min-h-[140px] sm:min-h-[150px] group hover:scale-105 transition-all duration-300 cursor-pointer"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <span className="text-white text-2xl sm:text-3xl group-hover:scale-110 transition-transform duration-300">
               <GiBrain />
             </span>
-            <span className="text-white text-2xl font-medium">
+            <span className="text-white text-xl sm:text-2xl font-medium">
               AI Insights You Can Trust
             </span>
-          </div>
+          </motion.div>
           {/* Feature 3 */}
-          <div className="bg-[#54B1AD] rounded-2xl p-8 flex flex-col items-start gap-6 min-h-[150px]">
-            <span className="text-white text-3xl">
+          <motion.div
+            className="bg-[#54B1AD] rounded-2xl p-6 sm:p-8 flex flex-col items-start gap-4 sm:gap-6 min-h-[140px] sm:min-h-[150px] group hover:scale-105 transition-all duration-300 cursor-pointer"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
+            <span className="text-white text-2xl sm:text-3xl group-hover:scale-110 transition-transform duration-300">
               <FiUsers />
             </span>
-            <span className="text-white text-2xl font-medium">
+            <span className="text-white text-xl sm:text-2xl font-medium">
               Detect Scam Agents
             </span>
-          </div>
+          </motion.div>
           {/* Feature 4 */}
-          <div className="bg-[#54B1AD] rounded-2xl p-8 flex flex-col items-start gap-6 min-h-[150px]">
-            <span className="text-white text-3xl">
+          <motion.div
+            className="bg-[#54B1AD] rounded-2xl p-6 sm:p-8 flex flex-col items-start gap-4 sm:gap-6 min-h-[140px] sm:min-h-[150px] group hover:scale-105 transition-all duration-300 cursor-pointer"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
+            <span className="text-white text-2xl sm:text-3xl group-hover:scale-110 transition-transform duration-300">
               <FiBarChart2 />
             </span>
-            <span className="text-white text-2xl font-medium">
+            <span className="text-white text-xl sm:text-2xl font-medium">
               Project ROI Like a Pro
             </span>
-          </div>
+          </motion.div>
           {/* Feature 5 */}
-          <div className="bg-[#54B1AD] rounded-2xl p-8 flex flex-col items-start gap-6 min-h-[150px]">
-            <span className="text-white text-3xl">
+          <motion.div
+            className="bg-[#54B1AD] rounded-2xl p-6 sm:p-8 flex flex-col items-start gap-4 sm:gap-6 min-h-[140px] sm:min-h-[150px] group hover:scale-105 transition-all duration-300 cursor-pointer"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.5 }}
+          >
+            <span className="text-white text-2xl sm:text-3xl group-hover:scale-110 transition-transform duration-300">
               <FiUsers />
             </span>
-            <span className="text-white text-2xl font-medium">
+            <span className="text-white text-xl sm:text-2xl font-medium">
               Community-Sourced Reviews
             </span>
-          </div>
+          </motion.div>
           {/* Feature 6 */}
-          <div className="bg-[#54B1AD] rounded-2xl p-8 flex flex-col items-start gap-6 min-h-[150px]">
-            <span className="text-white text-3xl">
+          <motion.div
+            className="bg-[#54B1AD] rounded-2xl p-6 sm:p-8 flex flex-col items-start gap-4 sm:gap-6 min-h-[140px] sm:min-h-[150px] group hover:scale-105 transition-all duration-300 cursor-pointer"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+          >
+            <span className="text-white text-2xl sm:text-3xl group-hover:scale-110 transition-transform duration-300">
               <FiTrendingUp />
             </span>
-            <span className="text-white text-2xl font-medium">
+            <span className="text-white text-xl sm:text-2xl font-medium">
               Find Underpriced Deals
             </span>
-          </div>
+          </motion.div>
         </div>
-      </section>
+      </motion.section>
 
-      <section className="w-full px-[10%] py-20 flex flex-col items-start justify-center">
-        <Text className="text-inda-dark font-bold text-3xl md:text-3xl mb-6">
-          Pricing
-        </Text>
-        <div
-          className="w-full rounded-3xl border border-[#E2E4E8] bg-white p-8 md:p-12 flex flex-col gap-8"
+      <motion.section
+        className="w-full px-4 sm:px-6 md:px-8 lg:px-[10%] py-12 sm:py-16 md:py-20 flex flex-col items-start justify-center"
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+        >
+          <Text className="text-inda-dark font-bold text-2xl sm:text-3xl mb-6 sm:mb-8">
+            Pricing
+          </Text>
+        </motion.div>
+        <motion.div
+          className="w-full rounded-2xl sm:rounded-3xl border border-[#E2E4E8] bg-white p-6 sm:p-8 md:p-12 flex flex-col gap-6 sm:gap-8"
           style={{ boxShadow: "0px 4px 4px 0px #00000040" }}
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.4 }}
         >
           <div className="w-full flex flex-col items-center">
-            <div className="w-full flex flex-col md:flex-row gap-8 justify-center">
+            <div className="w-full flex flex-col xl:flex-row gap-6 sm:gap-8 justify-center">
               {/* Basic Summary with Pricing Breakdown Button */}
-              <div>
-                <div className="flex-1 min-w-[260px] bg-white rounded-2xl border border-[#D1D5DB] p-8 flex flex-col justify-between">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                <div className="flex-1 min-w-[240px] sm:min-w-[260px] bg-white rounded-xl sm:rounded-2xl border border-[#D1D5DB] p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:scale-105">
                   <div>
-                    <div className="font-bold text-xl mb-4 text-inda-dark">
+                    <div className="font-bold text-lg sm:text-xl mb-3 sm:mb-4 text-inda-dark">
                       Basic Summary
                     </div>
-                    <div className="text-3xl font-extrabold text-inda-dark mb-2 flex items-center">
+                    <div className="text-2xl sm:text-3xl font-extrabold text-inda-dark mb-2 flex items-center">
                       <span className="line-through mr-2">₦0</span>
                     </div>
-                    <ul className="mt-6 mb-2">
-                      <li className="flex items-center gap-2 text-lg text-inda-dark/90">
-                        <span className="text-2xl text-inda-dark">✓</span>{" "}
+                    <ul className="mt-4 sm:mt-6 mb-2">
+                      <li className="flex items-center gap-2 text-base sm:text-lg text-inda-dark/90">
+                        <span className="text-xl sm:text-2xl text-inda-dark">
+                          ✓
+                        </span>{" "}
                         Report preview
                       </li>
                     </ul>
                   </div>
                 </div>
-                <div className="w-full flex justify-center mt-8">
-                  <button className="bg-[#F5F6F7] text-inda-dark font-bold text-xl rounded-2xl px-10 py-6 shadow-md hover:bg-[#e9eaeb] transition">
+                <div className="w-full flex justify-center mt-6 sm:mt-8">
+                  <button className="bg-[#F5F6F7] text-inda-dark font-bold text-lg sm:text-xl rounded-xl sm:rounded-2xl px-8 sm:px-10 py-4 sm:py-6 shadow-md hover:bg-[#e9eaeb] transition-all duration-300 hover:scale-105">
                     See Pricing Breakdown
                   </button>
                 </div>
-              </div>
+              </motion.div>
               {/* Deep Report */}
-              <div className="flex-1 min-w-[260px] bg-white rounded-2xl border border-[#D1D5DB] p-8 flex flex-col justify-between">
+              <motion.div
+                className="flex-1 min-w-[240px] sm:min-w-[260px] bg-white rounded-xl sm:rounded-2xl border border-[#D1D5DB] p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:scale-105"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+              >
                 <div>
-                  <div className="font-bold text-xl mb-4 text-inda-dark">
+                  <div className="font-bold text-lg sm:text-xl mb-3 sm:mb-4 text-inda-dark">
                     Deep Report
                   </div>
-                  <div className="text-3xl font-extrabold text-inda-dark mb-2 flex items-center">
+                  <div className="text-2xl sm:text-3xl font-extrabold text-inda-dark mb-2 flex items-center">
                     <span className="mr-2">₦15,000</span>
-                    <span className="text-lg font-medium text-inda-dark/70">
+                    <span className="text-sm sm:text-lg font-medium text-inda-dark/70">
                       / use
                     </span>
                   </div>
-                  <ul className="mt-6 mb-2 space-y-2">
-                    <li className="flex items-center gap-2 text-lg text-inda-dark/90">
-                      <span className="text-2xl text-inda-dark">✓</span>{" "}
+                  <ul className="mt-4 sm:mt-6 mb-2 space-y-1 sm:space-y-2">
+                    <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-dark/90">
+                      <span className="text-lg sm:text-2xl text-inda-dark">
+                        ✓
+                      </span>{" "}
                       Detailed property report
                     </li>
-                    <li className="flex items-center gap-2 text-lg text-inda-dark/90">
-                      <span className="text-2xl text-inda-dark">✓</span>{" "}
+                    <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-dark/90">
+                      <span className="text-lg sm:text-2xl text-inda-dark">
+                        ✓
+                      </span>{" "}
                       Verification stamp
                     </li>
-                    <li className="flex items-center gap-2 text-lg text-inda-dark/90">
-                      <span className="text-2xl text-inda-dark">✓</span> Legal
-                      risk assessment
+                    <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-dark/90">
+                      <span className="text-lg sm:text-2xl text-inda-dark">
+                        ✓
+                      </span>{" "}
+                      Legal risk assessment
                     </li>
-                    <li className="flex items-center gap-2 text-lg text-inda-dark/90">
-                      <span className="text-2xl text-inda-dark">✓</span> ROI
-                      chart
+                    <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-dark/90">
+                      <span className="text-lg sm:text-2xl text-inda-dark">
+                        ✓
+                      </span>{" "}
+                      ROI chart
                     </li>
-                    <li className="flex items-center gap-2 text-lg text-inda-dark/90">
-                      <span className="text-2xl text-inda-dark">✓</span> Agent
-                      trust rating
+                    <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-dark/90">
+                      <span className="text-lg sm:text-2xl text-inda-dark">
+                        ✓
+                      </span>{" "}
+                      Agent trust rating
                     </li>
                   </ul>
                 </div>
-              </div>
+              </motion.div>
               {/* Pro Access */}
-              <div className="flex-1 min-w-[260px] bg-white rounded-2xl border border-[#D1D5DB] p-8 flex flex-col justify-between">
+              <motion.div
+                className="flex-1 min-w-[240px] sm:min-w-[260px] bg-white rounded-xl sm:rounded-2xl border border-[#D1D5DB] p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:scale-105"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.6 }}
+              >
                 <div>
-                  <div className="font-bold text-xl mb-4 text-inda-dark">
+                  <div className="font-bold text-lg sm:text-xl mb-3 sm:mb-4 text-inda-dark">
                     Pro Access
                   </div>
-                  <div className="text-3xl font-extrabold text-inda-dark mb-2 flex items-center">
+                  <div className="text-2xl sm:text-3xl font-extrabold text-inda-dark mb-2 flex items-center">
                     <span className="mr-2">₦55,000</span>
-                    <span className="text-lg font-medium text-inda-dark/70">
+                    <span className="text-sm sm:text-lg font-medium text-inda-dark/70">
                       / month
                     </span>
                   </div>
-                  <ul className="mt-6 mb-2 space-y-2">
-                    <li className="flex items-center gap-2 text-lg text-inda-dark/90">
-                      <span className="text-2xl text-inda-dark">✓</span>{" "}
+                  <ul className="mt-4 sm:mt-6 mb-2 space-y-1 sm:space-y-2">
+                    <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-dark/90">
+                      <span className="text-lg sm:text-2xl text-inda-dark">
+                        ✓
+                      </span>{" "}
                       Unlimited deep reports
                     </li>
-                    <li className="flex items-center gap-2 text-lg text-inda-dark/90">
-                      <span className="text-2xl text-inda-dark">✓</span> Live
-                      ROI Alerts + Market Signals
+                    <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-dark/90">
+                      <span className="text-lg sm:text-2xl text-inda-dark">
+                        ✓
+                      </span>{" "}
+                      Live ROI Alerts + Market Signals
                     </li>
-                    <li className="flex items-center gap-2 text-lg text-inda-dark/90">
-                      <span className="text-2xl text-inda-dark">✓</span>{" "}
+                    <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-dark/90">
+                      <span className="text-lg sm:text-2xl text-inda-dark">
+                        ✓
+                      </span>{" "}
                       Exclusive market insights
                     </li>
-                    <li className="flex items-center gap-2 text-lg text-inda-dark/90">
-                      <span className="text-2xl text-inda-dark">✓</span>{" "}
+                    <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-dark/90">
+                      <span className="text-lg sm:text-2xl text-inda-dark">
+                        ✓
+                      </span>{" "}
                       Portfolio Dashboard
                     </li>
                   </ul>
                 </div>
-              </div>
+              </motion.div>
             </div>
           </div>
-        </div>
-      </section>
-      <section className="w-full px-[10%] py-20 flex flex-col items-start justify-center">
-        <Text className="text-inda-dark font-bold text-3xl md:text-3xl mb-6">
-          Frequently Asked Questions
-        </Text>
+        </motion.div>
+      </motion.section>
+      <motion.section
+        className="w-full px-4 sm:px-6 md:px-8 lg:px-[10%] py-12 sm:py-16 md:py-20 flex flex-col items-start justify-center"
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+        >
+          <Text className="text-inda-dark font-bold text-2xl sm:text-3xl mb-6 sm:mb-8">
+            Frequently Asked Questions
+          </Text>
+        </motion.div>
         <FAQ />
-      </section>
+      </motion.section>
 
       {/* CTA Section - See the truth behind that listing today! */}
-      <section className="w-full flex justify-center items-center py-24 bg-transparent">
-        <div
-          className="relative w-[95%] mx-auto rounded-[64px] bg-[#54B1AD] flex flex-col items-center justify-center px-6 md:px-0"
+      <motion.section
+        className="w-full flex justify-center items-center py-16 sm:py-20 md:py-24 bg-transparent px-4 sm:px-6"
+        initial={{ opacity: 0, y: 50 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
+        <motion.div
+          className="relative w-[95%] mx-auto rounded-[48px] sm:rounded-[64px] bg-[#54B1AD] flex flex-col items-center justify-center px-4 sm:px-6 md:px-8"
           style={{
-            minHeight: 540,
+            minHeight: 450,
             border: "1.5px solid #fff",
             boxSizing: "border-box",
           }}
+          initial={{ opacity: 0, scale: 0.9 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, delay: 0.2 }}
         >
           {/* Thin white border inside */}
           <div className="absolute inset-0 pointer-events-none">
             <div
-              className="w-full h-full rounded-[56px] border border-white opacity-60 absolute top-4 left-4"
+              className="w-full h-full rounded-[40px] sm:rounded-[56px] border border-white opacity-60 absolute top-3 sm:top-4 left-3 sm:left-4"
               style={{ zIndex: 1 }}
             ></div>
           </div>
           {/* Main content */}
-          <div className="relative z-10 flex flex-col items-center justify-center w-full h-full py-16">
-            <h2
-              className="text-white text-center font-extrabold text-4xl sm:text-5xl md:text-6xl leading-tight mb-10"
+          <div className="relative z-10 flex flex-col items-center justify-center w-full h-full py-12 sm:py-16">
+            <motion.h2
+              className="text-white text-center font-extrabold text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl leading-tight mb-8 sm:mb-10"
               style={{ letterSpacing: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.4 }}
             >
               See the truth behind
               <br className="hidden sm:block" />
               that listing today!
-            </h2>
-            <button
-              className="bg-[#101820] text-white text-2xl font-normal rounded-full px-12 py-5 mt-2 shadow-lg hover:bg-[#1a2a33] transition focus:outline-none"
-              style={{ minWidth: 380 }}
+            </motion.h2>
+            <motion.button
+              className="bg-[#101820] text-white text-lg sm:text-xl md:text-2xl font-normal rounded-full px-8 sm:px-10 md:px-12 py-4 sm:py-5 mt-2 shadow-lg hover:bg-[#1a2a33] transition-all duration-300 hover:scale-105 focus:outline-none"
+              style={{ minWidth: 280 }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.6 }}
             >
               Try your first search now
-            </button>
+            </motion.button>
           </div>
           {/* Chat with Us button and horizontal line */}
-          <button
+          <motion.button
             id="cta-chat-btn"
-            className="absolute left-8 bottom-16 bg-[#101820] text-white text-xl font-normal rounded-full px-10 py-4 shadow-lg hover:bg-[#1a2a33] transition focus:outline-none"
-            style={{ minWidth: 260, zIndex: 10 }}
+            className="absolute left-4 sm:left-6 md:left-8 bottom-12 sm:bottom-16 bg-[#101820] text-white text-base sm:text-lg md:text-xl font-normal rounded-full px-6 sm:px-8 md:px-10 py-3 sm:py-4 shadow-lg hover:bg-[#1a2a33] transition-all duration-300 hover:scale-105 focus:outline-none"
+            style={{ minWidth: 200, zIndex: 10 }}
+            initial={{ opacity: 0, x: -20 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.8 }}
           >
             Chat with Us
-          </button>
+          </motion.button>
           {/* Thin horizontal line starting beside Chat with Us button */}
-          <div
-            className="absolute bottom-16 bg-white opacity-60 h-px"
+          <motion.div
+            className="absolute bottom-12 sm:bottom-16 bg-white opacity-60 h-px hidden sm:block"
             style={{
-              left: `calc(8px + 260px + 2.5rem)`, // 8px left + minWidth + px-10 padding
+              left: `calc(24px + 200px + 2rem)`, // left + minWidth + padding
               right: 0,
               zIndex: 2,
             }}
-          ></div>
-        </div>
-      </section>
+            initial={{ opacity: 0, scaleX: 0 }}
+            whileInView={{ opacity: 0.6, scaleX: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 1 }}
+          ></motion.div>
+        </motion.div>
+      </motion.section>
       <Footer />
     </Container>
   );
@@ -632,50 +854,67 @@ const faqData = [
   },
 ];
 
-import { useState as useFAQState } from "react";
-
 const FAQ = () => {
   const [open, setOpen] = useFAQState<number | null>(null);
   return (
-    <div className="w-full max-w-3xl flex flex-col gap-6">
+    <motion.div
+      className="w-full max-w-4xl flex flex-col gap-4 sm:gap-6"
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.8, delay: 0.4 }}
+    >
       {faqData.map((item, i) => {
         const isOpen = open === i;
         return (
-          <div
+          <motion.div
             key={item.q}
-            className={`w-full bg-white rounded-2xl border border-[#ECECEC] shadow-sm transition-all duration-200 ${
+            className={`w-full bg-white rounded-xl sm:rounded-2xl border border-[#ECECEC] shadow-sm transition-all duration-300 ${
               isOpen ? "shadow-md" : "hover:shadow-md"
-            } cursor-pointer`}
-            style={{ minHeight: 64 }}
+            } cursor-pointer overflow-hidden`}
+            style={{ minHeight: 56 }}
             onClick={() => setOpen(isOpen ? null : i)}
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: i * 0.1 }}
+            whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
           >
-            <div className="flex items-center justify-between px-8 py-6 text-inda-dark text-xl md:text-2xl font-medium select-none">
-              <span>{item.q}</span>
-              <svg
-                width="32"
-                height="32"
+            <div className="flex items-center justify-between px-4 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6 text-inda-dark text-base sm:text-lg md:text-xl lg:text-2xl font-medium select-none">
+              <span className="flex-1 pr-4">{item.q}</span>
+              <motion.svg
+                width="28"
+                height="28"
                 fill="none"
                 stroke="#101820"
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className={`ml-4 transition-transform duration-200 ${
-                  isOpen ? "rotate-180" : ""
-                }`}
-                style={{ minWidth: 32 }}
+                className="flex-shrink-0 transition-transform duration-300"
+                style={{ minWidth: 28 }}
+                animate={{ rotate: isOpen ? 180 : 0 }}
+                transition={{ duration: 0.3 }}
               >
                 <polyline points="8 12 16 20 24 12" />
-              </svg>
+              </motion.svg>
             </div>
-            {isOpen && (
-              <div className="px-8 pb-6 pt-0 text-inda-dark/90 text-base md:text-lg font-normal animate-fadeIn">
-                <div>{item.a}</div>
-              </div>
-            )}
-          </div>
+            <AnimatePresence>
+              {isOpen && (
+                <motion.div
+                  className="px-4 sm:px-6 md:px-8 pb-4 sm:pb-5 md:pb-6 pt-0 text-inda-dark/90 text-sm sm:text-base md:text-lg font-normal"
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                >
+                  <div>{item.a}</div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
         );
       })}
-    </div>
+    </motion.div>
   );
 };
 
