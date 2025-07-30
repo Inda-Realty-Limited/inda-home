@@ -1,7 +1,7 @@
 import { getToken } from "@/helpers";
 import axios, { AxiosResponse } from "axios";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL;
+const BASE_URL = "https://api.staging.investinda.com";
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
