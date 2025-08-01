@@ -1,18 +1,25 @@
-import { Button, Container, Footer, Input, Navbar, Text } from "@/components";
+import { Container, Footer, Input, Navbar, Text } from "@/components";
+import { getToken } from "@/helpers";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import React, { useState as useFAQState, useState } from "react";
+import React, {
+  useEffect,
+  useState as useFAQState,
+  useRef,
+  useState,
+} from "react";
 import { BiSearchAlt2 } from "react-icons/bi";
 import {
   FiBarChart2,
-  FiBriefcase,
   FiHome,
+  FiLink,
+  FiMapPin,
   FiTrendingUp,
-  FiUser,
   FiUsers,
 } from "react-icons/fi";
 import { GiBrain } from "react-icons/gi";
+import { HiOutlineBuildingOffice2 } from "react-icons/hi2";
 
 const sampleData = [
   { id: 1, name: "Lagos Luxury Villa", type: "listing" },
@@ -22,126 +29,247 @@ const sampleData = [
   { id: 5, name: "Jane Smith", type: "agent" },
 ];
 
+const searchTypes = [
+  {
+    id: "address",
+    label: "Address",
+    icon: FiMapPin,
+    placeholder: "15 Lekki Phase 1, Lagos",
+    description: "Search by property address",
+  },
+  {
+    id: "agent",
+    label: "Agent Name",
+    icon: FiUsers,
+    placeholder: "John Smith Real Estate",
+    description: "Find agents and reviews",
+  },
+  {
+    id: "developer",
+    label: "Developer Name",
+    icon: HiOutlineBuildingOffice2,
+    placeholder: "Dangote Properties Ltd",
+    description: "Check developer projects",
+  },
+  {
+    id: "smart",
+    label: "Smart Search",
+    icon: GiBrain,
+    placeholder: "luxury apartment Victoria Island",
+    description: "AI-powered property search",
+  },
+  {
+    id: "link",
+    label: "Paste Link",
+    icon: FiLink,
+    placeholder: "https://propertypro.ng/property/...",
+    description: "Analyze any listing URL",
+  },
+  {
+    id: "property",
+    label: "Property Name",
+    icon: FiHome,
+    placeholder: "Eko Pearl Towers",
+    description: "Search specific properties",
+  },
+];
+
 const Landing: React.FC = () => {
   const router = useRouter();
   const [search, setSearch] = useState("");
+  const [selectedSearchType, setSelectedSearchType] = useState(searchTypes[0]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   const filtered = sampleData.filter((item) =>
     item.name.toLowerCase().includes(search.toLowerCase())
   );
+
+  // Function to handle search with authentication check
+  const handleSearch = () => {
+    const token = getToken();
+
+    if (!token) {
+      // User is not authenticated, redirect to auth with search query
+      router.push(
+        `/auth?q=${encodeURIComponent(search)}&type=${selectedSearchType.id}`
+      );
+    } else {
+      // User is authenticated, proceed to result page
+      router.push(
+        `/result?q=${encodeURIComponent(search)}&type=${selectedSearchType.id}`
+      );
+    }
+  };
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
   return (
-    <Container noPadding className="min-h-screen bg-[#F9F9F9] text-inda-dark">
+    <Container
+      noPadding
+      className="min-h-screen bg-[#F9F9F9] text-inda-dark overflow-hidden"
+    >
       <Navbar />
       <motion.section
-        className="flex flex-col items-center justify-center min-h-[70vh] relative z-10 overflow-hidden px-4 sm:px-6 lg:px-8"
+        className="flex flex-col bg-[#f9f9f9] items-center justify-center h-[90vh] relative z-10 px-4 sm:px-6 lg:px-8"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
       >
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          className="flex flex-col bg-[#E5E5E54D] items-center justify-center h-[60%] sm:h-[50%] rounded-[24px] sm:rounded-[32px] relative z-10 px-3 sm:px-6 lg:px-8"
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
         >
-          <p className="font-extrabold text-center text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl mb-4 text-inda-dark leading-tight">
-            Know before you buy
-          </p>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-        >
-          <Text
-            as="p"
-            size="2xl"
-            className="font-medium text-center text-base sm:text-lg md:text-xl lg:text-2xl mb-8 md:mb-10 text-inda-dark/80 tracking-wide max-w-3xl mx-auto px-4"
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            className="text-center mb-6"
           >
-            Inda reveals hidden risks, fake prices, and shady listings — in
-            seconds.
-          </Text>
-        </motion.div>
-        <motion.div
-          className="flex flex-col sm:flex-row items-center gap-3 sm:gap-3 w-full max-w-[90%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-[60%] xl:max-w-[50%] mx-auto"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.6 }}
-        >
-          <div className="relative flex items-center w-full sm:w-[85%] lg:w-[90%]">
-            <span className="absolute left-4 sm:left-6 flex items-center z-10">
-              <BiSearchAlt2 className="text-[#ACAFB2] text-2xl sm:text-3xl" />
-            </span>
-            <Input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search any listing, agent, developer, address or link"
-              className="w-full rounded-full pl-12 sm:pl-14 pr-6 sm:pr-8 py-4 sm:py-5 text-lg sm:text-xl md:text-[22px] placeholder:text-[#10182054] placeholder:text-sm sm:placeholder:text-md font-medium text-inda-dark/80 focus:outline-none transition-all duration-300 focus:ring-2 focus:ring-inda-teal/20"
-            />
-          </div>
-          <Button
-            onClick={() => {
-              router.push("/result");
-            }}
-            variant="primary"
-            className="rounded-full font-semibold px-8 sm:px-12 md:px-14 py-4 sm:py-5 text-lg sm:text-xl whitespace-nowrap flex items-center justify-center w-full sm:w-auto min-w-[160px] sm:min-w-[180px] transition-all duration-300 hover:scale-105 hover:shadow-lg"
+            <h1 className="font-extrabold text-center text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl mb-3 sm:mb-4 text-[#101820] leading-[0.9]">
+              Know before you buy
+            </h1>
+          </motion.div>
+          <motion.div
+            className="text-center mb-8 sm:mb-12"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
           >
-            Run Check
-          </Button>
+            <p className="font-medium text-center text-base sm:text-lg md:text-xl lg:text-2xl text-[#101820]/80 tracking-wide max-w-4xl mx-auto px-2 sm:px-4">
+              Inda reveals hidden risks, fake prices, and shady listings — in
+              seconds.
+            </p>
+          </motion.div>
+          <motion.div
+            className="flex items-center justify-center w-full px-2 sm:px-4 lg:px-8"
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6 }}
+          >
+            {/* Dropdown Button */}
+            <div
+              className="relative w-full max-w-sm sm:max-w-2xl"
+              ref={dropdownRef}
+            >
+              <div className="flex flex-col sm:flex-row items-center gap-0 w-full">
+                <button
+                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                  className="flex items-center bg-white border border-[#4EA8A1] rounded-t-[16px] sm:rounded-l-[16px] sm:rounded-tr-none pl-4 sm:pl-6 pr-3 sm:pr-4 py-3 sm:py-4 min-w-[160px] sm:min-w-[180px] w-full sm:w-auto hover:bg-gray-50 transition-colors duration-200"
+                >
+                  <selectedSearchType.icon className="w-4 h-4 text-[#4EA8A1] mr-2" />
+                  <span className="text-[#101820] font-medium text-base sm:text-lg whitespace-nowrap mr-2">
+                    {selectedSearchType.label}
+                  </span>
+                  <svg
+                    className={`w-4 h-4 text-[#101820] transition-transform duration-200 ml-auto ${
+                      isDropdownOpen ? "rotate-180" : ""
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M19 9l-7 7-7-7"
+                    />
+                  </svg>
+                </button>
+
+                {/* Search Input with embedded Search Button */}
+                <div className="relative flex-1 w-full">
+                  <Input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        handleSearch();
+                      }
+                    }}
+                    placeholder={selectedSearchType.placeholder}
+                    className="w-full border border-t-0 sm:border-t border-l sm:border-l-0 border-[#4EA8A1] rounded-b-[16px] sm:rounded-r-[16px] sm:rounded-bl-none pl-4 sm:pl-6 pr-12 sm:pr-16 py-3 sm:py-4 text-base sm:text-lg placeholder:text-[#9CA3AF] font-medium text-[#101820] focus:outline-none bg-white transition-all duration-200 focus:shadow-lg"
+                  />
+                  {/* Search Button inside the input */}
+                  <button
+                    onClick={handleSearch}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-[#4EA8A1] hover:bg-[#4EA8A1] rounded-full p-2 transition-all duration-200 hover:shadow-lg hover:scale-105"
+                  >
+                    <BiSearchAlt2 className="text-white text-lg sm:text-xl" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Dropdown Menu */}
+              <AnimatePresence>
+                {isDropdownOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    transition={{ duration: 0.2 }}
+                    className="absolute top-full left-0 right-0 mt-2 w-full bg-white border border-[#4EA8A1] rounded-2xl shadow-lg z-50 overflow-hidden"
+                  >
+                    <div className="grid grid-cols-1 sm:grid-cols-3">
+                      {searchTypes.map((type, index) => (
+                        <button
+                          key={type.id}
+                          onClick={() => {
+                            setSelectedSearchType(type);
+                            setIsDropdownOpen(false);
+                            setSearch("");
+                          }}
+                          className={`text-left p-4 hover:bg-[#4EA8A1]/10 transition-colors duration-200 ${
+                            index < searchTypes.length - 1
+                              ? "border-b sm:border-b-0"
+                              : ""
+                          } ${
+                            (index + 1) % 3 !== 0 &&
+                            index < searchTypes.length - 1
+                              ? "sm:border-r border-gray-100"
+                              : ""
+                          } ${index < 3 ? "sm:border-b border-gray-100" : ""} ${
+                            selectedSearchType.id === type.id
+                              ? "bg-[#4EA8A1]/5 text-[#4EA8A1]"
+                              : "text-[#101820]"
+                          }`}
+                        >
+                          <div className="flex items-center mb-1">
+                            <type.icon className="w-4 h-4 text-[#4EA8A1] mr-2 flex-shrink-0" />
+                            <div className="font-medium text-sm lg:text-base">
+                              {type.label}
+                            </div>
+                          </div>
+                          <div className="text-xs lg:text-sm text-gray-600 mt-1 leading-tight">
+                            {type.description}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </motion.div>
         </motion.div>
-        {/* Results area below input, always fixed under input, with animation */}
-        <div className="w-full max-w-[90%] sm:max-w-[80%] md:max-w-[70%] lg:max-w-[60%] xl:max-w-[50%] mx-auto mt-6 sm:mt-8">
-          <AnimatePresence>
-            {search ? (
-              filtered.length > 0 ? (
-                <motion.ul
-                  className="bg-white/80 backdrop-blur rounded-xl shadow-lg p-2 flex flex-col gap-2 max-h-80 overflow-y-auto"
-                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                >
-                  {filtered.map((item, index) => (
-                    <motion.li
-                      key={item.id}
-                      className="flex items-center gap-3 py-3 px-4 rounded-lg hover:bg-inda-light/60 transition cursor-pointer"
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -10 }}
-                      transition={{ duration: 0.2, delay: index * 0.05 }}
-                      whileHover={{
-                        scale: 1.02,
-                        transition: { duration: 0.2 },
-                      }}
-                    >
-                      <span className="text-inda-teal text-lg sm:text-xl flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-inda-light rounded-full">
-                        {item.type === "listing" && <FiHome />}
-                        {item.type === "agent" && <FiUser />}
-                        {item.type === "developer" && <FiBriefcase />}
-                      </span>
-                      <span className="text-sm sm:text-base text-inda-dark/90 font-normal flex-1">
-                        {item.name}
-                      </span>
-                      <span className="text-xs text-inda-teal bg-inda-light px-2 py-1 rounded ml-auto font-medium">
-                        {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
-                      </span>
-                    </motion.li>
-                  ))}
-                </motion.ul>
-              ) : (
-                <motion.div
-                  className="bg-white/80 backdrop-blur rounded-xl shadow-lg p-4 sm:p-6 text-center text-inda-dark/60"
-                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 20, scale: 0.95 }}
-                  transition={{ duration: 0.3, ease: "easeOut" }}
-                >
-                  <p className="text-sm sm:text-base">No results found.</p>
-                </motion.div>
-              )
-            ) : null}
-          </AnimatePresence>
-        </div>
       </motion.section>
 
       <motion.section
@@ -288,12 +416,12 @@ const Landing: React.FC = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            <div className="bg-[#FFFDAE] rounded-full w-full text-center px-6 sm:px-8 py-3 sm:py-4 font-semibold text-inda-dark z-10 text-lg sm:text-xl md:text-2xl lg:text-3xl">
+            <div className="bg-inda-dark/90 rounded-full w-full text-center px-6 sm:px-8 py-3 sm:py-4 font-semibold text-inda-yellow z-10 text-lg sm:text-xl md:text-2xl lg:text-3xl">
               Step One
             </div>
 
             <div className="w-4/5 h-[15px] sm:h-[20px] bg-[#E5E5E5] z-0"></div>
-            <div className="bg-[#4EA8A1DB] rounded-t-[32px] sm:rounded-t-[44px] rounded-b-none w-full px-[15%] sm:px-[20%] pt-5 sm:pt-7 pb-3 sm:pb-4 flex flex-col items-center">
+            <div className="bg-[#4EA8A1] rounded-t-[32px] sm:rounded-t-[44px] rounded-b-none w-full px-[15%] sm:px-[20%] pt-5 sm:pt-7 pb-3 sm:pb-4 flex flex-col items-center">
               <span className="text-white font-semibold mb-2 text-center text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl">
                 Type Anything in the Search Bar
               </span>
@@ -311,7 +439,7 @@ const Landing: React.FC = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.8, delay: 0.6 }}
             >
-              <div className="bg-[#FFFDAE] rounded-full w-full text-center px-8 py-4 font-semibold text-inda-dark z-10 text-xl sm:text-2xl md:text-3xl lg:text-3xl">
+              <div className="bg-inda-dark/90 rounded-full w-full text-center px-8 py-4 font-semibold text-inda-yellow z-10 text-xl sm:text-2xl md:text-3xl lg:text-3xl">
                 Step Two
               </div>
               <div className="w-4/5 h-[20px] bg-[#66B3AD] z-0"></div>
@@ -319,7 +447,7 @@ const Landing: React.FC = () => {
                 <b>Inda</b> detects if it’s a developer, agent, company, or
                 property and loads the matching result page.
               </div>
-              <div className="bg-[#4EA8A1DB] text-white px-[20%] rounded-b-[44px] w-full pt-7 pb-4 flex flex-col items-center ">
+              <div className="bg-[#4EA8A1] text-white px-[20%] rounded-b-[44px] w-full pt-7 pb-4 flex flex-col items-center ">
                 <span className="text-white font-semibold mb-2 text-center text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl">
                   Inda Understands Your Search Type
                 </span>
@@ -332,7 +460,7 @@ const Landing: React.FC = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.8, delay: 0.8 }}
             >
-              <div className="bg-[#FFFDAE] rounded-full w-full text-center px-6 sm:px-8 py-3 sm:py-4 font-semibold text-inda-dark z-10 text-lg sm:text-xl md:text-2xl lg:text-3xl">
+              <div className="bg-inda-dark/90 rounded-full w-full text-center px-6 sm:px-8 py-3 sm:py-4 font-semibold text-inda-yellow z-10 text-lg sm:text-xl md:text-2xl lg:text-3xl">
                 Step Three
               </div>
               <div className="w-4/5 h-[15px] sm:h-[20px] bg-[#66B3AD] z-0"></div>
@@ -340,7 +468,7 @@ const Landing: React.FC = () => {
                 Get clear info, ratings, reviews, red flags, and AI insights to
                 help you decide with confidence.
               </div>
-              <div className="bg-[#4EA8A1DB] text-white px-[15%] sm:px-[20%] rounded-b-[32px] sm:rounded-b-[44px] w-full pt-5 sm:pt-7 pb-3 sm:pb-4 flex flex-col items-center">
+              <div className="bg-[#4EA8A1] text-white px-[15%] sm:px-[20%] rounded-b-[32px] sm:rounded-b-[44px] w-full pt-5 sm:pt-7 pb-3 sm:pb-4 flex flex-col items-center">
                 <span className="text-white font-semibold mb-2 text-center text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl">
                   See a Smart Summary with Full Details
                 </span>
@@ -427,7 +555,7 @@ const Landing: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Feature 1 */}
           <motion.div
-            className="bg-[#54B1AD] rounded-2xl p-6 sm:p-8 flex flex-col items-start gap-4 sm:gap-6 min-h-[140px] sm:min-h-[150px] group hover:scale-105 transition-all duration-300 cursor-pointer"
+            className="bg-[#4EA8A1] rounded-2xl p-6 sm:p-8 flex flex-col items-start gap-4 sm:gap-6 min-h-[140px] sm:min-h-[150px] group hover:scale-105 transition-all duration-300 cursor-pointer"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -442,7 +570,7 @@ const Landing: React.FC = () => {
           </motion.div>
           {/* Feature 2 */}
           <motion.div
-            className="bg-[#54B1AD] rounded-2xl p-6 sm:p-8 flex flex-col items-start gap-4 sm:gap-6 min-h-[140px] sm:min-h-[150px] group hover:scale-105 transition-all duration-300 cursor-pointer"
+            className="bg-[#4EA8A1] rounded-2xl p-6 sm:p-8 flex flex-col items-start gap-4 sm:gap-6 min-h-[140px] sm:min-h-[150px] group hover:scale-105 transition-all duration-300 cursor-pointer"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -457,7 +585,7 @@ const Landing: React.FC = () => {
           </motion.div>
           {/* Feature 3 */}
           <motion.div
-            className="bg-[#54B1AD] rounded-2xl p-6 sm:p-8 flex flex-col items-start gap-4 sm:gap-6 min-h-[140px] sm:min-h-[150px] group hover:scale-105 transition-all duration-300 cursor-pointer"
+            className="bg-[#4EA8A1] rounded-2xl p-6 sm:p-8 flex flex-col items-start gap-4 sm:gap-6 min-h-[140px] sm:min-h-[150px] group hover:scale-105 transition-all duration-300 cursor-pointer"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -472,7 +600,7 @@ const Landing: React.FC = () => {
           </motion.div>
           {/* Feature 4 */}
           <motion.div
-            className="bg-[#54B1AD] rounded-2xl p-6 sm:p-8 flex flex-col items-start gap-4 sm:gap-6 min-h-[140px] sm:min-h-[150px] group hover:scale-105 transition-all duration-300 cursor-pointer"
+            className="bg-[#4EA8A1] rounded-2xl p-6 sm:p-8 flex flex-col items-start gap-4 sm:gap-6 min-h-[140px] sm:min-h-[150px] group hover:scale-105 transition-all duration-300 cursor-pointer"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -487,7 +615,7 @@ const Landing: React.FC = () => {
           </motion.div>
           {/* Feature 5 */}
           <motion.div
-            className="bg-[#54B1AD] rounded-2xl p-6 sm:p-8 flex flex-col items-start gap-4 sm:gap-6 min-h-[140px] sm:min-h-[150px] group hover:scale-105 transition-all duration-300 cursor-pointer"
+            className="bg-[#4EA8A1] rounded-2xl p-6 sm:p-8 flex flex-col items-start gap-4 sm:gap-6 min-h-[140px] sm:min-h-[150px] group hover:scale-105 transition-all duration-300 cursor-pointer"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -502,7 +630,7 @@ const Landing: React.FC = () => {
           </motion.div>
           {/* Feature 6 */}
           <motion.div
-            className="bg-[#54B1AD] rounded-2xl p-6 sm:p-8 flex flex-col items-start gap-4 sm:gap-6 min-h-[140px] sm:min-h-[150px] group hover:scale-105 transition-all duration-300 cursor-pointer"
+            className="bg-[#4EA8A1] rounded-2xl p-6 sm:p-8 flex flex-col items-start gap-4 sm:gap-6 min-h-[140px] sm:min-h-[150px] group hover:scale-105 transition-all duration-300 cursor-pointer"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -519,7 +647,7 @@ const Landing: React.FC = () => {
       </motion.section>
 
       <motion.section
-        className="w-full px-4 sm:px-6 md:px-8 lg:px-[10%] py-12 sm:py-16 md:py-20 flex flex-col items-start justify-center"
+        className="w-full px-4 sm:px-6 md:px-8 lg:px-[10%] bg-[#E5E5E566] py-12 sm:py-16 md:py-20 flex flex-col items-start justify-center"
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.2 }}
@@ -536,8 +664,7 @@ const Landing: React.FC = () => {
           </Text>
         </motion.div>
         <motion.div
-          className="w-full rounded-2xl sm:rounded-3xl border border-[#E2E4E8] bg-white p-6 sm:p-8 md:p-12 flex flex-col gap-6 sm:gap-8"
-          style={{ boxShadow: "0px 4px 4px 0px #00000040" }}
+          className="w-full rounded-2xl sm:rounded-3xl border border-[#E2E4E8] p-6 sm:p-8 md:p-12 flex flex-col gap-6 sm:gap-8"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -552,7 +679,7 @@ const Landing: React.FC = () => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.2 }}
               >
-                <div className="flex-1 min-w-[240px] sm:min-w-[260px] bg-white rounded-xl sm:rounded-2xl border border-[#D1D5DB] p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:scale-105">
+                <div className="flex-1 min-w-[240px] sm:min-w-[260px] bg-[#E5E5E566] rounded-xl sm:rounded-2xl border border-[#D1D5DB] p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:scale-105">
                   <div>
                     <div className="font-bold text-lg sm:text-xl mb-3 sm:mb-4 text-inda-dark">
                       Basic Summary
@@ -578,7 +705,7 @@ const Landing: React.FC = () => {
               </motion.div>
               {/* Deep Report */}
               <motion.div
-                className="flex-1 min-w-[240px] sm:min-w-[260px] bg-white rounded-xl sm:rounded-2xl border border-[#D1D5DB] p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:scale-105"
+                className="flex-1 min-w-[240px] sm:min-w-[260px] bg-[#E5E5E566] rounded-xl sm:rounded-2xl border border-[#D1D5DB] p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:scale-105"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -630,7 +757,7 @@ const Landing: React.FC = () => {
               </motion.div>
               {/* Pro Access */}
               <motion.div
-                className="flex-1 min-w-[240px] sm:min-w-[260px] bg-white rounded-xl sm:rounded-2xl border border-[#D1D5DB] p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:scale-105"
+                className="flex-1 min-w-[240px] sm:min-w-[260px] bg-[#E5E5E566] rounded-xl sm:rounded-2xl border border-[#D1D5DB] p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:scale-105"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -707,7 +834,7 @@ const Landing: React.FC = () => {
         transition={{ duration: 0.8, ease: "easeOut" }}
       >
         <motion.div
-          className="relative w-[95%] mx-auto rounded-[48px] sm:rounded-[64px] bg-[#54B1AD] flex flex-col items-center justify-center px-4 sm:px-6 md:px-8"
+          className="relative w-[95%] mx-auto overflow-hidden rounded-[48px] sm:rounded-[64px] bg-[#E5E5E599] flex flex-col items-center justify-center px-4 sm:px-6 md:px-8"
           style={{
             minHeight: 450,
             border: "1.5px solid #fff",
@@ -721,14 +848,14 @@ const Landing: React.FC = () => {
           {/* Thin white border inside */}
           <div className="absolute inset-0 pointer-events-none">
             <div
-              className="w-full h-full rounded-[40px] sm:rounded-[56px] border border-white opacity-60 absolute top-3 sm:top-4 left-3 sm:left-4"
+              className="w-full h-full rounded-[40px] sm:rounded-[56px] border border-[#00000040] opacity-60 absolute top-3 sm:top-4 left-3 sm:left-4"
               style={{ zIndex: 1 }}
             ></div>
           </div>
           {/* Main content */}
           <div className="relative z-10 flex flex-col items-center justify-center w-full h-full py-12 sm:py-16">
             <motion.h2
-              className="text-white text-center font-extrabold text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl leading-tight mb-8 sm:mb-10"
+              className="text-inda-dark text-center font-extrabold text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl leading-tight mb-8 sm:mb-10"
               style={{ letterSpacing: 0 }}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -740,7 +867,7 @@ const Landing: React.FC = () => {
               that listing today!
             </motion.h2>
             <motion.button
-              className="bg-[#101820] text-white text-lg sm:text-xl md:text-2xl font-normal rounded-full px-8 sm:px-10 md:px-12 py-4 sm:py-5 mt-2 shadow-lg hover:bg-[#1a2a33] transition-all duration-300 hover:scale-105 focus:outline-none"
+              className="bg-[#4EA8A1] text-white text-lg sm:text-xl md:text-2xl font-normal rounded-full px-8 sm:px-10 md:px-12 py-4 sm:py-5 mt-2 shadow-lg hover:bg-[#1a2a33] transition-all duration-300 hover:scale-105 focus:outline-none"
               style={{ minWidth: 280 }}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -753,7 +880,7 @@ const Landing: React.FC = () => {
           {/* Chat with Us button and horizontal line */}
           <motion.button
             id="cta-chat-btn"
-            className="absolute left-4 sm:left-6 md:left-8 bottom-12 sm:bottom-16 bg-[#101820] text-white text-base sm:text-lg md:text-xl font-normal rounded-full px-6 sm:px-8 md:px-10 py-3 sm:py-4 shadow-lg hover:bg-[#1a2a33] transition-all duration-300 hover:scale-105 focus:outline-none"
+            className="absolute left-4 sm:left-6 md:left-8 bottom-12 sm:bottom-16 bg-[#4EA8A1] text-white text-base sm:text-lg md:text-xl font-normal rounded-full px-6 sm:px-8 md:px-10 py-3 sm:py-4 shadow-lg hover:bg-[#1a2a33] transition-all duration-300 hover:scale-105 focus:outline-none"
             style={{ minWidth: 200, zIndex: 10 }}
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
@@ -764,7 +891,7 @@ const Landing: React.FC = () => {
           </motion.button>
           {/* Thin horizontal line starting beside Chat with Us button */}
           <motion.div
-            className="absolute bottom-12 sm:bottom-16 bg-white opacity-60 h-px hidden sm:block"
+            className="absolute bottom-12 sm:bottom-16 bg-[#00000040] opacity-60 h-px hidden sm:block"
             style={{
               left: `calc(24px + 200px + 2rem)`, // left + minWidth + padding
               right: 0,

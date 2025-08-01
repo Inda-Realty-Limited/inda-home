@@ -1,7 +1,9 @@
 import { register, RegisterPayload } from "@/api/auth";
 import { Button, Container, Footer, Input, Navbar } from "@/components";
 import { useToast } from "@/components/ToastProvider";
+import { setToken } from "@/helpers";
 import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import {
@@ -26,6 +28,9 @@ const Signup: React.FC = () => {
   const [lookingToDo, setLookingToDo] = useState("");
   const [hearAboutUs, setHearAboutUs] = useState("");
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchType, setSearchType] = useState("");
+  const router = useRouter();
   // OTP state
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const otpInputs = Array.from({ length: 6 }, (_, i) =>
@@ -34,6 +39,14 @@ const Signup: React.FC = () => {
   const [otpLoading, setOtpLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const toast = useToast();
+
+  useEffect(() => {
+    if (router.isReady) {
+      const { q, type } = router.query;
+      setSearchQuery((q as string) || "");
+      setSearchType((type as string) || "");
+    }
+  }, [router.isReady, router.query]);
 
   const useRegisterMutation = () =>
     useMutation({
@@ -397,7 +410,13 @@ const Signup: React.FC = () => {
                 <span className="text-xs sm:text-sm text-gray-600 mt-4 sm:mt-6 text-center">
                   Already have an account?{" "}
                   <a
-                    href="/auth/signin"
+                    href={`/auth/signin${
+                      searchQuery
+                        ? `?q=${encodeURIComponent(
+                            searchQuery
+                          )}&type=${searchType}`
+                        : ""
+                    }`}
                     className="text-[#4EA8A1] font-semibold hover:underline transition-all duration-200"
                   >
                     Log in
@@ -440,9 +459,25 @@ const Signup: React.FC = () => {
                       return;
                     }
                     try {
-                      await verifyOtpApi({ email, code });
+                      const response = await verifyOtpApi({ email, code });
                       setOtpLoading(false);
                       toast.showToast("Email verified!", 2000, "success");
+
+                      // If response includes token, store it and redirect
+                      if (response?.token) {
+                        setToken(response.token);
+                        setTimeout(() => {
+                          if (searchQuery) {
+                            router.push(
+                              `/result?q=${encodeURIComponent(
+                                searchQuery
+                              )}&type=${searchType}`
+                            );
+                          } else {
+                            router.push("/");
+                          }
+                        }, 800);
+                      }
                     } catch (err: any) {
                       setOtpLoading(false);
                       toast.showToast(

@@ -1,8 +1,16 @@
-import { getToken } from "@/helpers";
+import { getToken, removeToken } from "@/helpers";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import React, { useState } from "react";
-import { FiBell, FiMenu, FiUser, FiX } from "react-icons/fi";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  FiBell,
+  FiChevronDown,
+  FiLogOut,
+  FiMenu,
+  FiSettings,
+  FiUser,
+  FiX,
+} from "react-icons/fi";
 import Button from "../base/Button";
 import XStack from "../base/XStack";
 
@@ -14,6 +22,34 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
   const router = useRouter();
   const isLoggedIn = typeof window !== "undefined" && !!getToken();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
+  const profileDropdownRef = useRef<HTMLDivElement>(null);
+
+  const handleLogout = () => {
+    if (typeof window !== "undefined") {
+      removeToken();
+      router.push("/");
+      setShowLogoutConfirm(false);
+      setMobileMenuOpen(false);
+      setProfileDropdownOpen(false);
+    }
+  };
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        profileDropdownRef.current &&
+        !profileDropdownRef.current.contains(event.target as Node)
+      ) {
+        setProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   if (isLoggedIn) {
     return (
@@ -45,17 +81,70 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
                 Notifications
               </span>
             </div>
-            <div className="flex items-center gap-3 cursor-pointer select-none group hover:bg-white/5 rounded-xl px-3 py-2 transition-all duration-200">
-              <div className="p-2 rounded-lg bg-white/5 group-hover:bg-white/10 transition-all duration-200">
-                <FiUser
-                  size={20}
+
+            {/* Profile Dropdown */}
+            <div className="relative" ref={profileDropdownRef}>
+              <div
+                className="flex items-center gap-3 cursor-pointer select-none group hover:bg-white/5 rounded-xl px-3 py-2 transition-all duration-200"
+                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+              >
+                <div className="p-2 rounded-lg bg-white/5 group-hover:bg-white/10 transition-all duration-200">
+                  <FiUser
+                    size={20}
+                    color="#F9F9F9"
+                    className="group-hover:scale-110 transition-transform duration-200"
+                  />
+                </div>
+                <span className="text-white text-base font-medium group-hover:text-white/90 transition-colors duration-200">
+                  Profile
+                </span>
+                <FiChevronDown
+                  size={16}
                   color="#F9F9F9"
-                  className="group-hover:scale-110 transition-transform duration-200"
+                  className={`transition-transform duration-200 ${
+                    profileDropdownOpen ? "rotate-180" : ""
+                  }`}
                 />
               </div>
-              <span className="text-white text-base font-medium group-hover:text-white/90 transition-colors duration-200">
-                Profile
-              </span>
+
+              {/* Profile Dropdown Menu */}
+              {profileDropdownOpen && (
+                <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border border-gray-200 z-50">
+                  <div className="py-2">
+                    <button
+                      onClick={() => {
+                        setProfileDropdownOpen(false);
+                        // Add navigation to profile page here
+                      }}
+                      className="flex items-center w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+                    >
+                      <FiUser className="w-4 h-4 mr-3" />
+                      View Profile
+                    </button>
+                    <button
+                      onClick={() => {
+                        setProfileDropdownOpen(false);
+                        // Add navigation to settings page here
+                      }}
+                      className="flex items-center w-full px-4 py-3 text-left text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+                    >
+                      <FiSettings className="w-4 h-4 mr-3" />
+                      Account Settings
+                    </button>
+                    <hr className="my-1 border-gray-200" />
+                    <button
+                      onClick={() => {
+                        setProfileDropdownOpen(false);
+                        setShowLogoutConfirm(true);
+                      }}
+                      className="flex items-center w-full px-4 py-3 text-left text-red-600 hover:bg-red-50 transition-colors duration-200"
+                    >
+                      <FiLogOut className="w-4 h-4 mr-3" />
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-3 cursor-pointer select-none group hover:bg-white/5 rounded-xl px-3 py-2 transition-all duration-200">
               <div className="p-2 rounded-lg bg-white/5 group-hover:bg-white/10 transition-all duration-200">
@@ -154,6 +243,46 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
                     My Portfolio
                   </span>
                 </div>
+                <div
+                  className="flex flex-col items-center gap-4 cursor-pointer select-none p-6 rounded-2xl bg-red-500/10 hover:bg-red-500/20 border border-red-500/20 hover:border-red-500/30 transition-all duration-200 hover:scale-105 w-64"
+                  onClick={() => setShowLogoutConfirm(true)}
+                >
+                  <div className="p-3 rounded-xl bg-red-500/20">
+                    <FiLogOut size={24} color="#ef4444" />
+                  </div>
+                  <span className="text-red-400 text-base font-medium">
+                    Logout
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Logout Confirmation Modal */}
+        {showLogoutConfirm && (
+          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center px-4">
+            <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+              <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                Confirm Logout
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Are you sure you want to logout? You'll need to sign in again to
+                access your account.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors duration-200"
+                >
+                  Logout
+                </button>
               </div>
             </div>
           </div>
