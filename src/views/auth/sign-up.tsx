@@ -84,50 +84,62 @@ const Signup: React.FC = () => {
   }, []);
 
   const lookingToDoOptions = [
-    { value: "buy", label: "Buy a home to live in", icon: <FiHome /> },
-    { value: "invest", label: "Invest in Property", icon: <FiBriefcase /> },
-    { value: "agent", label: "I am an agent or developer", icon: <FiUser /> },
     {
-      value: "bank",
+      value: "Buy a home to live in",
+      label: "Buy a home to live in",
+      icon: <FiHome />,
+    },
+    {
+      value: "Invest in Property",
+      label: "Invest in Property",
+      icon: <FiBriefcase />,
+    },
+    {
+      value: "I am an agent or developer",
+      label: "I am an agent or developer",
+      icon: <FiUser />,
+    },
+    {
+      value: "I work with a bank or mortgage company",
       label: "I work with a bank or mortgage company",
       icon: <FiTag />,
     },
-    { value: "browse", label: "Just Browsing", icon: <FiGlobe /> },
+    { value: "Just Browsing", label: "Just Browsing", icon: <FiGlobe /> },
   ];
 
   const hearAboutUsOptions = [
     {
-      value: "search",
+      value: "Search Engines: Google, Bing, etc.",
       label: "Search Engines: Google, Bing, etc.",
       icon: <FiSearch />,
     },
     {
-      value: "social",
+      value: "Social Media: Facebook, Instagram, Twitter, YouTube, etc.",
       label: "Social Media: Facebook, Instagram, Twitter, YouTube, etc.",
       icon: <FiUsers />,
     },
     {
-      value: "ads",
+      value: "Online Ads: Google Ads, social media ads, etc.",
       label: "Online Ads: Google Ads, social media ads, etc.",
       icon: <FiTag />,
     },
     {
-      value: "referral",
+      value: "Referral: A friend, family member, or colleague",
       label: "Referral: A friend, family member, or colleague",
       icon: <FiUser />,
     },
     {
-      value: "website",
+      value: "Website: Direct visit to our website",
       label: "Website: Direct visit to our website",
       icon: <FiGlobe />,
     },
-    { value: "newsletter", label: "Email Newsletter", icon: <FiMail /> },
+    { value: "Email Newsletter", label: "Email Newsletter", icon: <FiMail /> },
     {
-      value: "print",
+      value: "Print Ads: Newspaper, magazine, or flyer",
       label: "Print Ads: Newspaper, magazine, or flyer",
       icon: <FiTag />,
     },
-    { value: "other", label: "Other", icon: <FiTag /> },
+    { value: "Other", label: "Other", icon: <FiTag /> },
   ];
 
   return (

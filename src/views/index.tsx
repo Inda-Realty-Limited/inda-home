@@ -123,62 +123,46 @@ const Landing: React.FC = () => {
     >
       <Navbar />
       <motion.section
-        className="flex flex-col bg-[#f9f9f9] items-center justify-center h-[90vh] relative z-10 px-4 sm:px-6 lg:px-8"
+        className="flex flex-col bg-[#f9f9f9] items-center justify-center min-h-[70vh] relative z-10 px-4 sm:px-6 lg:px-8 py-8"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
       >
-        <motion.div
-          className="flex flex-col bg-[#E5E5E54D] items-center justify-center h-[60%] sm:h-[50%] rounded-[24px] sm:rounded-[32px] relative z-10 px-3 sm:px-6 lg:px-8"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-        >
+        <div className="flex flex-col items-center justify-center w-full max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-center mb-6"
+            className="text-center mb-8 sm:mb-12"
           >
-            <h1 className="font-extrabold text-center text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl mb-3 sm:mb-4 text-[#101820] leading-[0.9]">
+            <h1 className="font-extrabold text-center text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl mb-6 sm:mb-8 text-[#101820] leading-[0.9]">
               Know before you buy
             </h1>
-          </motion.div>
-          <motion.div
-            className="text-center mb-8 sm:mb-12"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-          >
-            <p className="font-medium text-center text-base sm:text-lg md:text-xl lg:text-2xl text-[#101820]/80 tracking-wide max-w-4xl mx-auto px-2 sm:px-4">
+            <p className="font-medium text-center text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl text-[#101820]/80 tracking-wide max-w-5xl mx-auto px-2 sm:px-4">
               Inda reveals hidden risks, fake prices, and shady listings — in
               seconds.
             </p>
           </motion.div>
           <motion.div
-            className="flex items-center justify-center w-full px-2 sm:px-4 lg:px-8"
+            className="flex items-center justify-center w-full max-w-4xl mx-auto"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
           >
             {/* Dropdown Button */}
-            <div
-              className="relative w-full max-w-sm sm:max-w-2xl"
-              ref={dropdownRef}
-            >
+            <div className="relative w-full max-w-3xl" ref={dropdownRef}>
               <div className="flex flex-col sm:flex-row items-center gap-0 w-full">
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center bg-white border border-[#4EA8A1] rounded-t-[16px] sm:rounded-l-[16px] sm:rounded-tr-none pl-4 sm:pl-6 pr-3 sm:pr-4 py-3 sm:py-4 min-w-[160px] sm:min-w-[180px] w-full sm:w-auto hover:bg-gray-50 transition-colors duration-200"
+                  className="flex items-center bg-white border border-[#4EA8A1] rounded-t-[20px] sm:rounded-l-[20px] sm:rounded-tr-none pl-6 sm:pl-8 pr-4 sm:pr-6 py-4 sm:py-5 min-w-[200px] sm:min-w-[220px] w-full sm:w-auto hover:bg-gray-50 transition-colors duration-200"
                 >
-                  <selectedSearchType.icon className="w-4 h-4 text-[#4EA8A1] mr-2" />
-                  <span className="text-[#101820] font-medium text-base sm:text-lg whitespace-nowrap mr-2">
+                  <selectedSearchType.icon className="w-5 h-5 text-[#4EA8A1] mr-3" />
+                  <span className="text-[#101820] font-medium text-lg sm:text-xl whitespace-nowrap mr-3">
                     {selectedSearchType.label}
                   </span>
                   <svg
-                    className={`w-4 h-4 text-[#101820] transition-transform duration-200 ml-auto ${
+                    className={`w-5 h-5 text-[#101820] transition-transform duration-200 ml-auto ${
                       isDropdownOpen ? "rotate-180" : ""
                     }`}
                     fill="none"
@@ -206,14 +190,14 @@ const Landing: React.FC = () => {
                       }
                     }}
                     placeholder={selectedSearchType.placeholder}
-                    className="w-full border border-t-0 sm:border-t border-l sm:border-l-0 border-[#4EA8A1] rounded-b-[16px] sm:rounded-r-[16px] sm:rounded-bl-none pl-4 sm:pl-6 pr-12 sm:pr-16 py-3 sm:py-4 text-base sm:text-lg placeholder:text-[#9CA3AF] font-medium text-[#101820] focus:outline-none bg-white transition-all duration-200 focus:shadow-lg"
+                    className="w-full border border-t-0 sm:border-t border-l sm:border-l-0 border-[#4EA8A1] rounded-b-[20px] sm:rounded-r-[20px] sm:rounded-bl-none pl-6 sm:pl-8 pr-16 sm:pr-20 py-4 sm:py-5 text-lg sm:text-xl placeholder:text-[#9CA3AF] font-medium text-[#101820] focus:outline-none bg-white transition-all duration-200 focus:shadow-lg"
                   />
                   {/* Search Button inside the input */}
                   <button
                     onClick={handleSearch}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-[#4EA8A1] hover:bg-[#4EA8A1] rounded-full p-2 transition-all duration-200 hover:shadow-lg hover:scale-105"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-[#4EA8A1] hover:bg-[#3d9691] rounded-full p-3 transition-all duration-200 hover:shadow-lg hover:scale-105"
                   >
-                    <BiSearchAlt2 className="text-white text-lg sm:text-xl" />
+                    <BiSearchAlt2 className="text-white text-xl sm:text-2xl" />
                   </button>
                 </div>
               </div>
@@ -226,7 +210,7 @@ const Landing: React.FC = () => {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -10, scale: 0.95 }}
                     transition={{ duration: 0.2 }}
-                    className="absolute top-full left-0 right-0 mt-2 w-full bg-white border border-[#4EA8A1] rounded-2xl shadow-lg z-50 overflow-hidden"
+                    className="absolute top-full left-0 right-0 mt-3 w-full bg-white border border-[#4EA8A1] rounded-2xl shadow-xl z-50 overflow-hidden"
                   >
                     <div className="grid grid-cols-1 sm:grid-cols-3">
                       {searchTypes.map((type, index) => (
@@ -237,7 +221,7 @@ const Landing: React.FC = () => {
                             setIsDropdownOpen(false);
                             setSearch("");
                           }}
-                          className={`text-left p-4 hover:bg-[#4EA8A1]/10 transition-colors duration-200 ${
+                          className={`text-left p-5 hover:bg-[#4EA8A1]/10 transition-colors duration-200 ${
                             index < searchTypes.length - 1
                               ? "border-b sm:border-b-0"
                               : ""
@@ -252,13 +236,13 @@ const Landing: React.FC = () => {
                               : "text-[#101820]"
                           }`}
                         >
-                          <div className="flex items-center mb-1">
-                            <type.icon className="w-4 h-4 text-[#4EA8A1] mr-2 flex-shrink-0" />
-                            <div className="font-medium text-sm lg:text-base">
+                          <div className="flex items-center mb-2">
+                            <type.icon className="w-5 h-5 text-[#4EA8A1] mr-3 flex-shrink-0" />
+                            <div className="font-medium text-base lg:text-lg">
                               {type.label}
                             </div>
                           </div>
-                          <div className="text-xs lg:text-sm text-gray-600 mt-1 leading-tight">
+                          <div className="text-sm lg:text-base text-gray-600 mt-1 leading-tight">
                             {type.description}
                           </div>
                         </button>
@@ -269,7 +253,7 @@ const Landing: React.FC = () => {
               </AnimatePresence>
             </div>
           </motion.div>
-        </motion.div>
+        </div>
       </motion.section>
 
       <motion.section
