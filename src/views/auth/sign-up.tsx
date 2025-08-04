@@ -20,7 +20,7 @@ import {
 } from "react-icons/fi";
 
 const Signup: React.FC = () => {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(3);
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -450,6 +450,38 @@ const Signup: React.FC = () => {
                     {email}
                   </span>
                 </p>
+
+                {/* Aesthetic spam check info */}
+                <div className="w-full mb-6 sm:mb-8 p-4 sm:p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 mt-0.5">
+                      <svg
+                        className="w-full h-full text-blue-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-blue-900 text-sm sm:text-base mb-1">
+                        Don't see the code?
+                      </h4>
+                      <p className="text-blue-700 text-xs sm:text-sm leading-relaxed">
+                        Check your{" "}
+                        <span className="font-medium">spam or junk folder</span>
+                        . Sometimes verification emails end up there. The email
+                        is from <span className="font-medium">Inda</span>.
+                      </p>
+                    </div>
+                  </div>
+                </div>
                 <form
                   className="w-full flex flex-col gap-5 sm:gap-7"
                   onSubmit={async (e) => {
