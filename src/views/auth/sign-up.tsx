@@ -20,7 +20,7 @@ import {
 } from "react-icons/fi";
 
 const Signup: React.FC = () => {
-  const [step, setStep] = useState(3);
+  const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
