@@ -79,6 +79,7 @@ const Landing: React.FC = () => {
   const [search, setSearch] = useState("");
   const [selectedSearchType, setSelectedSearchType] = useState(searchTypes[0]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isSearchActive, setIsSearchActive] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const filtered = sampleData.filter((item) =>
@@ -150,61 +151,163 @@ const Landing: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
           >
-            {/* Dropdown Button */}
+            {/* Dynamic Search Interface */}
             <div className="relative w-full max-w-3xl" ref={dropdownRef}>
-              <div className="flex flex-col sm:flex-row items-center gap-0 w-full">
-                <button
-                  onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center bg-white border border-[#4EA8A1] rounded-t-[20px] sm:rounded-l-[20px] sm:rounded-tr-none pl-6 sm:pl-8 pr-4 sm:pr-6 py-4 sm:py-5 min-w-[200px] sm:min-w-[220px] w-full sm:w-auto hover:bg-gray-50 transition-colors duration-200"
-                >
-                  <selectedSearchType.icon className="w-5 h-5 text-[#4EA8A1] mr-3" />
-                  <span className="text-[#101820] font-medium text-lg sm:text-xl whitespace-nowrap mr-3">
-                    {selectedSearchType.label}
-                  </span>
-                  <svg
-                    className={`w-5 h-5 text-[#101820] transition-transform duration-200 ml-auto ${
-                      isDropdownOpen ? "rotate-180" : ""
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
+              <AnimatePresence mode="wait">
+                {!isSearchActive ? (
+                  /* Initial State: Dropdown + Input */
+                  <motion.div
+                    key="dropdown-mode"
+                    initial={{ opacity: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.3 }}
+                    className="flex flex-col sm:flex-row items-center gap-0 w-full"
                   >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </button>
+                    <button
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                      className="flex items-center bg-white border border-[#4EA8A1] rounded-t-[20px] sm:rounded-l-[20px] sm:rounded-tr-none pl-6 sm:pl-8 pr-4 sm:pr-6 py-4 sm:py-5 min-w-[200px] sm:min-w-[220px] w-full sm:w-auto hover:bg-gray-50 transition-colors duration-200"
+                    >
+                      <selectedSearchType.icon className="w-5 h-5 text-[#4EA8A1] mr-3" />
+                      <span className="text-[#101820] font-medium text-lg sm:text-xl whitespace-nowrap mr-3">
+                        {selectedSearchType.label}
+                      </span>
+                      <svg
+                        className={`w-5 h-5 text-[#101820] transition-transform duration-200 ml-auto ${
+                          isDropdownOpen ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 9l-7 7-7-7"
+                        />
+                      </svg>
+                    </button>
 
-                {/* Search Input with embedded Search Button */}
-                <div className="relative flex-1 w-full">
-                  <Input
-                    type="text"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        handleSearch();
-                      }
-                    }}
-                    placeholder={selectedSearchType.placeholder}
-                    className="w-full border border-t-0 sm:border-t border-l sm:border-l-0 border-[#4EA8A1] rounded-b-[20px] sm:rounded-r-[20px] sm:rounded-bl-none pl-6 sm:pl-8 pr-16 sm:pr-20 py-4 sm:py-5 text-lg sm:text-xl placeholder:text-[#9CA3AF] font-medium text-[#101820] focus:outline-none bg-white transition-all duration-200 focus:shadow-lg"
-                  />
-                  {/* Search Button inside the input */}
-                  <button
-                    onClick={handleSearch}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-[#4EA8A1] hover:bg-[#3d9691] rounded-full p-3 transition-all duration-200 hover:shadow-lg hover:scale-105"
+                    {/* Initial Input */}
+                    <div className="relative flex-1 w-full">
+                      <Input
+                        type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        onFocus={() => setIsSearchActive(true)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            handleSearch();
+                          }
+                        }}
+                        placeholder={selectedSearchType.placeholder}
+                        className="w-full border border-t-0 sm:border-t border-l sm:border-l-0 border-[#4EA8A1] rounded-b-[20px] sm:rounded-r-[20px] sm:rounded-bl-none pl-6 sm:pl-8 pr-16 sm:pr-20 py-4 sm:py-5 text-lg sm:text-xl placeholder:text-[#9CA3AF] font-medium text-[#101820] focus:outline-none bg-white transition-all duration-200 focus:shadow-lg"
+                      />
+                      {/* Search Button inside the input */}
+                      <button
+                        onClick={handleSearch}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-[#4EA8A1] hover:bg-[#3d9691] rounded-full p-3 transition-all duration-200 hover:shadow-lg hover:scale-105"
+                      >
+                        <BiSearchAlt2 className="text-white text-xl sm:text-2xl" />
+                      </button>
+                    </div>
+                  </motion.div>
+                ) : (
+                  /* Active State: Beautiful Textarea */
+                  <motion.div
+                    key="textarea-mode"
+                    initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                    className="relative w-full group"
                   >
-                    <BiSearchAlt2 className="text-white text-xl sm:text-2xl" />
-                  </button>
-                </div>
-              </div>
+                    {/* Search Type Indicator */}
+                    <div className="flex items-center mb-3 px-2">
+                      <selectedSearchType.icon className="w-4 h-4 text-[#4EA8A1] mr-2" />
+                      <span className="text-sm font-medium text-[#4EA8A1]">
+                        {selectedSearchType.label}
+                      </span>
+                      <button
+                        onClick={() => {
+                          setIsSearchActive(false);
+                          setIsDropdownOpen(true);
+                        }}
+                        className="ml-auto text-xs text-gray-500 hover:text-[#4EA8A1] transition-colors duration-200"
+                      >
+                        Change
+                      </button>
+                    </div>
+
+                    {/* Beautiful Textarea */}
+                    <div className="relative">
+                      <textarea
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSearch();
+                          }
+                          if (e.key === "Escape") {
+                            setIsSearchActive(false);
+                          }
+                        }}
+                        placeholder={selectedSearchType.placeholder}
+                        rows={3}
+                        autoFocus
+                        className="w-full border-2 border-[#4EA8A1] rounded-2xl pl-6 sm:pl-8 pr-20 sm:pr-24 py-5 sm:py-6 text-lg sm:text-xl placeholder:text-[#9CA3AF] font-medium text-[#101820] focus:outline-none bg-white/95 backdrop-blur-sm transition-all duration-300 focus:shadow-2xl focus:border-[#3d9691] focus:bg-white min-h-[120px] max-h-[200px] leading-relaxed resize-none overflow-y-auto scrollbar-thin scrollbar-thumb-[#4EA8A1]/20 scrollbar-track-transparent hover:scrollbar-thumb-[#4EA8A1]/40"
+                        style={{
+                          lineHeight: "1.6",
+                          fontFamily: "inherit",
+                        }}
+                      />
+
+                      {/* Enhanced Search Button */}
+                      <button
+                        onClick={handleSearch}
+                        disabled={!search.trim()}
+                        className={`absolute right-4 bottom-4 rounded-2xl px-6 py-3.5 transition-all duration-300 flex items-center gap-3 font-medium text-base ${
+                          search.trim()
+                            ? "bg-[#4EA8A1] hover:bg-[#3d9691] text-white shadow-lg hover:shadow-2xl hover:scale-105 active:scale-95 border border-[#4EA8A1]"
+                            : "bg-gray-50 text-gray-400 cursor-not-allowed border border-gray-200"
+                        }`}
+                      >
+                        <BiSearchAlt2 className="text-xl" />
+                        <span className="hidden sm:inline">Search</span>
+                      </button>
+
+                      {/* Enhanced focus effects */}
+                      <div className="absolute inset-0 rounded-2xl pointer-events-none transition-all duration-300 group-focus-within:ring-2 group-focus-within:ring-[#4EA8A1]/30 group-focus-within:ring-offset-2"></div>
+
+                      {/* Subtle gradient overlay */}
+                      <div className="absolute inset-0 rounded-2xl pointer-events-none opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 bg-gradient-to-br from-[#4EA8A1]/5 via-transparent to-[#4EA8A1]/10"></div>
+                    </div>
+
+                    {/* Mobile-friendly helper text */}
+                    <div className="flex items-center justify-between mt-3 px-2">
+                      <span className="text-xs text-gray-500 hidden sm:inline">
+                        Press Shift+Enter for new line, Enter to search
+                      </span>
+                      <span className="text-xs text-gray-500 sm:hidden">
+                        Tap Enter to search
+                      </span>
+                      <button
+                        onClick={() => setIsSearchActive(false)}
+                        className="text-xs text-gray-400 hover:text-[#4EA8A1] transition-colors duration-200 sm:hidden"
+                      >
+                        Back
+                      </button>
+                      <span className="text-xs text-gray-400 hidden sm:inline">
+                        Esc to go back
+                      </span>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
               {/* Dropdown Menu */}
               <AnimatePresence>
-                {isDropdownOpen && (
+                {isDropdownOpen && !isSearchActive && (
                   <motion.div
                     initial={{ opacity: 0, y: -10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -220,6 +323,7 @@ const Landing: React.FC = () => {
                             setSelectedSearchType(type);
                             setIsDropdownOpen(false);
                             setSearch("");
+                            setIsSearchActive(true);
                           }}
                           className={`text-left p-5 hover:bg-[#4EA8A1]/10 transition-colors duration-200 ${
                             index < searchTypes.length - 1
