@@ -1,7 +1,7 @@
 import { getToken } from "@/helpers";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FiBell, FiMenu, FiUser, FiX } from "react-icons/fi";
 import Button from "../base/Button";
 import XStack from "../base/XStack";
@@ -12,7 +12,14 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ variant }) => {
   const router = useRouter();
-  const isLoggedIn = typeof window !== "undefined" && !!getToken();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  useEffect(() => {
+    const token = getToken();
+    if (token) {
+      setIsLoggedIn(true);
+    }
+  }, []);
+  // const isLoggedIn = typeof window !== "undefined" && !!getToken();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   if (isLoggedIn) {

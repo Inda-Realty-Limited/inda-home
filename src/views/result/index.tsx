@@ -1,6 +1,7 @@
 import { Button, Container, Footer, Navbar } from "@/components";
 import { dummyResultData } from "@/data/resultData";
 import { useState } from "react";
+import { IoIosInformationCircle } from "react-icons/io";
 import {
   FaBuilding,
   FaCheckCircle,
@@ -86,11 +87,103 @@ const Result = () => {
     <Container noPadding className="min-h-screen bg-[#F9F9F9] text-inda-dark">
       <Navbar />
       <main className="flex-1 py-6">
+
         <div className="w-full md:w-4/5 md:mx-auto space-y-6">
+        <div className="w-full px-4 sm:px-6"><h1 className="text-2xl font-semibold">Hi Ola,</h1>
+        <p>Here's what we found based on your search</p></div>
+
+        
+
+ {/* Inda Verdict */}
+          <div className="w-full px-4 sm:px-6">
+            <div className="rounded-lg">
+              <div className="bg-inda-teal text-white p-5 rounded-xl mb-5">
+              <h3 className="text-xl font-bold mb-3 text-white">
+                Inda Verdict
+              </h3>
+
+              {/* Warning Message */}
+              <div className="flex items-center gap-3 mb-6">
+                <FaExclamationTriangle className="text-yellow-300 text-lg" />
+                <span className="text-base font-medium">
+                  Overpriced. Moderate Legal Risk
+                </span>
+              </div></div>
+
+              {/* Trust Score Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-base font-medium">Inda Trust Score <IoIosInformationCircle size={15} className="text-inda-teal inline-block" /></p>
+                  <div className="text-3xl font-bold">
+                    {dummyResultData.indaTrustScore}%
+                  </div>
+                </div>
+
+                <div className="w-full bg-white/20 rounded-full h-4">
+                  <div
+                    className="bg-inda-teal h-4 rounded-full transition-all duration-500"
+                    style={{ width: `${dummyResultData.indaTrustScore}%` }}
+                  ></div>
+                </div>
+
+                {/* Tooltip Section */}
+                <div className="mt-6 pt-4 border-t border-white/20">
+                  <div
+                    className="flex items-center justify-between cursor-pointer"
+                    onClick={() => setIsTooltipOpen(!isTooltipOpen)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+                        <FaInfoCircle className="text-white text-sm" />
+                      </div>
+                      <span className="text-base text-white/90">Tooltip</span>
+                    </div>
+                    <div className="text-white/60">
+                      {isTooltipOpen ? (
+                        <FaChevronUp className="text-sm" />
+                      ) : (
+                        <FaChevronDown className="text-sm" />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Tooltip Content */}
+                  {isTooltipOpen && (
+                    <div className="mt-4 p-4 bg-white/10 rounded-lg">
+                      <div className="space-y-3 text-sm text-white/90">
+                        <div>
+                          <h4 className="font-semibold mb-2">
+                            Trust Score Breakdown:
+                          </h4>
+                          <ul className="space-y-1 text-xs">
+                            <li>• Document Verification: 90%</li>
+                            <li>• Developer History: 85%</li>
+                            <li>• Legal Compliance: 75%</li>
+                            <li>• Market Analysis: 82%</li>
+                          </ul>
+                        </div>
+                        <div>
+                          <p className="text-xs">
+                            The Inda Trust Score is calculated using multiple
+                            data points including document authenticity,
+                            developer track record, legal compliance status, and
+                            current market conditions. A score above 80%
+                            indicates high reliability.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Property Images - Horizontal Scrollable */}
           <div className="w-full px-4 sm:px-6">
+            <h1>Gallery</h1>
             <div
-              className="flex gap-4 overflow-x-auto pb-2"
+              className="flex gap-4 overflow-x-auto py-2 "
               style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
             >
               <style jsx>{`
@@ -98,28 +191,28 @@ const Result = () => {
                   display: none;
                 }
               `}</style>
-              <div className="flex-shrink-0 w-80 h-48 md:w-96 md:h-64 lg:w-[28rem] lg:h-80 rounded-lg overflow-hidden">
+              <div className="flex-shrink-0 w-80 h-48 md:w-96 md:h-64 lg:w-[28rem] lg:h-80 rounded-xl overflow-hidden">
                 <img
                   src="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
                   alt="Modern house exterior"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover "
                 />
               </div>
-              <div className="flex-shrink-0 w-80 h-48 md:w-96 md:h-64 lg:w-[28rem] lg:h-80 rounded-lg overflow-hidden">
+              <div className="flex-shrink-0 w-80 h-48 md:w-96 md:h-64 lg:w-[28rem] lg:h-80 rounded-xl overflow-hidden">
                 <img
                   src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
                   alt="Luxury living room"
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="flex-shrink-0 w-80 h-48 md:w-96 md:h-64 lg:w-[28rem] lg:h-80 rounded-lg overflow-hidden">
+              <div className="flex-shrink-0 w-80 h-48 md:w-96 md:h-64 lg:w-[28rem] lg:h-80 rounded-xl overflow-hidden">
                 <img
                   src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
                   alt="Modern kitchen"
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div className="flex-shrink-0 w-80 h-48 md:w-96 md:h-64 lg:w-[28rem] lg:h-80 rounded-lg overflow-hidden">
+              <div className="flex-shrink-0 w-80 h-48 md:w-96 md:h-64 lg:w-[28rem] lg:h-80 rounded-xl overflow-hidden">
                 <img
                   src="https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
                   alt="Master bedroom"
@@ -454,89 +547,7 @@ const Result = () => {
             </div>
           </div>
 
-          {/* Inda Verdict */}
-          <div className="w-full px-4 sm:px-6">
-            <div className="bg-inda-teal text-white rounded-lg p-6">
-              <h3 className="text-xl font-bold mb-6 text-white">
-                Inda Verdict
-              </h3>
 
-              {/* Warning Message */}
-              <div className="flex items-center gap-3 mb-6">
-                <FaExclamationTriangle className="text-yellow-300 text-lg" />
-                <span className="text-base font-medium">
-                  Overpriced. Moderate Legal Risk
-                </span>
-              </div>
-
-              {/* Trust Score Section */}
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <p className="text-base font-medium">Inda Trust Score</p>
-                  <div className="text-3xl font-bold">
-                    {dummyResultData.indaTrustScore}%
-                  </div>
-                </div>
-
-                <div className="w-full bg-white/20 rounded-full h-4">
-                  <div
-                    className="bg-white h-4 rounded-full transition-all duration-500"
-                    style={{ width: `${dummyResultData.indaTrustScore}%` }}
-                  ></div>
-                </div>
-
-                {/* Tooltip Section */}
-                <div className="mt-6 pt-4 border-t border-white/20">
-                  <div
-                    className="flex items-center justify-between cursor-pointer"
-                    onClick={() => setIsTooltipOpen(!isTooltipOpen)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
-                        <FaInfoCircle className="text-white text-sm" />
-                      </div>
-                      <span className="text-base text-white/90">Tooltip</span>
-                    </div>
-                    <div className="text-white/60">
-                      {isTooltipOpen ? (
-                        <FaChevronUp className="text-sm" />
-                      ) : (
-                        <FaChevronDown className="text-sm" />
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Tooltip Content */}
-                  {isTooltipOpen && (
-                    <div className="mt-4 p-4 bg-white/10 rounded-lg">
-                      <div className="space-y-3 text-sm text-white/90">
-                        <div>
-                          <h4 className="font-semibold mb-2">
-                            Trust Score Breakdown:
-                          </h4>
-                          <ul className="space-y-1 text-xs">
-                            <li>• Document Verification: 90%</li>
-                            <li>• Developer History: 85%</li>
-                            <li>• Legal Compliance: 75%</li>
-                            <li>• Market Analysis: 82%</li>
-                          </ul>
-                        </div>
-                        <div>
-                          <p className="text-xs">
-                            The Inda Trust Score is calculated using multiple
-                            data points including document authenticity,
-                            developer track record, legal compliance status, and
-                            current market conditions. A score above 80%
-                            indicates high reliability.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
 
           {/* Feedback & Complaints */}
           <div className="w-full px-4 sm:px-6">
