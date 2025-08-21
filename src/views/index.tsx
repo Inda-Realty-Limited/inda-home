@@ -77,10 +77,22 @@ const searchTypes = [
 const Landing: React.FC = () => {
   const router = useRouter();
   const [search, setSearch] = useState("");
-  const [selectedSearchType, setSelectedSearchType] = useState(searchTypes[0]);
+  const [selectedSearchType, setSelectedSearchType] = useState(
+    () => searchTypes.find((t) => t.id === "link")!
+  );
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSearchActive, setIsSearchActive] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Only allow valid URLs when pasting links
+  const isValidUrl = (value: string) => {
+    try {
+      const u = new URL(value.trim());
+      return u.protocol === "http:" || u.protocol === "https:";
+    } catch {
+      return false;
+    }
+  };
 
   const filtered = sampleData.filter((item) =>
     item.name.toLowerCase().includes(search.toLowerCase())
@@ -88,6 +100,10 @@ const Landing: React.FC = () => {
 
   // Function to handle search with authentication check
   const handleSearch = () => {
+    // Only allow link-based searches for now
+    if (selectedSearchType.id !== "link" || !isValidUrl(search)) {
+      return;
+    }
     const token = getToken();
 
     if (!token) {
@@ -206,7 +222,12 @@ const Landing: React.FC = () => {
                       {/* Search Button inside the input */}
                       <button
                         onClick={handleSearch}
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 bg-[#4EA8A1] hover:bg-[#3d9691] rounded-full p-3 transition-all duration-200 hover:shadow-lg hover:scale-105"
+                        disabled={!isValidUrl(search)}
+                        className={`absolute right-3 top-1/2 transform -translate-y-1/2 rounded-full p-3 transition-all duration-200 ${
+                          isValidUrl(search)
+                            ? "bg-[#4EA8A1] hover:bg-[#3d9691] hover:shadow-lg hover:scale-105"
+                            : "bg-gray-200 cursor-not-allowed"
+                        }`}
                       >
                         <BiSearchAlt2 className="text-white text-xl sm:text-2xl" />
                       </button>
@@ -265,9 +286,9 @@ const Landing: React.FC = () => {
                       {/* Enhanced Search Button */}
                       <button
                         onClick={handleSearch}
-                        disabled={!search.trim()}
+                        disabled={!isValidUrl(search)}
                         className={`absolute right-4 bottom-4 rounded-2xl px-6 py-3.5 transition-all duration-300 flex items-center gap-3 font-medium text-base ${
-                          search.trim()
+                          isValidUrl(search)
                             ? "bg-[#4EA8A1] hover:bg-[#3d9691] text-white shadow-lg hover:shadow-2xl hover:scale-105 active:scale-95 border border-[#4EA8A1]"
                             : "bg-gray-50 text-gray-400 cursor-not-allowed border border-gray-200"
                         }`}
@@ -320,12 +341,18 @@ const Landing: React.FC = () => {
                         <button
                           key={type.id}
                           onClick={() => {
+                            if (type.id !== "link") return; // disable other types
                             setSelectedSearchType(type);
                             setIsDropdownOpen(false);
                             setSearch("");
                             setIsSearchActive(true);
                           }}
-                          className={`text-left p-5 hover:bg-[#4EA8A1]/10 transition-colors duration-200 ${
+                          disabled={type.id !== "link"}
+                          className={`text-left p-5 transition-colors duration-200 ${
+                            type.id === "link"
+                              ? "hover:bg-[#4EA8A1]/10"
+                              : "opacity-50 cursor-not-allowed"
+                          } ${
                             index < searchTypes.length - 1
                               ? "border-b sm:border-b-0"
                               : ""
