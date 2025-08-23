@@ -4,14 +4,24 @@ import { useToast } from "@/components/ToastProvider";
 import { setToken } from "@/helpers";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/router";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FiLock, FiMail } from "react-icons/fi";
 
 const SignIn: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchType, setSearchType] = useState("");
   const toast = useToast();
   const router = useRouter();
+
+  useEffect(() => {
+    if (router.isReady) {
+      const { q, type } = router.query;
+      setSearchQuery((q as string) || "");
+      setSearchType((type as string) || "");
+    }
+  }, [router.isReady, router.query]);
 
   // Store token securely using setToken helper
   const handleSuccess = (data: any) => {
@@ -19,7 +29,14 @@ const SignIn: React.FC = () => {
       setToken(data.token);
       toast.showToast("Sign in successful!", 2000, "success");
       setTimeout(() => {
-        router.push("/");
+        // If there's a search query, redirect to results, otherwise go to home
+        if (searchQuery) {
+          router.push(
+            `/result?q=${encodeURIComponent(searchQuery)}&type=${searchType}`
+          );
+        } else {
+          router.push("/");
+        }
       }, 800);
     } else {
       toast.showToast("Sign in failed: No token returned.", 2500, "error");
@@ -122,7 +139,11 @@ const SignIn: React.FC = () => {
             <span className="text-xs sm:text-sm text-gray-600 mt-4 sm:mt-6 text-center">
               Don't have an account?{" "}
               <a
-                href="/auth/signup"
+                href={`/auth/signup${
+                  searchQuery
+                    ? `?q=${encodeURIComponent(searchQuery)}&type=${searchType}`
+                    : ""
+                }`}
                 className="text-[#4EA8A1] font-semibold hover:underline transition-all duration-200"
               >
                 Sign Up

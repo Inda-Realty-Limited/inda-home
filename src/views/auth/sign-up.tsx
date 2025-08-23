@@ -1,7 +1,9 @@
 import { register, RegisterPayload } from "@/api/auth";
 import { Button, Container, Footer, Input, Navbar } from "@/components";
 import { useToast } from "@/components/ToastProvider";
+import { setToken } from "@/helpers";
 import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
 import {
@@ -26,6 +28,9 @@ const Signup: React.FC = () => {
   const [lookingToDo, setLookingToDo] = useState("");
   const [hearAboutUs, setHearAboutUs] = useState("");
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchType, setSearchType] = useState("");
+  const router = useRouter();
   // OTP state
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const otpInputs = Array.from({ length: 6 }, (_, i) =>
@@ -34,6 +39,14 @@ const Signup: React.FC = () => {
   const [otpLoading, setOtpLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
   const toast = useToast();
+
+  useEffect(() => {
+    if (router.isReady) {
+      const { q, type } = router.query;
+      setSearchQuery((q as string) || "");
+      setSearchType((type as string) || "");
+    }
+  }, [router.isReady, router.query]);
 
   const useRegisterMutation = () =>
     useMutation({
@@ -71,50 +84,62 @@ const Signup: React.FC = () => {
   }, []);
 
   const lookingToDoOptions = [
-    { value: "buy", label: "Buy a home to live in", icon: <FiHome /> },
-    { value: "invest", label: "Invest in Property", icon: <FiBriefcase /> },
-    { value: "agent", label: "I am an agent or developer", icon: <FiUser /> },
     {
-      value: "bank",
+      value: "Buy a home to live in",
+      label: "Buy a home to live in",
+      icon: <FiHome />,
+    },
+    {
+      value: "Invest in Property",
+      label: "Invest in Property",
+      icon: <FiBriefcase />,
+    },
+    {
+      value: "I am an agent or developer",
+      label: "I am an agent or developer",
+      icon: <FiUser />,
+    },
+    {
+      value: "I work with a bank or mortgage company",
       label: "I work with a bank or mortgage company",
       icon: <FiTag />,
     },
-    { value: "browse", label: "Just Browsing", icon: <FiGlobe /> },
+    { value: "Just Browsing", label: "Just Browsing", icon: <FiGlobe /> },
   ];
 
   const hearAboutUsOptions = [
     {
-      value: "search",
+      value: "Search Engines: Google, Bing, etc.",
       label: "Search Engines: Google, Bing, etc.",
       icon: <FiSearch />,
     },
     {
-      value: "social",
+      value: "Social Media: Facebook, Instagram, Twitter, YouTube, etc.",
       label: "Social Media: Facebook, Instagram, Twitter, YouTube, etc.",
       icon: <FiUsers />,
     },
     {
-      value: "ads",
+      value: "Online Ads: Google Ads, social media ads, etc.",
       label: "Online Ads: Google Ads, social media ads, etc.",
       icon: <FiTag />,
     },
     {
-      value: "referral",
+      value: "Referral: A friend, family member, or colleague",
       label: "Referral: A friend, family member, or colleague",
       icon: <FiUser />,
     },
     {
-      value: "website",
+      value: "Website: Direct visit to our website",
       label: "Website: Direct visit to our website",
       icon: <FiGlobe />,
     },
-    { value: "newsletter", label: "Email Newsletter", icon: <FiMail /> },
+    { value: "Email Newsletter", label: "Email Newsletter", icon: <FiMail /> },
     {
-      value: "print",
+      value: "Print Ads: Newspaper, magazine, or flyer",
       label: "Print Ads: Newspaper, magazine, or flyer",
       icon: <FiTag />,
     },
-    { value: "other", label: "Other", icon: <FiTag /> },
+    { value: "Other", label: "Other", icon: <FiTag /> },
   ];
 
   return (
@@ -397,7 +422,13 @@ const Signup: React.FC = () => {
                 <span className="text-xs sm:text-sm text-gray-600 mt-4 sm:mt-6 text-center">
                   Already have an account?{" "}
                   <a
-                    href="/auth/signin"
+                    href={`/auth/signin${
+                      searchQuery
+                        ? `?q=${encodeURIComponent(
+                            searchQuery
+                          )}&type=${searchType}`
+                        : ""
+                    }`}
                     className="text-[#4EA8A1] font-semibold hover:underline transition-all duration-200"
                   >
                     Log in
@@ -419,6 +450,38 @@ const Signup: React.FC = () => {
                     {email}
                   </span>
                 </p>
+
+                {/* Aesthetic spam check info */}
+                <div className="w-full mb-6 sm:mb-8 p-4 sm:p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0 w-5 h-5 sm:w-6 sm:h-6 mt-0.5">
+                      <svg
+                        className="w-full h-full text-blue-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="font-medium text-blue-900 text-sm sm:text-base mb-1">
+                        Don't see the code?
+                      </h4>
+                      <p className="text-blue-700 text-xs sm:text-sm leading-relaxed">
+                        Check your{" "}
+                        <span className="font-medium">spam or junk folder</span>
+                        . Sometimes verification emails end up there. The email
+                        is from <span className="font-medium">Inda</span>.
+                      </p>
+                    </div>
+                  </div>
+                </div>
                 <form
                   className="w-full flex flex-col gap-5 sm:gap-7"
                   onSubmit={async (e) => {
@@ -440,9 +503,25 @@ const Signup: React.FC = () => {
                       return;
                     }
                     try {
-                      await verifyOtpApi({ email, code });
+                      const response = await verifyOtpApi({ email, code });
                       setOtpLoading(false);
                       toast.showToast("Email verified!", 2000, "success");
+
+                      // If response includes token, store it and redirect
+                      if (response?.token) {
+                        setToken(response.token);
+                        setTimeout(() => {
+                          if (searchQuery) {
+                            router.push(
+                              `/result?q=${encodeURIComponent(
+                                searchQuery
+                              )}&type=${searchType}`
+                            );
+                          } else {
+                            router.push("/");
+                          }
+                        }, 800);
+                      }
                     } catch (err: any) {
                       setOtpLoading(false);
                       toast.showToast(

@@ -1,8 +1,26 @@
 import { Container, Footer, Navbar } from "@/components";
 import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 
 const Auth = () => {
   const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchType, setSearchType] = useState("");
+
+  useEffect(() => {
+    if (router.isReady) {
+      const { q, type } = router.query;
+      setSearchQuery((q as string) || "");
+      setSearchType((type as string) || "");
+    }
+  }, [router.isReady, router.query]);
+
+  const buildAuthUrl = (path: string) => {
+    const params = new URLSearchParams();
+    if (searchQuery) params.set("q", searchQuery);
+    if (searchType) params.set("type", searchType);
+    return `${path}${params.toString() ? `?${params.toString()}` : ""}`;
+  };
 
   return (
     <Container
@@ -21,7 +39,7 @@ const Auth = () => {
           <div className="flex flex-col gap-4 sm:gap-6 w-full max-w-[90%] sm:max-w-[400px] md:max-w-[480px] mx-auto justify-center px-4">
             <button
               onClick={() => {
-                router.push("/auth/signup");
+                router.push(buildAuthUrl("/auth/signup"));
               }}
               className="bg-[#F9F9F9] text-inda-dark font-medium text-lg sm:text-xl rounded-full w-full h-[56px] sm:h-[64px] transition-all duration-200 ease-in-out hover:bg-[#F0F0F0] hover:scale-[0.98] active:scale-[0.96]"
             >
@@ -29,7 +47,7 @@ const Auth = () => {
             </button>
             <button
               onClick={() => {
-                router.push("/auth/signin");
+                router.push(buildAuthUrl("/auth/signin"));
               }}
               className="bg-[#4EA8A1] text-white font-medium text-lg sm:text-xl rounded-full w-full h-[56px] sm:h-[64px] transition-all duration-200 ease-in-out hover:bg-[#45968f] hover:scale-[0.98] active:scale-[0.96]"
             >
