@@ -20,7 +20,14 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ variant }) => {
   const router = useRouter();
-  const isLoggedIn = typeof window !== "undefined" && !!getToken();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  useEffect(() => {
+    const token = getToken();
+    if (token) {
+      setIsLoggedIn(true);
+    }
+  }, []);
+  // const isLoggedIn = typeof window !== "undefined" && !!getToken();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);

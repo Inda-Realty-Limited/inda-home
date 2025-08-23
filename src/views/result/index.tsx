@@ -4,6 +4,7 @@ import { dummyResultData } from "@/data/resultData";
 import { getToken } from "@/helpers";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import { IoIosInformationCircle } from "react-icons/io";
 import {
   FaBuilding,
   FaCheckCircle,
@@ -335,38 +336,6 @@ const Result = () => {
         <Navbar />
         <main className="flex-1 py-6">
           <div className="w-full md:w-4/5 md:mx-auto space-y-6">
-            {/* Inda Verdict (Top Card) */}
-            <div className="w-full px-4 sm:px-6">
-              <div className="bg-inda-teal text-white rounded-lg p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-xl font-bold">Inda Verdict</h3>
-                </div>
-                <div className="flex items-center gap-3 mb-4">
-                  <FaExclamationTriangle className="text-yellow-300 text-lg" />
-                  <span className="text-base font-medium">
-                    Overpriced. Moderate Legal Risk
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Inda Trust Score</span>
-                    <span className="text-sm font-semibold">
-                      {Math.round(result?.indaScore?.finalScore ?? 0)}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-white/20 rounded-full h-2">
-                    <div
-                      className="bg-white h-2 rounded-full"
-                      style={{
-                        width: `${Math.round(
-                          result?.indaScore?.finalScore ?? 0
-                        )}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
             {/* Intro Header */}
             <div className="px-4 sm:px-6">
               <h2 className="text-2xl font-extrabold text-[#101820] mb-2">
@@ -376,7 +345,7 @@ const Result = () => {
                 Here's what we found based on your search.
               </p>
               {(result?.listingUrl || result?.snapshot?.listingUrl) && (
-                <p className="text-sm mt-3">
+                <p className="text-sm mt-10">
                   Results for the following link:{" "}
                   <a
                     className="text-inda-teal underline"
@@ -389,6 +358,48 @@ const Result = () => {
                 </p>
               )}
             </div>
+
+            {/* Inda Verdict (Top Card) */}
+            <div className="w-full px-4 sm:px-6">
+              <div>
+                <div className="bg-inda-teal text-white rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-xl font-bold">Inda Verdict</h3>
+                  </div>
+                  <div className="flex items-center gap-3 mb-2">
+                    <FaExclamationTriangle className="text-yellow-300 text-lg" />
+                    <span className="text-base font-medium">
+                      Overpriced. Moderate Legal Risk
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-5 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-md font-semibold mb-3">
+                      Inda Trust Score{" "}
+                      <IoIosInformationCircle
+                        size={25}
+                        className="text-inda-teal inline-block"
+                      />
+                    </span>
+                    <span className="text-sm font-semibold">
+                      {Math.round(result?.indaScore?.finalScore ?? 0)}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-[#EAEAEA] rounded-full h-2">
+                    <div
+                      className="bg-inda-teal h-2 rounded-full"
+                      style={{
+                        width: `${Math.round(
+                          result?.indaScore?.finalScore ?? 0
+                        )}%`,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Gallery */}
             <div className="w-full px-4 sm:px-6">
               <h3 className="text-xl font-bold mb-4">Gallery</h3>
@@ -425,7 +436,7 @@ const Result = () => {
                   ))}
               </div>
               {/* Chips under gallery */}
-              <div className="mt-4 flex flex-wrap items-center gap-2">
+              {/* <div className="mt-4 flex flex-wrap items-center gap-2">
                 {typeof result?.snapshot?.bedrooms === "number" && (
                   <span className="px-3 py-1 bg-[#E5F4F2] text-inda-teal rounded-full text-xs font-medium">
                     {result.snapshot.bedrooms} Bed(s)
@@ -444,11 +455,11 @@ const Result = () => {
                 <span className="px-3 py-1 bg-[#E5F4F2] text-inda-teal rounded-full text-xs font-medium">
                   Amenities
                 </span>
-              </div>
+              </div> */}
             </div>
 
             {/* Action Buttons Row */}
-            <div className="w-full px-4 sm:px-6">
+            <div className="w-full bg-[#4EA8A159] rounded-2xl py-5 sm:px-6">
               <div className="flex flex-wrap gap-2">
                 <button className="flex items-center gap-2 px-4 py-2 bg-inda-teal text-white rounded-full text-sm hover:bg-teal-600 transition-colors">
                   <FaWhatsapp className="text-xs" />
@@ -485,9 +496,9 @@ const Result = () => {
                   <div className="space-y-2">
                     {/* Table Header */}
                     <div className="grid grid-cols-3 gap-6 py-3 px-4 bg-[#E5E5E566] rounded-lg text-sm font-semibold text-gray-700">
-                      <div>Info</div>
-                      <div>Details</div>
-                      <div>Status</div>
+                      <div className="font-bold text-lg">Info</div>
+                      <div className="font-bold text-lg">Details</div>
+                      <div className="font-bold text-lg">Status</div>
                     </div>
 
                     {/* Bedroom/Bathrooms Row */}
@@ -496,18 +507,18 @@ const Result = () => {
                         <div className="w-8 h-8 bg-inda-teal/10 rounded-lg flex items-center justify-center">
                           <FaBuilding className="text-inda-teal text-sm" />
                         </div>
-                        <span className="text-sm font-medium">
+                        <span className="text-md font-medium">
                           Bedroom/Bathrooms
                         </span>
                       </div>
-                      <div className="text-sm font-semibold">
+                      <div className="text-md font-medium">
                         {result?.snapshot?.bedrooms ?? dummyResultData.bedrooms}
                         Bed./
                         {result?.snapshot?.bathrooms ??
                           dummyResultData.bathrooms}{" "}
                         Bath.
                       </div>
-                      <div className="text-sm text-gray-600">
+                      <div className="text-md font-medium text-gray-600">
                         From listing/docs.
                       </div>
                     </div>
@@ -518,15 +529,15 @@ const Result = () => {
                         <div className="w-8 h-8 bg-inda-teal/10 rounded-lg flex items-center justify-center">
                           <FaCheckCircle className="text-inda-teal text-sm" />
                         </div>
-                        <span className="text-sm font-medium">Title</span>
+                        <span className="text-md font-medium">Title</span>
                       </div>
-                      <div className="text-sm font-semibold flex items-center gap-2">
+                      <div className="text-md font-medium flex items-center gap-2">
                         {result?.aiReport?.titleSafety?.label ||
                           dummyResultData.title_status}
                         <FaCheckCircle className="text-green-500 text-sm" />
                       </div>
-                      <div className="text-sm text-inda-teal cursor-pointer hover:underline">
-                        Verify here
+                      <div className="text-md font-medium text-inda-teal cursor-pointer hover:underline">
+                        Verified
                       </div>
                     </div>
 
@@ -536,12 +547,12 @@ const Result = () => {
                         <div className="w-8 h-8 bg-inda-teal/10 rounded-lg flex items-center justify-center">
                           <FaBuilding className="text-inda-teal text-sm" />
                         </div>
-                        <span className="text-sm font-medium">Developer</span>
+                        <span className="text-md font-medium">Developer</span>
                       </div>
-                      <div className="text-sm font-semibold">
+                      <div className="text-md font-medium">
                         {dummyResultData.developer.name}
                       </div>
-                      <div className="text-sm text-inda-teal cursor-pointer hover:underline">
+                      <div className="text-md font-medium text-inda-teal cursor-pointer hover:underline">
                         View Profile here
                       </div>
                     </div>
@@ -552,15 +563,15 @@ const Result = () => {
                         <div className="w-8 h-8 bg-inda-teal/10 rounded-lg flex items-center justify-center">
                           <FaClock className="text-inda-teal text-sm" />
                         </div>
-                        <span className="text-sm font-medium">
+                        <span className="text-md font-medium">
                           Delivery Date
                         </span>
                       </div>
-                      <div className="text-sm font-semibold">
+                      <div className="text-md font-medium">
                         {dummyResultData.deliveryDate}
                       </div>
                       <div className="flex items-center gap-2 text-sm text-inda-teal">
-                        <div className="w-3 h-3 bg-inda-teal rounded-full"></div>
+                        <div className="w-3 h-3 text-md bg-inda-teal font-medium rounded-full"></div>
                         {dummyResultData.status}
                       </div>
                     </div>
@@ -571,13 +582,13 @@ const Result = () => {
                         <div className="w-8 h-8 bg-inda-teal/10 rounded-lg flex items-center justify-center">
                           <FaMapMarkerAlt className="text-inda-teal text-sm" />
                         </div>
-                        <span className="text-sm font-medium">Status</span>
+                        <span className="text-md font-medium">Status</span>
                       </div>
-                      <div className="text-sm font-semibold">
+                      <div className="text-md font-medium">
                         {dummyResultData.status}/Completed
                       </div>
                       <div className="flex items-center gap-2 text-sm text-inda-teal">
-                        <div className="w-3 h-3 bg-inda-teal rounded-full"></div>
+                        <div className="w-3 h-3 text-md font-medium bg-inda-teal rounded-full"></div>
                         {dummyResultData.status}
                       </div>
                     </div>
@@ -885,7 +896,7 @@ const Result = () => {
 
                 {/* AI Summary */}
                 <div className="mt-6 pt-4 border-t border-gray-200">
-                  <h4 className="text-lg font-bold text-gray-900 mb-2">
+                  <h4 className="text-lg font-bold mb-2 text-inda-teal">
                     AI Summary
                   </h4>
                   <p className="text-gray-700 text-base leading-relaxed">
@@ -1046,9 +1057,9 @@ const Result = () => {
                 {/* Desktop Table */}
                 <div className="hidden md:block bg-white rounded-lg overflow-hidden">
                   <div className="grid grid-cols-3 gap-4 px-4 py-3 border-b text-sm font-semibold text-gray-700">
-                    <div>Document</div>
-                    <div>Status</div>
-                    <div>Notes</div>
+                    <div className="text-lg font-bold">Document</div>
+                    <div className="text-lg font-bold">Status</div>
+                    <div className="text-lg font-bold">Notes</div>
                   </div>
                   <div>
                     {dummyResultData.documents.map((doc, idx) => (
@@ -1056,10 +1067,10 @@ const Result = () => {
                         key={idx}
                         className="grid grid-cols-3 gap-4 px-4 py-3 border-b last:border-0 text-sm"
                       >
-                        <div className="font-medium text-gray-900">
+                        <div className="font-medium text-md text-gray-900">
                           {doc.name}
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="font-medium text-md flex items-center gap-2">
                           {doc.status === "verified" && (
                             <FaCheckCircle className="text-green-500" />
                           )}
@@ -1069,7 +1080,7 @@ const Result = () => {
                           {doc.status === "in-review" && (
                             <FaClock className="text-yellow-500" />
                           )}
-                          <span className="capitalize">
+                          <span className="font-medium text-md capitalize">
                             {doc.status.replace("-", " ")}
                           </span>
                         </div>
@@ -1122,13 +1133,25 @@ const Result = () => {
             <div className="w-full px-4 sm:px-6">
               <div className="bg-gray-100 rounded-lg p-6">
                 <h3 className="text-xl font-bold mb-6 text-inda-teal">
-                  Investment ROI
+                  Investment ROI Calculator
                 </h3>
+                <p>
+                  Estimate your potenttial returns on investment properties with
+                  our comprehensive calculator
+                </p>
+                <h1 className="font-semibold text-xl py-5">Property Details</h1>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                   {dummyResultData.roiMetrics.map((m, idx) => (
-                    <div key={idx} className="bg-white rounded-lg p-4">
-                      <p className="text-sm text-gray-500">{m.label}</p>
-                      <p className="text-xl font-bold text-gray-900">
+                    <div key={idx}>
+                      <p className="text-sm pb-5 text-gray-500">
+                        <IoIosInformationCircle
+                          size={25}
+                          className="inline-block text-inda-teal mr-3"
+                        />
+                        {m.label}
+                      </p>
+
+                      <p className="bg-[#4EA8A159] rounded-xl p-4 text-xl font-bold text-gray-900">
                         {m.value}
                       </p>
                     </div>

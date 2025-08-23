@@ -20,6 +20,7 @@ import {
 } from "react-icons/fi";
 import { GiBrain } from "react-icons/gi";
 import { HiOutlineBuildingOffice2 } from "react-icons/hi2";
+import { TiTick } from "react-icons/ti";
 
 const sampleData = [
   { id: 1, name: "Lagos Luxury Villa", type: "listing" },
@@ -762,7 +763,7 @@ const Landing: React.FC = () => {
       </motion.section>
 
       <motion.section
-        className="w-full px-4 sm:px-6 md:px-8 lg:px-[10%] bg-[#E5E5E566] py-12 sm:py-16 md:py-20 flex flex-col items-start justify-center"
+        className="w-[90%] ml-25 mr-15 rounded-xl px-1 sm:px-6 md:px-8 lg:px-[5%] bg-[#4EA8A159] py-6 sm:py-16 md:py-20 flex flex-col items-start justify-center"
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.2 }}
@@ -774,12 +775,15 @@ const Landing: React.FC = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          <Text className="text-inda-dark font-bold text-2xl sm:text-3xl mb-6 sm:mb-8">
-            Pricing
+          <Text className="text-inda-dark font-bold text-2xl sm:text-3xl sm:mb-8">
+            Plans & Pricing
           </Text>
+          <p className="font-normal mb-10 text-md text-[#556457]">
+            Inda Pricing Guide (Lagos Listings Only)
+          </p>
         </motion.div>
         <motion.div
-          className="w-full rounded-2xl sm:rounded-3xl border border-[#E2E4E8] p-6 sm:p-8 md:p-12 flex flex-col gap-6 sm:gap-8"
+          className="w-full flex flex-wrap flex-col gap-6 sm:gap-8"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -789,36 +793,47 @@ const Landing: React.FC = () => {
             <div className="w-full flex flex-col xl:flex-row gap-6 sm:gap-8 justify-center">
               {/* Basic Summary with Pricing Breakdown Button */}
               <motion.div
+                className="flex-1 min-w-[240px] sm:min-w-[260px] bg-[#E5E5E566] rounded-xl sm:rounded-2xl border border-[#D1D5DB] p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:scale-105"
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.2 }}
               >
-                <div className="flex-1 min-w-[240px] sm:min-w-[260px] bg-[#E5E5E566] rounded-xl sm:rounded-2xl border border-[#D1D5DB] p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:scale-105">
-                  <div>
-                    <div className="font-bold text-lg sm:text-xl mb-3 sm:mb-4 text-inda-dark">
-                      Basic Summary
-                    </div>
-                    <div className="text-2xl sm:text-3xl font-extrabold text-inda-dark mb-2 flex items-center">
-                      <span className="line-through mr-2">₦0</span>
-                    </div>
-                    <ul className="mt-4 sm:mt-6 mb-2">
-                      <li className="flex items-center gap-2 text-base sm:text-lg text-inda-dark/90">
-                        <span className="text-xl sm:text-2xl text-inda-dark">
-                          ✓
-                        </span>{" "}
-                        Report preview
-                      </li>
-                    </ul>
+                <div className="h-[97%] relative">
+                  <div className="font-black text-8xl sm:text-xl mb-3 sm:mb-4 text-inda-dark">
+                    ₦0
+                  </div>
+                  <div className="sm:text-3xl  text-[#101820BF] mb-2 flex items-center">
+                    <span className=" mr-2 font-semibold">
+                      <h3 className="text-3xl">Free Report</h3>
+                      <p className="text-md text-xl">
+                        Delivery Time:{" "}
+                        <span className="font-light text-md">
+                          &lt; 20 seconds
+                        </span>
+                      </p>
+                    </span>
+                  </div>
+
+                  <ul className="mt-0 sm:mt-6 mb-2">
+                    <h4 className="text-[#101820BF] my-7 text-xl font-semibold">
+                      What You Get:
+                    </h4>
+                    <li className="flex items-center gap-2 text-base sm:text-lg text-inda-dark/90">
+                      <span className="text-xl sm:text-2xl text-[#4EA8A1]">
+                        ✓
+                      </span>{" "}
+                      Inda Score
+                    </li>
+                  </ul>
+                  <div className="w-full absolute bottom-5 flex justify-center sm:mt-8">
+                    <button className="bg-[#4ea8a1] relative bottom-3 text-inda-white w-[90%] py-3 rounded-full shadow-md hover:bg-[#e9eaeb] transition-all duration-300 hover:scale-105">
+                      Choose Plan
+                    </button>
                   </div>
                 </div>
-                <div className="w-full flex justify-center mt-6 sm:mt-8">
-                  <button className="bg-[#F5F6F7] text-inda-dark font-bold text-lg sm:text-xl rounded-xl sm:rounded-2xl px-8 sm:px-10 py-4 sm:py-6 shadow-md hover:bg-[#e9eaeb] transition-all duration-300 hover:scale-105">
-                    See Pricing Breakdown
-                  </button>
-                </div>
               </motion.div>
-              {/* Deep Report */}
+              {/* Free Report */}
               <motion.div
                 className="flex-1 min-w-[240px] sm:min-w-[260px] bg-[#E5E5E566] rounded-xl sm:rounded-2xl border border-[#D1D5DB] p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:scale-105"
                 initial={{ opacity: 0, y: 20 }}
@@ -826,51 +841,139 @@ const Landing: React.FC = () => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.4 }}
               >
-                <div>
-                  <div className="font-bold text-lg sm:text-xl mb-3 sm:mb-4 text-inda-dark">
-                    Deep Report
+                <div className="relative h-[97%]">
+                  <div className="font-black text-lg sm:text-xl mb-3 sm:mb-4 text-inda-dark">
+                    ₦3,000
                   </div>
-                  <div className="text-2xl sm:text-3xl font-extrabold text-inda-dark mb-2 flex items-center">
-                    <span className="mr-2">₦15,000</span>
-                    <span className="text-sm sm:text-lg font-medium text-inda-dark/70">
-                      / use
+                  <div className="sm:text-3xl text-[#101820BF] font-semibold text-inda-dark mb-2 flex items-center">
+                    <span className="mr-2 font-semibold">
+                      <h3 className="text-3xl text-[#101820BF]">
+                        Inda Instant Report
+                      </h3>
+                      <p className="text-md sm:text-lg font-semibold text-inda-dark/70">
+                        Delivery Time:{" "}
+                        <span className="font-light text-md">
+                          &lt; 30 seconds (Instant)
+                        </span>
+                      </p>
                     </span>
+
+                    <span></span>
                   </div>
                   <ul className="mt-4 sm:mt-6 mb-2 space-y-1 sm:space-y-2">
+                    <h4 className="text-[#101820BF] my-7 text-xl font-semibold">
+                      What You Get:
+                    </h4>
                     <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-dark/90">
-                      <span className="text-lg sm:text-2xl text-inda-dark">
+                      <span className="text-lg sm:text-2xl text-inda-teal">
                         ✓
                       </span>{" "}
-                      Detailed property report
+                      Inda Score
                     </li>
                     <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-dark/90">
-                      <span className="text-lg sm:text-2xl text-inda-dark">
+                      <span className="text-lg sm:text-2xl text-inda-teal">
                         ✓
                       </span>{" "}
-                      Verification stamp
+                      Micro-location market data
                     </li>
                     <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-dark/90">
-                      <span className="text-lg sm:text-2xl text-inda-dark">
+                      <span className="text-lg sm:text-2xl text-inda-teal">
                         ✓
                       </span>{" "}
-                      Legal risk assessment
+                      AI market valuation
                     </li>
                     <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-dark/90">
-                      <span className="text-lg sm:text-2xl text-inda-dark">
+                      <span className="text-lg sm:text-2xl text-inda-teal">
                         ✓
                       </span>{" "}
-                      ROI chart
-                    </li>
-                    <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-dark/90">
-                      <span className="text-lg sm:text-2xl text-inda-dark">
-                        ✓
-                      </span>{" "}
-                      Agent trust rating
+                      Overpricing check
                     </li>
                   </ul>
+                  <div className="w-full absolute bottom-5 flex justify-center sm:mt-8">
+                    <button className="bg-[#4ea8a1] text-inda-white w-[90%] py-3 rounded-full shadow-md hover:bg-[#e9eaeb] transition-all duration-300 hover:scale-105">
+                      Choose Plan
+                    </button>
+                  </div>
                 </div>
               </motion.div>
-              {/* Pro Access */}
+
+              {/* Deep Report */}
+              <motion.div
+                className="flex-1 min-w-[240px] sm:min-w-[260px] bg-inda-dark rounded-xl sm:rounded-2xl border border-[#D1D5DB] p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:scale-105"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+              >
+                <div className="relative h-[100%]">
+                  <div className="font-bold text-lg sm:text-xl mb-3 sm:mb-4 text-inda-white">
+                    ₦25,000
+                  </div>
+                  <div className="sm:text-3xl font-light text-inda-white items-center">
+                    <span className="mr-2 font-semibold">
+                      <h3 className="text-3xl">Deep Dive Report</h3>
+                      <p className="text-sm sm:text-lg font-medium text-inda-white">
+                        Delivery Time:{" "}
+                        <span className="font-light text-md">
+                          {" "}
+                          24-48 hours (via email PDF)
+                        </span>
+                      </p>
+                    </span>
+                  </div>
+
+                  <ul className="sm:mt-6 mb-2 translate-y-[-45px] sm:space-y-2">
+                    <h4 className="text-inda-white text-xl font-semibold">
+                      What You Get:{" "}
+                      <span className="text-inda-white font-light text-md">
+                        Everything in Instant Report{" "}
+                        <span className="text-inda-yellow">Plus:</span>
+                      </span>
+                    </h4>
+
+                    <h3 className="text-inda-white text-lg font-semibold">
+                      Title & Legal Verification:
+                    </h3>
+                    <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-white">
+                      <span className="text-lg sm:text-2xl text-inda-yellow">
+                        ✓
+                      </span>{" "}
+                      Certificate of Occupancy (C of O) or Deed cheeck
+                    </li>
+                    <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-white">
+                      <span className="text-lg sm:text-2xl text-inda-yellow">
+                        ✓
+                      </span>{" "}
+                      Governor's consent check
+                    </li>
+                    <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-white">
+                      <span className="text-lg sm:text-2xl text-inda-yellow">
+                        ✓
+                      </span>{" "}
+                      Zoning compliance check
+                    </li>
+                    <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-white">
+                      <span className="text-lg sm:text-2xl text-inda-yellow">
+                        ✓
+                      </span>{" "}
+                      Litigation search (court registery)
+                    </li>
+                    <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-white">
+                      <span className="text-lg sm:text-2xl text-inda-yellow">
+                        ✓
+                      </span>{" "}
+                      Survey plan verification (boundaries & location)
+                    </li>
+                  </ul>
+                  <div className="w-full absolute bottom-0 flex justify-center sm:mt-8">
+                    <button className="bg-[#4ea8a1] text-inda-white w-[90%] py-3 rounded-full shadow-md hover:bg-[#e9eaeb] transition-all duration-300 hover:scale-105">
+                      Choose Plan
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+
+              {/* Deeper Dive */}
               <motion.div
                 className="flex-1 min-w-[240px] sm:min-w-[260px] bg-[#E5E5E566] rounded-xl sm:rounded-2xl border border-[#D1D5DB] p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:scale-105"
                 initial={{ opacity: 0, y: 20 }}
@@ -878,42 +981,58 @@ const Landing: React.FC = () => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.6 }}
               >
-                <div>
+                <div className="relative h-[97%]">
                   <div className="font-bold text-lg sm:text-xl mb-3 sm:mb-4 text-inda-dark">
-                    Pro Access
+                    ₦75,000
                   </div>
-                  <div className="text-2xl sm:text-3xl font-extrabold text-inda-dark mb-2 flex items-center">
-                    <span className="mr-2">₦55,000</span>
-                    <span className="text-sm sm:text-lg font-medium text-inda-dark/70">
-                      / month
+                  <div className="text-2xl text-[#101820BF] sm:text-3xl font-semibold mb-2 items-center">
+                    <span className="mr-2 font-semibold">
+                      <h3 className="text-3xl"> Deeper Dive</h3>
+                      <p className="text-xl sm:text-lg text-inda-dark/70">
+                        Delivery Time:{" "}
+                        <span className="font-light text-md">2-4 Days</span>
+                      </p>
                     </span>
                   </div>
+
                   <ul className="mt-4 sm:mt-6 mb-2 space-y-1 sm:space-y-2">
-                    <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-dark/90">
-                      <span className="text-lg sm:text-2xl text-inda-dark">
+                    <h4 className="text-[#101820BF] text-xl font-semibold">
+                      What You Get:{" "}
+                      <span className="font-light text-md">
+                        Everything in Instant Report{" "}
+                        <span className="text-inda-teal">Plus:</span>
+                      </span>
+                    </h4>
+                    <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-[#101820BF]">
+                      <span className="text-lg sm:text-2xl text-inda-teal">
                         ✓
                       </span>{" "}
-                      Unlimited deep reports
+                      Seller identity verification
                     </li>
-                    <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-dark/90">
-                      <span className="text-lg sm:text-2xl text-inda-dark">
+                    <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-[#101820BF]">
+                      <span className="text-lg sm:text-2xl text-inda-teal">
                         ✓
                       </span>{" "}
-                      Live ROI Alerts + Market Signals
+                      On-site property visit
                     </li>
-                    <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-dark/90">
-                      <span className="text-lg sm:text-2xl text-inda-dark">
+                    <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-[#101820BF]">
+                      <span className="text-lg sm:text-2xl text-inda-teal">
                         ✓
                       </span>{" "}
-                      Exclusive market insights
+                      Photo evidence
                     </li>
-                    <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-dark/90">
-                      <span className="text-lg sm:text-2xl text-inda-dark">
+                    <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-[#101820BF]">
+                      <span className="text-lg sm:text-2xl text-inda-teal">
                         ✓
                       </span>{" "}
                       Portfolio Dashboard
                     </li>
                   </ul>
+                  <div className="w-full absolute bottom-0 flex justify-center sm:mt-8">
+                    <button className="bg-[#4ea8a1] text-inda-white w-[90%] py-3 rounded-full shadow-md hover:bg-[#e9eaeb] transition-all duration-300 hover:scale-105">
+                      Choose Plan
+                    </button>
+                  </div>
                 </div>
               </motion.div>
             </div>
