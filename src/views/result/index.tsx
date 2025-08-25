@@ -1377,7 +1377,7 @@ const Result = () => {
                               <span className="text-lg sm:text-2xl text-inda-yellow">
                                 ✓
                               </span>{" "}
-                              Certificate of Occupancy (C of O) or Deed cheeck
+                              Certificate of Occupancy (C of O) or Deed check
                             </li>
                             <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-white">
                               <span className="text-lg sm:text-lg text-inda-yellow">
