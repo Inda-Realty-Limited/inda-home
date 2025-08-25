@@ -1,9 +1,10 @@
 import { getComputedListingByUrl } from "@/api/listings";
-import { Button, Container, Footer, Navbar } from "@/components";
+import { Button, Container, Footer, Navbar, Text } from "@/components";
 import { dummyResultData } from "@/data/resultData";
 import { getToken } from "@/helpers";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 import { IoIosInformationCircle } from "react-icons/io";
 import {
   FaBuilding,
@@ -26,6 +27,7 @@ const Result = () => {
   const [searchType, setSearchType] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
+  const [proceed, setProceed] = useState(false);
   const [result, setResult] = useState<any | null>(null);
 
   // Always show not found view instead of results
@@ -346,7 +348,7 @@ const Result = () => {
               </p>
               {(result?.listingUrl || result?.snapshot?.listingUrl) && (
                 <p className="text-sm mt-10">
-                  Results for the following link:{" "}
+                  Results for the listing link:{" "}
                   <a
                     className="text-inda-teal underline"
                     href={result?.listingUrl || result?.snapshot?.listingUrl}
@@ -375,10 +377,10 @@ const Result = () => {
                 </div>
                 <div className="mt-5 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-md font-semibold mb-3">
+                    <span className="text-md font-medium mb-3">
                       Inda Trust Score{" "}
                       <IoIosInformationCircle
-                        size={25}
+                        size={20}
                         className="text-inda-teal inline-block"
                       />
                     </span>
@@ -811,41 +813,43 @@ const Result = () => {
                 <h3 className="text-xl font-bold mb-6 text-inda-teal">
                   Feedback & Complaints
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="">
                   {/* Ratings Overview */}
-                  <div className="bg-white rounded-lg p-6">
-                    <div className="flex items-baseline gap-2 mb-2">
-                      <span className="text-4xl font-extrabold text-gray-900">
-                        {dummyResultData.overallRating.toFixed(1)}
-                      </span>
-                      <span className="text-sm text-gray-600">/ 5</span>
+                  <div className="flex bg-white gap-20 rounded-lg p-6 mb-4">
+                    <div>
+                      <div className="flex items-baseline gap-2 mb-2">
+                        <span className="text-4xl font-extrabold text-gray-900">
+                          {dummyResultData.overallRating.toFixed(1)}
+                        </span>
+                        <span className="text-sm text-gray-600"></span>
+                      </div>
+                      <div className="flex items-center gap-1 mb-3">
+                        {Array.from({ length: 5 }).map((_, i) => {
+                          const active =
+                            i < Math.round(dummyResultData.overallRating);
+                          return (
+                            <FaStar
+                              key={i}
+                              className={
+                                active ? "text-yellow-400" : "text-gray-300"
+                              }
+                            />
+                          );
+                        })}
+                      </div>
+                      <p className="text-sm text-gray-600 mb-4">
+                        {dummyResultData.totalReviews} reviews
+                      </p>
                     </div>
-                    <div className="flex items-center gap-1 mb-3">
-                      {Array.from({ length: 5 }).map((_, i) => {
-                        const active =
-                          i < Math.round(dummyResultData.overallRating);
-                        return (
-                          <FaStar
-                            key={i}
-                            className={
-                              active ? "text-yellow-400" : "text-gray-300"
-                            }
-                          />
-                        );
-                      })}
-                    </div>
-                    <p className="text-sm text-gray-600 mb-4">
-                      Based on {dummyResultData.totalReviews} reviews
-                    </p>
-                    <div className="space-y-2">
+                    <div className="space-y-2 w-full">
                       {dummyResultData.ratingBreakdown.map((r, idx) => (
                         <div key={idx} className="flex items-center gap-3">
                           <span className="w-10 text-sm text-gray-700">
-                            {r.stars}★
+                            {r.stars}
                           </span>
-                          <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                          <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
                             <div
-                              className="h-2 bg-inda-teal"
+                              className="h-2 bg-gray-400 rounded-full"
                               style={{ width: `${r.percentage}%` }}
                             ></div>
                           </div>
@@ -859,6 +863,7 @@ const Result = () => {
 
                   {/* Reviews List */}
                   <div className="md:col-span-2 space-y-4">
+                    <h1 className="font-bold text-xl">Reviews</h1>
                     {dummyResultData.reviews.map((rev) => (
                       <div key={rev.id} className="bg-white rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
@@ -1119,7 +1124,7 @@ const Result = () => {
 
                 {/* Legal Note */}
                 <div className="mt-6 pt-4 border-t border-gray-200">
-                  <h4 className="text-lg font-bold text-gray-900 mb-2">
+                  <h4 className="text-lg font-bold text-inda-teal mb-2">
                     Legal Note
                   </h4>
                   <p className="text-gray-700 text-base leading-relaxed">
@@ -1132,26 +1137,26 @@ const Result = () => {
             {/* ROI Panel */}
             <div className="w-full px-4 sm:px-6">
               <div className="bg-gray-100 rounded-lg p-6">
-                <h3 className="text-xl font-bold mb-6 text-inda-teal">
+                <h3 className="text-2xl font-bold mb-10 text-inda-teal">
                   Investment ROI Calculator
                 </h3>
-                <p>
+                <p className="text-gray-900">
                   Estimate your potenttial returns on investment properties with
-                  our comprehensive calculator
+                  our
+                  <br /> comprehensive calculator
                 </p>
                 <h1 className="font-semibold text-xl py-5">Property Details</h1>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                   {dummyResultData.roiMetrics.map((m, idx) => (
                     <div key={idx}>
-                      <p className="text-sm pb-5 text-gray-500">
-                        <IoIosInformationCircle
-                          size={25}
-                          className="inline-block text-inda-teal mr-3"
-                        />
+                      <p className="text-sm pb-5  text-gray-500">
                         {m.label}
+                        <IoIosInformationCircle
+                          size={20}
+                          className="inline-block text-inda-teal ml-1"
+                        />
                       </p>
-
-                      <p className="bg-[#4EA8A159] rounded-xl p-4 text-xl font-bold text-gray-900">
+                      <p className="bg-[#4EA8A159] rounded-lg p-4 text-lg text-center font-normal text-gray-600">
                         {m.value}
                       </p>
                     </div>
@@ -1194,8 +1199,13 @@ const Result = () => {
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                   {dummyResultData.comparables.map((c) => (
-                    <div key={c.id} className="bg-white rounded-lg p-4">
-                      <p className="font-semibold text-gray-900 mb-1">
+                    <div key={c.id} className=" bg-[#E5F4F2] rounded-lg p-4">
+                      <img
+                        className="block"
+                        src="https://unsplash.com/photos/low-angle-photo-of-city-high-rise-buildings-during-daytime-PhYq704ffdA"
+                        alt="building-image"
+                      />
+                      <p className="w-full font-semibold text-gray-900 mb-1">
                         {c.title}
                       </p>
                       <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
@@ -1249,23 +1259,30 @@ const Result = () => {
 
             {/* How would you like to proceed? */}
             <div className="w-full px-4 sm:px-6">
-              <div className="bg-gray-100 rounded-lg p-6">
-                <h3 className="text-xl font-bold mb-4 text-inda-teal">
-                  How would you like to proceed?
-                </h3>
-                <div className="flex flex-wrap gap-3">
-                  <button className="flex items-center gap-2 px-4 py-2 bg-inda-teal text-white rounded-full text-sm hover:bg-teal-600 transition-colors">
+              <div className="rounded-lg p-6">
+                <div className="bg-gray-100 rounded-xl py-10">
+                  <h3 className="text-3xl font-bold mb-4 text-center">
+                    How would you like more information
+                    <br />
+                    about this listing?
+                  </h3>
+                  <div className="flex flex-wrap gap-3 justify-center">
+                    {/* <button className="flex items-center gap-2 px-4 py-2 bg-inda-teal text-white rounded-full text-sm hover:bg-teal-600 transition-colors">
                     <FaWhatsapp className="text-xs" /> WhatsApp Seller
                   </button>
                   <button className="flex items-center gap-2 px-4 py-2 bg-inda-teal text-white rounded-full text-sm hover:bg-teal-600 transition-colors">
                     <FaPhone className="text-xs" /> Call Seller
-                  </button>
-                  <button className="px-4 py-2 border border-inda-teal text-inda-teal rounded-full text-sm hover:bg-[#E5F4F2]">
-                    Request Legal Review
-                  </button>
-                  <button className="px-4 py-2 border border-inda-teal text-inda-teal rounded-full text-sm hover:bg-[#E5F4F2]">
-                    Save for Later
-                  </button>
+                  </button> */}
+                    <button
+                      onClick={(e) => setProceed(true)}
+                      className="px-15 py-4 bg-inda-teal border text-white rounded-xl text-sm hover:bg-[#E5F4F2]"
+                    >
+                      Yes
+                    </button>
+                    <button className=" px-15 py-4 border bg-inda-dark/90 text-white rounded-xl text-sm hover:bg-[#E5F4F2]">
+                      No
+                    </button>
+                  </div>
                 </div>
 
                 {/* Legal Disclaimer */}
@@ -1279,6 +1296,193 @@ const Result = () => {
                 </div>
               </div>
             </div>
+          </div>
+          <div>
+            {proceed && (
+              <div className="fixed inset-0 backdrop-blur-sm bg-opacity-60 flex justify-center items-center z-50">
+                <div className="max-h-[90vh] bg-white rounded-lg max-w-5xl w-full max-md:w-3/4 overflow-y-auto relative">
+                  <motion.section
+                    className="h-full w-full max-sm:p-10 rounded-xl sm:px-6 md:px-8 lg:px-[5%] bg-[#4EA8A159] sm:py-16 md:py-20 flex flex-col items-start justify-center"
+                    initial={{ opacity: 0, y: 50 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, amount: 0.2 }}
+                    transition={{ duration: 0.8, ease: "easeOut" }}
+                  >
+                    <button
+                      onClick={() => setProceed(false)}
+                      className="absolute top-4 right-4 text-gray-600 hover:text-black"
+                    >
+                      <FaTimes size={30} />
+                    </button>
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.8, delay: 0.2 }}
+                    >
+                      <Text className="text-inda-dark font-bold text-2xl sm:text-3xl sm:mb-8">
+                        Plans & Pricing
+                      </Text>
+                      <p className="font-normal mb-10 text-md text-[#556457]">
+                        Inda Pricing Guide (Lagos Listings Only)
+                      </p>
+                    </motion.div>
+                    <motion.div
+                      className="w-full flex flex-wrap gap-6 gap-7-10 sm:gap-8"
+                      initial={{ opacity: 0, y: 30 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.8, delay: 0.4 }}
+                    >
+                      {/* Deep Report */}
+                      <motion.div
+                        className="flex-1 min-w-[240px] sm:min-w-[260px] bg-inda-dark rounded-xl sm:rounded-2xl border border-[#D1D5DB] p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:scale-105"
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6, delay: 0.4 }}
+                      >
+                        <div className="relative h-[100%]">
+                          <div className="font-bold text-lg max-sm:text-sm mb-3 sm:mb-0 text-inda-white">
+                            ₦25,000
+                          </div>
+                          <div className="max-sm:text-xl font-light text-inda-white items-center">
+                            <span className="mr-2 font-semibold">
+                              <h3 className="text-3xl max-sm:text-lg">
+                                Deep Dive Report
+                              </h3>
+                              <p className="text-sm sm:text-lg font-medium text-inda-white">
+                                Delivery Time:{" "}
+                                <span className="font-light text-md">
+                                  {" "}
+                                  24-48 hours (via email PDF)
+                                </span>
+                              </p>
+                            </span>
+                          </div>
+
+                          <ul className="sm:mt-6 mb-2 translate-y-[-45px] max-sm:translate-y-[-20px] sm:space-y-2">
+                            <h4 className="text-inda-white text-xl max-sm:text-sm font-semibold">
+                              What You Get:{" "}
+                              <span className="text-inda-white font-light text-md max-sm:text-sm">
+                                Everything in Instant Report{" "}
+                                <span className="text-inda-yellow">Plus:</span>
+                              </span>
+                            </h4>
+
+                            <h3 className="text-inda-white text-lg max-sm:text-sm font-semibold">
+                              Title & Legal Verification:
+                            </h3>
+                            <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-white">
+                              <span className="text-lg sm:text-2xl text-inda-yellow">
+                                ✓
+                              </span>{" "}
+                              Certificate of Occupancy (C of O) or Deed cheeck
+                            </li>
+                            <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-white">
+                              <span className="text-lg sm:text-lg text-inda-yellow">
+                                ✓
+                              </span>{" "}
+                              Governor's consent check
+                            </li>
+                            <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-white">
+                              <span className="text-lg sm:text-2xl text-inda-yellow">
+                                ✓
+                              </span>{" "}
+                              Zoning compliance check
+                            </li>
+                            <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-white">
+                              <span className="text-lg sm:text-2xl text-inda-yellow">
+                                ✓
+                              </span>{" "}
+                              Litigation search (court registery)
+                            </li>
+                            <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-white">
+                              <span className="text-lg sm:text-2xl text-inda-yellow">
+                                ✓
+                              </span>{" "}
+                              Survey plan verification (boundaries & location)
+                            </li>
+                          </ul>
+                          <div className="w-full absolute bottom-0 flex justify-center max-sm:mt-20">
+                            <button className="bg-[#4ea8a1] text-inda-white w-[90%] py-3 max-sm:py-1 rounded-full shadow-md hover:bg-[#e9eaeb] transition-all duration-300 hover:scale-105">
+                              Choose Plan
+                            </button>
+                          </div>
+                        </div>
+                      </motion.div>
+
+                      {/* Deeper Dive */}
+                      <motion.div
+                        className="flex-1 min-w-[240px] sm:min-w-[260px] bg-[#E5E5E566] rounded-xl sm:rounded-2xl border border-[#D1D5DB] p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:scale-105"
+                        initial={{ opacity: 0, y: 20 }}
+                        whileInView={{ opacity: 1, y: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6, delay: 0.6 }}
+                      >
+                        <div className="relative h-[97%]">
+                          <div className="font-bold text-lg max-sm:text-md mb-3 sm:mb-4 text-inda-dark">
+                            ₦75,000
+                          </div>
+                          <div className="text-2xl text-[#101820BF] max-sm:text-md font-semibold mb-2 items-center">
+                            <span className="mr-2 font-semibold">
+                              <h3 className="text-3xl max-sm:text-sm">
+                                Deeper Dive
+                              </h3>
+                              <p className="text-xl max-sm:text-sm sm:text-lg text-inda-dark/70">
+                                Delivery Time:{" "}
+                                <span className="font-light text-md">
+                                  2-4 Days
+                                </span>
+                              </p>
+                            </span>
+                          </div>
+
+                          <ul className="mt-4 sm:mt-6 mb-2 space-y-1 sm:space-y-2 max-sm:translate-y-[-30px]">
+                            <h4 className="text-[#101820BF] text-xl max-sm:text-sm font-semibold">
+                              What You Get:{" "}
+                              <span className="font-light text-md">
+                                Everything in Instant Report{" "}
+                                <span className="text-inda-teal">Plus:</span>
+                              </span>
+                            </h4>
+                            <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-[#101820BF]">
+                              <span className="text-lg sm:text-2xl text-inda-teal">
+                                ✓
+                              </span>{" "}
+                              Seller identity verification
+                            </li>
+                            <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-[#101820BF]">
+                              <span className="text-lg sm:text-2xl text-inda-teal">
+                                ✓
+                              </span>{" "}
+                              On-site property visit
+                            </li>
+                            <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-[#101820BF]">
+                              <span className="text-lg sm:text-2xl text-inda-teal">
+                                ✓
+                              </span>{" "}
+                              Photo evidence
+                            </li>
+                            <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-[#101820BF]">
+                              <span className="text-lg sm:text-2xl text-inda-teal">
+                                ✓
+                              </span>{" "}
+                              Portfolio Dashboard
+                            </li>
+                          </ul>
+                          <div className="w-full absolute bottom-0 flex justify-center sm:mt-8">
+                            <button className="bg-[#4ea8a1] text-inda-white w-[90%] py-3 max-sm:py-1 rounded-full shadow-md hover:bg-[#e9eaeb] transition-all duration-300 hover:scale-105">
+                              Choose Plan
+                            </button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    </motion.div>
+                  </motion.section>
+                </div>
+              </div>
+            )}
           </div>
         </main>
         <Footer />
