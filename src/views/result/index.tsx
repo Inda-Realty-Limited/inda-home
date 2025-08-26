@@ -1193,62 +1193,61 @@ const Result = () => {
 
             {/* Verified Comparables */}
             <div className="w-full px-4 sm:px-6">
-              <div className="bg-gray-100 rounded-lg p-6">
+              <div className="shadow-lg border-gray-500 rounded-b-xl p-6">
                 <h3 className="text-xl font-bold mb-6 text-inda-teal">
                   Verified Comparables
                 </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div
+                  className="flex gap-4"
+                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                >
+                  <style jsx>{`
+                    div::-webkit-scrollbar {
+                      display: none;
+                    }
+                  `}</style>
                   {dummyResultData.comparables.map((c) => (
                     <div key={c.id} className=" bg-[#E5F4F2] rounded-lg p-4">
                       <img
                         className="block"
-                        src="https://unsplash.com/photos/low-angle-photo-of-city-high-rise-buildings-during-daytime-PhYq704ffdA"
+                        src={c.image}
                         alt="building-image"
                       />
                       <p className="w-full font-semibold text-gray-900 mb-1">
                         {c.title}
                       </p>
-                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
-                        <FaMapMarkerAlt className="text-inda-teal" />
-                        <span>{c.location}</span>
+                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+                        <span>Location: {c.location}</span>
                       </div>
+                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+                        <span>Number of beds: {c.beds}</span>
+                      </div>
+                      <div>
+                        <div className="flex py-1 bg-[#E5F4F2] justify-between text-inda-teal rounded-full text-xs font-medium">
+                          <span>Inda Trust Score</span>
+                          <span>{c.developerTrustScore}%</span>
+                        </div>
+
+                        <div className="w-full bg-[#EAEAEA] rounded-full h-2">
+                          <div
+                            className="bg-inda-teal h-2 rounded-full"
+                            style={{
+                              width: `${Math.round(
+                                result?.indaScore?.finalScore ?? 0
+                              )}%`,
+                            }}
+                          />
+                        </div>
+                      </div>
+
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-lg font-bold text-gray-900">
-                          {c.price}
-                        </span>
+                        <span className=" text-gray-900">{c.price}</span> {"|"}
                         <span className="text-sm text-gray-600">
                           {c.pricePerSqm}
                         </span>
-                      </div>
-                      <div className="flex flex-wrap gap-2 mb-3">
+                        {"|"}
                         <span className="px-2 py-1 bg-[#E5F4F2] text-inda-teal rounded-full text-xs font-medium">
                           {c.yield}
-                        </span>
-                        <span className="px-2 py-1 bg-[#E5F4F2] text-inda-teal rounded-full text-xs font-medium">
-                          {c.riskLevel}
-                        </span>
-                        <span className="px-2 py-1 bg-[#E5F4F2] text-inda-teal rounded-full text-xs font-medium">
-                          Trust {c.developerTrustScore}%
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3 text-sm">
-                        <span
-                          className={`inline-flex items-center gap-1 ${
-                            c.hasVerifiedDocuments
-                              ? "text-green-600"
-                              : "text-gray-500"
-                          }`}
-                        >
-                          <FaCheckCircle /> Docs
-                        </span>
-                        <span
-                          className={`inline-flex items-center gap-1 ${
-                            c.hasVerifiedAgent
-                              ? "text-green-600"
-                              : "text-gray-500"
-                          }`}
-                        >
-                          <FaCheckCircle /> Agent
                         </span>
                       </div>
                     </div>
