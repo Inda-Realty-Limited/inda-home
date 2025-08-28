@@ -337,20 +337,18 @@ const Result = () => {
       <Container noPadding className="min-h-screen bg-[#F9F9F9] text-inda-dark">
         <Navbar />
         <main className="flex-1 py-6">
-          <div className="w-full md:w-4/5 md:mx-auto space-y-6">
+          <div className="text-[#101820]/90 w-full md:w-4/5 md:mx-auto space-y-6">
             {/* Intro Header */}
             <div className="px-4 sm:px-6">
-              <h2 className="text-2xl font-extrabold text-[#101820] mb-2">
-                Hi there,
-              </h2>
-              <p className="text-[#101820]/80">
+              <h2 className="text-[52px] font-bold mb-2">Hi there,</h2>
+              <p className="text-[32px] font-normal">
                 Here's what we found based on your search.
               </p>
               {(result?.listingUrl || result?.snapshot?.listingUrl) && (
-                <p className="text-sm mt-10">
+                <p className="text-[28px] font-normal mt-10">
                   Results for the listing link:{" "}
                   <a
-                    className="text-inda-teal underline"
+                    className="text-inda-teal text-[28px] font-normal underline"
                     href={result?.listingUrl || result?.snapshot?.listingUrl}
                     target="_blank"
                     rel="noreferrer"
@@ -364,33 +362,22 @@ const Result = () => {
             {/* Inda Verdict (Top Card) */}
             <div className="w-full px-4 sm:px-6">
               <div>
-                <div className="bg-inda-teal text-white rounded-lg p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-xl font-bold">Inda Verdict</h3>
-                  </div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <FaExclamationTriangle className="text-yellow-300 text-lg" />
-                    <span className="text-base font-medium">
-                      Overpriced. Moderate Legal Risk
-                    </span>
-                  </div>
-                </div>
-                <div className="mt-5 space-y-2">
+                <div className="bg-inda-teal text-white rounded-lg p-6 mt-5 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-md font-medium mb-3">
+                    <span className="text-[32px] font-medium mb-3">
                       Inda Trust Score{" "}
                       <IoIosInformationCircle
                         size={20}
                         className="text-inda-teal inline-block"
                       />
                     </span>
-                    <span className="text-sm font-semibold">
+                    <span className="text-sm text-[32px] font-normal">
                       {Math.round(result?.indaScore?.finalScore ?? 0)}%
                     </span>
                   </div>
-                  <div className="w-full bg-[#EAEAEA] rounded-full h-2">
+                  <div className="w-full bg-[#101820]/32 rounded-full h-2">
                     <div
-                      className="bg-inda-teal h-2 rounded-full"
+                      className="bg-[#F9F9F9] h-2 rounded-full"
                       style={{
                         width: `${Math.round(
                           result?.indaScore?.finalScore ?? 0
@@ -404,7 +391,7 @@ const Result = () => {
 
             {/* Gallery */}
             <div className="w-full px-4 sm:px-6">
-              <h3 className="text-xl font-bold mb-4">Gallery</h3>
+              <h3 className="text-[40px] font-bold mb-4">Gallery</h3>
               <div
                 className="flex gap-4 overflow-x-auto pb-2"
                 style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
@@ -432,7 +419,7 @@ const Result = () => {
                       <img
                         src={url}
                         alt={`property-${idx}`}
-                        className="w-full h-full object-cover"
+                        className="w-[450px] h-[380px] object-cover"
                       />
                     </div>
                   ))}
@@ -461,8 +448,8 @@ const Result = () => {
             </div>
 
             {/* Action Buttons Row */}
-            <div className="w-full bg-[#4EA8A159] rounded-2xl py-5 sm:px-6">
-              <div className="flex flex-wrap gap-2">
+            <div className="overflow-x-hidden bg-[#4EA8A159] rounded-2xl py-5 sm:px-6">
+              <div className="flex flex-wrap gap-2 w-screen">
                 <button className="flex items-center gap-2 px-4 py-2 bg-inda-teal text-white rounded-full text-sm hover:bg-teal-600 transition-colors">
                   <FaWhatsapp className="text-xs" />
                   WhatsApp Seller
@@ -489,62 +476,60 @@ const Result = () => {
             {/* Smart Summary */}
             <div className="w-full px-4 sm:px-6">
               <div className="">
-                <h2 className="text-xl font-bold mb-6 text-inda-teal">
-                  Smart Summary
-                </h2>
-
                 {/* Desktop Table View */}
                 <div className="hidden md:block">
                   <div className="space-y-2">
                     {/* Table Header */}
-                    <div className="grid grid-cols-3 gap-6 py-3 px-4 bg-[#E5E5E566] rounded-lg text-sm font-semibold text-gray-700">
-                      <div className="font-bold text-lg">Info</div>
-                      <div className="font-bold text-lg">Details</div>
-                      <div className="font-bold text-lg">Status</div>
+                    <div className=" pt-[62px] pb-[34px] px-[41px]  bg-[#E5E5E566] rounded-[16px] text-sm font-semibold text-gray-700">
+                      <h2 className="text-[52px] font-bold mb-6 text-inda-teal">
+                        Smart Summary
+                      </h2>
+                      <div className="grid grid-cols-3 gap-[98px] text-[44px] font-semibold">
+                        {" "}
+                        <div>Info</div>
+                        <div>Details</div>
+                        <div>Status</div>
+                      </div>
                     </div>
 
                     {/* Bedroom/Bathrooms Row */}
-                    <div className="grid grid-cols-3 gap-6 py-4 px-4 bg-[#E5E5E566] rounded-lg">
+                    <div className="grid grid-cols-3 gap-[98px] py-4 px-[22px] bg-[#E5E5E566] font-normal text-[32px] text-[#101820] rounded-lg">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-inda-teal/10 rounded-lg flex items-center justify-center">
                           <FaBuilding className="text-inda-teal text-sm" />
                         </div>
-                        <span className="text-md font-medium">
-                          Bedroom/Bathrooms
-                        </span>
+                        <span>Bedroom/Bathrooms</span>
                       </div>
-                      <div className="text-md font-medium">
+                      <div>
                         {result?.snapshot?.bedrooms ?? dummyResultData.bedrooms}
                         Bed./
                         {result?.snapshot?.bathrooms ??
                           dummyResultData.bathrooms}{" "}
                         Bath.
                       </div>
-                      <div className="text-md font-medium text-gray-600">
-                        From listing/docs.
-                      </div>
+                      <div>From listing/docs.</div>
                     </div>
 
-                    {/* Title Row */}
-                    <div className="grid grid-cols-3 gap-6 py-4 px-4 bg-[#E5E5E566] rounded-lg">
+                    {/* Title Row
+                    <div className="grid grid-cols-3 gap-6 py-4 px-4 bg-[#E5E5E566] font-normal text-[32px] text-[#101820] rounded-lg">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-inda-teal/10 rounded-lg flex items-center justify-center">
                           <FaCheckCircle className="text-inda-teal text-sm" />
                         </div>
-                        <span className="text-md font-medium">Title</span>
+                        <span>Title</span>
                       </div>
                       <div className="text-md font-medium flex items-center gap-2">
                         {result?.aiReport?.titleSafety?.label ||
                           dummyResultData.title_status}
                         <FaCheckCircle className="text-green-500 text-sm" />
                       </div>
-                      <div className="text-md font-medium text-inda-teal cursor-pointer hover:underline">
+                      <div className="cursor-pointer hover:text-inda-teal">
                         Verified
                       </div>
-                    </div>
+                    </div> */}
 
                     {/* Developer Row */}
-                    <div className="grid grid-cols-3 gap-6 py-4 px-4 bg-[#E5E5E566] rounded-lg">
+                    <div className="grid grid-cols-3 gap-[98px] py-4 px-[22px] bg-[#E5E5E566] font-normal text-[32px] text-[#101820] rounded-lg">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-inda-teal/10 rounded-lg flex items-center justify-center">
                           <FaBuilding className="text-inda-teal text-sm" />
@@ -554,13 +539,13 @@ const Result = () => {
                       <div className="text-md font-medium">
                         {dummyResultData.developer.name}
                       </div>
-                      <div className="text-md font-medium text-inda-teal cursor-pointer hover:underline">
+                      <div className="text-md font-medium cursor-pointer hover:text-inda-teal">
                         View Profile here
                       </div>
                     </div>
 
                     {/* Delivery Date Row */}
-                    <div className="grid grid-cols-3 gap-6 py-4 px-4 bg-[#E5E5E566] rounded-lg">
+                    <div className="grid grid-cols-3 gap-[98px] py-4 px-[22px] bg-[#E5E5E566] font-normal text-[32px] text-[#101820] rounded-lg">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-inda-teal/10 rounded-lg flex items-center justify-center">
                           <FaClock className="text-inda-teal text-sm" />
@@ -572,14 +557,14 @@ const Result = () => {
                       <div className="text-md font-medium">
                         {dummyResultData.deliveryDate}
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-inda-teal">
+                      <div className="flex items-center gap-2">
                         <div className="w-3 h-3 text-md bg-inda-teal font-medium rounded-full"></div>
                         {dummyResultData.status}
                       </div>
                     </div>
 
                     {/* Status Row */}
-                    <div className="grid grid-cols-3 gap-6 py-4 px-4 bg-[#E5E5E566] rounded-lg">
+                    <div className="grid grid-cols-3 gap-[98px] py-4 px-[22px] bg-[#E5E5E566] font-normal text-[32px] text-[#101820] rounded-lg">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 bg-inda-teal/10 rounded-lg flex items-center justify-center">
                           <FaMapMarkerAlt className="text-inda-teal text-sm" />
@@ -589,7 +574,7 @@ const Result = () => {
                       <div className="text-md font-medium">
                         {dummyResultData.status}/Completed
                       </div>
-                      <div className="flex items-center gap-2 text-sm text-inda-teal">
+                      <div className="flex items-center gap-2">
                         <div className="w-3 h-3 text-md font-medium bg-inda-teal rounded-full"></div>
                         {dummyResultData.status}
                       </div>
@@ -734,7 +719,7 @@ const Result = () => {
             {/* Amenities */}
             <div className="w-full">
               <div className="rounded-lg p-6">
-                <h3 className="text-xl font-bold mb-6">Amenities</h3>
+                <h3 className="text-[40px] font-bold mb-6">Amenities</h3>
                 <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-4">
                   {/* Keeping placeholder amenities for now */}
                   <div className="flex-shrink-0 w-48 h-36 rounded-xl overflow-hidden relative shadow-lg">
@@ -810,92 +795,75 @@ const Result = () => {
             {/* Feedback & Complaints */}
             <div className="w-full px-4 sm:px-6">
               <div className="bg-gray-100 rounded-lg p-6">
-                <h3 className="text-xl font-bold mb-6 text-inda-teal">
+                <h3 className="text-[52px] font-bold mb-6 text-inda-teal">
                   Feedback & Complaints
                 </h3>
                 <div className="">
                   {/* Ratings Overview */}
-                  <div className="flex bg-white gap-20 rounded-lg p-6 mb-4">
-                    <div>
-                      <div className="flex items-baseline gap-2 mb-2">
-                        <span className="text-4xl font-extrabold text-gray-900">
-                          {dummyResultData.overallRating.toFixed(1)}
-                        </span>
-                        <span className="text-sm text-gray-600"></span>
-                      </div>
-                      <div className="flex items-center gap-1 mb-3">
-                        {Array.from({ length: 5 }).map((_, i) => {
-                          const active =
-                            i < Math.round(dummyResultData.overallRating);
-                          return (
-                            <FaStar
-                              key={i}
-                              className={
-                                active ? "text-yellow-400" : "text-gray-300"
-                              }
-                            />
-                          );
-                        })}
-                      </div>
-                      <p className="text-sm text-gray-600 mb-4">
-                        {dummyResultData.totalReviews} reviews
-                      </p>
-                    </div>
-                    <div className="space-y-2 w-full">
-                      {dummyResultData.ratingBreakdown.map((r, idx) => (
-                        <div key={idx} className="flex items-center gap-3">
-                          <span className="w-10 text-sm text-gray-700">
-                            {r.stars}
-                          </span>
-                          <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                            <div
-                              className="h-2 bg-gray-400 rounded-full"
-                              style={{ width: `${r.percentage}%` }}
-                            ></div>
+                  <div className="flex gap-20 rounded-lg p-6 mb-4">
+                    <div className="flex-1">
+                      <div className="flex gap-20">
+                        <div>
+                          <div className="flex items-baseline gap-2 mb-2">
+                            <span className="text-[48px] font-black">
+                              {dummyResultData.overallRating.toFixed(1)}
+                            </span>
+                            <span className="text-sm text-gray-600"></span>
                           </div>
-                          <span className="w-10 text-right text-sm text-gray-600">
-                            {r.percentage}%
-                          </span>
+                          <div className="flex items-center gap-1 mb-3">
+                            {Array.from({ length: 5 }).map((_, i) => {
+                              const active =
+                                i < Math.round(dummyResultData.overallRating);
+                              return (
+                                <FaStar
+                                  key={i}
+                                  className={
+                                    active
+                                      ? "text-yellow-400 h-[31px] w-[31px]"
+                                      : "text-gray-300 h-[31px] w-[31px]"
+                                  }
+                                />
+                              );
+                            })}
+                          </div>
+                          <p className="text-[16px] text-[#0F1417] font-normal">
+                            {dummyResultData.totalReviews} reviews
+                          </p>
                         </div>
-                      ))}
+                        <div className="space-y-2 w-full">
+                          {dummyResultData.ratingBreakdown.map((r, idx) => (
+                            <div key={idx} className="flex items-center gap-3">
+                              <span className="w-10 text-[16px] text-[#101820]">
+                                {r.stars}
+                              </span>
+                              <div className="flex-1 h-8 bg-[#E5E5E5] rounded-full overflow-hidden">
+                                <div
+                                  className="h-8 bg-[#101820]/40 rounded-full"
+                                  style={{ width: `${r.percentage}%` }}
+                                ></div>
+                              </div>
+                              <span className="w-10 text-right text-[16px]  text-[#101820]/65">
+                                {r.percentage}%
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
+                    <div className="flex-1"> </div>
                   </div>
 
                   {/* Reviews List */}
-                  <div className="md:col-span-2 space-y-4">
-                    <h1 className="font-bold text-xl">Reviews</h1>
-                    {dummyResultData.reviews.map((rev) => (
-                      <div key={rev.id} className="bg-white rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <div>
-                            <p className="font-semibold text-gray-900">
-                              {rev.reviewer}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {rev.location} • {rev.timeAgo}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            {Array.from({ length: 5 }).map((_, i) => (
-                              <FaStar
-                                key={i}
-                                className={
-                                  i < rev.rating
-                                    ? "text-yellow-400"
-                                    : "text-gray-300"
-                                }
-                              />
-                            ))}
-                          </div>
-                        </div>
-                        <p className="font-medium text-gray-900 mb-1">
-                          {rev.title}
-                        </p>
-                        <p className="text-sm text-gray-700 leading-relaxed">
-                          {rev.content}
-                        </p>
-                      </div>
-                    ))}
+                  <div className="md:col-span-2 space-y-4 h-[499px]">
+                    <h1 className="font-bold text-[32px]">Reviews</h1>
+                    <div className="w-[1224px] border-1 border-[#4EA8A1] rounded-[32px] h-[311px]">
+                      <p className="text-center pt-[145px] text-[20px] font-medium">
+                        No Reviews Yet
+                      </p>
+                    </div>
+                    <button className="mt-[50px] ml-[30px] py-[8px] px-[3px] text-[#4EA8A1] text-[24px] font-semibold">
+                      Report Your Experience here &lt; &lt;
+                    </button>
                   </div>
                 </div>
 
@@ -1053,87 +1021,6 @@ const Result = () => {
               </div>
             </div>
 
-            {/* Documents & Trust Indicators */}
-            <div className="w-full px-4 sm:px-6">
-              <div className="bg-gray-100 rounded-lg p-6">
-                <h3 className="text-xl font-bold mb-6 text-inda-teal">
-                  Documents & Trust Indicators
-                </h3>
-                {/* Desktop Table */}
-                <div className="hidden md:block bg-white rounded-lg overflow-hidden">
-                  <div className="grid grid-cols-3 gap-4 px-4 py-3 border-b text-sm font-semibold text-gray-700">
-                    <div className="text-lg font-bold">Document</div>
-                    <div className="text-lg font-bold">Status</div>
-                    <div className="text-lg font-bold">Notes</div>
-                  </div>
-                  <div>
-                    {dummyResultData.documents.map((doc, idx) => (
-                      <div
-                        key={idx}
-                        className="grid grid-cols-3 gap-4 px-4 py-3 border-b last:border-0 text-sm"
-                      >
-                        <div className="font-medium text-md text-gray-900">
-                          {doc.name}
-                        </div>
-                        <div className="font-medium text-md flex items-center gap-2">
-                          {doc.status === "verified" && (
-                            <FaCheckCircle className="text-green-500" />
-                          )}
-                          {doc.status === "not-provided" && (
-                            <FaTimes className="text-red-500" />
-                          )}
-                          {doc.status === "in-review" && (
-                            <FaClock className="text-yellow-500" />
-                          )}
-                          <span className="font-medium text-md capitalize">
-                            {doc.status.replace("-", " ")}
-                          </span>
-                        </div>
-                        <div className="text-gray-600">{doc.notes}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-                {/* Mobile Cards */}
-                <div className="md:hidden space-y-3">
-                  {dummyResultData.documents.map((doc, idx) => (
-                    <div key={idx} className="bg-white rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <p className="font-semibold text-gray-900">
-                          {doc.name}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          {doc.status === "verified" && (
-                            <FaCheckCircle className="text-green-500" />
-                          )}
-                          {doc.status === "not-provided" && (
-                            <FaTimes className="text-red-500" />
-                          )}
-                          {doc.status === "in-review" && (
-                            <FaClock className="text-yellow-500" />
-                          )}
-                          <span className="text-sm capitalize">
-                            {doc.status.replace("-", " ")}
-                          </span>
-                        </div>
-                      </div>
-                      <p className="text-sm text-gray-700">{doc.notes}</p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Legal Note */}
-                <div className="mt-6 pt-4 border-t border-gray-200">
-                  <h4 className="text-lg font-bold text-inda-teal mb-2">
-                    Legal Note
-                  </h4>
-                  <p className="text-gray-700 text-base leading-relaxed">
-                    {dummyResultData.legalNote}
-                  </p>
-                </div>
-              </div>
-            </div>
-
             {/* ROI Panel */}
             <div className="w-full px-4 sm:px-6">
               <div className="bg-gray-100 rounded-lg p-6">
@@ -1141,7 +1028,7 @@ const Result = () => {
                   Investment ROI Calculator
                 </h3>
                 <p className="text-gray-900">
-                  Estimate your potenttial returns on investment properties with
+                  Estimate your potential returns on investment properties with
                   our
                   <br /> comprehensive calculator
                 </p>
@@ -1149,12 +1036,12 @@ const Result = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
                   {dummyResultData.roiMetrics.map((m, idx) => (
                     <div key={idx}>
-                      <p className="text-sm pb-5  text-gray-500">
+                      <IoIosInformationCircle
+                        size={20}
+                        className="inline-block text-inda-teal mr-1"
+                      />
+                      <p className="text-sm pb-5 inline-block text-gray-500">
                         {m.label}
-                        <IoIosInformationCircle
-                          size={20}
-                          className="inline-block text-inda-teal ml-1"
-                        />
                       </p>
                       <p className="bg-[#4EA8A159] rounded-lg p-4 text-lg text-center font-normal text-gray-600">
                         {m.value}
@@ -1191,7 +1078,7 @@ const Result = () => {
               </div>
             </div>
 
-            {/* Verified Comparables */}
+            {/* Verified Comparables
             <div className="w-full px-4 sm:px-6">
               <div className="shadow-lg border-gray-500 rounded-b-xl p-6">
                 <h3 className="text-xl font-bold mb-6 text-inda-teal">
@@ -1254,7 +1141,7 @@ const Result = () => {
                   ))}
                 </div>
               </div>
-            </div>
+            </div> */}
 
             {/* How would you like to proceed? */}
             <div className="w-full px-4 sm:px-6">
@@ -1668,3 +1555,62 @@ const Result = () => {
 };
 
 export default Result;
+
+// {dummyResultData.reviews.map((rev) => (
+//                       <div
+//                         key={rev.id}
+//                         className="bg-white rounded-lg p-4 flex flex-row w-[313px] mr-10 inline-block"
+//                       >
+//                         <div className="flex flex-col gap-5  w-[313px]">
+//                           <div className="flex gap-5">
+//                             <div className="flex flex-col gap-3">
+//                               <div>
+//                                 <div className="rounded-full w-[48px] h-[44px] bg-[#C6E3E1]"></div>
+//                                 <span className="text-[14px] font-medium p-1">
+//                                   Image
+//                                 </span>
+//                               </div>
+//                               <div>
+//                                 <span className="text-[14px] font-medium text-[#101820]">
+//                                   Rating
+//                                 </span>
+//                                 <div className="flex items-center gap-1">
+//                                   {Array.from({ length: 5 }).map((_, i) => (
+//                                     <FaStar
+//                                       key={i}
+//                                       className={
+//                                         i < rev.rating
+//                                           ? "h-[16px] w-[19px] text-[#101820]/40"
+//                                           : "h-[16px] w-[19px] text-[#989C9F]"
+//                                       }
+//                                     />
+//                                   ))}
+//                                 </div>
+//                               </div>
+//                             </div>
+//                             <div className="flex items-center justify-between mb-2">
+//                               <div>
+//                                 <p className="font-medium text-[14px] text-[#101820]">
+//                                   Name
+//                                 </p>
+//                                 <div className="w-[156px] h-[41px] rounded-[6px] bg-[#4EA8A152]/32"></div>
+//                                 <div>
+//                                   <p className="font-medium text-[14px] text-[#101820]">
+//                                     Review date
+//                                   </p>
+//                                   <div className="w-[156px] h-[24px] rounded-[6px] bg-[#4EA8A152]/32"></div>
+//                                 </div>
+//                               </div>
+//                             </div>
+//                           </div>
+//                           <div>
+//                             <div>
+//                               <p className="font-medium text-[14px] text-[#101820]">
+//                                 Review
+//                               </p>
+//                               <div className="w-[269px] h-[77px] rounded-[6px] bg-[#4EA8A152]/32"></div>
+//                             </div>
+//                           </div>
+//                         </div>
+//                       </div>
+//                     ))}
