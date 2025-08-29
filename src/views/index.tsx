@@ -2,7 +2,6 @@ import { Container, Footer, Input, Navbar, Text } from "@/components";
 import { getToken } from "@/helpers";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
-import Link from "next/link";
 import { useRouter } from "next/router";
 import React, {
   useEffect,
@@ -21,7 +20,6 @@ import {
 } from "react-icons/fi";
 import { GiBrain } from "react-icons/gi";
 import { HiOutlineBuildingOffice2 } from "react-icons/hi2";
-import { TiTick } from "react-icons/ti";
 
 const sampleData = [
   { id: 1, name: "Lagos Luxury Villa", type: "listing" },
@@ -121,7 +119,9 @@ const Landing: React.FC = () => {
     } else {
       // User is authenticated, proceed to result page
       router.push(
-        `/result?q=${encodeURIComponent(search)}&type=${selectedSearchType.id}`
+        `/result/hidden?q=${encodeURIComponent(search)}&type=${
+          selectedSearchType.id
+        }`
       );
     }
   };
@@ -769,342 +769,450 @@ const Landing: React.FC = () => {
       </motion.section>
 
       <motion.section
-        className="w-[95%] max-sm:w-[95%] ml-10 max-sm:ml-5 mr-15 max-sm:mr-0 max-sm:p-5 rounded-xl px-1 sm:px-6 md:px-8 lg:px-[5%] bg-[#4EA8A159] py-6 sm:py-16 md:py-20 flex flex-col items-start justify-center"
+        className="w-full py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8"
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.2 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
       >
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-        >
-          <Text className="text-inda-dark font-bold text-2xl sm:text-3xl sm:mb-8">
-            Plans & Pricing
-          </Text>
-          <p className="font-normal mb-10 text-md text-[#556457]">
-            Inda Pricing Guide (Lagos Listings Only)
-          </p>
-        </motion.div>
-        <motion.div
-          className="w-full flex flex-wrap flex-col gap-6 sm:gap-8"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.4 }}
-        >
-          <div className="w-full max-sm:w-[90%] h-250 flex flex-col items-center">
-            <div className="w-full pl-3 bg-[#E5E5E566] h-[95%] mb-20 rounded-xl sm:rounded-2xl border border-[#D1D5DB] overflow-visible max-sm:w-[90%] flex flex-col xl:flex-row justify-center">
-              {/* Basic Summary with Pricing Breakdown Button */}
-              {/* <motion.div
-                className="flex-1 flex-grow px-6  sm:p-8 flex flex-col justify-between transition-all duration-300  hover:pt-5 hover:shadow-lg hover:scale-105"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-              >
-                <div className="h-[97%] relative max-sm:static max-sm:flex max-sm:flex-col">
-                  <div>
-                    <div className="font-bold text-[36px] max-sm:text-lg mb-3 sm:mb-4 text-inda-dark">
-                      ₦0
-                    </div>
-                    <div className="sm:text-3xl  text-[#101820BF] mb-2 flex items-center">
-                      <span className=" mr-2 font-medium">
-                        <h3 className="text-[28px] max-sm:text-lg">
-                          Free Report
-                        </h3>
-                        <p className="text-[16px] font-semibold max-sm:text-lg">
-                          Delivery Time:{" "}
-                          <span className="font-normal text-[16px] max-sm:text-sm">
-                            &lt; 20 seconds
-                          </span>
-                        </p>
-                      </span>
-                    </div>
-
-                    <ul className="mt-0 sm:mt-6 mb-2">
-                      <h4 className="text-[#101820BF] my-8 text-[16px] max-sm:text-lg font-semibold">
-                        What You Get:
-                      </h4>
-                      <li className="flex items-center gap-2 text-[16px] font-normal sm:text-lg text-inda-dark/90">
-                        <span className="text-xl sm:text-2xl text-[#4EA8A1]">
-                          ✓
-                        </span>{" "}
-                        Inda Score
-                      </li>
-                    </ul>
-                    <div className="w-full absolute max-sm:static bottom-5 max-sm:bottom-0 flex justify-center sm:mt-8">
-                      <button className="bg-[#4ea8a1] absolute max-sm:static bottom-3 max-sm:text-lg text-inda-white w-[90%] max-sm:w-full py-3 rounded-full shadow-md hover:bg-[#e9eaeb] transition-all duration-300 hover:scale-105">
-                        Choose Plan
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </motion.div> */}
-
+        <div className="max-w-[80%] mx-auto ">
+          <motion.div
+            className="bg-[#1018200A] rounded-[48px] p-8 sm:p-12 shadow-xl"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="text-left mb-12"
+            >
+              <Text className="text-inda-dark font-bold text-2xl sm:text-3xl mb-2">
+                Plans & Pricing
+              </Text>
+              <p className="font-normal text-md text-[#556457]">
+                Inda Pricing Guide (Lagos Listings Only)
+              </p>
+            </motion.div>
+            <div className="bg-[#F9F9F980] rounded-[24px] p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-0">
               <motion.div
-                className="flex-[1_1_220px] p-6 flex flex-col justify-between transition-all duration-300  hover:pt-10 hover:shadow-lg hover:scale-105"
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.4 }}
+                transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+                whileHover={{ scale: 1.02, transition: { duration: 0.3 } }}
+                className="w-full"
               >
-                <div className="relative max-sm:static h-[97%] max-sm:flex max-sm:flex-col">
-                  <div>
-                    <div className="font-bold text-[36px] max-sm:text-lg mb-3 sm:mb-4 text-inda-dark">
-                      ₦0
-                    </div>
-                    <div className="sm:text-3xl text-[#101820BF] font-semibold text-inda-dark mb-2 flex items-center">
-                      <span className="mr-2 font-medium">
-                        <h3 className="text-[28px] text-[#101820BF]">
-                          Free Report{" "}
-                        </h3>
-                        <p className="text-[16px] sm:text-lg font-semibold text-inda-dark/70">
-                          Delivery Time:{" "}
-                          <span className="font-normal text-[16px]">
-                            &lt; 20 seconds
-                          </span>
-                        </p>
-                      </span>
-
-                      <span></span>
-                    </div>
-                    <ul className="mt-4 sm:mt-6 mb-2 space-y-1 sm:space-y-2">
-                      <h4 className="text-[#101820BF] my-8 text-[16px] font-semibold">
-                        What You Get:
-                      </h4>
-                      <li className="flex items-center gap-2 text-[16px] font-normal sm:text-base md:text-lg text-inda-dark/90">
-                        <span className="text-lg sm:text-2xl text-inda-teal">
-                          ✓
-                        </span>{" "}
-                        Inda Score
-                      </li>
-                    </ul>
-                  </div>
-                  <div className="w-full absolute max-sm:static bottom-[22%] flex justify-center sm:mt-8">
-                    <button
-                      onClick={choseFree}
-                      className="bg-[#4ea8a1] text-inda-white w-[90%] py-3 rounded-full shadow-md hover:bg-[#e9eaeb] transition-all duration-300 hover:scale-105"
+                <div className="p-4 sm:p-6 h-full flex flex-col transition-all duration-300 hover:shadow-md rounded-lg sm:rounded-none">
+                  <div className="text-left mb-4 sm:mb-6">
+                    <motion.div
+                      className="font-bold text-3xl sm:text-4xl mb-2 text-gray-900"
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5, delay: 0.4 }}
                     >
-                      Choose Plan
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Free Report */}
-              <motion.div
-                className="flex-[1_1_280px] p-6  flex flex-col justify-between transition-all duration-300  hover:pt-10 hover:shadow-lg hover:scale-105"
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-              >
-                <div className="relative max-sm:static h-[97%] max-sm:flex max-sm:flex-col">
-                  <div>
-                    <div className="font-bold text-[36px] max-sm:text-lg mb-3 sm:mb-4 text-inda-dark">
-                      ₦3,000
-                    </div>
-                    <div className="sm:text-3xl text-[#101820BF] font-semibold text-inda-dark mb-2 flex items-center">
-                      <span className="mr-2 font-medium">
-                        <h3 className="text-[28px] text-[#101820BF]">
-                          Inda Instant Report
-                        </h3>
-                        <p className="text-[16px] sm:text-lg font-semibold text-inda-dark/70">
-                          Delivery Time:{" "}
-                          <span className="font-normal text-[16px]">
-                            &lt; 30 seconds (Instant)
-                          </span>
-                        </p>
-                      </span>
-
-                      <span></span>
-                    </div>
-                    <ul className="mt-4 sm:mt-6 mb-2 space-y-1 sm:space-y-2">
-                      <h4 className="text-[#101820BF] my-8 text-[16px] font-semibold">
-                        What You Get:
-                      </h4>
-                      <li className="flex items-center gap-2 text-[16px] font-normal sm:text-base md:text-lg text-inda-dark/90">
-                        <span className="text-lg sm:text-2xl text-inda-teal">
-                          ✓
-                        </span>{" "}
-                        Inda Score
-                      </li>
-                      <li className="flex items-center gap-2 text-[16px] font-normal sm:text-base md:text-lg text-inda-dark/90">
-                        <span className="text-lg sm:text-2xl text-inda-teal">
-                          ✓
-                        </span>{" "}
-                        Micro-location market data
-                      </li>
-                      <li className="flex items-center gap-2 text-[16px] font-normal sm:text-base md:text-lg text-inda-dark/90">
-                        <span className="text-lg sm:text-2xl text-inda-teal">
-                          ✓
-                        </span>{" "}
-                        AI market valuation
-                      </li>
-                      <li className="flex items-center gap-2 text-[16px] font-normal sm:text-base md:text-lg text-inda-dark/90">
-                        <span className="text-lg sm:text-2xl text-inda-teal">
-                          ✓
-                        </span>{" "}
-                        Overpricing check
-                      </li>
-                    </ul>
-                  </div>
-                  <div className="w-full absolute max-sm:static bottom-[22%] flex justify-center sm:mt-8">
-                    <button className="bg-[#4ea8a1] text-inda-white w-[90%] py-3 rounded-full shadow-md hover:bg-[#e9eaeb] transition-all duration-300 hover:scale-105">
-                      Choose Plan
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Deep Report */}
-              <motion.div
-                className="flex-[2_1_280px] h-170 py-20 bg-inda-dark rounded-xl sm:rounded-2xl hover:shadow-inda-teal hover:shadow-[0_10px_10px_-1px_rgba(0,0,0,0.1)] hover:shadow-[0_8px_4px_-1px_rgba(0,0,0,0.06)] border border-[#D1D5DB] sm:p-8 flex flex-col justify-between transition-all duration-300  hover:pt-10 hover:shadow-lg hover:scale-105"
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-              >
-                <div className="relative">
-                  <div className="font-bold text-[36px] max-sm:text-lg mb-3 sm:mb-4 text-white">
-                    ₦25,000
-                  </div>
-                  <div className="sm:text-3xl text-inda-white items-center">
-                    <span className="mr-2 font-medium">
-                      <h3 className="text-[28px]">Deep Dive Report</h3>
-                      <p className="text-[16px] sm:text-lg font-semibold text-inda-white">
-                        Delivery Time:{" "}
-                        <span className="font-normal text-[16px]">
-                          {" "}
-                          24-48 hours (via email PDF)
-                        </span>
-                      </p>
-                    </span>
+                      ₦0
+                    </motion.div>
+                    <motion.h3
+                      className="text-lg sm:text-xl font-bold text-gray-900 mb-2"
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5, delay: 0.5 }}
+                    >
+                      Free Report
+                    </motion.h3>
+                    <motion.p
+                      className="text-xs sm:text-sm text-gray-600 mb-4"
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      transition={{ duration: 0.5, delay: 0.6 }}
+                    >
+                      Delivery Time: &lt;20 seconds
+                    </motion.p>
                   </div>
 
-                  <ul className="sm:mt-6 mb-2 translate-y-[-45px] sm:space-y-2">
-                    <h4 className="text-inda-white text-[16px] font-semibold">
-                      What You Get:{" "}
-                      <span className="text-inda-white font-medium text-[16px]">
-                        Everything in Instant Report{" "}
-                        <span className="text-inda-yellow">Plus:</span>
-                      </span>
+                  <motion.div
+                    className="flex-1 mb-4 sm:mb-6"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.7 }}
+                  >
+                    <h4 className="text-gray-900 mb-3 text-xs sm:text-sm font-semibold">
+                      What You Get:
                     </h4>
+                    <ul className="space-y-2">
+                      <motion.li
+                        className="flex items-center gap-3 text-xs sm:text-sm text-gray-700"
+                        initial={{ opacity: 0, x: -10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4, delay: 0.8 }}
+                      >
+                        <span className="text-[#4ea8a1] text-base sm:text-lg">
+                          ✓
+                        </span>
+                        Inda Score
+                      </motion.li>
+                    </ul>
+                  </motion.div>
 
-                    <h3 className="text-inda-white text-[16px] font-semibold">
-                      Title & Legal Verification:
-                    </h3>
-                    <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-white">
-                      <span className="text-lg sm:text-2xl text-inda-yellow">
-                        ✓
-                      </span>{" "}
-                      Certificate of Occupancy (C of O) or Deed check
-                    </li>
-                    <li className="flex items-center gap-2 text-[16px] font-[normal] sm:text-base md:text-lg text-inda-white">
-                      <span className="text-lg sm:text-2xl text-inda-yellow">
-                        ✓
-                      </span>{" "}
-                      Governor's consent check
-                    </li>
-                    <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-white">
-                      <span className="text-lg sm:text-2xl text-inda-yellow">
-                        ✓
-                      </span>{" "}
-                      Zoning compliance check
-                    </li>
-                    <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-white">
-                      <span className="text-lg sm:text-2xl text-inda-yellow">
-                        ✓
-                      </span>{" "}
-                      Litigation search (court registery)
-                    </li>
-                    <li className="flex items-center gap-2 mb-10 text-sm sm:text-base md:text-lg text-inda-white">
-                      <span className="text-lg sm:text-2xl text-inda-yellow">
-                        ✓
-                      </span>{" "}
-                      Survey plan verification (boundaries & location)
-                    </li>
-                  </ul>
-                  <div className="w-full absolute bottom-0 flex justify-center sm:mt-8">
-                    <button className="bg-[#4ea8a1] text-inda-white w-[90%] py-3 rounded-full shadow-md hover:bg-[#e9eaeb] transition-all duration-300 hover:scale-105">
-                      Choose Plan
-                    </button>
+                  <motion.button
+                    onClick={choseFree}
+                    className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.9 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Choose plan
+                  </motion.button>
+                </div>
+              </motion.div>
+
+              {/* Inda Instant Report */}
+              <motion.div
+                initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+                whileHover={{ scale: 1.02, transition: { duration: 0.3 } }}
+                className="w-full"
+              >
+                <div className="p-4 sm:p-6 h-full flex flex-col transition-all duration-300 hover:shadow-md rounded-lg sm:rounded-none border-l-0 sm:border-l sm:border-l-gray-200">
+                  <div className="text-left mb-4 sm:mb-6">
+                    <motion.div
+                      className="font-bold text-3xl sm:text-4xl mb-2 text-gray-900"
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5, delay: 0.4 }}
+                    >
+                      ₦3,000
+                    </motion.div>
+                    <motion.h3
+                      className="text-lg sm:text-xl font-bold text-gray-900 mb-2"
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5, delay: 0.5 }}
+                    >
+                      Inda Instant Report
+                    </motion.h3>
+                    <motion.p
+                      className="text-xs sm:text-sm text-gray-600 mb-4"
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      transition={{ duration: 0.5, delay: 0.6 }}
+                    >
+                      Delivery Time: &lt;30 seconds (Instant)
+                    </motion.p>
                   </div>
+
+                  <motion.div
+                    className="flex-1 mb-4 sm:mb-6"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.7 }}
+                  >
+                    <h4 className="text-gray-900 mb-3 text-xs sm:text-sm font-semibold">
+                      What You Get:
+                    </h4>
+                    <ul className="space-y-2">
+                      <motion.li
+                        className="flex items-center gap-3 text-xs sm:text-sm text-gray-700"
+                        initial={{ opacity: 0, x: -10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4, delay: 0.8 }}
+                      >
+                        <span className="text-[#4ea8a1] text-base sm:text-lg">
+                          ✓
+                        </span>
+                        Inda Score
+                      </motion.li>
+                      <motion.li
+                        className="flex items-center gap-3 text-xs sm:text-sm text-gray-700"
+                        initial={{ opacity: 0, x: -10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4, delay: 0.9 }}
+                      >
+                        <span className="text-[#4ea8a1] text-base sm:text-lg">
+                          ✓
+                        </span>
+                        Micro-location market data
+                      </motion.li>
+                      <motion.li
+                        className="flex items-center gap-3 text-xs sm:text-sm text-gray-700"
+                        initial={{ opacity: 0, x: -10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4, delay: 1.0 }}
+                      >
+                        <span className="text-[#4ea8a1] text-base sm:text-lg">
+                          ✓
+                        </span>
+                        AI market valuation
+                      </motion.li>
+                      <motion.li
+                        className="flex items-center gap-3 text-xs sm:text-sm text-gray-700"
+                        initial={{ opacity: 0, x: -10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4, delay: 1.1 }}
+                      >
+                        <span className="text-[#4ea8a1] text-base sm:text-lg">
+                          ✓
+                        </span>
+                        Overpricing check
+                      </motion.li>
+                    </ul>
+                  </motion.div>
+
+                  <motion.button
+                    className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 1.2 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Choose plan
+                  </motion.button>
+                </div>
+              </motion.div>
+
+              {/* Deep Dive Report - Elevated */}
+              <motion.div
+                initial={{ opacity: 0, y: 40, scale: 0.85 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.7, delay: 0.4, ease: "easeOut" }}
+                whileHover={{
+                  scale: 1.03,
+                  y: -5,
+                  transition: { duration: 0.3 },
+                }}
+                className="relative -mt-4 sm:-mt-8 lg:-mt-12 w-full"
+              >
+                <div className="bg-[#2A2A2A] rounded-[20px] sm:rounded-[32px] p-4 sm:p-6 h-full flex flex-col shadow-2xl hover:shadow-3xl transition-all duration-300 ">
+                  <div className="text-left mb-4 sm:mb-6">
+                    <motion.div
+                      className="font-bold text-3xl sm:text-4xl mb-2 text-white"
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5, delay: 0.6 }}
+                    >
+                      ₦25,000
+                    </motion.div>
+                    <motion.h3
+                      className="text-lg sm:text-xl font-bold text-white mb-2"
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5, delay: 0.7 }}
+                    >
+                      Deep Dive Report
+                    </motion.h3>
+                    <motion.p
+                      className="text-xs sm:text-sm text-gray-300 mb-4"
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      transition={{ duration: 0.5, delay: 0.8 }}
+                    >
+                      Delivery Time: 24-48 hours (via email PDF)
+                    </motion.p>
+                  </div>
+
+                  <motion.div
+                    className="flex-1 mb-4 sm:mb-6"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.9 }}
+                  >
+                    <h4 className="text-white mb-2 text-xs sm:text-sm font-semibold">
+                      What You Get:{" "}
+                      <span className="font-normal text-gray-300">
+                        Everything in Instant Report
+                      </span>
+                      <span className="text-white font-semibold"> Plus:</span>
+                    </h4>
+                    <h5 className="text-white text-xs sm:text-sm font-semibold mb-3">
+                      Title & Legal Verification:
+                    </h5>
+                    <ul className="space-y-2">
+                      <motion.li
+                        className="flex items-center gap-3 text-xs sm:text-sm text-gray-300"
+                        initial={{ opacity: 0, x: -10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4, delay: 1.0 }}
+                      >
+                        <span className="text-white text-base sm:text-lg">
+                          ✓
+                        </span>
+                        Certificate of Occupancy (C of O) or Deed check
+                      </motion.li>
+                      <motion.li
+                        className="flex items-center gap-3 text-xs sm:text-sm text-gray-300"
+                        initial={{ opacity: 0, x: -10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4, delay: 1.1 }}
+                      >
+                        <span className="text-white text-base sm:text-lg">
+                          ✓
+                        </span>
+                        Governor's consent check
+                      </motion.li>
+                      <motion.li
+                        className="flex items-center gap-3 text-xs sm:text-sm text-gray-300"
+                        initial={{ opacity: 0, x: -10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4, delay: 1.2 }}
+                      >
+                        <span className="text-white text-base sm:text-lg">
+                          ✓
+                        </span>
+                        Zoning compliance check
+                      </motion.li>
+                      <motion.li
+                        className="flex items-center gap-3 text-xs sm:text-sm text-gray-300"
+                        initial={{ opacity: 0, x: -10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4, delay: 1.3 }}
+                      >
+                        <span className="text-white text-base sm:text-lg">
+                          ✓
+                        </span>
+                        Litigation search (court registry)
+                      </motion.li>
+                      <motion.li
+                        className="flex items-center gap-3 text-xs sm:text-sm text-gray-300"
+                        initial={{ opacity: 0, x: -10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4, delay: 1.4 }}
+                      >
+                        <span className="text-white text-base sm:text-lg">
+                          ✓
+                        </span>
+                        Survey plan verification (boundaries & location)
+                      </motion.li>
+                    </ul>
+                  </motion.div>
+
+                  <motion.button
+                    className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 1.5 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Choose plan
+                  </motion.button>
                 </div>
               </motion.div>
 
               {/* Deeper Dive */}
               <motion.div
-                className="flex-[1_1_260px] p-6  flex flex-col justify-between transition-all duration-300  hover:pt-10 hover:shadow-lg hover:scale-105"
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.6 }}
+                transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
+                whileHover={{ scale: 1.02, transition: { duration: 0.3 } }}
+                className="w-full"
               >
-                <div className="relative max-sm:static h-[97%] max-sm:flex max-sm:flex-col">
-                  <div>
-                    <div className="font-bold text-[36px] max-sm:text-lg mb-3 sm:mb-4 text-inda-dark">
+                <div className="p-4 sm:p-6 h-full flex flex-col transition-all duration-300 hover:shadow-md rounded-lg sm:rounded-none border-l-0 sm:border-l sm:border-l-gray-200">
+                  <div className="text-left mb-4 sm:mb-6">
+                    <motion.div
+                      className="font-bold text-3xl sm:text-4xl mb-2 text-gray-900"
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5, delay: 0.7 }}
+                    >
                       ₦75,000
-                    </div>
-                    <div className="text-2xl text-[#101820BF] sm:text-3xl font-semibold items-center">
-                      <span className="mr-2 font-medium">
-                        <h3 className="text-[28px]"> Deeper Dive</h3>
-                        <p className="text-[16px] font-semibold sm:text-lg text-inda-dark/70">
-                          Delivery Time:{" "}
-                          <span className="font-normal text-[16px]">
-                            2-4 Days
-                          </span>
-                        </p>
-                      </span>
-                    </div>
+                    </motion.div>
+                    <motion.h3
+                      className="text-lg sm:text-xl font-bold text-gray-900 mb-2"
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.5, delay: 0.8 }}
+                    >
+                      Deeper Dive
+                    </motion.h3>
+                    <motion.p
+                      className="text-xs sm:text-sm text-gray-600 mb-4"
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      transition={{ duration: 0.5, delay: 0.9 }}
+                    >
+                      Delivery Time: 2-4 Days
+                    </motion.p>
+                  </div>
 
-                    <ul className="sm:mt-6 mb-2 space-y-1 sm:space-y-2">
-                      <h4 className="text-[#101820BF] text-[16px] font-semibold">
-                        What You Get:{" "}
-                        <span className="font-normal text-[16px]">
-                          Everything in Instant Report{" "}
-                          <span className="text-inda-teal">Plus:</span>
+                  <motion.div
+                    className="flex-1 mb-4 sm:mb-6"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 1.0 }}
+                  >
+                    <h4 className="text-gray-900 mb-3 text-xs sm:text-sm font-semibold">
+                      What You Get:{" "}
+                      <span className="font-normal text-gray-600">
+                        Everything in Instant Report
+                      </span>
+                      <span className="text-[#4ea8a1] font-semibold">
+                        {" "}
+                        Plus:
+                      </span>
+                    </h4>
+                    <ul className="space-y-2">
+                      <motion.li
+                        className="flex items-center gap-3 text-xs sm:text-sm text-gray-700"
+                        initial={{ opacity: 0, x: -10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4, delay: 1.1 }}
+                      >
+                        <span className="text-[#4ea8a1] text-base sm:text-lg">
+                          ✓
                         </span>
-                      </h4>
-                      <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-[#101820BF]">
-                        <span className="text-lg sm:text-2xl text-inda-teal">
-                          ✓
-                        </span>{" "}
                         Seller identity verification
-                      </li>
-                      <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-[#101820BF]">
-                        <span className="text-lg sm:text-2xl text-inda-teal">
+                      </motion.li>
+                      <motion.li
+                        className="flex items-center gap-3 text-xs sm:text-sm text-gray-700"
+                        initial={{ opacity: 0, x: -10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4, delay: 1.2 }}
+                      >
+                        <span className="text-[#4ea8a1] text-base sm:text-lg">
                           ✓
-                        </span>{" "}
+                        </span>
                         On-site property visit
-                      </li>
-                      <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-[#101820BF]">
-                        <span className="text-lg sm:text-2xl text-inda-teal">
+                      </motion.li>
+                      <motion.li
+                        className="flex items-center gap-3 text-xs sm:text-sm text-gray-700"
+                        initial={{ opacity: 0, x: -10 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4, delay: 1.3 }}
+                      >
+                        <span className="text-[#4ea8a1] text-base sm:text-lg">
                           ✓
-                        </span>{" "}
+                        </span>
                         Photo evidence
-                      </li>
-                      <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-[#101820BF]">
-                        <span className="text-lg sm:text-2xl text-inda-teal">
-                          ✓
-                        </span>{" "}
-                        Portfolio Dashboard
-                      </li>
+                      </motion.li>
                     </ul>
-                  </div>
-                  <div className="w-full absolute max-sm:static bottom-[22%] flex justify-center sm:mt-8">
-                    <button className="bg-[#4ea8a1] text-inda-white w-[90%] py-3 rounded-full shadow-md hover:bg-[#e9eaeb] transition-all duration-300 hover:scale-105">
-                      Choose Plan
-                    </button>
-                  </div>
+                  </motion.div>
+
+                  <motion.button
+                    className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 1.4 }}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    Choose plan
+                  </motion.button>
                 </div>
               </motion.div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
       </motion.section>
 
       <motion.section
@@ -1179,7 +1287,6 @@ const Landing: React.FC = () => {
               Try your first search now
             </motion.button>
           </div>
-          {/* Chat with Us button and horizontal line */}
           <motion.button
             id="cta-chat-btn"
             className="absolute left-4 sm:left-6 md:left-8 bottom-12 sm:bottom-16 bg-[#4EA8A1] text-white text-base sm:text-lg md:text-xl font-normal rounded-full px-6 sm:px-8 md:px-10 py-3 sm:py-4 shadow-lg hover:bg-[#1a2a33] transition-all duration-300 hover:scale-105 focus:outline-none"
@@ -1191,7 +1298,6 @@ const Landing: React.FC = () => {
           >
             Chat with Us
           </motion.button>
-          {/* Thin horizontal line starting beside Chat with Us button */}
           <motion.div
             className="absolute bottom-12 sm:bottom-16 bg-[#00000040] opacity-60 h-px hidden sm:block"
             style={{
