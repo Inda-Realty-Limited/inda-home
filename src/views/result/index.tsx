@@ -2,17 +2,15 @@ import { getComputedListingByUrl } from "@/api/listings";
 import { Button, Container, Footer, Navbar, Text } from "@/components";
 import { dummyResultData } from "@/data/resultData";
 import { getToken } from "@/helpers";
+import { motion } from "framer-motion";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { IoIosInformationCircle } from "react-icons/io";
 import {
   FaBuilding,
   FaCheckCircle,
   FaChevronDown,
   FaChevronUp,
   FaClock,
-  FaExclamationTriangle,
   FaMapMarkerAlt,
   FaPhone,
   FaShare,
@@ -20,6 +18,7 @@ import {
   FaTimes,
   FaWhatsapp,
 } from "react-icons/fa";
+import { IoIosInformationCircle } from "react-icons/io";
 import { RiEditFill } from "react-icons/ri";
 
 const Result = () => {
@@ -29,6 +28,11 @@ const Result = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [proceed, setProceed] = useState(false);
+  // Handler for selecting the Free plan
+  const choseFree = () => {
+    // Close the modal for now; wire up purchase flow here later
+    setProceed(false);
+  };
   const [open, setOpen] = useState(null);
   const [result, setResult] = useState<any | null>(null);
 
@@ -50,7 +54,7 @@ const Result = () => {
     }
   };
 
-  function toggler(index) {
+  function toggler(index: any) {
     if (open === index) {
       setOpen(null);
     } else {
@@ -58,7 +62,6 @@ const Result = () => {
     }
   }
 
-  // Get search parameters from URL
   useEffect(() => {
     if (router.isReady) {
       const { q, type } = router.query;
@@ -66,17 +69,14 @@ const Result = () => {
       setSearchQuery(query);
       setSearchType((type as string) || "");
 
-      // Check if user is authenticated
       const token = getToken();
       if (!token) {
-        // User is not authenticated, redirect to auth with search query
         router.push(
           `/auth?q=${encodeURIComponent(query)}&type=${(type as string) || ""}`
         );
         return;
       }
 
-      // Only support pasted links for now
       if (query && (type as string) === "link" && isValidUrl(query)) {
         setIsLoading(true);
         setCurrentStep(0);
@@ -108,7 +108,6 @@ const Result = () => {
     }
   }, [router.isReady, router.query]);
 
-  // Show loading state
   if (isLoading) {
     return (
       <Container
@@ -355,10 +354,12 @@ const Result = () => {
                 Here's what we found based on your search.
               </p>
               {(result?.listingUrl || result?.snapshot?.listingUrl) && (
-                <p className="text-[28px] font-normal mt-10">
-                  Results for the listing link:{" "}
+                <p className="mt-10 flex items-center gap-2 font-normal whitespace-nowrap overflow-hidden text-[18px] sm:text-[24px] md:text-[28px]">
+                  <span className="shrink-0">
+                    Results for the listing link:
+                  </span>
                   <a
-                    className="text-inda-teal text-[28px] font-normal underline"
+                    className="text-inda-teal underline truncate flex-1 min-w-0"
                     href={result?.listingUrl || result?.snapshot?.listingUrl}
                     target="_blank"
                     rel="noreferrer"
@@ -890,49 +891,51 @@ const Result = () => {
               </div>
             </div>
 
-            {/* Price */}
             <div className="w-full px-4 sm:px-6">
-              <div className="bg-gray-100 rounded-lg p-6">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
-                  {/* Price Card */}
-                  <div className="bg-white rounded-lg p-6 text-center">
-                    <h4 className="text-lg font-bold mb-2 text-gray-900">
+              <div className="bg-gray-100 rounded-[24px] p-8">
+                <h3 className="text-[40px] font-bold mb-8 text-inda-teal">
+                  Property Price Analysis
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8">
+                  <div className="bg-[#E5F4F2] rounded-xl p-8 text-left">
+                    <h4 className="text-[18px] font-bold mb-3 text-[#101820]/80">
                       Price
                     </h4>
-                    <p className="text-3xl font-bold text-gray-900">
-                      {price ? `₦${price.toLocaleString()}` : "—"}
+                    <p className="text-[24px] font-semibold text-inda-teal">
+                      {price ? `₦${price.toLocaleString()}` : "₦120,000,000"}
                     </p>
                   </div>
 
-                  {/* Fair Market Value Card */}
-                  <div className="bg-white rounded-lg p-6 text-center">
-                    <h4 className="text-lg font-bold mb-2 text-gray-900">
+                  <div className="bg-[#E5F4F2] rounded-xl p-8 text-left">
+                    <h4 className="text-[18px] font-bold mb-3 text-[#101820]/80">
                       Fair Market Value
                     </h4>
-                    <p className="text-3xl font-bold text-gray-900">
-                      {fairValue ? fairValue.toLocaleString() : "—"}
+                    <p className="text-[24px] font-semibold text-inda-teal">
+                      {fairValue
+                        ? `₦${fairValue.toLocaleString()}`
+                        : "₦99,600,000"}
                     </p>
                   </div>
+                </div>
 
-                  {/* Market Position Card */}
-                  <div className="bg-white rounded-lg p-6 text-center">
-                    <h4 className="text-lg font-bold mb-2 text-gray-900">
+                <div className="flex justify-end mb-12">
+                  <div className="bg-transparent border border-gray-200 rounded-md px-4 py-3 text-right w-fit">
+                    <div className="text-xs font-medium text-gray-600">
                       Market Position
-                    </h4>
-                    <p
-                      className={
-                        `text-2xl font-bold ` +
-                        (marketDelta == null
-                          ? "text-gray-600"
+                    </div>
+                    <div
+                      className={`text-sm font-semibold ${
+                        marketDelta == null
+                          ? "text-red-500"
                           : marketDelta > 0
                           ? "text-red-500"
                           : marketDelta < 0
                           ? "text-green-600"
-                          : "text-gray-900")
-                      }
+                          : "text-amber-600"
+                      }`}
                     >
                       {marketDelta == null
-                        ? "—"
+                        ? "17% Overpriced"
                         : `${Math.abs(marketDelta)}% ${
                             marketDelta > 0
                               ? "Overpriced"
@@ -940,7 +943,74 @@ const Result = () => {
                               ? "Underpriced"
                               : "Fairly Priced"
                           }`}
-                    </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-transparent rounded-xl p-8 mb-8">
+                  <div className="flex items-center justify-between mb-6">
+                    <div>
+                      <p className="text-sm text-inda-teal font-medium">
+                        ↑ 3.5% in the last 6 months
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Sales from Aug 2024 - July 2025
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Dual-series bars (deterministic) */}
+                  <div
+                    className="flex items-end justify-between h-40 bg-transparent rounded-lg p-4"
+                    style={{
+                      backgroundImage:
+                        "repeating-linear-gradient(to top, rgba(16,24,32,0.06), rgba(16,24,32,0.06) 1px, transparent 1px, transparent 24px)",
+                    }}
+                  >
+                    {[
+                      "Aug",
+                      "Sep",
+                      "Oct",
+                      "Nov",
+                      "Dec",
+                      "Jan",
+                      "Feb",
+                      "Mar",
+                      "Apr",
+                      "May",
+                      "Jun",
+                      "Jul",
+                    ].map((month, index) => (
+                      <div
+                        key={month}
+                        className="flex flex-col items-center flex-1"
+                      >
+                        <div className="flex items-end gap-1">
+                          <div
+                            className="bg-inda-teal rounded-t w-2"
+                            style={{ height: `${50 + index * 4}px` }}
+                          />
+                          <div
+                            className="bg-gray-300 rounded-t w-2"
+                            style={{ height: `${56 + index * 4}px` }}
+                          />
+                        </div>
+                        <span className="mt-2 text-[10px] text-gray-500">
+                          {month}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-4 mt-4">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-inda-teal rounded-full"></div>
+                      <span className="text-xs text-gray-600">Last 3 days</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+                      <span className="text-xs text-gray-600">Last Week</span>
+                    </div>
                   </div>
                 </div>
 
@@ -950,7 +1020,7 @@ const Result = () => {
                     className="flex items-center justify-between cursor-pointer"
                     onClick={() => setIsPriceSummaryOpen(!isPriceSummaryOpen)}
                   >
-                    <h4 className="text-lg font-bold text-inda-teal">
+                    <h4 className="text-[24px] font-bold text-inda-teal">
                       AI Summary
                     </h4>
                     <div className="text-inda-teal">
@@ -963,7 +1033,7 @@ const Result = () => {
                   </div>
 
                   {isPriceSummaryOpen && (
-                    <div className="mt-4 p-4 bg-white rounded-lg">
+                    <div className="mt-4 p-4 bg-transparent rounded-lg">
                       <p className="text-sm text-gray-600 leading-relaxed">
                         {result?.aiReport?.marketValue?.summary ||
                           dummyResultData.priceAnalysis.aiSummary}
@@ -983,8 +1053,8 @@ const Result = () => {
                 <h3 className="text-xl font-bold mb-6 text-inda-teal">
                   Location & Micro-Market
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="md:col-span-2">
+                <div className="flex flex-col gap-6">
+                  <div>
                     <div className="h-64 md:h-80 rounded-lg overflow-hidden bg-white">
                       <iframe
                         title="map"
@@ -1016,7 +1086,7 @@ const Result = () => {
                       )}
                     </div>
                     {isLocationSummaryOpen && (
-                      <div className="bg-white rounded-lg p-4">
+                      <div className="bg-transparent rounded-lg p-4">
                         <p className="text-sm text-gray-700 leading-relaxed">
                           {result?.aiReport?.location?.summary ||
                             "Neighborhood is fairly connected with moderate access to schools, hospitals and shopping. Average commute time to CBD is 35–45 mins."}
@@ -1047,7 +1117,7 @@ const Result = () => {
                   {dummyResultData.roiMetrics.map((m, idx) => (
                     <div key={idx}>
                       <div className="flex flex-wrap justify-between">
-                        <p className="text-[20px] font-normal text-[#101820]/90 pb-3 inline-block text-gray-500">
+                        <p className="text-[20px] font-normal text-[#101820]/90 pb-3 inline-block">
                           {m.label}
                         </p>{" "}
                         <div className="inline-block">
@@ -1066,7 +1136,7 @@ const Result = () => {
                     return (
                       <div key={index}>
                         <div className="flex flex-wrap justify-between">
-                          <p className="text-[20px] font-normal text-[#101820]/90 pb-3 inline-block text-gray-500">
+                          <p className="text-[20px] font-normal text-[#101820]/90 pb-3 inline-block">
                             {two.label}
                           </p>{" "}
                           <div className="inline-block">
@@ -1252,14 +1322,14 @@ const Result = () => {
               </div>
             </div>
 
-            {/* Verified Comparables
+            {/* Verified Comparables */}
             <div className="w-full px-4 sm:px-6">
-              <div className="shadow-lg border-gray-500 rounded-b-xl p-6">
-                <h3 className="text-xl font-bold mb-6 text-inda-teal">
+              <div className=" rounded-lg p-6">
+                <h3 className="text-[52px] font-bold mb-6 text-inda-teal">
                   Verified Comparables
                 </h3>
                 <div
-                  className="flex gap-4"
+                  className="flex gap-4 overflow-x-auto pb-2"
                   style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                 >
                   <style jsx>{`
@@ -1268,54 +1338,44 @@ const Result = () => {
                     }
                   `}</style>
                   {dummyResultData.comparables.map((c) => (
-                    <div key={c.id} className=" bg-[#E5F4F2] rounded-lg p-4">
-                      <img
-                        className="block"
-                        src={c.image}
-                        alt="building-image"
-                      />
-                      <p className="w-full font-semibold text-gray-900 mb-1">
+                    <div
+                      key={c.id}
+                      className="flex-shrink-0 min-w-[320px] max-w-[320px] bg-[#E5F4F2] rounded-2xl p-4"
+                    >
+                      <div className="w-full h-40 rounded-xl overflow-hidden mb-4">
+                        <img
+                          className="w-full h-full object-cover"
+                          src={c.image}
+                          alt={c.title}
+                        />
+                      </div>
+                      <p className="text-[#101820] font-semibold text-lg mb-2">
                         {c.title}
                       </p>
-                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                        <span>Location: {c.location}</span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                        <span>Number of beds: {c.beds}</span>
-                      </div>
-                      <div>
-                        <div className="flex py-1 bg-[#E5F4F2] justify-between text-inda-teal rounded-full text-xs font-medium">
+                      <div className="text-sm text-gray-700 space-y-1 mb-3">
+                        <div>Location: {c.location}</div>
+                        <div>Number of beds: {c.beds}</div>
+                        <div className="flex items-center justify-between">
                           <span>Inda Trust Score</span>
-                          <span>{c.developerTrustScore}%</span>
+                          <span className="font-semibold">
+                            {c.developerTrustScore}%
+                          </span>
                         </div>
-
-                        <div className="w-full bg-[#EAEAEA] rounded-full h-2">
+                        <div className="w-full bg-gray-300/60 rounded-full h-2">
                           <div
                             className="bg-inda-teal h-2 rounded-full"
-                            style={{
-                              width: `${Math.round(
-                                result?.indaScore?.finalScore ?? 0
-                              )}%`,
-                            }}
+                            style={{ width: `${c.developerTrustScore}%` }}
                           />
                         </div>
                       </div>
-
-                      <div className="flex items-center justify-between mb-3">
-                        <span className=" text-gray-900">{c.price}</span> {"|"}
-                        <span className="text-sm text-gray-600">
-                          {c.pricePerSqm}
-                        </span>
-                        {"|"}
-                        <span className="px-2 py-1 bg-[#E5F4F2] text-inda-teal rounded-full text-xs font-medium">
-                          {c.yield}
-                        </span>
+                      <div className="text-sm text-[#101820] font-semibold">
+                        Price: {c.price}
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
-            </div> */}
+            </div>
 
             {/* How would you like to proceed? */}
             <div className="w-full px-4 sm:px-6">
@@ -1333,14 +1393,14 @@ const Result = () => {
                    </button> */}
                     <button
                       onClick={(e) => setProceed(true)}
-                      className="py-[12px] px-[42px] h-[121px] w-[339px] bg-inda-teal text-[#F9F9F9] rounded-2xl text-[24px] font-normal hover:bg-[#E5F4F2]"
+                      className="py-[12px] px-[42px] h-[121px] w-[339px] bg-inda-teal text-[#F9F9F9] rounded-2xl text-[24px] font-normal hover:bg-[#0A655E]"
                     >
                       Run Deeper Verification
                     </button>
-                    <button className="py-[12px] px-[42px] h-[121px] w-[339px] bg-inda-teal text-[#F9F9F9] rounded-2xl text-[24px] font-normal hover:bg-[#E5F4F2]">
+                    <button className="py-[12px] px-[42px] h-[121px] w-[339px] bg-inda-teal text-[#F9F9F9] rounded-2xl text-[24px] font-normal hover:bg-[#0A655E]">
                       Buy with Inda
                     </button>
-                    <button className="py-[12px] px-[42px] h-[121px] w-[339px] bg-inda-teal text-[#F9F9F9] rounded-2xl text-[24px] font-normal hover:bg-[#E5F4F2]">
+                    <button className="py-[12px] px-[42px] h-[121px] w-[339px] bg-inda-teal text-[#F9F9F9] rounded-2xl text-[24px] font-normal hover:bg-[#0A655E]">
                       Finance with Inda
                     </button>
                   </div>
@@ -1363,183 +1423,291 @@ const Result = () => {
               <div className="fixed inset-0 backdrop-blur-sm bg-opacity-60 flex justify-center items-center z-50">
                 <div className="max-h-[90vh] bg-white rounded-lg max-w-5xl w-full max-md:w-3/4 overflow-y-auto relative">
                   <motion.section
-                    className="h-full w-full max-sm:p-10 rounded-xl sm:px-6 md:px-8 lg:px-[5%] bg-[#4EA8A159] sm:py-16 md:py-20 flex flex-col items-start justify-center"
+                    className="w-full py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8"
                     initial={{ opacity: 0, y: 50 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, amount: 0.2 }}
                     transition={{ duration: 0.8, ease: "easeOut" }}
                   >
-                    <button
-                      onClick={() => setProceed(false)}
-                      className="absolute top-4 right-4 text-gray-600 hover:text-black"
-                    >
-                      <FaTimes size={30} />
-                    </button>
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.8, delay: 0.2 }}
-                    >
-                      <Text className="text-inda-dark font-bold text-2xl sm:text-3xl sm:mb-8">
-                        Plans & Pricing
-                      </Text>
-                      <p className="font-normal mb-10 text-md text-[#556457]">
-                        Inda Pricing Guide (Lagos Listings Only)
-                      </p>
-                    </motion.div>
-                    <motion.div
-                      className="w-full flex flex-wrap gap-6 gap-7-10 sm:gap-8"
-                      initial={{ opacity: 0, y: 30 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.8, delay: 0.4 }}
-                    >
-                      {/* Deep Report */}
+                    <div className="max-w-[80%] mx-auto ">
                       <motion.div
-                        className="flex-1 min-w-[240px] sm:min-w-[260px] bg-inda-dark rounded-xl sm:rounded-2xl border border-[#D1D5DB] p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:scale-105"
-                        initial={{ opacity: 0, y: 20 }}
+                        className="bg-[#1018200A] rounded-[48px] p-8 sm:p-12 shadow-xl"
+                        initial={{ opacity: 0, y: 30 }}
                         whileInView={{ opacity: 1, y: 0 }}
                         viewport={{ once: true }}
-                        transition={{ duration: 0.6, delay: 0.4 }}
+                        transition={{ duration: 0.8, delay: 0.4 }}
                       >
-                        <div className="relative h-[100%]">
-                          <div className="font-bold text-lg max-sm:text-sm mb-3 sm:mb-0 text-inda-white">
-                            ₦25,000
-                          </div>
-                          <div className="max-sm:text-xl font-light text-inda-white items-center">
-                            <span className="mr-2 font-semibold">
-                              <h3 className="text-3xl max-sm:text-lg">
-                                Deep Dive Report
-                              </h3>
-                              <p className="text-sm sm:text-lg font-medium text-inda-white">
-                                Delivery Time:{" "}
-                                <span className="font-light text-md">
-                                  {" "}
-                                  24-48 hours (via email PDF)
-                                </span>
-                              </p>
-                            </span>
-                          </div>
+                        <button
+                          onClick={() => setProceed(false)}
+                          className="absolute top-4 right-4 text-gray-600 hover:text-black"
+                        >
+                          <FaTimes size={30} />
+                        </button>
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.8, delay: 0.2 }}
+                          className="text-left mb-12"
+                        >
+                          <Text className="text-inda-dark font-bold text-2xl sm:text-3xl mb-2">
+                            Plans & Pricing
+                          </Text>
+                          <p className="font-normal text-md text-[#556457]">
+                            Inda Pricing Guide (Lagos Listings Only)
+                          </p>
+                        </motion.div>
+                        <div className="bg-[#F9F9F980] rounded-[24px] p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-0">
+                          {/* Deep Dive Report - Elevated */}
+                          <motion.div
+                            initial={{ opacity: 0, y: 40, scale: 0.85 }}
+                            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                            viewport={{ once: true }}
+                            transition={{
+                              duration: 0.7,
+                              delay: 0.4,
+                              ease: "easeOut",
+                            }}
+                            whileHover={{
+                              scale: 1.03,
+                              y: -5,
+                              transition: { duration: 0.3 },
+                            }}
+                            className="relative -mt-4 sm:-mt-8 lg:-mt-12 w-full"
+                          >
+                            <div className="bg-[#2A2A2A] rounded-[20px] sm:rounded-[32px] p-4 sm:p-6 h-full flex flex-col shadow-2xl hover:shadow-3xl transition-all duration-300 ">
+                              <div className="text-left mb-4 sm:mb-6">
+                                <motion.div
+                                  className="font-bold text-3xl sm:text-4xl mb-2 text-white"
+                                  initial={{ opacity: 0, x: -20 }}
+                                  whileInView={{ opacity: 1, x: 0 }}
+                                  transition={{ duration: 0.5, delay: 0.6 }}
+                                >
+                                  ₦25,000
+                                </motion.div>
+                                <motion.h3
+                                  className="text-lg sm:text-xl font-bold text-white mb-2"
+                                  initial={{ opacity: 0, x: -20 }}
+                                  whileInView={{ opacity: 1, x: 0 }}
+                                  transition={{ duration: 0.5, delay: 0.7 }}
+                                >
+                                  Deep Dive Report
+                                </motion.h3>
+                                <motion.p
+                                  className="text-xs sm:text-sm text-gray-300 mb-4"
+                                  initial={{ opacity: 0 }}
+                                  whileInView={{ opacity: 1 }}
+                                  transition={{ duration: 0.5, delay: 0.8 }}
+                                >
+                                  Delivery Time: 24-48 hours (via email PDF)
+                                </motion.p>
+                              </div>
 
-                          <ul className="sm:mt-6 mb-2 translate-y-[-45px] max-sm:translate-y-[-20px] sm:space-y-2">
-                            <h4 className="text-inda-white text-xl max-sm:text-sm font-semibold">
-                              What You Get:{" "}
-                              <span className="text-inda-white font-light text-md max-sm:text-sm">
-                                Everything in Instant Report{" "}
-                                <span className="text-inda-yellow">Plus:</span>
-                              </span>
-                            </h4>
+                              <motion.div
+                                className="flex-1 mb-4 sm:mb-6"
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, delay: 0.9 }}
+                              >
+                                <h4 className="text-white mb-2 text-xs sm:text-sm font-semibold">
+                                  What You Get:{" "}
+                                  <span className="font-normal text-gray-300">
+                                    Everything in Instant Report
+                                  </span>
+                                  <span className="text-white font-semibold">
+                                    {" "}
+                                    Plus:
+                                  </span>
+                                </h4>
+                                <h5 className="text-white text-xs sm:text-sm font-semibold mb-3">
+                                  Title & Legal Verification:
+                                </h5>
+                                <ul className="space-y-2">
+                                  <motion.li
+                                    className="flex items-center gap-3 text-xs sm:text-sm text-gray-300"
+                                    initial={{ opacity: 0, x: -10 }}
+                                    whileInView={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.4, delay: 1.0 }}
+                                  >
+                                    <span className="text-white text-base sm:text-lg">
+                                      ✓
+                                    </span>
+                                    Certificate of Occupancy (C of O) or Deed
+                                    check
+                                  </motion.li>
+                                  <motion.li
+                                    className="flex items-center gap-3 text-xs sm:text-sm text-gray-300"
+                                    initial={{ opacity: 0, x: -10 }}
+                                    whileInView={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.4, delay: 1.1 }}
+                                  >
+                                    <span className="text-white text-base sm:text-lg">
+                                      ✓
+                                    </span>
+                                    Governor's consent check
+                                  </motion.li>
+                                  <motion.li
+                                    className="flex items-center gap-3 text-xs sm:text-sm text-gray-300"
+                                    initial={{ opacity: 0, x: -10 }}
+                                    whileInView={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.4, delay: 1.2 }}
+                                  >
+                                    <span className="text-white text-base sm:text-lg">
+                                      ✓
+                                    </span>
+                                    Zoning compliance check
+                                  </motion.li>
+                                  <motion.li
+                                    className="flex items-center gap-3 text-xs sm:text-sm text-gray-300"
+                                    initial={{ opacity: 0, x: -10 }}
+                                    whileInView={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.4, delay: 1.3 }}
+                                  >
+                                    <span className="text-white text-base sm:text-lg">
+                                      ✓
+                                    </span>
+                                    Litigation search (court registry)
+                                  </motion.li>
+                                  <motion.li
+                                    className="flex items-center gap-3 text-xs sm:text-sm text-gray-300"
+                                    initial={{ opacity: 0, x: -10 }}
+                                    whileInView={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.4, delay: 1.4 }}
+                                  >
+                                    <span className="text-white text-base sm:text-lg">
+                                      ✓
+                                    </span>
+                                    Survey plan verification (boundaries &
+                                    location)
+                                  </motion.li>
+                                </ul>
+                              </motion.div>
 
-                            <h3 className="text-inda-white text-lg max-sm:text-sm font-semibold">
-                              Title & Legal Verification:
-                            </h3>
-                            <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-white">
-                              <span className="text-lg sm:text-2xl text-inda-yellow">
-                                ✓
-                              </span>{" "}
-                              Certificate of Occupancy (C of O) or Deed check
-                            </li>
-                            <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-white">
-                              <span className="text-lg sm:text-lg text-inda-yellow">
-                                ✓
-                              </span>{" "}
-                              Governor's consent check
-                            </li>
-                            <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-white">
-                              <span className="text-lg sm:text-2xl text-inda-yellow">
-                                ✓
-                              </span>{" "}
-                              Zoning compliance check
-                            </li>
-                            <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-white">
-                              <span className="text-lg sm:text-2xl text-inda-yellow">
-                                ✓
-                              </span>{" "}
-                              Litigation search (court registery)
-                            </li>
-                            <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-white">
-                              <span className="text-lg sm:text-2xl text-inda-yellow">
-                                ✓
-                              </span>{" "}
-                              Survey plan verification (boundaries & location)
-                            </li>
-                          </ul>
-                          <div className="w-full absolute bottom-0 flex justify-center max-sm:mt-20">
-                            <button className="bg-[#4ea8a1] text-inda-white w-[90%] py-3 max-sm:py-1 rounded-full shadow-md hover:bg-[#e9eaeb] transition-all duration-300 hover:scale-105">
-                              Choose Plan
-                            </button>
-                          </div>
+                              <motion.button
+                                className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base"
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, delay: 1.5 }}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                              >
+                                Choose plan
+                              </motion.button>
+                            </div>
+                          </motion.div>
+
+                          {/* Deeper Dive */}
+                          <motion.div
+                            initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                            viewport={{ once: true }}
+                            transition={{
+                              duration: 0.6,
+                              delay: 0.5,
+                              ease: "easeOut",
+                            }}
+                            whileHover={{
+                              scale: 1.02,
+                              transition: { duration: 0.3 },
+                            }}
+                            className="w-full"
+                          >
+                            <div className="p-4 sm:p-6 h-full flex flex-col transition-all duration-300 hover:shadow-md rounded-lg sm:rounded-none">
+                              <div className="text-left mb-4 sm:mb-6">
+                                <motion.div
+                                  className="font-bold text-3xl sm:text-4xl mb-2 text-gray-900"
+                                  initial={{ opacity: 0, x: -20 }}
+                                  whileInView={{ opacity: 1, x: 0 }}
+                                  transition={{ duration: 0.5, delay: 0.7 }}
+                                >
+                                  ₦75,000
+                                </motion.div>
+                                <motion.h3
+                                  className="text-lg sm:text-xl font-bold text-gray-900 mb-2"
+                                  initial={{ opacity: 0, x: -20 }}
+                                  whileInView={{ opacity: 1, x: 0 }}
+                                  transition={{ duration: 0.5, delay: 0.8 }}
+                                >
+                                  Deeper Dive
+                                </motion.h3>
+                                <motion.p
+                                  className="text-xs sm:text-sm text-gray-600 mb-4"
+                                  initial={{ opacity: 0 }}
+                                  whileInView={{ opacity: 1 }}
+                                  transition={{ duration: 0.5, delay: 0.9 }}
+                                >
+                                  Delivery Time: 2-4 Days
+                                </motion.p>
+                              </div>
+
+                              <motion.div
+                                className="flex-1 mb-4 sm:mb-6"
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, delay: 1.0 }}
+                              >
+                                <h4 className="text-gray-900 mb-3 text-xs sm:text-sm font-semibold">
+                                  What You Get:{" "}
+                                  <span className="font-normal text-gray-600">
+                                    Everything in Instant Report
+                                  </span>
+                                  <span className="text-[#4ea8a1] font-semibold">
+                                    {" "}
+                                    Plus:
+                                  </span>
+                                </h4>
+                                <ul className="space-y-2">
+                                  <motion.li
+                                    className="flex items-center gap-3 text-xs sm:text-sm text-gray-700"
+                                    initial={{ opacity: 0, x: -10 }}
+                                    whileInView={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.4, delay: 1.1 }}
+                                  >
+                                    <span className="text-[#4ea8a1] text-base sm:text-lg">
+                                      ✓
+                                    </span>
+                                    Seller identity verification
+                                  </motion.li>
+                                  <motion.li
+                                    className="flex items-center gap-3 text-xs sm:text-sm text-gray-700"
+                                    initial={{ opacity: 0, x: -10 }}
+                                    whileInView={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.4, delay: 1.2 }}
+                                  >
+                                    <span className="text-[#4ea8a1] text-base sm:text-lg">
+                                      ✓
+                                    </span>
+                                    On-site property visit
+                                  </motion.li>
+                                  <motion.li
+                                    className="flex items-center gap-3 text-xs sm:text-sm text-gray-700"
+                                    initial={{ opacity: 0, x: -10 }}
+                                    whileInView={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.4, delay: 1.3 }}
+                                  >
+                                    <span className="text-[#4ea8a1] text-base sm:text-lg">
+                                      ✓
+                                    </span>
+                                    Photo evidence
+                                  </motion.li>
+                                </ul>
+                              </motion.div>
+
+                              <motion.button
+                                className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base"
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, delay: 1.4 }}
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                              >
+                                Choose plan
+                              </motion.button>
+                            </div>
+                          </motion.div>
                         </div>
                       </motion.div>
-
-                      {/* Deeper Dive */}
-                      <motion.div
-                        className="flex-1 min-w-[240px] sm:min-w-[260px] bg-[#E5E5E566] rounded-xl sm:rounded-2xl border border-[#D1D5DB] p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:scale-105"
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.6, delay: 0.6 }}
-                      >
-                        <div className="relative h-[97%]">
-                          <div className="font-bold text-lg max-sm:text-md mb-3 sm:mb-4 text-inda-dark">
-                            ₦75,000
-                          </div>
-                          <div className="text-2xl text-[#101820BF] max-sm:text-md font-semibold mb-2 items-center">
-                            <span className="mr-2 font-semibold">
-                              <h3 className="text-3xl max-sm:text-sm">
-                                Deeper Dive
-                              </h3>
-                              <p className="text-xl max-sm:text-sm sm:text-lg text-inda-dark/70">
-                                Delivery Time:{" "}
-                                <span className="font-light text-md">
-                                  2-4 Days
-                                </span>
-                              </p>
-                            </span>
-                          </div>
-
-                          <ul className="mt-4 sm:mt-6 mb-2 space-y-1 sm:space-y-2 max-sm:translate-y-[-30px]">
-                            <h4 className="text-[#101820BF] text-xl max-sm:text-sm font-semibold">
-                              What You Get:{" "}
-                              <span className="font-light text-md">
-                                Everything in Instant Report{" "}
-                                <span className="text-inda-teal">Plus:</span>
-                              </span>
-                            </h4>
-                            <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-[#101820BF]">
-                              <span className="text-lg sm:text-2xl text-inda-teal">
-                                ✓
-                              </span>{" "}
-                              Seller identity verification
-                            </li>
-                            <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-[#101820BF]">
-                              <span className="text-lg sm:text-2xl text-inda-teal">
-                                ✓
-                              </span>{" "}
-                              On-site property visit
-                            </li>
-                            <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-[#101820BF]">
-                              <span className="text-lg sm:text-2xl text-inda-teal">
-                                ✓
-                              </span>{" "}
-                              Photo evidence
-                            </li>
-                            <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-[#101820BF]">
-                              <span className="text-lg sm:text-2xl text-inda-teal">
-                                ✓
-                              </span>{" "}
-                              Portfolio Dashboard
-                            </li>
-                          </ul>
-                          <div className="w-full absolute bottom-0 flex justify-center sm:mt-8">
-                            <button className="bg-[#4ea8a1] text-inda-white w-[90%] py-3 max-sm:py-1 rounded-full shadow-md hover:bg-[#e9eaeb] transition-all duration-300 hover:scale-105">
-                              Choose Plan
-                            </button>
-                          </div>
-                        </div>
-                      </motion.div>
-                    </motion.div>
+                    </div>
                   </motion.section>
                 </div>
               </div>
