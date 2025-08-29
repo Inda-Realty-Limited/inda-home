@@ -119,7 +119,9 @@ const Landing: React.FC = () => {
     } else {
       // User is authenticated, proceed to result page
       router.push(
-        `/result?q=${encodeURIComponent(search)}&type=${selectedSearchType.id}`
+        `/result/hidden?q=${encodeURIComponent(search)}&type=${
+          selectedSearchType.id
+        }`
       );
     }
   };
