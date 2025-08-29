@@ -32,6 +32,11 @@ export interface ROIMetric {
   value: string;
 }
 
+export interface ROIMetricTwo {
+  label: string;
+  value: string;
+}
+
 export interface ResultData {
   // Basic Property Info
   title: string;
@@ -94,6 +99,7 @@ export interface ResultData {
 
   // ROI Panel
   roiMetrics: ROIMetric[];
+  roiMetricsTwo: ROIMetricTwo[];
   roiSummary: string;
 
   // Comparables
@@ -227,24 +233,35 @@ export const dummyResultData: ResultData = {
 
   roiMetrics: [
     {
-      label: "Estimated Annual Rent",
-      value: "₦4.8M",
+      label: "Purchase Price",
+      value: "₦130,000,000",
     },
     {
-      label: "Gross Yield",
-      value: "7.2%",
+      label: "Financing",
+      value: "4.5%",
     },
     {
-      label: "Net Yield (after tax/fees)",
-      value: "5.4%",
+      label: "Financing Tenure",
+      value: "10 years",
     },
     {
-      label: "5-Year Price Forecast",
-      value: "₦156M",
+      label: "Holding Period",
+      value: "3 years",
+    },
+  ],
+
+  roiMetricsTwo: [
+    {
+      label: "Avg. Rental Yield (Long Term)",
+      value: "5.2%",
     },
     {
-      label: "5-Year ROI (Projected)",
-      value: "30.2%",
+      label: "Avg. Rental Yield (Short Term)",
+      value: "6.8",
+    },
+    {
+      label: "Total Expense (% of Rent)",
+      value: "18.2",
     },
   ],
 

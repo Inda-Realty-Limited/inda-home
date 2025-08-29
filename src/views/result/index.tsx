@@ -20,6 +20,7 @@ import {
   FaTimes,
   FaWhatsapp,
 } from "react-icons/fa";
+import { FiEdit3 } from "react-icons/fi";
 
 const Result = () => {
   const router = useRouter();
@@ -1024,32 +1025,54 @@ const Result = () => {
             {/* ROI Panel */}
             <div className="w-full px-4 sm:px-6">
               <div className="bg-gray-100 rounded-lg p-6">
-                <h3 className="text-2xl font-bold mb-10 text-inda-teal">
+                <h3 className="text-[52px] font-bold mb-10 text-inda-teal">
                   Investment ROI Calculator
                 </h3>
-                <p className="text-gray-900">
+                <p className="text[#101820] font-regular text-[20px]">
                   Estimate your potential returns on investment properties with
                   our
                   <br /> comprehensive calculator
                 </p>
-                <h1 className="font-semibold text-xl py-5">Property Details</h1>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+                <h1 className="font-bold text-[32px] py-5">Property Details</h1>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[73px] mb-10">
                   {dummyResultData.roiMetrics.map((m, idx) => (
                     <div key={idx}>
-                      <IoIosInformationCircle
-                        size={20}
-                        className="inline-block text-inda-teal mr-1"
-                      />
-                      <p className="text-sm pb-5 inline-block text-gray-500">
-                        {m.label}
-                      </p>
-                      <p className="bg-[#4EA8A159] rounded-lg p-4 text-lg text-center font-normal text-gray-600">
+                      <div className="flex flex-wrap justify-between">
+                        <p className="text-[20px] font-normal text-[#101820]/90 pb-3 inline-block text-gray-500">
+                          {m.label}
+                        </p>{" "}
+                        <div className="inline-block">
+                          <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
+                          <FiEdit3 className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
+                        </div>
+                      </div>
+                      <p className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600">
                         {m.value}
                       </p>
                     </div>
                   ))}
                 </div>
-                <div className="border-t border-gray-200 pt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[41px] mb-4">
+                  {dummyResultData.roiMetricsTwo.map((two, index) => {
+                    return (
+                      <div key={index}>
+                        <div className="flex flex-wrap justify-between">
+                          <p className="text-[20px] font-normal text-[#101820]/90 pb-3 inline-block text-gray-500">
+                            {two.label}
+                          </p>{" "}
+                          <div className="inline-block">
+                            <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
+                            <FiEdit3 className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
+                          </div>
+                        </div>
+                        <p className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600">
+                          {two.value}
+                        </p>
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* <div className="border-t border-gray-200 pt-4">
                   <div
                     className="flex items-center justify-between cursor-pointer"
                     onClick={() => setIsROISummaryOpen(!isROISummaryOpen)}
@@ -1074,7 +1097,7 @@ const Result = () => {
                       </button>
                     </div>
                   )}
-                </div>
+                </div> */}
               </div>
             </div>
 
@@ -1147,26 +1170,27 @@ const Result = () => {
             <div className="w-full px-4 sm:px-6">
               <div className="rounded-lg p-6">
                 <div className="bg-gray-100 rounded-xl py-10">
-                  <h3 className="text-3xl font-bold mb-4 text-center">
-                    How would you like more information
-                    <br />
-                    about this listing?
+                  <h3 className="text-[52px] font-bold mb-10 text-center">
+                    How would you like to proceed?
                   </h3>
                   <div className="flex flex-wrap gap-3 justify-center">
                     {/* <button className="flex items-center gap-2 px-4 py-2 bg-inda-teal text-white rounded-full text-sm hover:bg-teal-600 transition-colors">
                     <FaWhatsapp className="text-xs" /> WhatsApp Seller
-                  </button>
-                  <button className="flex items-center gap-2 px-4 py-2 bg-inda-teal text-white rounded-full text-sm hover:bg-teal-600 transition-colors">
+                   </button>
+                   <button className="flex items-center gap-2 px-4 py-2 bg-inda-teal text-white rounded-full text-sm hover:bg-teal-600 transition-colors">
                     <FaPhone className="text-xs" /> Call Seller
-                  </button> */}
+                   </button> */}
                     <button
                       onClick={(e) => setProceed(true)}
-                      className="px-15 py-4 bg-inda-teal border text-white rounded-xl text-sm hover:bg-[#E5F4F2]"
+                      className="py-[12px] px-[42px] h-[121px] w-[339px] bg-inda-teal text-[#F9F9F9] rounded-2xl text-[24px] font-normal hover:bg-[#E5F4F2]"
                     >
-                      Yes
+                      Run Deeper Verification
                     </button>
-                    <button className=" px-15 py-4 border bg-inda-dark/90 text-white rounded-xl text-sm hover:bg-[#E5F4F2]">
-                      No
+                    <button className="py-[12px] px-[42px] h-[121px] w-[339px] bg-inda-teal text-[#F9F9F9] rounded-2xl text-[24px] font-normal hover:bg-[#E5F4F2]">
+                      Buy with Inda
+                    </button>
+                    <button className="py-[12px] px-[42px] h-[121px] w-[339px] bg-inda-teal text-[#F9F9F9] rounded-2xl text-[24px] font-normal hover:bg-[#E5F4F2]">
+                      Finance with Inda
                     </button>
                   </div>
                 </div>
