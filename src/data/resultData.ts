@@ -303,7 +303,8 @@ export const dummyResultData: ResultData = {
       pricePerSqm: "₦100k/Sqm",
       yield: "6.5% Yield",
       developerTrustScore: 83,
-      image: "https://share.google/images/aLqn3qjeANrudQu8u",
+      image:
+        "https://images.unsplash.com/photo-1501183638710-841dd1904471?auto=format&fit=crop&w=1200&q=80",
     },
     {
       id: "2",
@@ -314,7 +315,8 @@ export const dummyResultData: ResultData = {
       yield: "7% Yield",
       beds: 4,
       developerTrustScore: 83,
-      image: "https://share.google/images/aLqn3qjeANrudQu8u",
+      image:
+        "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1200&q=80",
     },
     {
       id: "3",
@@ -325,7 +327,8 @@ export const dummyResultData: ResultData = {
       yield: "6.5% Yield",
       beds: 5,
       developerTrustScore: 83,
-      image: "https://share.google/images/aLqn3qjeANrudQu8u",
+      image:
+        "https://images.unsplash.com/photo-1531973968078-9bb02785f13d?auto=format&fit=crop&w=1200&q=80",
     },
     {
       id: "4",
@@ -336,7 +339,8 @@ export const dummyResultData: ResultData = {
       yield: "6.5% Yield",
       beds: 5,
       developerTrustScore: 83,
-      image: "https://share.google/images/aLqn3qjeANrudQu8u",
+      image:
+        "https://images.unsplash.com/photo-1560185008-b033106af14d?auto=format&fit=crop&w=1200&q=80",
     },
     {
       id: "5",
@@ -347,7 +351,8 @@ export const dummyResultData: ResultData = {
       yield: "6.5% Yield",
       beds: 5,
       developerTrustScore: 83,
-      image: "https://share.google/images/aLqn3qjeANrudQu8u",
+      image:
+        "https://images.unsplash.com/photo-1432839318976-b1bb217873f6?auto=format&fit=crop&w=1200&q=80",
     },
     {
       id: "6",
@@ -358,7 +363,8 @@ export const dummyResultData: ResultData = {
       yield: "6.5% Yield",
       beds: 5,
       developerTrustScore: 83,
-      image: "https://share.google/images/aLqn3qjeANrudQu8u",
+      image:
+        "https://images.unsplash.com/photo-1531972111892-79aee1edc029?auto=format&fit=crop&w=1200&q=80",
     },
   ],
 
