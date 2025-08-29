@@ -20,7 +20,7 @@ import {
   FaTimes,
   FaWhatsapp,
 } from "react-icons/fa";
-import { FiEdit3 } from "react-icons/fi";
+import { RiEditFill } from "react-icons/ri";
 
 const Result = () => {
   const router = useRouter();
@@ -29,6 +29,7 @@ const Result = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [proceed, setProceed] = useState(false);
+  const [open, setOpen] = useState(null);
   const [result, setResult] = useState<any | null>(null);
 
   // Always show not found view instead of results
@@ -48,6 +49,14 @@ const Result = () => {
       return false;
     }
   };
+
+  function toggler(index) {
+    if (open === index) {
+      setOpen(null);
+    } else {
+      setOpen(index);
+    }
+  }
 
   // Get search parameters from URL
   useEffect(() => {
@@ -837,9 +846,9 @@ const Result = () => {
                               <span className="w-10 text-[16px] text-[#101820]">
                                 {r.stars}
                               </span>
-                              <div className="flex-1 h-8 bg-[#E5E5E5] rounded-full overflow-hidden">
+                              <div className="flex-1 h-[8px] bg-[#E5E5E5] rounded-full overflow-hidden">
                                 <div
-                                  className="h-8 bg-[#101820]/40 rounded-full"
+                                  className="h-[8px] bg-[#101820]/40 rounded-full"
                                   style={{ width: `${r.percentage}%` }}
                                 ></div>
                               </div>
@@ -1024,7 +1033,7 @@ const Result = () => {
 
             {/* ROI Panel */}
             <div className="w-full px-4 sm:px-6">
-              <div className="bg-gray-100 rounded-lg p-6">
+              <div className="rounded-lg p-6">
                 <h3 className="text-[52px] font-bold mb-10 text-inda-teal">
                   Investment ROI Calculator
                 </h3>
@@ -1043,7 +1052,7 @@ const Result = () => {
                         </p>{" "}
                         <div className="inline-block">
                           <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
-                          <FiEdit3 className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
+                          <RiEditFill className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
                         </div>
                       </div>
                       <p className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600">
@@ -1062,7 +1071,7 @@ const Result = () => {
                           </p>{" "}
                           <div className="inline-block">
                             <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
-                            <FiEdit3 className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
+                            <RiEditFill className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
                           </div>
                         </div>
                         <p className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600">
@@ -1072,6 +1081,148 @@ const Result = () => {
                     );
                   })}
                 </div>
+
+                <div className="flex gap-[50px] mt-10">
+                  {dummyResultData.annualAppreciation.map((annual, index) => {
+                    return (
+                      <div
+                        onClick={() => toggler({ index })}
+                        className="flex-1"
+                      >
+                        {open === 1 ? (
+                          <div>
+                            <div className="flex justify-between">
+                              <span className="text-[20px] text-[#101820]/80 font-normal">
+                                {annual.label}
+                              </span>
+                              <span className="inline-block">
+                                <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
+                              </span>
+                            </div>
+                            <div>
+                              <p className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600">
+                                {annual.value}
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div>
+                            <div className="flex justify-between">
+                              <span className="text-[20px] text-[#101820]/80 font-normal">
+                                {annual.label}
+                              </span>
+                              <span>
+                                <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
+                              </span>
+                            </div>
+                            <div className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600"></div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* <div className="flex gap-[50px] mt-10">
+                  <div onClick={() => toggler(1)} className="flex-1">
+                    {open === 1 ? (
+                      <div>
+                        <div className="flex justify-between">
+                          <span className="text-[20px] text-[#101820]/80 font-normal">
+                            Annual Appreciation <br />
+                            (₦, Local Nominal)
+                          </span>
+                          <span className="inline-block">
+                            <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
+                          </span>
+                        </div>
+                        <div>
+                          <p className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600">
+                            3.2%
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="flex justify-between">
+                          <span className="text-[20px] text-[#101820]/80 font-normal">
+                            Annual Appreciation <br /> (₦, Local Nominal)
+                          </span>
+                          <span>
+                            <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
+                          </span>
+                        </div>
+                        <div className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600"></div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex-1" onClick={() => toggler(2)}>
+                    {open === 2 ? (
+                      <div>
+                        <div className="flex justify-between">
+                          <span className="text-[20px] text-[#101820]/80 font-normal">
+                            Annual Appreciation (₦, <br /> Local Real)
+                          </span>
+                          <span>
+                            <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
+                          </span>
+                        </div>
+                        <div>
+                          <p className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600">
+                            3.2%
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="flex justify-between">
+                          <span className="text-[20px] text-[#101820]/80 font-normal">
+                            Annual Appreciation (₦, <br /> Local Real)
+                          </span>
+                          <span>
+                            <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
+                          </span>
+                        </div>
+                        <div className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600"></div>
+                      </div>
+                    )}
+                  </div>
+                  <div onClick={() => toggler(3)} className="flex-1">
+                    {open === 3 ? (
+                      <div className="">
+                        <div className="flex justify-between">
+                          <span className="text-[20px] text-[#101820]/80 font-normal">
+                            Annual Appreciation <br /> (USD, $FX + Inflation
+                            Adjusted)
+                          </span>
+                          <span>
+                            <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
+                          </span>
+                        </div>
+                        <div>
+                          <p className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600">
+                            3.2%
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div>
+                        <div className="flex justify-between">
+                          <span className="text-[20px] text-[#101820]/80 font-normal">
+                            Annual Appreciation <br /> (USD, $FX + Inflation
+                            Adjusted)
+                          </span>
+                          <span>
+                            <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
+                          </span>
+                        </div>
+                        <div className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600"></div>
+                      </div>
+                    )}
+                  </div>
+                </div> */}
+
                 {/* <div className="border-t border-gray-200 pt-4">
                   <div
                     className="flex items-center justify-between cursor-pointer"

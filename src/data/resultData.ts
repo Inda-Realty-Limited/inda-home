@@ -37,6 +37,12 @@ export interface ROIMetricTwo {
   value: string;
 }
 
+export interface annualApp {
+  label: string;
+  value: string;
+  index: number;
+}
+
 export interface ResultData {
   // Basic Property Info
   title: string;
@@ -101,6 +107,7 @@ export interface ResultData {
   roiMetrics: ROIMetric[];
   roiMetricsTwo: ROIMetricTwo[];
   roiSummary: string;
+  annualAppreciation: annualApp[];
 
   // Comparables
   comparables: Comparable[];
@@ -267,6 +274,24 @@ export const dummyResultData: ResultData = {
 
   roiSummary:
     "Summarize ROI projection using rental yield, appreciation trends, and future resale value. Highlight how it compares to micro location average and what kind of buyer it suits (e.g. rental investor, flip buyer, etc.)",
+
+  annualAppreciation: [
+    {
+      label: "Annual Appreciation (₦, Local Nominal)",
+      value: " 3.2%",
+      index: 1,
+    },
+    {
+      label: "Annual Appreciation (₦, Local Real",
+      value: "18.2",
+      index: 2,
+    },
+    {
+      label: "Annual Appreciation (USD, $FX + Inflation Adjusted)",
+      value: "18.2",
+      index: 3,
+    },
+  ],
 
   comparables: [
     {
