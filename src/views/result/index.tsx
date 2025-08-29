@@ -28,12 +28,10 @@ const Result = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [proceed, setProceed] = useState(false);
-  // Handler for selecting the Free plan
+  const [open, setOpen] = useState<number | null>(0);
   const choseFree = () => {
-    // Close the modal for now; wire up purchase flow here later
     setProceed(false);
   };
-  const [open, setOpen] = useState(null);
   const [result, setResult] = useState<any | null>(null);
 
   // Always show not found view instead of results
@@ -53,6 +51,8 @@ const Result = () => {
       return false;
     }
   };
+
+
 
   function toggler(index: any) {
     if (open === index) {
@@ -1151,46 +1151,52 @@ const Result = () => {
                     );
                   })}
                 </div>
-
-                <div className="flex gap-[50px] mt-10">
-                  {dummyResultData.annualAppreciation.map((annual, index) => {
-                    return (
-                      <div
-                        onClick={() => toggler({ index })}
-                        className="flex-1"
-                      >
-                        {open === 1 ? (
-                          <div>
-                            <div className="flex justify-between">
-                              <span className="text-[20px] text-[#101820]/80 font-normal">
-                                {annual.label}
-                              </span>
-                              <span className="inline-block">
-                                <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
-                              </span>
-                            </div>
+                <div>
+                  <div className="flex gap-[50px] mt-10">
+                    {dummyResultData.annualAppreciation.map((annual, index) => {
+                      return (
+                        <div onClick={() => toggler(index)} className="flex-1">
+                          {open === index ? (
                             <div>
-                              <p className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600">
-                                {annual.value}
-                              </p>
+                              <div className="flex justify-between border-b-[6px] rounded-[5px] w-[363px] text-inda-teal mb-5 px-[18px]">
+                                <span className="text-[20px] text-[#101820]/80 font-normal">
+                                  {annual.label}
+                                </span>
+                                <span className="inline-block">
+                                  <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
+                                </span>
+                              </div>
+                              <div>
+                                <p className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600">
+                                  {annual.value}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        ) : (
-                          <div>
-                            <div className="flex justify-between">
-                              <span className="text-[20px] text-[#101820]/80 font-normal">
-                                {annual.label}
-                              </span>
-                              <span>
-                                <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
-                              </span>
+                          ) : (
+                            <div>
+                              <div className="flex justify-between">
+                                <span className="text-[20px] text-[#101820]/80 font-normal">
+                                  {annual.label}
+                                </span>
+                                <span>
+                                  <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
+                                </span>
+                              </div>
+                              <div className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600"></div>
                             </div>
-                            <div className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600"></div>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="mt-30 text-right">
+                    {" "}
+                    <button className="bg-[#4EA8A1] py-[12px] px-[42px] rounded-[8px]">
+                      <p className="text-[16px] text-[#E5E5E5] font-bold">
+                        Calculate
+                      </p>
+                    </button>
+                  </div>
                 </div>
 
                 {/* <div className="flex gap-[50px] mt-10">
