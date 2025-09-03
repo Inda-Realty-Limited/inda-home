@@ -43,6 +43,13 @@ export interface annualApp {
   index: number;
 }
 
+export interface Result {
+  term: string;
+  ptp: string;
+  roi: string;
+  ari: string;
+}
+
 export interface ResultData {
   // Basic Property Info
   title: string;
@@ -108,6 +115,9 @@ export interface ResultData {
   roiMetricsTwo: ROIMetricTwo[];
   roiSummary: string;
   annualAppreciation: annualApp[];
+
+  // Results
+  results: Result[];
 
   // Comparables
   comparables: Comparable[];
@@ -293,6 +303,21 @@ export const dummyResultData: ResultData = {
     },
   ],
 
+  results: [
+    {
+      term: "Long Term Rental",
+      ptp: "122,500,000",
+      roi: "96.5",
+      ari: "7,500,000",
+    },
+    {
+      term: "Short Term Rental",
+      ptp: "72,000,000",
+      roi: "62.9",
+      ari: "2,250,000",
+    },
+  ],
+
   comparables: [
     {
       id: "1",
@@ -340,7 +365,7 @@ export const dummyResultData: ResultData = {
       beds: 5,
       developerTrustScore: 83,
       image:
-        "https://images.unsplash.com/photo-1560185008-b033106af14d?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1602343168117-bb8ffe3e2e9f?q=80&w=725&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     },
     {
       id: "5",
@@ -352,7 +377,7 @@ export const dummyResultData: ResultData = {
       beds: 5,
       developerTrustScore: 83,
       image:
-        "https://images.unsplash.com/photo-1432839318976-b1bb217873f6?auto=format&fit=crop&w=1200&q=80",
+        "https://plus.unsplash.com/premium_photo-1661883964999-c1bcb57a7357?q=80&w=2028&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
     },
     {
       id: "6",

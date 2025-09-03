@@ -19,6 +19,7 @@ import {
   FaWhatsapp,
 } from "react-icons/fa";
 import { IoIosInformationCircle } from "react-icons/io";
+import { MdKeyboardDoubleArrowLeft } from "react-icons/md";
 import { RiEditFill } from "react-icons/ri";
 
 const Result = () => {
@@ -29,6 +30,7 @@ const Result = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [proceed, setProceed] = useState(false);
   const [open, setOpen] = useState<number | null>(0);
+  const [isResult, setIsResult] = useState<number | null>(0);
   const choseFree = () => {
     setProceed(false);
   };
@@ -52,13 +54,19 @@ const Result = () => {
     }
   };
 
-
-
   function toggler(index: any) {
     if (open === index) {
       setOpen(null);
     } else {
       setOpen(index);
+    }
+  }
+
+  function popUp(index: any) {
+    if (isResult === index) {
+      setIsResult(null);
+    } else {
+      setIsResult(index);
     }
   }
 
@@ -867,16 +875,49 @@ const Result = () => {
                   {/* Reviews List */}
                   <div className="md:col-span-2 space-y-4 h-[499px]">
                     <h1 className="font-bold text-[32px]">Reviews</h1>
-                    <div className="w-[1224px] border-1 border-[#4EA8A1] rounded-[32px] h-[311px]">
+                    <div className="w-full border-1 border-[#4EA8A1] rounded-[32px] h-[311px]">
                       <p className="text-center pt-[145px] text-[20px] font-medium">
                         No Reviews Yet
                       </p>
                     </div>
                     <button className="mt-[50px] ml-[30px] py-[8px] px-[3px] text-[#4EA8A1] text-[24px] font-semibold">
-                      Report Your Experience here &lt; &lt;
+                      Report Your Experience here{" "}
+                      <MdKeyboardDoubleArrowLeft className="inline-block text-[30px]" />
                     </button>
                   </div>
                 </div>
+
+                {/* <div className="border-t border-gray-300 pt-4">
+                  <div
+                    className="flex items-center justify-between cursor-pointer"
+                    onClick={() => setIsPriceSummaryOpen(!isPriceSummaryOpen)}
+                  >
+                    <h4 className="text-[24px] font-bold text-inda-teal">
+                      AI Summary
+                    </h4>
+                    <div className="text-inda-teal">
+                      {isPriceSummaryOpen ? (
+                        <FaChevronUp className="text-sm" />
+                      ) : (
+                        <FaChevronDown className="text-sm" />
+                      )}
+                    </div>
+                  </div>
+
+                  {isPriceSummaryOpen && (
+                    <div className="mt-4 p-4 bg-transparent rounded-lg">
+                      <p className="text-sm text-gray-600 leading-relaxed">
+                        {result?.aiReport?.marketValue?.summary ||
+                          dummyResultData.priceAnalysis.aiSummary}
+                      </p>
+                      <button className="mt-3 text-inda-teal text-sm hover:underline font-medium">
+                        More Details
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div> */}
 
                 {/* AI Summary */}
                 <div className="mt-6 pt-4 border-t border-gray-200">
@@ -1104,15 +1145,17 @@ const Result = () => {
             {/* ROI Panel */}
             <div className="w-full px-4 sm:px-6">
               <div className="rounded-lg p-6">
-                <h3 className="text-[52px] font-bold mb-10 text-inda-teal">
+                <h3 className="text-[52px] font-bold mb-2 text-inda-teal">
                   Investment ROI Calculator
                 </h3>
-                <p className="text[#101820] font-regular text-[20px]">
+                <p className="text[#101820] font-normal text-[20px]">
                   Estimate your potential returns on investment properties with
                   our
                   <br /> comprehensive calculator
                 </p>
-                <h1 className="font-bold text-[32px] py-5">Property Details</h1>
+                <h1 className="font-bold text-[#101820E5] text-[32px] my-15 py-5">
+                  Property Details
+                </h1>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[73px] mb-10">
                   {dummyResultData.roiMetrics.map((m, idx) => (
                     <div key={idx}>
@@ -1158,8 +1201,8 @@ const Result = () => {
                         <div onClick={() => toggler(index)} className="flex-1">
                           {open === index ? (
                             <div>
-                              <div className="flex justify-between border-b-[6px] rounded-[5px] w-[363px] text-inda-teal mb-5 px-[18px]">
-                                <span className="text-[20px] text-[#101820]/80 font-normal">
+                              <div className="flex justify-between border-b-[6px] rounded-[5px] w-[363px] text-inda-teal mb-9 px-[18px]">
+                                <span className="text-[20px] mx-auto my-0 w-[250px] text-center whitespace-normal break-words text-[#101820]/80 font-normal">
                                   {annual.label}
                                 </span>
                                 <span className="inline-block">
@@ -1174,8 +1217,8 @@ const Result = () => {
                             </div>
                           ) : (
                             <div>
-                              <div className="flex justify-between">
-                                <span className="text-[20px] text-[#101820]/80 font-normal">
+                              <div className="flex justify-between mb-10">
+                                <span className="text-[20px] mx-auto my-0 w-[250px] text-center text-[#101820]/80 font-normal">
                                   {annual.label}
                                 </span>
                                 <span>
@@ -1198,133 +1241,75 @@ const Result = () => {
                     </button>
                   </div>
                 </div>
+              </div>
+            </div>
 
-                {/* <div className="flex gap-[50px] mt-10">
-                  <div onClick={() => toggler(1)} className="flex-1">
-                    {open === 1 ? (
+            <div>
+              <h1 className="text-[32px] font-bold text-[#101820E5]">
+                Results
+              </h1>
+              <div>
+                <div className="flex w-[550px]">
+                  {dummyResultData.results.map((result, idx) => {
+                    return (
                       <div>
-                        <div className="flex justify-between">
-                          <span className="text-[20px] text-[#101820]/80 font-normal">
-                            Annual Appreciation <br />
-                            (₦, Local Nominal)
-                          </span>
-                          <span className="inline-block">
-                            <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
-                          </span>
+                        <div
+                          className="flex-1 text-center mt-10 mb-5 rounded-[8px] border-1 py-[12px] mr-10 px-[20px] border-inda-teal text-[#0A655E] text-[20px] font-bold"
+                          onClick={() => setIsResult(idx)}
+                        >
+                          {result.term}
                         </div>
+                        {isResult === idx && (
+                          <div className="border-b-[6px] ml-3 rounded-[5px] w-[185px] mb-1 border-inda-teal"></div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+                <hr className="border-t-3 pt-10 text-[#E5E5E5] w-full" />
+                <div
+                  className="h-[260px] w-full rounded-[16px] flex gap-x-[44px] py-[67px] px-[40px]"
+                  style={{
+                    background: "linear-gradient(45deg, #0A655E, #4EA8A1)",
+                  }}
+                >
+                  <div>
+                    {dummyResultData.results.map((item, index) => {
+                      return (
                         <div>
-                          <p className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600">
-                            3.2%
-                          </p>
+                          {isResult === index && (
+                            <div className="flex gap-x-[44px] text-left">
+                              <div className="flex-grow">
+                                <p className="text-[20px] text-center pb-[40px] font-medium text-[#F9F9F9]">
+                                  Projected Total Profit
+                                </p>
+                                <span className="bg-[#F9F9F9] text-[#0A655E] px-[100px] py-[34px] rounded-[8px]">
+                                  ₦{item.ptp}
+                                </span>
+                              </div>
+                              <div className="flex-grow">
+                                <p className="text-[20px] text-center pb-[40px] font-medium text-[#F9F9F9]">
+                                  Return on Investment (ROI)
+                                </p>
+                                <span className="bg-[#F9F9F9] text-[#0A655E] px-[130px] py-[34px] rounded-[8px]">
+                                  {item.roi}%
+                                </span>
+                              </div>
+                              <div className="flex-grow">
+                                <p className="text-[20px] text-center pb-[40px] font-medium text-[#F9F9F9]">
+                                  Annual Rental Income
+                                </p>
+                                <span className="bg-[#F9F9F9] text-[#0A655E] px-[100px] py-[34px] rounded-[8px] ">
+                                  ₦{item.ari}
+                                </span>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="flex justify-between">
-                          <span className="text-[20px] text-[#101820]/80 font-normal">
-                            Annual Appreciation <br /> (₦, Local Nominal)
-                          </span>
-                          <span>
-                            <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
-                          </span>
-                        </div>
-                        <div className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600"></div>
-                      </div>
-                    )}
+                      );
+                    })}
                   </div>
-
-                  <div className="flex-1" onClick={() => toggler(2)}>
-                    {open === 2 ? (
-                      <div>
-                        <div className="flex justify-between">
-                          <span className="text-[20px] text-[#101820]/80 font-normal">
-                            Annual Appreciation (₦, <br /> Local Real)
-                          </span>
-                          <span>
-                            <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
-                          </span>
-                        </div>
-                        <div>
-                          <p className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600">
-                            3.2%
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="flex justify-between">
-                          <span className="text-[20px] text-[#101820]/80 font-normal">
-                            Annual Appreciation (₦, <br /> Local Real)
-                          </span>
-                          <span>
-                            <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
-                          </span>
-                        </div>
-                        <div className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600"></div>
-                      </div>
-                    )}
-                  </div>
-                  <div onClick={() => toggler(3)} className="flex-1">
-                    {open === 3 ? (
-                      <div className="">
-                        <div className="flex justify-between">
-                          <span className="text-[20px] text-[#101820]/80 font-normal">
-                            Annual Appreciation <br /> (USD, $FX + Inflation
-                            Adjusted)
-                          </span>
-                          <span>
-                            <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
-                          </span>
-                        </div>
-                        <div>
-                          <p className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600">
-                            3.2%
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="flex justify-between">
-                          <span className="text-[20px] text-[#101820]/80 font-normal">
-                            Annual Appreciation <br /> (USD, $FX + Inflation
-                            Adjusted)
-                          </span>
-                          <span>
-                            <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
-                          </span>
-                        </div>
-                        <div className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600"></div>
-                      </div>
-                    )}
-                  </div>
-                </div> */}
-
-                {/* <div className="border-t border-gray-200 pt-4">
-                  <div
-                    className="flex items-center justify-between cursor-pointer"
-                    onClick={() => setIsROISummaryOpen(!isROISummaryOpen)}
-                  >
-                    <h4 className="text-lg font-bold text-inda-teal">
-                      AI Summary
-                    </h4>
-                    {isROISummaryOpen ? (
-                      <FaChevronUp className="text-inda-teal" />
-                    ) : (
-                      <FaChevronDown className="text-inda-teal" />
-                    )}
-                  </div>
-                  {isROISummaryOpen && (
-                    <div className="mt-3 bg-white rounded-lg p-4">
-                      <p className="text-sm text-gray-700 leading-relaxed">
-                        {result?.aiReport?.roi?.summary ||
-                          dummyResultData.roiSummary}
-                      </p>
-                      <button className="mt-3 text-inda-teal text-sm hover:underline font-medium">
-                        More Details
-                      </button>
-                    </div>
-                  )}
-                </div> */}
+                </div>
               </div>
             </div>
 
@@ -1904,62 +1889,3 @@ const Result = () => {
 };
 
 export default Result;
-
-// {dummyResultData.reviews.map((rev) => (
-//                       <div
-//                         key={rev.id}
-//                         className="bg-white rounded-lg p-4 flex flex-row w-[313px] mr-10 inline-block"
-//                       >
-//                         <div className="flex flex-col gap-5  w-[313px]">
-//                           <div className="flex gap-5">
-//                             <div className="flex flex-col gap-3">
-//                               <div>
-//                                 <div className="rounded-full w-[48px] h-[44px] bg-[#C6E3E1]"></div>
-//                                 <span className="text-[14px] font-medium p-1">
-//                                   Image
-//                                 </span>
-//                               </div>
-//                               <div>
-//                                 <span className="text-[14px] font-medium text-[#101820]">
-//                                   Rating
-//                                 </span>
-//                                 <div className="flex items-center gap-1">
-//                                   {Array.from({ length: 5 }).map((_, i) => (
-//                                     <FaStar
-//                                       key={i}
-//                                       className={
-//                                         i < rev.rating
-//                                           ? "h-[16px] w-[19px] text-[#101820]/40"
-//                                           : "h-[16px] w-[19px] text-[#989C9F]"
-//                                       }
-//                                     />
-//                                   ))}
-//                                 </div>
-//                               </div>
-//                             </div>
-//                             <div className="flex items-center justify-between mb-2">
-//                               <div>
-//                                 <p className="font-medium text-[14px] text-[#101820]">
-//                                   Name
-//                                 </p>
-//                                 <div className="w-[156px] h-[41px] rounded-[6px] bg-[#4EA8A152]/32"></div>
-//                                 <div>
-//                                   <p className="font-medium text-[14px] text-[#101820]">
-//                                     Review date
-//                                   </p>
-//                                   <div className="w-[156px] h-[24px] rounded-[6px] bg-[#4EA8A152]/32"></div>
-//                                 </div>
-//                               </div>
-//                             </div>
-//                           </div>
-//                           <div>
-//                             <div>
-//                               <p className="font-medium text-[14px] text-[#101820]">
-//                                 Review
-//                               </p>
-//                               <div className="w-[269px] h-[77px] rounded-[6px] bg-[#4EA8A152]/32"></div>
-//                             </div>
-//                           </div>
-//                         </div>
-//                       </div>
-//                     ))}

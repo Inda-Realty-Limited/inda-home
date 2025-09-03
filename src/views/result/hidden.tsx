@@ -2,17 +2,15 @@ import { getComputedListingByUrl } from "@/api/listings";
 import { Button, Container, Footer, Navbar, Text } from "@/components";
 import { dummyResultData } from "@/data/resultData";
 import { getToken } from "@/helpers";
+import { motion } from "framer-motion";
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { IoIosInformationCircle } from "react-icons/io";
 import {
   FaBuilding,
   FaCheckCircle,
   FaChevronDown,
   FaChevronUp,
   FaClock,
-  FaExclamationTriangle,
   FaMapMarkerAlt,
   FaPhone,
   FaShare,
@@ -20,6 +18,9 @@ import {
   FaTimes,
   FaWhatsapp,
 } from "react-icons/fa";
+import { IoIosInformationCircle } from "react-icons/io";
+import { RiEditFill } from "react-icons/ri";
+import { TiLockOpen } from "react-icons/ti";
 
 const Result = () => {
   const router = useRouter();
@@ -28,6 +29,11 @@ const Result = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [proceed, setProceed] = useState(false);
+  const [open, setOpen] = useState<number | null>(0);
+  const [isResult, setIsResult] = useState<number | null>(0);
+  const choseFree = () => {
+    setProceed(false);
+  };
   const [result, setResult] = useState<any | null>(null);
 
   // Always show not found view instead of results
@@ -48,7 +54,22 @@ const Result = () => {
     }
   };
 
-  // Get search parameters from URL
+  function toggler(index: any) {
+    if (open === index) {
+      setOpen(null);
+    } else {
+      setOpen(index);
+    }
+  }
+
+  function popUp(index: any) {
+    if (isResult === index) {
+      setIsResult(null);
+    } else {
+      setIsResult(index);
+    }
+  }
+
   useEffect(() => {
     if (router.isReady) {
       const { q, type } = router.query;
@@ -56,17 +77,14 @@ const Result = () => {
       setSearchQuery(query);
       setSearchType((type as string) || "");
 
-      // Check if user is authenticated
       const token = getToken();
       if (!token) {
-        // User is not authenticated, redirect to auth with search query
         router.push(
           `/auth?q=${encodeURIComponent(query)}&type=${(type as string) || ""}`
         );
         return;
       }
 
-      // Only support pasted links for now
       if (query && (type as string) === "link" && isValidUrl(query)) {
         setIsLoading(true);
         setCurrentStep(0);
@@ -98,7 +116,6 @@ const Result = () => {
     }
   }, [router.isReady, router.query]);
 
-  // Show loading state
   if (isLoading) {
     return (
       <Container
@@ -337,20 +354,20 @@ const Result = () => {
       <Container noPadding className="min-h-screen bg-[#F9F9F9] text-inda-dark">
         <Navbar />
         <main className="flex-1 py-6">
-          <div className="w-full md:w-4/5 md:mx-auto space-y-6">
+          <div className="text-[#101820]/90 w-full md:w-4/5 md:mx-auto space-y-6">
             {/* Intro Header */}
             <div className="px-4 sm:px-6">
-              <h2 className="text-2xl font-extrabold text-[#101820] mb-2">
-                Hi there,
-              </h2>
-              <p className="text-[#101820]/80">
+              <h2 className="text-[52px] font-bold mb-2">Hi there,</h2>
+              <p className="text-[32px] font-normal">
                 Here's what we found based on your search.
               </p>
               {(result?.listingUrl || result?.snapshot?.listingUrl) && (
-                <p className="text-sm mt-10">
-                  Results for the listing link:{" "}
+                <p className="mt-10 flex items-center gap-2 font-normal whitespace-nowrap overflow-hidden text-[18px] sm:text-[24px] md:text-[28px]">
+                  <span className="shrink-0">
+                    Results for the listing link:
+                  </span>
                   <a
-                    className="text-inda-teal underline"
+                    className="text-inda-teal underline truncate flex-1 min-w-0"
                     href={result?.listingUrl || result?.snapshot?.listingUrl}
                     target="_blank"
                     rel="noreferrer"
@@ -364,33 +381,22 @@ const Result = () => {
             {/* Inda Verdict (Top Card) */}
             <div className="w-full px-4 sm:px-6">
               <div>
-                <div className="bg-inda-teal text-white rounded-lg p-6">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-xl font-bold">Inda Verdict</h3>
-                  </div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <FaExclamationTriangle className="text-yellow-300 text-lg" />
-                    <span className="text-base font-medium">
-                      Overpriced. Moderate Legal Risk
-                    </span>
-                  </div>
-                </div>
-                <div className="mt-5 space-y-2">
+                <div className="bg-inda-teal text-white rounded-lg p-6 mt-5 space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-md font-medium mb-3">
+                    <span className="text-[32px] font-medium mb-3">
                       Inda Trust Score{" "}
                       <IoIosInformationCircle
                         size={20}
                         className="text-inda-teal inline-block"
                       />
                     </span>
-                    <span className="text-sm font-semibold">
+                    <span className="text-sm text-[32px] font-normal">
                       {Math.round(result?.indaScore?.finalScore ?? 0)}%
                     </span>
                   </div>
-                  <div className="w-full bg-[#EAEAEA] rounded-full h-2">
+                  <div className="w-full bg-[#101820]/32 rounded-full h-2">
                     <div
-                      className="bg-inda-teal h-2 rounded-full"
+                      className="bg-[#F9F9F9] h-2 rounded-full"
                       style={{
                         width: `${Math.round(
                           result?.indaScore?.finalScore ?? 0
@@ -401,45 +407,53 @@ const Result = () => {
                 </div>
               </div>
             </div>
-            <div className="blur-lg">
-              {/* Gallery */}
-
-              <div className="w-full px-4 sm:px-6">
-                <h3 className="text-xl font-bold mb-4">Gallery</h3>
-                <div
-                  className="flex gap-4 overflow-x-auto pb-2"
-                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                >
-                  <style jsx>{`
-                    div::-webkit-scrollbar {
-                      display: none;
-                    }
-                  `}</style>
-                  {(result?.snapshot?.imageUrls?.length
-                    ? result.snapshot.imageUrls
-                    : [
-                        "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-                        "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-                        "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-                        "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-                      ]
-                  )
-                    .slice(0, 6)
-                    .map((url: string, idx: number) => (
-                      <div
-                        key={idx}
-                        className="flex-shrink-0 w-80 h-48 md:w-96 md:h-64 lg:w-[28rem] lg:h-80 rounded-lg overflow-hidden"
-                      >
-                        <img
-                          src={url}
-                          alt={`property-${idx}`}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    ))}
+            <div className="relative w-full">
+              <div className="h-full absolute top-100 left-1/2 -translate-x-1/2 z-50">
+                <div className="bg-inda-teal rounded-[256px] px-[116px] py-[124px] w-[512px] h-[512px] flex gap-[8px] flex-col items-center justify-center">
+                  <TiLockOpen className="text-white w-[167px] h-[167px] " />
+                  <button className="py-[14px] px-[41px] w-[311px] rounded-[16px] border-[1px] text-white text-[40px] font-medium">
+                    Unlock here
+                  </button>
                 </div>
-                {/* Chips under gallery */}
-                {/* <div className="mt-4 flex flex-wrap items-center gap-2">
+              </div>
+              <div className="w-full h-full blur-xl">
+                {/* Gallery */}
+                <div className="w-full px-4 sm:px-6">
+                  <h3 className="text-[40px] font-bold mb-4">Gallery</h3>
+                  <div
+                    className="flex gap-4 overflow-x-auto pb-2"
+                    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                  >
+                    <style jsx>{`
+                      div::-webkit-scrollbar {
+                        display: none;
+                      }
+                    `}</style>
+                    {(result?.snapshot?.imageUrls?.length
+                      ? result.snapshot.imageUrls
+                      : [
+                          "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+                          "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+                          "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+                          "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+                        ]
+                    )
+                      .slice(0, 6)
+                      .map((url: string, idx: number) => (
+                        <div
+                          key={idx}
+                          className="flex-shrink-0 w-80 h-48 md:w-96 md:h-64 lg:w-[28rem] lg:h-80 rounded-lg overflow-hidden"
+                        >
+                          <img
+                            src={url}
+                            alt={`property-${idx}`}
+                            className="w-[450px] h-[380px] object-cover"
+                          />
+                        </div>
+                      ))}
+                  </div>
+                  {/* Chips under gallery */}
+                  {/* <div className="mt-4 flex flex-wrap items-center gap-2">
                 {typeof result?.snapshot?.bedrooms === "number" && (
                   <span className="px-3 py-1 bg-[#E5F4F2] text-inda-teal rounded-full text-xs font-medium">
                     {result.snapshot.bedrooms} Bed(s)
@@ -459,615 +473,658 @@ const Result = () => {
                   Amenities
                 </span>
               </div> */}
-              </div>
-
-              {/* Action Buttons Row */}
-              <div className="w-full bg-[#4EA8A159] rounded-2xl py-5 sm:px-6">
-                <div className="flex flex-wrap gap-2">
-                  <button className="flex items-center gap-2 px-4 py-2 bg-inda-teal text-white rounded-full text-sm hover:bg-teal-600 transition-colors">
-                    <FaWhatsapp className="text-xs" />
-                    WhatsApp Seller
-                  </button>
-                  <button className="flex items-center gap-2 px-4 py-2 bg-inda-teal text-white rounded-full text-sm hover:bg-teal-600 transition-colors">
-                    <FaPhone className="text-xs" />
-                    Call Seller
-                  </button>
-                  <button
-                    className="flex items-center gap-2 px-4 py-2 bg-inda-teal text-white rounded-full text-sm hover:bg-teal-600 transition-colors"
-                    onClick={() =>
-                      window.open(
-                        result?.listingUrl ||
-                          result?.snapshot?.listingUrl ||
-                          "#",
-                        "_blank"
-                      )
-                    }
-                  >
-                    <FaShare className="text-xs" />
-                    View Source
-                  </button>
                 </div>
-              </div>
 
-              {/* Smart Summary */}
-              <div className="w-full px-4 sm:px-6">
-                <div className="">
-                  <h2 className="text-xl font-bold mb-6 text-inda-teal">
-                    Smart Summary
-                  </h2>
-
-                  {/* Desktop Table View */}
-                  <div className="hidden md:block">
-                    <div className="space-y-2">
-                      {/* Table Header */}
-                      <div className="grid grid-cols-3 gap-6 py-3 px-4 bg-[#E5E5E566] rounded-lg text-sm font-semibold text-gray-700">
-                        <div className="font-bold text-lg">Info</div>
-                        <div className="font-bold text-lg">Details</div>
-                        <div className="font-bold text-lg">Status</div>
-                      </div>
-
-                      {/* Bedroom/Bathrooms Row */}
-                      <div className="grid grid-cols-3 gap-6 py-4 px-4 bg-[#E5E5E566] rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                            <FaBuilding className="text-inda-teal text-sm" />
-                          </div>
-                          <span className="text-md font-medium">
-                            Bedroom/Bathrooms
-                          </span>
-                        </div>
-                        <div className="text-md font-medium">
-                          {result?.snapshot?.bedrooms ??
-                            dummyResultData.bedrooms}
-                          Bed./
-                          {result?.snapshot?.bathrooms ??
-                            dummyResultData.bathrooms}{" "}
-                          Bath.
-                        </div>
-                        <div className="text-md font-medium text-gray-600">
-                          From listing/docs.
-                        </div>
-                      </div>
-
-                      {/* Title Row */}
-                      <div className="grid grid-cols-3 gap-6 py-4 px-4 bg-[#E5E5E566] rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                            <FaCheckCircle className="text-inda-teal text-sm" />
-                          </div>
-                          <span className="text-md font-medium">Title</span>
-                        </div>
-                        <div className="text-md font-medium flex items-center gap-2">
-                          {result?.aiReport?.titleSafety?.label ||
-                            dummyResultData.title_status}
-                          <FaCheckCircle className="text-green-500 text-sm" />
-                        </div>
-                        <div className="text-md font-medium text-inda-teal cursor-pointer hover:underline">
-                          Verified
-                        </div>
-                      </div>
-
-                      {/* Developer Row */}
-                      <div className="grid grid-cols-3 gap-6 py-4 px-4 bg-[#E5E5E566] rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                            <FaBuilding className="text-inda-teal text-sm" />
-                          </div>
-                          <span className="text-md font-medium">Developer</span>
-                        </div>
-                        <div className="text-md font-medium">
-                          {dummyResultData.developer.name}
-                        </div>
-                        <div className="text-md font-medium text-inda-teal cursor-pointer hover:underline">
-                          View Profile here
-                        </div>
-                      </div>
-
-                      {/* Delivery Date Row */}
-                      <div className="grid grid-cols-3 gap-6 py-4 px-4 bg-[#E5E5E566] rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                            <FaClock className="text-inda-teal text-sm" />
-                          </div>
-                          <span className="text-md font-medium">
-                            Delivery Date
-                          </span>
-                        </div>
-                        <div className="text-md font-medium">
-                          {dummyResultData.deliveryDate}
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-inda-teal">
-                          <div className="w-3 h-3 text-md bg-inda-teal font-medium rounded-full"></div>
-                          {dummyResultData.status}
-                        </div>
-                      </div>
-
-                      {/* Status Row */}
-                      <div className="grid grid-cols-3 gap-6 py-4 px-4 bg-[#E5E5E566] rounded-lg">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                            <FaMapMarkerAlt className="text-inda-teal text-sm" />
-                          </div>
-                          <span className="text-md font-medium">Status</span>
-                        </div>
-                        <div className="text-md font-medium">
-                          {dummyResultData.status}/Completed
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-inda-teal">
-                          <div className="w-3 h-3 text-md font-medium bg-inda-teal rounded-full"></div>
-                          {dummyResultData.status}
-                        </div>
-                      </div>
-                    </div>
+                {/* Action Buttons Row */}
+                <div className="overflow-x-hidden bg-[#4EA8A159] rounded-2xl py-5 sm:px-6">
+                  <div className="flex flex-wrap gap-2 w-screen">
+                    <button className="flex items-center gap-2 px-4 py-2 bg-inda-teal text-white rounded-full text-sm hover:bg-teal-600 transition-colors">
+                      <FaWhatsapp className="text-xs" />
+                      WhatsApp Seller
+                    </button>
+                    <button className="flex items-center gap-2 px-4 py-2 bg-inda-teal text-white rounded-full text-sm hover:bg-teal-600 transition-colors">
+                      <FaPhone className="text-xs" />
+                      Call Seller
+                    </button>
+                    <button
+                      className="flex items-center gap-2 px-4 py-2 bg-inda-teal text-white rounded-full text-sm hover:bg-teal-600 transition-colors"
+                      onClick={() =>
+                        window.open(
+                          result?.listingUrl ||
+                            result?.snapshot?.listingUrl ||
+                            "#",
+                          "_blank"
+                        )
+                      }
+                    >
+                      <FaShare className="text-xs" />
+                      View Source
+                    </button>
                   </div>
+                </div>
 
-                  {/* Mobile Card View */}
-                  <div className="md:hidden space-y-2">
-                    {/* Bedroom/Bathrooms Card */}
-                    <div className="bg-[#E5E5E566] rounded-lg p-4">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                          <FaBuilding className="text-inda-teal text-base" />
-                        </div>
-                        <h4 className="font-semibold text-base">
-                          Bedroom/Bathrooms
-                        </h4>
-                      </div>
+                {/* Smart Summary */}
+                <div className="w-full px-4 sm:px-6">
+                  <div className="">
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block">
                       <div className="space-y-2">
-                        <div>
-                          <span className="text-sm text-gray-500">
-                            Details:{" "}
-                          </span>
-                          <span className="font-semibold text-sm">
+                        {/* Table Header */}
+                        <div className=" pt-[62px] pb-[34px] px-[41px]  bg-[#E5E5E566] rounded-[16px] text-sm font-semibold text-gray-700">
+                          <h2 className="text-[52px] font-bold mb-6 text-inda-teal">
+                            Smart Summary
+                          </h2>
+                          <div className="grid grid-cols-3 gap-[98px] text-[44px] font-semibold">
+                            {" "}
+                            <div>Info</div>
+                            <div>Details</div>
+                            <div>Status</div>
+                          </div>
+                        </div>
+
+                        {/* Bedroom/Bathrooms Row */}
+                        <div className="grid grid-cols-3 gap-[98px] py-4 px-[22px] bg-[#E5E5E566] font-normal text-[32px] text-[#101820] rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-inda-teal/10 rounded-lg flex items-center justify-center">
+                              <FaBuilding className="text-inda-teal text-sm" />
+                            </div>
+                            <span>Bedroom/Bathrooms</span>
+                          </div>
+                          <div>
                             {result?.snapshot?.bedrooms ??
                               dummyResultData.bedrooms}
                             Bed./
                             {result?.snapshot?.bathrooms ??
                               dummyResultData.bathrooms}{" "}
                             Bath.
-                          </span>
+                          </div>
+                          <div>From listing/docs.</div>
                         </div>
-                        <div>
-                          <span className="text-sm text-gray-500">
-                            Status:{" "}
-                          </span>
-                          <span className="text-sm">From listing/docs.</span>
-                        </div>
-                      </div>
-                    </div>
 
-                    {/* Title Card */}
-                    <div className="bg-[#E5E5E566] rounded-lg p-4">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                          <FaCheckCircle className="text-inda-teal text-base" />
+                        {/* Title Row
+                    <div className="grid grid-cols-3 gap-6 py-4 px-4 bg-[#E5E5E566] font-normal text-[32px] text-[#101820] rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-inda-teal/10 rounded-lg flex items-center justify-center">
+                          <FaCheckCircle className="text-inda-teal text-sm" />
                         </div>
-                        <h4 className="font-semibold text-base">Title</h4>
+                        <span>Title</span>
                       </div>
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-500">
-                            Details:{" "}
-                          </span>
-                          <span className="font-semibold text-sm">
-                            {result?.aiReport?.titleSafety?.label ||
-                              dummyResultData.title_status}
-                          </span>
-                          <FaCheckCircle className="text-green-500 text-sm" />
-                        </div>
-                        <div>
-                          <span className="text-sm text-gray-500">
-                            Status:{" "}
-                          </span>
-                          <span className="text-sm text-inda-teal cursor-pointer hover:underline">
-                            Verify here
-                          </span>
-                        </div>
+                      <div className="text-md font-medium flex items-center gap-2">
+                        {result?.aiReport?.titleSafety?.label ||
+                          dummyResultData.title_status}
+                        <FaCheckCircle className="text-green-500 text-sm" />
                       </div>
-                    </div>
+                      <div className="cursor-pointer hover:text-inda-teal">
+                        Verified
+                      </div>
+                    </div> */}
 
-                    {/* Developer Card */}
-                    <div className="bg-[#E5E5E566] rounded-lg p-4">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                          <FaBuilding className="text-inda-teal text-base" />
-                        </div>
-                        <h4 className="font-semibold text-base">Developer</h4>
-                      </div>
-                      <div className="space-y-2">
-                        <div>
-                          <span className="text-sm text-gray-500">
-                            Details:{" "}
-                          </span>
-                          <span className="font-semibold text-sm">
+                        {/* Developer Row */}
+                        <div className="grid grid-cols-3 gap-[98px] py-4 px-[22px] bg-[#E5E5E566] font-normal text-[32px] text-[#101820] rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-inda-teal/10 rounded-lg flex items-center justify-center">
+                              <FaBuilding className="text-inda-teal text-sm" />
+                            </div>
+                            <span className="text-md font-medium">
+                              Developer
+                            </span>
+                          </div>
+                          <div className="text-md font-medium">
                             {dummyResultData.developer.name}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-sm text-gray-500">
-                            Status:{" "}
-                          </span>
-                          <span className="text-sm text-inda-teal cursor-pointer hover:underline">
+                          </div>
+                          <div className="text-md font-medium cursor-pointer hover:text-inda-teal">
                             View Profile here
-                          </span>
+                          </div>
                         </div>
-                      </div>
-                    </div>
 
-                    {/* Delivery Date Card */}
-                    <div className="bg-[#E5E5E566] rounded-lg p-4">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                          <FaClock className="text-inda-teal text-base" />
-                        </div>
-                        <h4 className="font-semibold text-base">
-                          Delivery Date
-                        </h4>
-                      </div>
-                      <div className="space-y-2">
-                        <div>
-                          <span className="text-sm text-gray-500">
-                            Details:{" "}
-                          </span>
-                          <span className="font-semibold text-sm">
+                        {/* Delivery Date Row */}
+                        <div className="grid grid-cols-3 gap-[98px] py-4 px-[22px] bg-[#E5E5E566] font-normal text-[32px] text-[#101820] rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-inda-teal/10 rounded-lg flex items-center justify-center">
+                              <FaClock className="text-inda-teal text-sm" />
+                            </div>
+                            <span className="text-md font-medium">
+                              Delivery Date
+                            </span>
+                          </div>
+                          <div className="text-md font-medium">
                             {dummyResultData.deliveryDate}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-500">
-                            Status:{" "}
-                          </span>
-                          <div className="w-3 h-3 bg-inda-teal rounded-full"></div>
-                          <span className="text-sm text-inda-teal">
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 text-md bg-inda-teal font-medium rounded-full"></div>
                             {dummyResultData.status}
-                          </span>
+                          </div>
                         </div>
-                      </div>
-                    </div>
 
-                    {/* Status Card */}
-                    <div className="bg-[#E5E5E566] rounded-lg p-4">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-10 h-10 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                          <FaMapMarkerAlt className="text-inda-teal text-base" />
-                        </div>
-                        <h4 className="font-semibold text-base">Status</h4>
-                      </div>
-                      <div className="space-y-2">
-                        <div>
-                          <span className="text-sm text-gray-500">
-                            Details:{" "}
-                          </span>
-                          <span className="font-semibold text-sm">
+                        {/* Status Row */}
+                        <div className="grid grid-cols-3 gap-[98px] py-4 px-[22px] bg-[#E5E5E566] font-normal text-[32px] text-[#101820] rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 bg-inda-teal/10 rounded-lg flex items-center justify-center">
+                              <FaMapMarkerAlt className="text-inda-teal text-sm" />
+                            </div>
+                            <span className="text-md font-medium">Status</span>
+                          </div>
+                          <div className="text-md font-medium">
                             {dummyResultData.status}/Completed
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm text-gray-500">
-                            Status:{" "}
-                          </span>
-                          <div className="w-3 h-3 bg-inda-teal rounded-full"></div>
-                          <span className="text-sm text-inda-teal">
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 text-md font-medium bg-inda-teal rounded-full"></div>
                             {dummyResultData.status}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="md:hidden space-y-2">
+                      {/* Bedroom/Bathrooms Card */}
+                      <div className="bg-[#E5E5E566] rounded-lg p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 bg-inda-teal/10 rounded-lg flex items-center justify-center">
+                            <FaBuilding className="text-inda-teal text-base" />
+                          </div>
+                          <h4 className="font-semibold text-base">
+                            Bedroom/Bathrooms
+                          </h4>
+                        </div>
+                        <div className="space-y-2">
+                          <div>
+                            <span className="text-sm text-gray-500">
+                              Details:{" "}
+                            </span>
+                            <span className="font-semibold text-sm">
+                              {result?.snapshot?.bedrooms ??
+                                dummyResultData.bedrooms}
+                              Bed./
+                              {result?.snapshot?.bathrooms ??
+                                dummyResultData.bathrooms}{" "}
+                              Bath.
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-500">
+                              Status:{" "}
+                            </span>
+                            <span className="text-sm">From listing/docs.</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Title Card */}
+                      <div className="bg-[#E5E5E566] rounded-lg p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 bg-inda-teal/10 rounded-lg flex items-center justify-center">
+                            <FaCheckCircle className="text-inda-teal text-base" />
+                          </div>
+                          <h4 className="font-semibold text-base">Title</h4>
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-500">
+                              Details:{" "}
+                            </span>
+                            <span className="font-semibold text-sm">
+                              {result?.aiReport?.titleSafety?.label ||
+                                dummyResultData.title_status}
+                            </span>
+                            <FaCheckCircle className="text-green-500 text-sm" />
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-500">
+                              Status:{" "}
+                            </span>
+                            <span className="text-sm text-inda-teal cursor-pointer hover:underline">
+                              Verify here
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Developer Card */}
+                      <div className="bg-[#E5E5E566] rounded-lg p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 bg-inda-teal/10 rounded-lg flex items-center justify-center">
+                            <FaBuilding className="text-inda-teal text-base" />
+                          </div>
+                          <h4 className="font-semibold text-base">Developer</h4>
+                        </div>
+                        <div className="space-y-2">
+                          <div>
+                            <span className="text-sm text-gray-500">
+                              Details:{" "}
+                            </span>
+                            <span className="font-semibold text-sm">
+                              {dummyResultData.developer.name}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-500">
+                              Status:{" "}
+                            </span>
+                            <span className="text-sm text-inda-teal cursor-pointer hover:underline">
+                              View Profile here
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Delivery Date Card */}
+                      <div className="bg-[#E5E5E566] rounded-lg p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 bg-inda-teal/10 rounded-lg flex items-center justify-center">
+                            <FaClock className="text-inda-teal text-base" />
+                          </div>
+                          <h4 className="font-semibold text-base">
+                            Delivery Date
+                          </h4>
+                        </div>
+                        <div className="space-y-2">
+                          <div>
+                            <span className="text-sm text-gray-500">
+                              Details:{" "}
+                            </span>
+                            <span className="font-semibold text-sm">
+                              {dummyResultData.deliveryDate}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-500">
+                              Status:{" "}
+                            </span>
+                            <div className="w-3 h-3 bg-inda-teal rounded-full"></div>
+                            <span className="text-sm text-inda-teal">
+                              {dummyResultData.status}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Status Card */}
+                      <div className="bg-[#E5E5E566] rounded-lg p-4">
+                        <div className="flex items-center gap-3 mb-3">
+                          <div className="w-10 h-10 bg-inda-teal/10 rounded-lg flex items-center justify-center">
+                            <FaMapMarkerAlt className="text-inda-teal text-base" />
+                          </div>
+                          <h4 className="font-semibold text-base">Status</h4>
+                        </div>
+                        <div className="space-y-2">
+                          <div>
+                            <span className="text-sm text-gray-500">
+                              Details:{" "}
+                            </span>
+                            <span className="font-semibold text-sm">
+                              {dummyResultData.status}/Completed
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-500">
+                              Status:{" "}
+                            </span>
+                            <div className="w-3 h-3 bg-inda-teal rounded-full"></div>
+                            <span className="text-sm text-inda-teal">
+                              {dummyResultData.status}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Amenities */}
+                <div className="w-full">
+                  <div className="rounded-lg p-6">
+                    <h3 className="text-[40px] font-bold mb-6">Amenities</h3>
+                    <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-4">
+                      {/* Keeping placeholder amenities for now */}
+                      <div className="flex-shrink-0 w-48 h-36 rounded-xl overflow-hidden relative shadow-lg">
+                        <img
+                          src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+                          alt="Swimming Pool"
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/40 flex items-end p-4">
+                          <span className="text-white text-sm font-semibold">
+                            Swimming Pool
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex-shrink-0 w-48 h-36 rounded-xl overflow-hidden relative shadow-lg">
+                        <img
+                          src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+                          alt="Security"
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/40 flex items-end p-4">
+                          <span className="text-white text-sm font-semibold">
+                            Security
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex-shrink-0 w-48 h-36 rounded-xl overflow-hidden relative shadow-lg">
+                        <img
+                          src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+                          alt="Accessible Roads"
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/40 flex items-end p-4">
+                          <span className="text-white text-sm font-semibold">
+                            Accessible Roads
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex-shrink-0 w-48 h-36 rounded-xl overflow-hidden relative shadow-lg">
+                        <img
+                          src="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+                          alt="24 hours Electricity"
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/40 flex items-end p-4">
+                          <span className="text-white text-sm font-semibold">
+                            24hrs Electricity
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex-shrink-0 w-48 h-36 rounded-xl overflow-hidden relative shadow-lg">
+                        <img
+                          src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+                          alt="Well-Planned Layout"
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/40 flex items-end p-4">
+                          <span className="text-white text-sm font-semibold">
+                            Well-Planned Layout
                           </span>
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
+
+                {/* Inda Verdict - moved to top */}
+
+                {/* Feedback & Complaints */}
+                <div className="w-full px-4 sm:px-6">
+                  <div className="bg-gray-100 rounded-lg p-6">
+                    <h3 className="text-[52px] font-bold mb-6 text-inda-teal">
+                      Feedback & Complaints
+                    </h3>
+                    <div className="">
+                      {/* Ratings Overview */}
+                      <div className="flex gap-20 rounded-lg p-6 mb-4">
+                        <div className="flex-1">
+                          <div className="flex gap-20">
+                            <div>
+                              <div className="flex items-baseline gap-2 mb-2">
+                                <span className="text-[48px] font-black">
+                                  {dummyResultData.overallRating.toFixed(1)}
+                                </span>
+                                <span className="text-sm text-gray-600"></span>
+                              </div>
+                              <div className="flex items-center gap-1 mb-3">
+                                {Array.from({ length: 5 }).map((_, i) => {
+                                  const active =
+                                    i <
+                                    Math.round(dummyResultData.overallRating);
+                                  return (
+                                    <FaStar
+                                      key={i}
+                                      className={
+                                        active
+                                          ? "text-yellow-400 h-[31px] w-[31px]"
+                                          : "text-gray-300 h-[31px] w-[31px]"
+                                      }
+                                    />
+                                  );
+                                })}
+                              </div>
+                              <p className="text-[16px] text-[#0F1417] font-normal">
+                                {dummyResultData.totalReviews} reviews
+                              </p>
+                            </div>
+                            <div className="space-y-2 w-full">
+                              {dummyResultData.ratingBreakdown.map((r, idx) => (
+                                <div
+                                  key={idx}
+                                  className="flex items-center gap-3"
+                                >
+                                  <span className="w-10 text-[16px] text-[#101820]">
+                                    {r.stars}
+                                  </span>
+                                  <div className="flex-1 h-[8px] bg-[#E5E5E5] rounded-full overflow-hidden">
+                                    <div
+                                      className="h-[8px] bg-[#101820]/40 rounded-full"
+                                      style={{ width: `${r.percentage}%` }}
+                                    ></div>
+                                  </div>
+                                  <span className="w-10 text-right text-[16px]  text-[#101820]/65">
+                                    {r.percentage}%
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex-1"> </div>
+                      </div>
+
+                      {/* Reviews List */}
+                      <div className="md:col-span-2 space-y-4 h-[499px]">
+                        <h1 className="font-bold text-[32px]">Reviews</h1>
+                        <div className="w-full border-1 border-[#4EA8A1] rounded-[32px] h-[311px]">
+                          <p className="text-center pt-[145px] text-[20px] font-medium">
+                            No Reviews Yet
+                          </p>
+                        </div>
+                        <button className="mt-[50px] ml-[30px] py-[8px] px-[3px] text-[#4EA8A1] text-[24px] font-semibold">
+                          Report Your Experience here &lt; &lt;
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* <div className="border-t border-gray-300 pt-4">
+                  <div
+                    className="flex items-center justify-between cursor-pointer"
+                    onClick={() => setIsPriceSummaryOpen(!isPriceSummaryOpen)}
+                  >
+                    <h4 className="text-[24px] font-bold text-inda-teal">
+                      AI Summary
+                    </h4>
+                    <div className="text-inda-teal">
+                      {isPriceSummaryOpen ? (
+                        <FaChevronUp className="text-sm" />
+                      ) : (
+                        <FaChevronDown className="text-sm" />
+                      )}
+                    </div>
+                  </div>
+
+                  {isPriceSummaryOpen && (
+                    <div className="mt-4 p-4 bg-transparent rounded-lg">
+                      <p className="text-sm text-gray-600 leading-relaxed">
+                        {result?.aiReport?.marketValue?.summary ||
+                          dummyResultData.priceAnalysis.aiSummary}
+                      </p>
+                      <button className="mt-3 text-inda-teal text-sm hover:underline font-medium">
+                        More Details
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
+             */}
 
-              {/* Amenities */}
-              <div className="w-full">
-                <div className="rounded-lg p-6">
-                  <h3 className="text-xl font-bold mb-6">Amenities</h3>
-                  <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-4">
-                    {/* Keeping placeholder amenities for now */}
-                    <div className="flex-shrink-0 w-48 h-36 rounded-xl overflow-hidden relative shadow-lg">
-                      <img
-                        src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-                        alt="Swimming Pool"
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-black/40 flex items-end p-4">
-                        <span className="text-white text-sm font-semibold">
-                          Swimming Pool
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex-shrink-0 w-48 h-36 rounded-xl overflow-hidden relative shadow-lg">
-                      <img
-                        src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-                        alt="Security"
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-black/40 flex items-end p-4">
-                        <span className="text-white text-sm font-semibold">
-                          Security
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex-shrink-0 w-48 h-36 rounded-xl overflow-hidden relative shadow-lg">
-                      <img
-                        src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-                        alt="Accessible Roads"
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-black/40 flex items-end p-4">
-                        <span className="text-white text-sm font-semibold">
-                          Accessible Roads
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex-shrink-0 w-48 h-36 rounded-xl overflow-hidden relative shadow-lg">
-                      <img
-                        src="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-                        alt="24 hours Electricity"
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-black/40 flex items-end p-4">
-                        <span className="text-white text-sm font-semibold">
-                          24hrs Electricity
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="flex-shrink-0 w-48 h-36 rounded-xl overflow-hidden relative shadow-lg">
-                      <img
-                        src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-                        alt="Well-Planned Layout"
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-black/40 flex items-end p-4">
-                        <span className="text-white text-sm font-semibold">
-                          Well-Planned Layout
-                        </span>
-                      </div>
+                    {/* AI Summary */}
+                    <div className="mt-6 pt-4 border-t border-gray-200">
+                      <h4 className="text-lg font-bold mb-2 text-inda-teal">
+                        AI Summary
+                      </h4>
+                      <p className="text-gray-700 text-base leading-relaxed">
+                        {result?.aiReport?.sellerCredibility?.summary ||
+                          dummyResultData.aiSummary}
+                      </p>
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Inda Verdict - moved to top */}
-
-              {/* Feedback & Complaints */}
-              <div className="w-full px-4 sm:px-6">
-                <div className="bg-gray-100 rounded-lg p-6">
-                  <h3 className="text-xl font-bold mb-6 text-inda-teal">
-                    Feedback & Complaints
-                  </h3>
-                  <div className="">
-                    {/* Ratings Overview */}
-                    <div className="flex bg-white gap-20 rounded-lg p-6 mb-4">
-                      <div>
-                        <div className="flex items-baseline gap-2 mb-2">
-                          <span className="text-4xl font-extrabold text-gray-900">
-                            {dummyResultData.overallRating.toFixed(1)}
-                          </span>
-                          <span className="text-sm text-gray-600"></span>
-                        </div>
-                        <div className="flex items-center gap-1 mb-3">
-                          {Array.from({ length: 5 }).map((_, i) => {
-                            const active =
-                              i < Math.round(dummyResultData.overallRating);
-                            return (
-                              <FaStar
-                                key={i}
-                                className={
-                                  active ? "text-yellow-400" : "text-gray-300"
-                                }
-                              />
-                            );
-                          })}
-                        </div>
-                        <p className="text-sm text-gray-600 mb-4">
-                          {dummyResultData.totalReviews} reviews
+                <div className="w-full px-4 sm:px-6">
+                  <div className="bg-gray-100 rounded-[24px] p-8">
+                    <h3 className="text-[40px] font-bold mb-8 text-inda-teal">
+                      Property Price Analysis
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8">
+                      <div className="bg-[#E5F4F2] rounded-xl p-8 text-left">
+                        <h4 className="text-[18px] font-bold mb-3 text-[#101820]/80">
+                          Price
+                        </h4>
+                        <p className="text-[24px] font-semibold text-inda-teal">
+                          {price
+                            ? `₦${price.toLocaleString()}`
+                            : "₦120,000,000"}
                         </p>
                       </div>
-                      <div className="space-y-2 w-full">
-                        {dummyResultData.ratingBreakdown.map((r, idx) => (
-                          <div key={idx} className="flex items-center gap-3">
-                            <span className="w-10 text-sm text-gray-700">
-                              {r.stars}
-                            </span>
-                            <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+
+                      <div className="bg-[#E5F4F2] rounded-xl p-8 text-left">
+                        <h4 className="text-[18px] font-bold mb-3 text-[#101820]/80">
+                          Fair Market Value
+                        </h4>
+                        <p className="text-[24px] font-semibold text-inda-teal">
+                          {fairValue
+                            ? `₦${fairValue.toLocaleString()}`
+                            : "₦99,600,000"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end mb-12">
+                      <div className="bg-transparent border border-gray-200 rounded-md px-4 py-3 text-right w-fit">
+                        <div className="text-xs font-medium text-gray-600">
+                          Market Position
+                        </div>
+                        <div
+                          className={`text-sm font-semibold ${
+                            marketDelta == null
+                              ? "text-red-500"
+                              : marketDelta > 0
+                              ? "text-red-500"
+                              : marketDelta < 0
+                              ? "text-green-600"
+                              : "text-amber-600"
+                          }`}
+                        >
+                          {marketDelta == null
+                            ? "17% Overpriced"
+                            : `${Math.abs(marketDelta)}% ${
+                                marketDelta > 0
+                                  ? "Overpriced"
+                                  : marketDelta < 0
+                                  ? "Underpriced"
+                                  : "Fairly Priced"
+                              }`}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-transparent rounded-xl p-8 mb-8">
+                      <div className="flex items-center justify-between mb-6">
+                        <div>
+                          <p className="text-sm text-inda-teal font-medium">
+                            ↑ 3.5% in the last 6 months
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Sales from Aug 2024 - July 2025
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Dual-series bars (deterministic) */}
+                      <div
+                        className="flex items-end justify-between h-40 bg-transparent rounded-lg p-4"
+                        style={{
+                          backgroundImage:
+                            "repeating-linear-gradient(to top, rgba(16,24,32,0.06), rgba(16,24,32,0.06) 1px, transparent 1px, transparent 24px)",
+                        }}
+                      >
+                        {[
+                          "Aug",
+                          "Sep",
+                          "Oct",
+                          "Nov",
+                          "Dec",
+                          "Jan",
+                          "Feb",
+                          "Mar",
+                          "Apr",
+                          "May",
+                          "Jun",
+                          "Jul",
+                        ].map((month, index) => (
+                          <div
+                            key={month}
+                            className="flex flex-col items-center flex-1"
+                          >
+                            <div className="flex items-end gap-1">
                               <div
-                                className="h-2 bg-gray-400 rounded-full"
-                                style={{ width: `${r.percentage}%` }}
-                              ></div>
+                                className="bg-inda-teal rounded-t w-2"
+                                style={{ height: `${50 + index * 4}px` }}
+                              />
+                              <div
+                                className="bg-gray-300 rounded-t w-2"
+                                style={{ height: `${56 + index * 4}px` }}
+                              />
                             </div>
-                            <span className="w-10 text-right text-sm text-gray-600">
-                              {r.percentage}%
+                            <span className="mt-2 text-[10px] text-gray-500">
+                              {month}
                             </span>
                           </div>
                         ))}
                       </div>
-                    </div>
 
-                    {/* Reviews List */}
-                    <div className="md:col-span-2 space-y-4">
-                      <h1 className="font-bold text-xl">Reviews</h1>
-                      {dummyResultData.reviews.map((rev) => (
-                        <div key={rev.id} className="bg-white rounded-lg p-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <div>
-                              <p className="font-semibold text-gray-900">
-                                {rev.reviewer}
-                              </p>
-                              <p className="text-xs text-gray-500">
-                                {rev.location} • {rev.timeAgo}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              {Array.from({ length: 5 }).map((_, i) => (
-                                <FaStar
-                                  key={i}
-                                  className={
-                                    i < rev.rating
-                                      ? "text-yellow-400"
-                                      : "text-gray-300"
-                                  }
-                                />
-                              ))}
-                            </div>
-                          </div>
-                          <p className="font-medium text-gray-900 mb-1">
-                            {rev.title}
-                          </p>
-                          <p className="text-sm text-gray-700 leading-relaxed">
-                            {rev.content}
-                          </p>
+                      <div className="flex items-center gap-4 mt-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 bg-inda-teal rounded-full"></div>
+                          <span className="text-xs text-gray-600">
+                            Last 3 days
+                          </span>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* AI Summary */}
-                  <div className="mt-6 pt-4 border-t border-gray-200">
-                    <h4 className="text-lg font-bold mb-2 text-inda-teal">
-                      AI Summary
-                    </h4>
-                    <p className="text-gray-700 text-base leading-relaxed">
-                      {result?.aiReport?.sellerCredibility?.summary ||
-                        dummyResultData.aiSummary}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Price */}
-              <div className="w-full px-4 sm:px-6">
-                <div className="bg-gray-100 rounded-lg p-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
-                    {/* Price Card */}
-                    <div className="bg-white rounded-lg p-6 text-center">
-                      <h4 className="text-lg font-bold mb-2 text-gray-900">
-                        Price
-                      </h4>
-                      <p className="text-3xl font-bold text-gray-900">
-                        {price ? `₦${price.toLocaleString()}` : "—"}
-                      </p>
-                    </div>
-
-                    {/* Fair Market Value Card */}
-                    <div className="bg-white rounded-lg p-6 text-center">
-                      <h4 className="text-lg font-bold mb-2 text-gray-900">
-                        Fair Market Value
-                      </h4>
-                      <p className="text-3xl font-bold text-gray-900">
-                        {fairValue ? fairValue.toLocaleString() : "—"}
-                      </p>
-                    </div>
-
-                    {/* Market Position Card */}
-                    <div className="bg-white rounded-lg p-6 text-center">
-                      <h4 className="text-lg font-bold mb-2 text-gray-900">
-                        Market Position
-                      </h4>
-                      <p
-                        className={
-                          `text-2xl font-bold ` +
-                          (marketDelta == null
-                            ? "text-gray-600"
-                            : marketDelta > 0
-                            ? "text-red-500"
-                            : marketDelta < 0
-                            ? "text-green-600"
-                            : "text-gray-900")
-                        }
-                      >
-                        {marketDelta == null
-                          ? "—"
-                          : `${Math.abs(marketDelta)}% ${
-                              marketDelta > 0
-                                ? "Overpriced"
-                                : marketDelta < 0
-                                ? "Underpriced"
-                                : "Fairly Priced"
-                            }`}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* AI Summary Collapsible */}
-                  <div className="border-t border-gray-300 pt-4">
-                    <div
-                      className="flex items-center justify-between cursor-pointer"
-                      onClick={() => setIsPriceSummaryOpen(!isPriceSummaryOpen)}
-                    >
-                      <h4 className="text-lg font-bold text-inda-teal">
-                        AI Summary
-                      </h4>
-                      <div className="text-inda-teal">
-                        {isPriceSummaryOpen ? (
-                          <FaChevronUp className="text-sm" />
-                        ) : (
-                          <FaChevronDown className="text-sm" />
-                        )}
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+                          <span className="text-xs text-gray-600">
+                            Last Week
+                          </span>
+                        </div>
                       </div>
                     </div>
 
-                    {isPriceSummaryOpen && (
-                      <div className="mt-4 p-4 bg-white rounded-lg">
-                        <p className="text-sm text-gray-600 leading-relaxed">
-                          {result?.aiReport?.marketValue?.summary ||
-                            dummyResultData.priceAnalysis.aiSummary}
-                        </p>
-                        <button className="mt-3 text-inda-teal text-sm hover:underline font-medium">
-                          More Details
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Map Section - Google Maps */}
-              <div className="w-full px-4 sm:px-6">
-                <div className="bg-gray-100 rounded-lg p-6">
-                  <h3 className="text-xl font-bold mb-6 text-inda-teal">
-                    Location & Micro-Market
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="md:col-span-2">
-                      <div className="h-64 md:h-80 rounded-lg overflow-hidden bg-white">
-                        <iframe
-                          title="map"
-                          className="w-full h-full"
-                          loading="lazy"
-                          referrerPolicy="no-referrer-when-downgrade"
-                          src={`https://www.google.com/maps?q=${encodeURIComponent(
-                            (result?.snapshot?.address as string) ||
-                              (result?.snapshot?.location as string) ||
-                              "Lagos, Nigeria"
-                          )}&output=embed`}
-                        ></iframe>
-                      </div>
-                    </div>
-                    <div>
+                    {/* AI Summary Collapsible */}
+                    <div className="border-t border-gray-300 pt-4">
                       <div
-                        className="flex items-center justify-between cursor-pointer mb-2"
+                        className="flex items-center justify-between cursor-pointer"
                         onClick={() =>
-                          setIsLocationSummaryOpen(!isLocationSummaryOpen)
+                          setIsPriceSummaryOpen(!isPriceSummaryOpen)
                         }
                       >
-                        <h4 className="text-lg font-bold text-inda-teal">
+                        <h4 className="text-[24px] font-bold text-inda-teal">
                           AI Summary
                         </h4>
-                        {isLocationSummaryOpen ? (
-                          <FaChevronUp className="text-inda-teal" />
-                        ) : (
-                          <FaChevronDown className="text-inda-teal" />
-                        )}
+                        <div className="text-inda-teal">
+                          {isPriceSummaryOpen ? (
+                            <FaChevronUp className="text-sm" />
+                          ) : (
+                            <FaChevronDown className="text-sm" />
+                          )}
+                        </div>
                       </div>
-                      {isLocationSummaryOpen && (
-                        <div className="bg-white rounded-lg p-4">
-                          <p className="text-sm text-gray-700 leading-relaxed">
-                            {result?.aiReport?.location?.summary ||
-                              "Neighborhood is fairly connected with moderate access to schools, hospitals and shopping. Average commute time to CBD is 35–45 mins."}
+
+                      {isPriceSummaryOpen && (
+                        <div className="mt-4 p-4 bg-transparent rounded-lg">
+                          <p className="text-sm text-gray-600 leading-relaxed">
+                            {result?.aiReport?.marketValue?.summary ||
+                              dummyResultData.priceAnalysis.aiSummary}
                           </p>
                           <button className="mt-3 text-inda-teal text-sm hover:underline font-medium">
                             More Details
@@ -1077,442 +1134,679 @@ const Result = () => {
                     </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Documents & Trust Indicators */}
-              <div className="w-full px-4 sm:px-6">
-                <div className="bg-gray-100 rounded-lg p-6">
-                  <h3 className="text-xl font-bold mb-6 text-inda-teal">
-                    Documents & Trust Indicators
-                  </h3>
-                  {/* Desktop Table */}
-                  <div className="hidden md:block bg-white rounded-lg overflow-hidden">
-                    <div className="grid grid-cols-3 gap-4 px-4 py-3 border-b text-sm font-semibold text-gray-700">
-                      <div className="text-lg font-bold">Document</div>
-                      <div className="text-lg font-bold">Status</div>
-                      <div className="text-lg font-bold">Notes</div>
+                {/* Map Section - Google Maps */}
+                <div className="w-full px-4 sm:px-6">
+                  <div className="bg-gray-100 rounded-lg p-6">
+                    <h3 className="text-xl font-bold mb-6 text-inda-teal">
+                      Location & Micro-Market
+                    </h3>
+                    <div className="flex flex-col gap-6">
+                      <div>
+                        <div className="h-64 md:h-80 rounded-lg overflow-hidden bg-white">
+                          <iframe
+                            title="map"
+                            className="w-full h-full"
+                            loading="lazy"
+                            referrerPolicy="no-referrer-when-downgrade"
+                            src={`https://www.google.com/maps?q=${encodeURIComponent(
+                              (result?.snapshot?.address as string) ||
+                                (result?.snapshot?.location as string) ||
+                                "Lagos, Nigeria"
+                            )}&output=embed`}
+                          ></iframe>
+                        </div>
+                      </div>
+                      <div>
+                        <div
+                          className="flex items-center justify-between cursor-pointer mb-2"
+                          onClick={() =>
+                            setIsLocationSummaryOpen(!isLocationSummaryOpen)
+                          }
+                        >
+                          <h4 className="text-lg font-bold text-inda-teal">
+                            AI Summary
+                          </h4>
+                          {isLocationSummaryOpen ? (
+                            <FaChevronUp className="text-inda-teal" />
+                          ) : (
+                            <FaChevronDown className="text-inda-teal" />
+                          )}
+                        </div>
+                        {isLocationSummaryOpen && (
+                          <div className="bg-transparent rounded-lg p-4">
+                            <p className="text-sm text-gray-700 leading-relaxed">
+                              {result?.aiReport?.location?.summary ||
+                                "Neighborhood is fairly connected with moderate access to schools, hospitals and shopping. Average commute time to CBD is 35–45 mins."}
+                            </p>
+                            <button className="mt-3 text-inda-teal text-sm hover:underline font-medium">
+                              More Details
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ROI Panel */}
+                <div className="w-full px-4 sm:px-6">
+                  <div className="rounded-lg p-6">
+                    <h3 className="text-[52px] font-bold mb-2 text-inda-teal">
+                      Investment ROI Calculator
+                    </h3>
+                    <p className="text[#101820] font-normal text-[20px]">
+                      Estimate your potential returns on investment properties
+                      with our
+                      <br /> comprehensive calculator
+                    </p>
+                    <h1 className="font-bold text-[#101820E5] text-[32px] my-15 py-5">
+                      Property Details
+                    </h1>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[73px] mb-10">
+                      {dummyResultData.roiMetrics.map((m, idx) => (
+                        <div key={idx}>
+                          <div className="flex flex-wrap justify-between">
+                            <p className="text-[20px] font-normal text-[#101820]/90 pb-3 inline-block">
+                              {m.label}
+                            </p>{" "}
+                            <div className="inline-block">
+                              <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
+                              <RiEditFill className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
+                            </div>
+                          </div>
+                          <p className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600">
+                            {m.value}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[41px] mb-4">
+                      {dummyResultData.roiMetricsTwo.map((two, index) => {
+                        return (
+                          <div key={index}>
+                            <div className="flex flex-wrap justify-between">
+                              <p className="text-[20px] font-normal text-[#101820]/90 pb-3 inline-block">
+                                {two.label}
+                              </p>{" "}
+                              <div className="inline-block">
+                                <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
+                                <RiEditFill className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
+                              </div>
+                            </div>
+                            <p className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600">
+                              {two.value}
+                            </p>
+                          </div>
+                        );
+                      })}
                     </div>
                     <div>
-                      {dummyResultData.documents.map((doc, idx) => (
+                      <div className="flex gap-[50px] mt-10">
+                        {dummyResultData.annualAppreciation.map(
+                          (annual, index) => {
+                            return (
+                              <div
+                                onClick={() => toggler(index)}
+                                className="flex-1"
+                              >
+                                {open === index ? (
+                                  <div>
+                                    <div className="flex justify-between border-b-[6px] rounded-[5px] w-[363px] text-inda-teal mb-9 px-[18px]">
+                                      <span className="text-[20px] mx-auto my-0 w-[250px] text-center whitespace-normal break-words text-[#101820]/80 font-normal">
+                                        {annual.label}
+                                      </span>
+                                      <span className="inline-block">
+                                        <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
+                                      </span>
+                                    </div>
+                                    <div>
+                                      <p className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600">
+                                        {annual.value}
+                                      </p>
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <div>
+                                    <div className="flex justify-between mb-10">
+                                      <span className="text-[20px] mx-auto my-0 w-[250px] text-center text-[#101820]/80 font-normal">
+                                        {annual.label}
+                                      </span>
+                                      <span>
+                                        <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
+                                      </span>
+                                    </div>
+                                    <div className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600"></div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          }
+                        )}
+                      </div>
+                      <div className="mt-30 text-right">
+                        {" "}
+                        <button className="bg-[#4EA8A1] py-[12px] px-[42px] rounded-[8px]">
+                          <p className="text-[16px] text-[#E5E5E5] font-bold">
+                            Calculate
+                          </p>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <h1 className="text-[32px] font-bold text-[#101820E5]">
+                    Results
+                  </h1>
+                  <div>
+                    <div className="flex w-[550px]">
+                      {dummyResultData.results.map((result, idx) => {
+                        return (
+                          <div
+                            className="flex-1 text-center my-10 rounded-[8px] border-1 py-[12px] mr-10 px-[20px] border-inda-teal text-[#0A655E] text-[20px] font-bold"
+                            onClick={() => setIsResult(idx)}
+                          >
+                            {result.term}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <hr className="border-t-3 pt-10 text-[#E5E5E5] w-full" />
+                    <div
+                      className="h-[260px] w-full rounded-[16px] flex gap-x-[44px] py-[67px] px-[40px]"
+                      style={{
+                        background: "linear-gradient(45deg, #0A655E, #4EA8A1)",
+                      }}
+                    >
+                      <div>
+                        {dummyResultData.results.map((item, index) => {
+                          return (
+                            <div>
+                              {isResult === index && (
+                                <div className="flex gap-x-[44px] text-left">
+                                  <div className="flex-grow">
+                                    <p className="text-[20px] text-center pb-[40px] font-medium text-[#F9F9F9]">
+                                      Projected Total Profit
+                                    </p>
+                                    <span className="bg-[#F9F9F9] text-[#0A655E] px-[100px] py-[34px] rounded-[8px]">
+                                      ₦{item.ptp}
+                                    </span>
+                                  </div>
+                                  <div className="flex-grow">
+                                    <p className="text-[20px] text-center pb-[40px] font-medium text-[#F9F9F9]">
+                                      Return on Investment (ROI)
+                                    </p>
+                                    <span className="bg-[#F9F9F9] text-[#0A655E] px-[130px] py-[34px] rounded-[8px]">
+                                      {item.roi}%
+                                    </span>
+                                  </div>
+                                  <div className="flex-grow">
+                                    <p className="text-[20px] text-center pb-[40px] font-medium text-[#F9F9F9]">
+                                      Annual Rental Income
+                                    </p>
+                                    <span className="bg-[#F9F9F9] text-[#0A655E] px-[100px] py-[34px] rounded-[8px] ">
+                                      ₦{item.ari}
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                  {/* <div className="flex">
+                  {dummyResultData.results.map((result, idx) => {
+                    return (
+                      <div>
+                        <div className="flex">
+                          <div
+                            onClick={() => setIsResult(idx)}
+                            className="flex-1 rounded-[8px] border-1 py-[12px] mr-10 px-[20px] border-inda-teal text-[#0A655E] text-[20px] font-bold"
+                          >
+                            {result.term}
+                          </div>
+                        </div>
+                        <div>
+                          {isResult === idx && (
+                            <div
+                              className="h-[260px] w-[1167px] rounded-[16px] flex gap-x-[44px] py-[67px] px-[40px]"
+                              style={{
+                                background:
+                                  "linear-gradient(45deg, #0A655E, #4EA8A1)",
+                              }}
+                            >
+                              <div>
+                                <p className="text-[20px] pb-[40px] font-medium text-[#F9F9F9]">
+                                  Projected Total Profit
+                                </p>
+                                <span className="bg-[#F9F9F9] h-[61px] text-[#0A655E] p-[8px] rounded-[8px] w-[274px]">
+                                  {result.ptp}
+                                </span>
+                              </div>
+                              <div>
+                                <p className="text-[20px] pb-[40px] font-medium text-[#F9F9F9]">
+                                  Return on Investment
+                                </p>{" "}
+                                <span className="bg-[#F9F9F9] text-[#0A655E] p-[8px] rounded-[8px] h-[61px] w-[274px]">
+                                  {result.roi}
+                                </span>
+                              </div>
+                              <div className="w-[208px]">
+                                <p className="text-[20px] font-medium text-[#F9F9F9] pb-[40px]">
+                                  Annual Rental Income
+                                </p>{" "}
+                                <span className="bg-[#F9F9F9] h-[61px] text-[#0A655E] p-[8px] rounded-[8px] w-20">
+                                  {result.ari}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div> */}
+                </div>
+
+                {/* Verified Comparables */}
+                <div className="w-full px-4 sm:px-6">
+                  <div className=" rounded-lg p-6">
+                    <h3 className="text-[52px] font-bold mb-6 text-inda-teal">
+                      Verified Comparables
+                    </h3>
+                    <div
+                      className="flex gap-4 overflow-x-auto pb-2"
+                      style={{
+                        scrollbarWidth: "none",
+                        msOverflowStyle: "none",
+                      }}
+                    >
+                      <style jsx>{`
+                        div::-webkit-scrollbar {
+                          display: none;
+                        }
+                      `}</style>
+                      {dummyResultData.comparables.map((c) => (
                         <div
-                          key={idx}
-                          className="grid grid-cols-3 gap-4 px-4 py-3 border-b last:border-0 text-sm"
+                          key={c.id}
+                          className="flex-shrink-0 min-w-[320px] max-w-[320px] bg-[#E5F4F2] rounded-2xl p-4"
                         >
-                          <div className="font-medium text-md text-gray-900">
-                            {doc.name}
+                          <div className="w-full h-40 rounded-xl overflow-hidden mb-4">
+                            <img
+                              className="w-full h-full object-cover"
+                              src={c.image}
+                              alt={c.title}
+                            />
                           </div>
-                          <div className="font-medium text-md flex items-center gap-2">
-                            {doc.status === "verified" && (
-                              <FaCheckCircle className="text-green-500" />
-                            )}
-                            {doc.status === "not-provided" && (
-                              <FaTimes className="text-red-500" />
-                            )}
-                            {doc.status === "in-review" && (
-                              <FaClock className="text-yellow-500" />
-                            )}
-                            <span className="font-medium text-md capitalize">
-                              {doc.status.replace("-", " ")}
-                            </span>
+                          <p className="text-[#101820] font-semibold text-lg mb-2">
+                            {c.title}
+                          </p>
+                          <div className="text-sm text-gray-700 space-y-1 mb-3">
+                            <div>Location: {c.location}</div>
+                            <div>Number of beds: {c.beds}</div>
+                            <div className="flex items-center justify-between">
+                              <span>Inda Trust Score</span>
+                              <span className="font-semibold">
+                                {c.developerTrustScore}%
+                              </span>
+                            </div>
+                            <div className="w-full bg-gray-300/60 rounded-full h-2">
+                              <div
+                                className="bg-inda-teal h-2 rounded-full"
+                                style={{ width: `${c.developerTrustScore}%` }}
+                              />
+                            </div>
                           </div>
-                          <div className="text-gray-600">{doc.notes}</div>
+                          <div className="text-sm text-[#101820] font-semibold">
+                            Price: {c.price}
+                          </div>
                         </div>
                       ))}
                     </div>
                   </div>
-                  {/* Mobile Cards */}
-                  <div className="md:hidden space-y-3">
-                    {dummyResultData.documents.map((doc, idx) => (
-                      <div key={idx} className="bg-white rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <p className="font-semibold text-gray-900">
-                            {doc.name}
-                          </p>
-                          <div className="flex items-center gap-2">
-                            {doc.status === "verified" && (
-                              <FaCheckCircle className="text-green-500" />
-                            )}
-                            {doc.status === "not-provided" && (
-                              <FaTimes className="text-red-500" />
-                            )}
-                            {doc.status === "in-review" && (
-                              <FaClock className="text-yellow-500" />
-                            )}
-                            <span className="text-sm capitalize">
-                              {doc.status.replace("-", " ")}
-                            </span>
-                          </div>
-                        </div>
-                        <p className="text-sm text-gray-700">{doc.notes}</p>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Legal Note */}
-                  <div className="mt-6 pt-4 border-t border-gray-200">
-                    <h4 className="text-lg font-bold text-inda-teal mb-2">
-                      Legal Note
-                    </h4>
-                    <p className="text-gray-700 text-base leading-relaxed">
-                      {dummyResultData.legalNote}
-                    </p>
-                  </div>
                 </div>
-              </div>
 
-              {/* ROI Panel */}
-              <div className="w-full px-4 sm:px-6">
-                <div className="bg-gray-100 rounded-lg p-6">
-                  <h3 className="text-2xl font-bold mb-10 text-inda-teal">
-                    Investment ROI Calculator
-                  </h3>
-                  <p className="text-gray-900">
-                    Estimate your potenttial returns on investment properties
-                    with our
-                    <br /> comprehensive calculator
-                  </p>
-                  <h1 className="font-semibold text-xl py-5">
-                    Property Details
-                  </h1>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-                    {dummyResultData.roiMetrics.map((m, idx) => (
-                      <div key={idx}>
-                        <p className="text-sm pb-5  text-gray-500">
-                          {m.label}
-                          <IoIosInformationCircle
-                            size={20}
-                            className="inline-block text-inda-teal ml-1"
-                          />
-                        </p>
-                        <p className="bg-[#4EA8A159] rounded-lg p-4 text-lg text-center font-normal text-gray-600">
-                          {m.value}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="border-t border-gray-200 pt-4">
-                    <div
-                      className="flex items-center justify-between cursor-pointer"
-                      onClick={() => setIsROISummaryOpen(!isROISummaryOpen)}
-                    >
-                      <h4 className="text-lg font-bold text-inda-teal">
-                        AI Summary
-                      </h4>
-                      {isROISummaryOpen ? (
-                        <FaChevronUp className="text-inda-teal" />
-                      ) : (
-                        <FaChevronDown className="text-inda-teal" />
-                      )}
-                    </div>
-                    {isROISummaryOpen && (
-                      <div className="mt-3 bg-white rounded-lg p-4">
-                        <p className="text-sm text-gray-700 leading-relaxed">
-                          {result?.aiReport?.roi?.summary ||
-                            dummyResultData.roiSummary}
-                        </p>
-                        <button className="mt-3 text-inda-teal text-sm hover:underline font-medium">
-                          More Details
+                {/* How would you like to proceed? */}
+                <div className="w-full px-4 sm:px-6">
+                  <div className="rounded-lg p-6">
+                    <div className="bg-gray-100 rounded-xl py-10">
+                      <h3 className="text-[52px] font-bold mb-10 text-center">
+                        How would you like to proceed?
+                      </h3>
+                      <div className="flex flex-wrap gap-3 justify-center">
+                        {/* <button className="flex items-center gap-2 px-4 py-2 bg-inda-teal text-white rounded-full text-sm hover:bg-teal-600 transition-colors">
+                    <FaWhatsapp className="text-xs" /> WhatsApp Seller
+                   </button>
+                   <button className="flex items-center gap-2 px-4 py-2 bg-inda-teal text-white rounded-full text-sm hover:bg-teal-600 transition-colors">
+                    <FaPhone className="text-xs" /> Call Seller
+                   </button> */}
+                        <button
+                          onClick={(e) => setProceed(true)}
+                          className="py-[12px] px-[42px] h-[121px] w-[339px] bg-inda-teal text-[#F9F9F9] rounded-2xl text-[24px] font-normal hover:bg-[#0A655E]"
+                        >
+                          Run Deeper Verification
+                        </button>
+                        <button className="py-[12px] px-[42px] h-[121px] w-[339px] bg-inda-teal text-[#F9F9F9] rounded-2xl text-[24px] font-normal hover:bg-[#0A655E]">
+                          Buy with Inda
+                        </button>
+                        <button className="py-[12px] px-[42px] h-[121px] w-[339px] bg-inda-teal text-[#F9F9F9] rounded-2xl text-[24px] font-normal hover:bg-[#0A655E]">
+                          Finance with Inda
                         </button>
                       </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* Verified Comparables */}
-              <div className="w-full px-4 sm:px-6">
-                <div className="shadow-lg border-gray-500 rounded-b-xl p-6">
-                  <h3 className="text-xl font-bold mb-6 text-inda-teal">
-                    Verified Comparables
-                  </h3>
-                  <div
-                    className="flex gap-4"
-                    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                  >
-                    <style jsx>{`
-                      div::-webkit-scrollbar {
-                        display: none;
-                      }
-                    `}</style>
-                    {dummyResultData.comparables.map((c) => (
-                      <div key={c.id} className=" bg-[#E5F4F2] rounded-lg p-4">
-                        <img
-                          className="block"
-                          src={c.image}
-                          alt="building-image"
-                        />
-                        <p className="w-full font-semibold text-gray-900 mb-1">
-                          {c.title}
-                        </p>
-                        <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                          <span>Location: {c.location}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
-                          <span>Number of beds: {c.beds}</span>
-                        </div>
-                        <div>
-                          <div className="flex py-1 bg-[#E5F4F2] justify-between text-inda-teal rounded-full text-xs font-medium">
-                            <span>Inda Trust Score</span>
-                            <span>{c.developerTrustScore}%</span>
-                          </div>
-
-                          <div className="w-full bg-[#EAEAEA] rounded-full h-2">
-                            <div
-                              className="bg-inda-teal h-2 rounded-full"
-                              style={{
-                                width: `${Math.round(
-                                  result?.indaScore?.finalScore ?? 0
-                                )}%`,
-                              }}
-                            />
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between mb-3">
-                          <span className=" text-gray-900">{c.price}</span>{" "}
-                          {"|"}
-                          <span className="text-sm text-gray-600">
-                            {c.pricePerSqm}
-                          </span>
-                          {"|"}
-                          <span className="px-2 py-1 bg-[#E5F4F2] text-inda-teal rounded-full text-xs font-medium">
-                            {c.yield}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* How would you like to proceed? */}
-              <div className="w-full px-4 sm:px-6">
-                <div className="rounded-lg p-6">
-                  <div className="bg-gray-100 rounded-xl py-10">
-                    <h3 className="text-3xl font-bold mb-4 text-center">
-                      How would you like more information
-                      <br />
-                      about this listing?
-                    </h3>
-                    <div className="flex flex-wrap gap-3 justify-center">
-                      {/* <button className="flex items-center gap-2 px-4 py-2 bg-inda-teal text-white rounded-full text-sm hover:bg-teal-600 transition-colors">
-                    <FaWhatsapp className="text-xs" /> WhatsApp Seller
-                  </button>
-                  <button className="flex items-center gap-2 px-4 py-2 bg-inda-teal text-white rounded-full text-sm hover:bg-teal-600 transition-colors">
-                    <FaPhone className="text-xs" /> Call Seller
-                  </button> */}
-                      <button
-                        onClick={(e) => setProceed(true)}
-                        className="px-15 py-4 bg-inda-teal border text-white rounded-xl text-sm hover:bg-[#E5F4F2]"
-                      >
-                        Yes
-                      </button>
-                      <button className=" px-15 py-4 border bg-inda-dark/90 text-white rounded-xl text-sm hover:bg-[#E5F4F2]">
-                        No
-                      </button>
                     </div>
-                  </div>
 
-                  {/* Legal Disclaimer */}
-                  <div className="mt-6 pt-4 border-t border-gray-200">
-                    <h4 className="text-lg font-bold text-gray-900 mb-2">
-                      Legal Disclaimer
-                    </h4>
-                    <p className="text-sm text-gray-700 leading-relaxed">
-                      {dummyResultData.legalDisclaimer}
-                    </p>
+                    {/* Legal Disclaimer */}
+                    <div className="mt-6 pt-4 border-t border-gray-200">
+                      <h4 className="text-lg font-bold text-gray-900 mb-2">
+                        Legal Disclaimer
+                      </h4>
+                      <p className="text-sm text-gray-700 leading-relaxed">
+                        {dummyResultData.legalDisclaimer}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="relative z-10 flex items-center justify-center h-full"></div>
-          </div>
-          <div>
-            {proceed && (
-              <div className="fixed inset-0 backdrop-blur-sm bg-opacity-60 flex justify-center items-center z-50">
-                <div className="max-h-[90vh] bg-white rounded-lg max-w-5xl w-full max-md:w-3/4 overflow-y-auto relative">
-                  <motion.section
-                    className="h-full w-full max-sm:p-10 rounded-xl sm:px-6 md:px-8 lg:px-[5%] bg-[#4EA8A159] sm:py-16 md:py-20 flex flex-col items-start justify-center"
-                    initial={{ opacity: 0, y: 50 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.2 }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                  >
-                    <button
-                      onClick={() => setProceed(false)}
-                      className="absolute top-4 right-4 text-gray-600 hover:text-black"
-                    >
-                      <FaTimes size={30} />
-                    </button>
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
+            <div>
+              {proceed && (
+                <div className="fixed inset-0 backdrop-blur-sm bg-opacity-60 flex justify-center items-center z-50">
+                  <div className="max-h-[90vh] bg-white rounded-lg max-w-5xl w-full max-md:w-3/4 overflow-y-auto relative">
+                    <motion.section
+                      className="w-full py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8"
+                      initial={{ opacity: 0, y: 50 }}
                       whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.8, delay: 0.2 }}
+                      viewport={{ once: true, amount: 0.2 }}
+                      transition={{ duration: 0.8, ease: "easeOut" }}
                     >
-                      <Text className="text-inda-dark font-bold text-2xl sm:text-3xl sm:mb-8">
-                        Plans & Pricing
-                      </Text>
-                      <p className="font-normal mb-10 text-md text-[#556457]">
-                        Inda Pricing Guide (Lagos Listings Only)
-                      </p>
-                    </motion.div>
-                    <motion.div
-                      className="w-full flex flex-wrap gap-6 gap-7-10 sm:gap-8"
-                      initial={{ opacity: 0, y: 30 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.8, delay: 0.4 }}
-                    >
-                      {/* Deep Report */}
-                      <motion.div
-                        className="flex-1 min-w-[240px] sm:min-w-[260px] bg-inda-dark rounded-xl sm:rounded-2xl border border-[#D1D5DB] p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:scale-105"
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.6, delay: 0.4 }}
-                      >
-                        <div className="relative h-[100%]">
-                          <div className="font-bold text-lg max-sm:text-sm mb-3 sm:mb-0 text-inda-white">
-                            ₦25,000
-                          </div>
-                          <div className="max-sm:text-xl font-light text-inda-white items-center">
-                            <span className="mr-2 font-semibold">
-                              <h3 className="text-3xl max-sm:text-lg">
-                                Deep Dive Report
-                              </h3>
-                              <p className="text-sm sm:text-lg font-medium text-inda-white">
-                                Delivery Time:{" "}
-                                <span className="font-light text-md">
-                                  {" "}
-                                  24-48 hours (via email PDF)
-                                </span>
-                              </p>
-                            </span>
-                          </div>
+                      <div className="max-w-[80%] mx-auto ">
+                        <motion.div
+                          className="bg-[#1018200A] rounded-[48px] p-8 sm:p-12 shadow-xl"
+                          initial={{ opacity: 0, y: 30 }}
+                          whileInView={{ opacity: 1, y: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ duration: 0.8, delay: 0.4 }}
+                        >
+                          <button
+                            onClick={() => setProceed(false)}
+                            className="absolute top-4 right-4 text-gray-600 hover:text-black"
+                          >
+                            <FaTimes size={30} />
+                          </button>
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.8, delay: 0.2 }}
+                            className="text-left mb-12"
+                          >
+                            <Text className="text-inda-dark font-bold text-2xl sm:text-3xl mb-2">
+                              Plans & Pricing
+                            </Text>
+                            <p className="font-normal text-md text-[#556457]">
+                              Inda Pricing Guide (Lagos Listings Only)
+                            </p>
+                          </motion.div>
+                          <div className="bg-[#F9F9F980] rounded-[24px] p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-0">
+                            {/* Deep Dive Report - Elevated */}
+                            <motion.div
+                              initial={{ opacity: 0, y: 40, scale: 0.85 }}
+                              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                              viewport={{ once: true }}
+                              transition={{
+                                duration: 0.7,
+                                delay: 0.4,
+                                ease: "easeOut",
+                              }}
+                              whileHover={{
+                                scale: 1.03,
+                                y: -5,
+                                transition: { duration: 0.3 },
+                              }}
+                              className="relative -mt-4 sm:-mt-8 lg:-mt-12 w-full"
+                            >
+                              <div className="bg-[#2A2A2A] rounded-[20px] sm:rounded-[32px] p-4 sm:p-6 h-full flex flex-col shadow-2xl hover:shadow-3xl transition-all duration-300 ">
+                                <div className="text-left mb-4 sm:mb-6">
+                                  <motion.div
+                                    className="font-bold text-3xl sm:text-4xl mb-2 text-white"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    whileInView={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.5, delay: 0.6 }}
+                                  >
+                                    ₦25,000
+                                  </motion.div>
+                                  <motion.h3
+                                    className="text-lg sm:text-xl font-bold text-white mb-2"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    whileInView={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.5, delay: 0.7 }}
+                                  >
+                                    Deep Dive Report
+                                  </motion.h3>
+                                  <motion.p
+                                    className="text-xs sm:text-sm text-gray-300 mb-4"
+                                    initial={{ opacity: 0 }}
+                                    whileInView={{ opacity: 1 }}
+                                    transition={{ duration: 0.5, delay: 0.8 }}
+                                  >
+                                    Delivery Time: 24-48 hours (via email PDF)
+                                  </motion.p>
+                                </div>
 
-                          <ul className="sm:mt-6 mb-2 translate-y-[-45px] max-sm:translate-y-[-20px] sm:space-y-2">
-                            <h4 className="text-inda-white text-xl max-sm:text-sm font-semibold">
-                              What You Get:{" "}
-                              <span className="text-inda-white font-light text-md max-sm:text-sm">
-                                Everything in Instant Report{" "}
-                                <span className="text-inda-yellow">Plus:</span>
-                              </span>
-                            </h4>
+                                <motion.div
+                                  className="flex-1 mb-4 sm:mb-6"
+                                  initial={{ opacity: 0, y: 20 }}
+                                  whileInView={{ opacity: 1, y: 0 }}
+                                  transition={{ duration: 0.5, delay: 0.9 }}
+                                >
+                                  <h4 className="text-white mb-2 text-xs sm:text-sm font-semibold">
+                                    What You Get:{" "}
+                                    <span className="font-normal text-gray-300">
+                                      Everything in Instant Report
+                                    </span>
+                                    <span className="text-white font-semibold">
+                                      {" "}
+                                      Plus:
+                                    </span>
+                                  </h4>
+                                  <h5 className="text-white text-xs sm:text-sm font-semibold mb-3">
+                                    Title & Legal Verification:
+                                  </h5>
+                                  <ul className="space-y-2">
+                                    <motion.li
+                                      className="flex items-center gap-3 text-xs sm:text-sm text-gray-300"
+                                      initial={{ opacity: 0, x: -10 }}
+                                      whileInView={{ opacity: 1, x: 0 }}
+                                      transition={{ duration: 0.4, delay: 1.0 }}
+                                    >
+                                      <span className="text-white text-base sm:text-lg">
+                                        ✓
+                                      </span>
+                                      Certificate of Occupancy (C of O) or Deed
+                                      check
+                                    </motion.li>
+                                    <motion.li
+                                      className="flex items-center gap-3 text-xs sm:text-sm text-gray-300"
+                                      initial={{ opacity: 0, x: -10 }}
+                                      whileInView={{ opacity: 1, x: 0 }}
+                                      transition={{ duration: 0.4, delay: 1.1 }}
+                                    >
+                                      <span className="text-white text-base sm:text-lg">
+                                        ✓
+                                      </span>
+                                      Governor's consent check
+                                    </motion.li>
+                                    <motion.li
+                                      className="flex items-center gap-3 text-xs sm:text-sm text-gray-300"
+                                      initial={{ opacity: 0, x: -10 }}
+                                      whileInView={{ opacity: 1, x: 0 }}
+                                      transition={{ duration: 0.4, delay: 1.2 }}
+                                    >
+                                      <span className="text-white text-base sm:text-lg">
+                                        ✓
+                                      </span>
+                                      Zoning compliance check
+                                    </motion.li>
+                                    <motion.li
+                                      className="flex items-center gap-3 text-xs sm:text-sm text-gray-300"
+                                      initial={{ opacity: 0, x: -10 }}
+                                      whileInView={{ opacity: 1, x: 0 }}
+                                      transition={{ duration: 0.4, delay: 1.3 }}
+                                    >
+                                      <span className="text-white text-base sm:text-lg">
+                                        ✓
+                                      </span>
+                                      Litigation search (court registry)
+                                    </motion.li>
+                                    <motion.li
+                                      className="flex items-center gap-3 text-xs sm:text-sm text-gray-300"
+                                      initial={{ opacity: 0, x: -10 }}
+                                      whileInView={{ opacity: 1, x: 0 }}
+                                      transition={{ duration: 0.4, delay: 1.4 }}
+                                    >
+                                      <span className="text-white text-base sm:text-lg">
+                                        ✓
+                                      </span>
+                                      Survey plan verification (boundaries &
+                                      location)
+                                    </motion.li>
+                                  </ul>
+                                </motion.div>
 
-                            <h3 className="text-inda-white text-lg max-sm:text-sm font-semibold">
-                              Title & Legal Verification:
-                            </h3>
-                            <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-white">
-                              <span className="text-lg sm:text-2xl text-inda-yellow">
-                                ✓
-                              </span>{" "}
-                              Certificate of Occupancy (C of O) or Deed check
-                            </li>
-                            <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-white">
-                              <span className="text-lg sm:text-lg text-inda-yellow">
-                                ✓
-                              </span>{" "}
-                              Governor's consent check
-                            </li>
-                            <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-white">
-                              <span className="text-lg sm:text-2xl text-inda-yellow">
-                                ✓
-                              </span>{" "}
-                              Zoning compliance check
-                            </li>
-                            <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-white">
-                              <span className="text-lg sm:text-2xl text-inda-yellow">
-                                ✓
-                              </span>{" "}
-                              Litigation search (court registery)
-                            </li>
-                            <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-inda-white">
-                              <span className="text-lg sm:text-2xl text-inda-yellow">
-                                ✓
-                              </span>{" "}
-                              Survey plan verification (boundaries & location)
-                            </li>
-                          </ul>
-                          <div className="w-full absolute bottom-0 flex justify-center max-sm:mt-20">
-                            <button className="bg-[#4ea8a1] text-inda-white w-[90%] py-3 max-sm:py-1 rounded-full shadow-md hover:bg-[#e9eaeb] transition-all duration-300 hover:scale-105">
-                              Choose Plan
-                            </button>
-                          </div>
-                        </div>
-                      </motion.div>
+                                <motion.button
+                                  className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base"
+                                  initial={{ opacity: 0, y: 20 }}
+                                  whileInView={{ opacity: 1, y: 0 }}
+                                  transition={{ duration: 0.5, delay: 1.5 }}
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                >
+                                  Choose plan
+                                </motion.button>
+                              </div>
+                            </motion.div>
 
-                      {/* Deeper Dive */}
-                      <motion.div
-                        className="flex-1 min-w-[240px] sm:min-w-[260px] bg-[#E5E5E566] rounded-xl sm:rounded-2xl border border-[#D1D5DB] p-6 sm:p-8 flex flex-col justify-between transition-all duration-300 hover:shadow-lg hover:scale-105"
-                        initial={{ opacity: 0, y: 20 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.6, delay: 0.6 }}
-                      >
-                        <div className="relative h-[97%]">
-                          <div className="font-bold text-lg max-sm:text-md mb-3 sm:mb-4 text-inda-dark">
-                            ₦75,000
-                          </div>
-                          <div className="text-2xl text-[#101820BF] max-sm:text-md font-semibold mb-2 items-center">
-                            <span className="mr-2 font-semibold">
-                              <h3 className="text-3xl max-sm:text-sm">
-                                Deeper Dive
-                              </h3>
-                              <p className="text-xl max-sm:text-sm sm:text-lg text-inda-dark/70">
-                                Delivery Time:{" "}
-                                <span className="font-light text-md">
-                                  2-4 Days
-                                </span>
-                              </p>
-                            </span>
-                          </div>
+                            {/* Deeper Dive */}
+                            <motion.div
+                              initial={{ opacity: 0, y: 30, scale: 0.9 }}
+                              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                              viewport={{ once: true }}
+                              transition={{
+                                duration: 0.6,
+                                delay: 0.5,
+                                ease: "easeOut",
+                              }}
+                              whileHover={{
+                                scale: 1.02,
+                                transition: { duration: 0.3 },
+                              }}
+                              className="w-full"
+                            >
+                              <div className="p-4 sm:p-6 h-full flex flex-col transition-all duration-300 hover:shadow-md rounded-lg sm:rounded-none">
+                                <div className="text-left mb-4 sm:mb-6">
+                                  <motion.div
+                                    className="font-bold text-3xl sm:text-4xl mb-2 text-gray-900"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    whileInView={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.5, delay: 0.7 }}
+                                  >
+                                    ₦75,000
+                                  </motion.div>
+                                  <motion.h3
+                                    className="text-lg sm:text-xl font-bold text-gray-900 mb-2"
+                                    initial={{ opacity: 0, x: -20 }}
+                                    whileInView={{ opacity: 1, x: 0 }}
+                                    transition={{ duration: 0.5, delay: 0.8 }}
+                                  >
+                                    Deeper Dive
+                                  </motion.h3>
+                                  <motion.p
+                                    className="text-xs sm:text-sm text-gray-600 mb-4"
+                                    initial={{ opacity: 0 }}
+                                    whileInView={{ opacity: 1 }}
+                                    transition={{ duration: 0.5, delay: 0.9 }}
+                                  >
+                                    Delivery Time: 2-4 Days
+                                  </motion.p>
+                                </div>
 
-                          <ul className="mt-4 sm:mt-6 mb-2 space-y-1 sm:space-y-2 max-sm:translate-y-[-30px]">
-                            <h4 className="text-[#101820BF] text-xl max-sm:text-sm font-semibold">
-                              What You Get:{" "}
-                              <span className="font-light text-md">
-                                Everything in Instant Report{" "}
-                                <span className="text-inda-teal">Plus:</span>
-                              </span>
-                            </h4>
-                            <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-[#101820BF]">
-                              <span className="text-lg sm:text-2xl text-inda-teal">
-                                ✓
-                              </span>{" "}
-                              Seller identity verification
-                            </li>
-                            <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-[#101820BF]">
-                              <span className="text-lg sm:text-2xl text-inda-teal">
-                                ✓
-                              </span>{" "}
-                              On-site property visit
-                            </li>
-                            <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-[#101820BF]">
-                              <span className="text-lg sm:text-2xl text-inda-teal">
-                                ✓
-                              </span>{" "}
-                              Photo evidence
-                            </li>
-                            <li className="flex items-center gap-2 text-sm sm:text-base md:text-lg text-[#101820BF]">
-                              <span className="text-lg sm:text-2xl text-inda-teal">
-                                ✓
-                              </span>{" "}
-                              Portfolio Dashboard
-                            </li>
-                          </ul>
-                          <div className="w-full absolute bottom-0 flex justify-center sm:mt-8">
-                            <button className="bg-[#4ea8a1] text-inda-white w-[90%] py-3 max-sm:py-1 rounded-full shadow-md hover:bg-[#e9eaeb] transition-all duration-300 hover:scale-105">
-                              Choose Plan
-                            </button>
+                                <motion.div
+                                  className="flex-1 mb-4 sm:mb-6"
+                                  initial={{ opacity: 0, y: 20 }}
+                                  whileInView={{ opacity: 1, y: 0 }}
+                                  transition={{ duration: 0.5, delay: 1.0 }}
+                                >
+                                  <h4 className="text-gray-900 mb-3 text-xs sm:text-sm font-semibold">
+                                    What You Get:{" "}
+                                    <span className="font-normal text-gray-600">
+                                      Everything in Instant Report
+                                    </span>
+                                    <span className="text-[#4ea8a1] font-semibold">
+                                      {" "}
+                                      Plus:
+                                    </span>
+                                  </h4>
+                                  <ul className="space-y-2">
+                                    <motion.li
+                                      className="flex items-center gap-3 text-xs sm:text-sm text-gray-700"
+                                      initial={{ opacity: 0, x: -10 }}
+                                      whileInView={{ opacity: 1, x: 0 }}
+                                      transition={{ duration: 0.4, delay: 1.1 }}
+                                    >
+                                      <span className="text-[#4ea8a1] text-base sm:text-lg">
+                                        ✓
+                                      </span>
+                                      Seller identity verification
+                                    </motion.li>
+                                    <motion.li
+                                      className="flex items-center gap-3 text-xs sm:text-sm text-gray-700"
+                                      initial={{ opacity: 0, x: -10 }}
+                                      whileInView={{ opacity: 1, x: 0 }}
+                                      transition={{ duration: 0.4, delay: 1.2 }}
+                                    >
+                                      <span className="text-[#4ea8a1] text-base sm:text-lg">
+                                        ✓
+                                      </span>
+                                      On-site property visit
+                                    </motion.li>
+                                    <motion.li
+                                      className="flex items-center gap-3 text-xs sm:text-sm text-gray-700"
+                                      initial={{ opacity: 0, x: -10 }}
+                                      whileInView={{ opacity: 1, x: 0 }}
+                                      transition={{ duration: 0.4, delay: 1.3 }}
+                                    >
+                                      <span className="text-[#4ea8a1] text-base sm:text-lg">
+                                        ✓
+                                      </span>
+                                      Photo evidence
+                                    </motion.li>
+                                  </ul>
+                                </motion.div>
+
+                                <motion.button
+                                  className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base"
+                                  initial={{ opacity: 0, y: 20 }}
+                                  whileInView={{ opacity: 1, y: 0 }}
+                                  transition={{ duration: 0.5, delay: 1.4 }}
+                                  whileHover={{ scale: 1.05 }}
+                                  whileTap={{ scale: 0.95 }}
+                                >
+                                  Choose plan
+                                </motion.button>
+                              </div>
+                            </motion.div>
                           </div>
-                        </div>
-                      </motion.div>
-                    </motion.div>
-                  </motion.section>
+                        </motion.div>
+                      </div>
+                    </motion.section>
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </main>
         <Footer />

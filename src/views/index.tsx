@@ -777,7 +777,8 @@ const Landing: React.FC = () => {
       >
         <div className="max-w-[80%] mx-auto ">
           <motion.div
-            className="bg-[#1018200A] rounded-[48px] p-8 sm:p-12 shadow-xl"
+            style={{ backgroundImage: "url('/assets/images/pricing.png')" }}
+            className="rounded-[44px] p-8 sm:p-12 shadow-xl"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -790,10 +791,10 @@ const Landing: React.FC = () => {
               transition={{ duration: 0.8, delay: 0.2 }}
               className="text-left mb-12"
             >
-              <Text className="text-inda-dark font-bold text-2xl sm:text-3xl mb-2">
+              <Text className="text-[#101820] font-semibold text-[40px] sm:text-3xl mb-2">
                 Plans & Pricing
               </Text>
-              <p className="font-normal text-md text-[#556457]">
+              <p className="font-medium text-[20px] text-[#101820A6]">
                 Inda Pricing Guide (Lagos Listings Only)
               </p>
             </motion.div>
@@ -809,7 +810,7 @@ const Landing: React.FC = () => {
                 <div className="p-4 sm:p-6 h-full flex flex-col transition-all duration-300 hover:shadow-md rounded-lg sm:rounded-none">
                   <div className="text-left mb-4 sm:mb-6">
                     <motion.div
-                      className="font-bold text-3xl sm:text-4xl mb-2 text-gray-900"
+                      className="font-bold text-[36px] sm:text-4xl mb-2 text-[#101820F2]"
                       initial={{ opacity: 0, x: -20 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.5, delay: 0.4 }}
@@ -817,7 +818,7 @@ const Landing: React.FC = () => {
                       ₦0
                     </motion.div>
                     <motion.h3
-                      className="text-lg sm:text-xl font-bold text-gray-900 mb-2"
+                      className="text-[28px] sm:text-xl font-medium text-[#101820BF]-2"
                       initial={{ opacity: 0, x: -20 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.5, delay: 0.5 }}
@@ -825,12 +826,16 @@ const Landing: React.FC = () => {
                       Free Report
                     </motion.h3>
                     <motion.p
-                      className="text-xs sm:text-sm text-gray-600 mb-4"
+                      className="text-xs sm:text-sm text-[#101820BF] font-semibold mb-4"
                       initial={{ opacity: 0 }}
                       whileInView={{ opacity: 1 }}
                       transition={{ duration: 0.5, delay: 0.6 }}
                     >
-                      Delivery Time: &lt;20 seconds
+                      Delivery Time:{" "}
+                      <span className="text-[16px] font-normal">
+                        {" "}
+                        &lt;20 seconds
+                      </span>
                     </motion.p>
                   </div>
 
@@ -840,7 +845,7 @@ const Landing: React.FC = () => {
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.7 }}
                   >
-                    <h4 className="text-gray-900 mb-3 text-xs sm:text-sm font-semibold">
+                    <h4 className="text-[#101820BF] mb-3 text-[16px] py-[8px] sm:text-sm font-semibold">
                       What You Get:
                     </h4>
                     <ul className="space-y-2">
@@ -850,17 +855,17 @@ const Landing: React.FC = () => {
                         whileInView={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.4, delay: 0.8 }}
                       >
-                        <span className="text-[#4ea8a1] text-base sm:text-lg">
+                        <span className="text-[#4EA8A1] text-[16px] font-normal sm:text-lg">
                           ✓
                         </span>
-                        Inda Score
+                        <span className="text-[#101820BF]">Inda Score</span>
                       </motion.li>
                     </ul>
                   </motion.div>
 
                   <motion.button
                     onClick={choseFree}
-                    className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base"
+                    className="w-full bg-[#4ea8a1] text-[#F9F9F9] text-[15px] py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.9 }}
@@ -884,7 +889,7 @@ const Landing: React.FC = () => {
                 <div className="p-4 sm:p-6 h-full flex flex-col transition-all duration-300 hover:shadow-md rounded-lg sm:rounded-none border-l-0 sm:border-l sm:border-l-gray-200">
                   <div className="text-left mb-4 sm:mb-6">
                     <motion.div
-                      className="font-bold text-3xl sm:text-4xl mb-2 text-gray-900"
+                      className="font-bold text-[36px] sm:text-4xl mb-2 text-[#101820F2]"
                       initial={{ opacity: 0, x: -20 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.5, delay: 0.4 }}
@@ -892,7 +897,7 @@ const Landing: React.FC = () => {
                       ₦3,000
                     </motion.div>
                     <motion.h3
-                      className="text-lg sm:text-xl font-bold text-gray-900 mb-2"
+                      className="text-[#101820BF] sm:text-xl font-medium text-[28px] mb-2"
                       initial={{ opacity: 0, x: -20 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.5, delay: 0.5 }}
@@ -900,12 +905,15 @@ const Landing: React.FC = () => {
                       Inda Instant Report
                     </motion.h3>
                     <motion.p
-                      className="text-xs sm:text-sm text-gray-600 mb-4"
+                      className="text-[16px] text-[#101820BF] font-semibold sm:text-sm text-gray-600 mb-4"
                       initial={{ opacity: 0 }}
                       whileInView={{ opacity: 1 }}
                       transition={{ duration: 0.5, delay: 0.6 }}
                     >
-                      Delivery Time: &lt;30 seconds (Instant)
+                      Delivery Time:{" "}
+                      <span className="font-normal">
+                        &lt;30 seconds (Instant)
+                      </span>
                     </motion.p>
                   </div>
 
@@ -915,12 +923,12 @@ const Landing: React.FC = () => {
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.7 }}
                   >
-                    <h4 className="text-gray-900 mb-3 text-xs sm:text-sm font-semibold">
+                    <h4 className="text-[#101820BF] mb-3 text-[16px] py-[8px] px-[1px] sm:text-sm font-semibold">
                       What You Get:
                     </h4>
                     <ul className="space-y-2">
                       <motion.li
-                        className="flex items-center gap-3 text-xs sm:text-sm text-gray-700"
+                        className="flex items-center gap-3 text-[16px] font-normal text-[#101820BF] sm:text-sm"
                         initial={{ opacity: 0, x: -10 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.4, delay: 0.8 }}
@@ -931,7 +939,7 @@ const Landing: React.FC = () => {
                         Inda Score
                       </motion.li>
                       <motion.li
-                        className="flex items-center gap-3 text-xs sm:text-sm text-gray-700"
+                        className="flex items-center gap-3 text-[16px] font-normal text-[#101820BF] sm:text-sm text-[#101820BF]"
                         initial={{ opacity: 0, x: -10 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.4, delay: 0.9 }}
@@ -942,7 +950,7 @@ const Landing: React.FC = () => {
                         Micro-location market data
                       </motion.li>
                       <motion.li
-                        className="flex items-center gap-3 text-xs sm:text-sm text-gray-700"
+                        className="flex items-center gap-3 text-[16px] font-normal text-[#101820BF] sm:text-sm"
                         initial={{ opacity: 0, x: -10 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.4, delay: 1.0 }}
@@ -953,7 +961,7 @@ const Landing: React.FC = () => {
                         AI market valuation
                       </motion.li>
                       <motion.li
-                        className="flex items-center gap-3 text-xs sm:text-sm text-gray-700"
+                        className="flex items-center gap-3 text-[16px] font-normal text-[#101820BF] sm:text-sm"
                         initial={{ opacity: 0, x: -10 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.4, delay: 1.1 }}
@@ -967,7 +975,7 @@ const Landing: React.FC = () => {
                   </motion.div>
 
                   <motion.button
-                    className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base"
+                    className="w-full bg-[#4EA8A1CC] text-[#F9F9F9] text-[15px] py-2.5 sm:py-3 px-4 sm:px-6 rounded-[32px] font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 1.2 }}
@@ -995,7 +1003,7 @@ const Landing: React.FC = () => {
                 <div className="bg-[#2A2A2A] rounded-[20px] sm:rounded-[32px] p-4 sm:p-6 h-full flex flex-col shadow-2xl hover:shadow-3xl transition-all duration-300 ">
                   <div className="text-left mb-4 sm:mb-6">
                     <motion.div
-                      className="font-bold text-3xl sm:text-4xl mb-2 text-white"
+                      className="font-bold text-[36px] text-[#F9F9F9] sm:text-4xl mb-2"
                       initial={{ opacity: 0, x: -20 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.5, delay: 0.6 }}
@@ -1003,7 +1011,7 @@ const Landing: React.FC = () => {
                       ₦25,000
                     </motion.div>
                     <motion.h3
-                      className="text-lg sm:text-xl font-bold text-white mb-2"
+                      className="text-[28px] sm:text-xl font-medium text-white mb-2"
                       initial={{ opacity: 0, x: -20 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.5, delay: 0.7 }}
@@ -1011,12 +1019,15 @@ const Landing: React.FC = () => {
                       Deep Dive Report
                     </motion.h3>
                     <motion.p
-                      className="text-xs sm:text-sm text-gray-300 mb-4"
+                      className="text-[16px] font-semibold sm:text-sm text-gray-300 mb-4"
                       initial={{ opacity: 0 }}
                       whileInView={{ opacity: 1 }}
                       transition={{ duration: 0.5, delay: 0.8 }}
                     >
-                      Delivery Time: 24-48 hours (via email PDF)
+                      Delivery Time:{" "}
+                      <span className="font-regular">
+                        24-48 hours (via email PDF)
+                      </span>
                     </motion.p>
                   </div>
 
@@ -1026,68 +1037,71 @@ const Landing: React.FC = () => {
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.9 }}
                   >
-                    <h4 className="text-white mb-2 text-xs sm:text-sm font-semibold">
+                    <h4 className="text-white mb-2 text-[16px] sm:text-sm font-semibold">
                       What You Get:{" "}
                       <span className="font-normal text-gray-300">
                         Everything in Instant Report
                       </span>
-                      <span className="text-white font-semibold"> Plus:</span>
+                      <span className="text-inda-yellow font-normal">
+                        {" "}
+                        Plus:
+                      </span>
                     </h4>
-                    <h5 className="text-white text-xs sm:text-sm font-semibold mb-3">
+                    <h5 className="text-white text-[16px] sm:text-sm font-semibold mb-3">
                       Title & Legal Verification:
                     </h5>
                     <ul className="space-y-2">
                       <motion.li
-                        className="flex items-center gap-3 text-xs sm:text-sm text-gray-300"
+                        className="flex items-center gap-3 text-[16px] text-[#F9F9F9] font-normal sm:text-sm"
                         initial={{ opacity: 0, x: -10 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.4, delay: 1.0 }}
                       >
-                        <span className="text-white text-base sm:text-lg">
+                        <span className="text-[#EBEA98] text-base sm:text-lg">
                           ✓
                         </span>
                         Certificate of Occupancy (C of O) or Deed check
                       </motion.li>
                       <motion.li
-                        className="flex items-center gap-3 text-xs sm:text-sm text-gray-300"
+                        className="flex items-center gap-3 text-[16px] text-[#F9F9F9] font-normal sm:text-sm"
                         initial={{ opacity: 0, x: -10 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.4, delay: 1.1 }}
                       >
-                        <span className="text-white text-base sm:text-lg">
+                        <span className="text-[#EBEA98] text-base sm:text-lg">
                           ✓
                         </span>
                         Governor's consent check
                       </motion.li>
                       <motion.li
-                        className="flex items-center gap-3 text-xs sm:text-sm text-gray-300"
+                        className="flex items-center gap-3 text-[16px] text-[#F9F9F9] font-normal sm:text-sm"
                         initial={{ opacity: 0, x: -10 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.4, delay: 1.2 }}
                       >
-                        <span className="text-white text-base sm:text-lg">
+                        <span className="text-[#EBEA98] text-base sm:text-lg">
                           ✓
                         </span>
                         Zoning compliance check
                       </motion.li>
                       <motion.li
-                        className="flex items-center gap-3 text-xs sm:text-sm text-gray-300"
+                        className="flex items-center gap-3 text-[16px] text-[#F9F9F9] font-normal sm:text-sm"
                         initial={{ opacity: 0, x: -10 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.4, delay: 1.3 }}
                       >
-                        <span className="text-white text-base sm:text-lg">
+                        <span className="text-[#EBEA98] text-base sm:text-lg">
                           ✓
                         </span>
                         Litigation search (court registry)
                       </motion.li>
                       <motion.li
-                        className="flex items-center gap-3 text-xs sm:text-sm text-gray-300"
+                        className="flex items-center gap-3 text-[16px] text-[#F9F9F9] font-normal sm:text-sm"
                         initial={{ opacity: 0, x: -10 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.4, delay: 1.4 }}
                       >
-                        <span className="text-white text-base sm:text-lg">
+                        <span className="text-[#EBEA98] text-base sm:text-lg">
                           ✓
                         </span>
                         Survey plan verification (boundaries & location)
@@ -1120,7 +1134,7 @@ const Landing: React.FC = () => {
                 <div className="p-4 sm:p-6 h-full flex flex-col transition-all duration-300 hover:shadow-md rounded-lg sm:rounded-none border-l-0 sm:border-l sm:border-l-gray-200">
                   <div className="text-left mb-4 sm:mb-6">
                     <motion.div
-                      className="font-bold text-3xl sm:text-4xl mb-2 text-gray-900"
+                      className="font-bold text-[36px] text-[#101820F2] sm:text-4xl mb-2"
                       initial={{ opacity: 0, x: -20 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.5, delay: 0.7 }}
@@ -1128,7 +1142,7 @@ const Landing: React.FC = () => {
                       ₦75,000
                     </motion.div>
                     <motion.h3
-                      className="text-lg sm:text-xl font-bold text-gray-900 mb-2"
+                      className="text-[28px] sm:text-xl font-medium text-[#101820BF] mb-2"
                       initial={{ opacity: 0, x: -20 }}
                       whileInView={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.5, delay: 0.8 }}
@@ -1136,12 +1150,13 @@ const Landing: React.FC = () => {
                       Deeper Dive
                     </motion.h3>
                     <motion.p
-                      className="text-xs sm:text-sm text-gray-600 mb-4"
+                      className="text-[16px] font-semibold sm:text-sm text-[#101820BF] mb-4"
                       initial={{ opacity: 0 }}
                       whileInView={{ opacity: 1 }}
                       transition={{ duration: 0.5, delay: 0.9 }}
                     >
-                      Delivery Time: 2-4 Days
+                      Delivery Time:{" "}
+                      <span className="font-normal">2-4 Days</span>
                     </motion.p>
                   </div>
 
@@ -1151,19 +1166,16 @@ const Landing: React.FC = () => {
                     whileInView={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 1.0 }}
                   >
-                    <h4 className="text-gray-900 mb-3 text-xs sm:text-sm font-semibold">
+                    <h4 className="text-[#101820BF] py-[8px] mb-3 text-[16px] sm:text-sm font-semibold">
                       What You Get:{" "}
                       <span className="font-normal text-gray-600">
                         Everything in Instant Report
                       </span>
-                      <span className="text-[#4ea8a1] font-semibold">
-                        {" "}
-                        Plus:
-                      </span>
+                      <span className="text-[#4ea8a1] font-bold"> Plus:</span>
                     </h4>
                     <ul className="space-y-2">
                       <motion.li
-                        className="flex items-center gap-3 text-xs sm:text-sm text-gray-700"
+                        className="flex items-center gap-3 text-[16px] font-normal sm:text-sm text-gray-700"
                         initial={{ opacity: 0, x: -10 }}
                         whileInView={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.4, delay: 1.1 }}
