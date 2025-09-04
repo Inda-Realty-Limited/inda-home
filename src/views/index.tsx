@@ -600,88 +600,31 @@ const Landing: React.FC = () => {
           transition={{ duration: 0.8, delay: 0.2 }}
         >
           <Text className="text-inda-dark text-center font-extrabold text-xl sm:text-2xl md:text-3xl lg:text-4xl mb-6 sm:mb-8">
-            Here's How <span className="text-inda-teal">INDA</span> Works
+            See Every Risk. <br /> Spot Every Opportunity.
+          </Text>
+          <Text className="text-inda-dark text-center font-normal w-full max-w-[600px] lg:text-[22px] mb-6 sm:mb-8">
+            Whether it’s valuation, due diligence, or investment potential, Inda
+            delivers a clear, data-backed answer you can trust.
           </Text>
         </motion.div>
-        <div className="flex flex-col items-center w-full max-w-7xl">
-          <motion.div
-            className="flex flex-col items-center w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto mb-8 sm:mb-10 md:mb-12"
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-          >
-            <div className="bg-inda-dark/90 rounded-full w-full text-center px-6 sm:px-8 py-3 sm:py-4 font-semibold text-inda-yellow z-10 text-lg sm:text-xl md:text-2xl lg:text-3xl">
-              Step One
-            </div>
-
-            <div className="w-4/5 h-[15px] sm:h-[20px] bg-[#E5E5E5] z-0"></div>
-            <div className="bg-[#4EA8A1] rounded-t-[32px] sm:rounded-t-[44px] rounded-b-none w-full px-[15%] sm:px-[20%] pt-5 sm:pt-7 pb-3 sm:pb-4 flex flex-col items-center">
-              <span className="text-white font-semibold mb-2 text-center text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl">
-                Type Anything in the Search Bar
-              </span>
-            </div>
-            <div className="bg-[#E5E5E5] rounded-t-none w-full p-4 sm:p-5 px-[10%] sm:px-[15%] text-center text-inda-dark/90 border-t-0 text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl">
-              Enter a name, address, or link. <b>Inda</b> suggests results as
-              you type.
-            </div>
-          </motion.div>
-          <div className="flex flex-col lg:flex-row gap-6 sm:gap-8 w-full items-start justify-center">
-            <motion.div
-              className="flex flex-col items-center w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto mb-8 sm:mb-10"
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.6 }}
-            >
-              <div className="bg-inda-dark/90 rounded-full w-full text-center px-8 py-4 font-semibold text-inda-yellow z-10 text-xl sm:text-2xl md:text-3xl lg:text-3xl">
-                Step Two
-              </div>
-              <div className="w-4/5 h-[20px] bg-[#66B3AD] z-0"></div>
-              <div className="bg-[#E5E5E5] w-full p-5 px-[15%] text-center text-inda-dark/90 border-t-0 text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl">
-                <b>Inda</b> detects if it’s a developer, agent, company, or
-                property and loads the matching result page.
-              </div>
-              <div className="bg-[#4EA8A1] text-white px-[20%] rounded-b-[44px] w-full pt-7 pb-4 flex flex-col items-center ">
-                <span className="text-white font-semibold mb-2 text-center text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl">
-                  Inda Understands Your Search Type
-                </span>
-              </div>
-            </motion.div>
-            <motion.div
-              className="flex flex-col items-center w-full max-w-md sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto mb-8 sm:mb-10"
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.8 }}
-            >
-              <div className="bg-inda-dark/90 rounded-full w-full text-center px-6 sm:px-8 py-3 sm:py-4 font-semibold text-inda-yellow z-10 text-lg sm:text-xl md:text-2xl lg:text-3xl">
-                Step Three
-              </div>
-              <div className="w-4/5 h-[15px] sm:h-[20px] bg-[#66B3AD] z-0"></div>
-              <div className="bg-[#E5E5E5] w-full p-4 sm:p-5 px-[10%] sm:px-[15%] text-center text-inda-dark/90 border-t-0 text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl">
-                Get clear info, ratings, reviews, red flags, and AI insights to
-                help you decide with confidence.
-              </div>
-              <div className="bg-[#4EA8A1] text-white px-[15%] sm:px-[20%] rounded-b-[32px] sm:rounded-b-[44px] w-full pt-5 sm:pt-7 pb-3 sm:pb-4 flex flex-col items-center">
-                <span className="text-white font-semibold mb-2 text-center text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl 2xl:text-3xl">
-                  See a Smart Summary with Full Details
-                </span>
-              </div>
-            </motion.div>
-          </div>
-        </div>
+        <Image
+          src="/assets/images/risk.png"
+          width={800}
+          height={400}
+          alt="Feature illustration"
+          className="mt-8 w-full max-w-4xl h-auto"
+        />
       </motion.section>
       {/* Inda Report Preview Section */}
       <motion.section
-        className="w-full flex flex-col px-4 sm:px-6 md:px-8 lg:px-[10%] items-start pt-6 sm:pt-8 justify-center min-h-[400px] sm:min-h-[465px] bg-[#1018200A]"
+        className="w-[90%] flex flex-col px-4 sm:px-6 md:px-8 lg:mx-auto items-center pt-6 sm:pt-8 justify-center min-h-[400px] sm:min-h-[465px] bg-[#F9F9F9]"
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.2 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
       >
         <motion.p
-          className="text-inda-dark font-bold text-2xl sm:text-3xl md:text-4xl mb-4 sm:mb-6"
+          className="text-inda-dark text-center font-bold text-2xl sm:text-3xl md:text-4xl mb-4 sm:mb-6"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -689,9 +632,12 @@ const Landing: React.FC = () => {
         >
           See an Inda Report in Action
         </motion.p>
-        <div className="flex flex-col lg:flex-row items-start w-full gap-6 sm:gap-8">
+        <div
+          className="flex flex-col lg:flex-row items-center lg:items-start w-full sm:w-[70%] mx-auto gap-6 sm:gap-8 bg-[#4EA8A129] rounded-2xl p-5 sm:p-[57px] overflow-hidden"
+          style={{ boxShadow: "0px 2px 2px 0px #00000026" }}
+        >
           <motion.div
-            className="flex-col items-center justify-center w-full lg:w-auto"
+            className="flex flex-col items-center justify-center w-full lg:w-auto"
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
@@ -706,7 +652,7 @@ const Landing: React.FC = () => {
             />
           </motion.div>
           <motion.div
-            className="flex flex-col space-y-3 items-start justify-between lg:pl-8 xl:pl-12"
+            className="flex flex-col space-y-3 items-center lg:items-start justify-between text-center lg:text-left lg:pl-8 xl:pl-12"
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
@@ -722,14 +668,13 @@ const Landing: React.FC = () => {
             </p>
             <a
               href="#"
-              className="bg-[#0A1A22] text-white text-lg sm:text-xl px-8 sm:px-10 h-[56px] sm:h-[67px] flex items-center justify-center rounded-full hover:bg-[#11242e] transition-all duration-300 hover:scale-105"
+              className="w-full sm:w-auto bg-[#0A1A22] text-white text-lg sm:text-xl px-8 sm:px-10 h-[56px] sm:h-[67px] flex items-center justify-center rounded-full hover:bg-[#11242e] transition-all duration-300 hover:scale-105"
             >
               See full report sample
             </a>
           </motion.div>
         </div>
       </motion.section>
-
       <motion.section
         className="w-full py-12 sm:py-16 md:py-20 px-4 sm:px-6 md:px-8 lg:px-[10%]"
         initial={{ opacity: 0, y: 50 }}
@@ -848,7 +793,7 @@ const Landing: React.FC = () => {
         viewport={{ once: true, amount: 0.2 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
       >
-        <div className="max-w-[80%] mx-auto ">
+        <div className="w-full max-w-full sm:max-w-[80%] mx-auto">
           <motion.div
             className="bg-[#1018200A] rounded-[48px] p-8 sm:p-12 shadow-xl"
             initial={{ opacity: 0, y: 30 }}
@@ -936,7 +881,7 @@ const Landing: React.FC = () => {
                     className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.9 }}
+                    transition={{ duration: 0.5, delay: 1.0 }}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
@@ -1393,70 +1338,72 @@ const Landing: React.FC = () => {
 // FAQ data and component
 const faqData = [
   {
-    q: "How does Inda know if a property is real or fake?",
+    q: "What is Inda and how does it help me?",
     a: (
       <>
-        Inda uses advanced algorithms and data verification processes to ensure
-        the authenticity of property listings. We cross-reference information
-        from multiple reliable sources and employ machine learning techniques to
-        detect and flag potentially fraudulent listings. Our system continuously
-        learns and adapts to new patterns, enhancing its ability to identify and
-        filter out fake properties.
+        Inda is your property truth checker. In just seconds, it verifies if a
+        listing is real, priced fairly, and free from hidden risks like fake
+        documents, flooding, or disputes so you don’t waste money or fall for
+        scams.
       </>
     ),
   },
   {
-    q: "Can I trust Inda’s pricing and ROI suggestions?",
+    q: "How does Inda get its data?",
     a: (
       <>
-        Yes. We benchmark against verified comps in your area, adjust for market
-        movement and rental income, and back every estimate with real-time data
-        — not guesswork.
+        We pull data from multiple trusted sources property platforms,
+        government registries, rental markets, sellers, and verified agents. Our
+        system cleans and cross-checks everything, then uses AI to give you a
+        clear, easy-to-read report.
       </>
     ),
   },
   {
-    q: "What do I get after a search?",
-    a: (
-      <>
-        You’ll see a smart breakdown including: verification status, legal red
-        flags, ROI analysis, resale estimates, market comparisons, user reviews,
-        and even a recommendation like ‘Overpriced by 18% — Negotiate.’
-      </>
-    ),
-  },
-  {
-    q: "Is Inda only for investors or can I use it to buy a home?",
-    a: (
-      <>
-        Anyone buying property can use Inda. We help you check documents,
-        evaluate deals, and make sure you’re not getting scammed — whether it’s
-        your first home or your fifth.
-      </>
-    ),
-  },
-  {
-    q: "What’s free and what’s paid?",
+    q: "What’s the difference between Instant, Deep Dive, and Deeper Dive reports?",
     a: (
       <>
         <span className="block">
-          Free: Search any name or listing to get basic trust signals and
-          reviews.
+          Instant Report (₦3k): Quick check on price, ROI, and Inda Score (30
+          seconds).
         </span>
         <span className="block">
-          Paid: ₦15K one-time unlocks full reports — including: ROI, resale,
-          legal insights. Frequent buyers? ₦100K/month for unlimited scans.
+          Deep Dive (₦25k): Adds title verification + government approvals
+          (24-48 hours).
+        </span>
+        <span className="block">
+          Deeper Dive (₦75k): Includes seller verification + on-site inspection
+          (2-4 days).
         </span>
       </>
     ),
   },
   {
-    q: "How does Inda get smarter?",
+    q: "Who should use Inda?",
     a: (
       <>
-        Every time you search, flag, or leave a review, Inda’s AI learns. We
-        improve our detection, pricing logic, and risk signals to make sure each
-        new search is sharper than the last.
+        Anyone buying or investing in property - first-time buyers, diaspora
+        buyers sending money home, or everyday investors. If you’re about to put
+        millions into a property, Inda helps you buy with confidence.
+      </>
+    ),
+  },
+  {
+    q: "Is my information safe with Inda?",
+    a: (
+      <>
+        Yes. We don’t share your personal or property checks publicly. All data
+        is secured and only you get access to your reports.
+      </>
+    ),
+  },
+  {
+    q: "Why should I pay for Inda when agents or lawyers can check for me?",
+    a: (
+      <>
+        Agents and lawyers often take weeks and still miss risks. Inda gives you
+        instant, unbiased, data-backed insights, at a fraction of the cost so
+        you can decide faster and safer.
       </>
     ),
   },
@@ -1466,7 +1413,7 @@ const FAQ = () => {
   const [open, setOpen] = useFAQState<number | null>(null);
   return (
     <motion.div
-      className="w-full max-w-4xl flex flex-col gap-4 sm:gap-6"
+      className="w-full max-w-full sm:max-w-[67%]  flex flex-col gap-4 sm:gap-6"
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
@@ -1477,7 +1424,7 @@ const FAQ = () => {
         return (
           <motion.div
             key={item.q}
-            className={`w-full bg-white rounded-xl sm:rounded-2xl border border-[#ECECEC] shadow-sm transition-all duration-300 ${
+            className={`w-full bg-[#4EA8A129] rounded-xl sm:rounded-2xl border border-[#4EA8A129] shadow-sm transition-all duration-300 ${
               isOpen ? "shadow-md" : "hover:shadow-md"
             } cursor-pointer overflow-hidden`}
             style={{ minHeight: 56 }}
@@ -1488,7 +1435,7 @@ const FAQ = () => {
             transition={{ duration: 0.6, delay: i * 0.1 }}
             whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
           >
-            <div className="flex items-center justify-between px-4 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6 text-inda-dark text-base sm:text-lg md:text-xl lg:text-2xl font-medium select-none">
+            <div className="flex items-center justify-between px-4 sm:px-6 md:px-8 py-4 sm:py-5 md:py-6 text-inda-dark text-base sm:text-md md:text-lg lg:text-xl font-medium select-none">
               <span className="flex-1 pr-4">{item.q}</span>
               <motion.svg
                 width="28"

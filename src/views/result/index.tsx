@@ -166,25 +166,25 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
   // ROI helpers and formatters
   const roiFieldInfo: Record<ROIFieldKey, string> = {
     purchasePrice:
-      "Total price you pay to acquire the property, including land and building cost.",
+      "The total cost to buy the property, including any extra fees not shown here. You can adjust this to match your actual cost.",
     financingRate:
-      "Annual interest rate for your mortgage/loan. If buying cash, leave as 0%.",
+      "The yearly percentage rate charged on any loan you take to buy the property.",
     financingTenureYears:
-      "How many years you'll take to fully repay the loan (tenor).",
+      "How long you plan to take to pay off your loan (in years).",
     holdingPeriodYears:
-      "How long you plan to hold the asset before exit/resale.",
+      "The length of time you plan to own the property before selling (in years).",
     yieldLong:
-      "Average annual rental yield for long-term leases in this micro location.",
+      "The expected yearly rental income from renting out the property on long leases, shown as a % of the purchase price.",
     yieldShort:
-      "Average annualized yield for short-stay/serviced rentals in this micro location.",
+      "The expected yearly rental income from renting the property for short stays (like Airbnb), shown as a % of the purchase price.",
     expensePct:
-      "Total annual expenses as a percentage of rent (management, maintenance, taxes, etc).",
+      "All yearly costs (maintenance, management, taxes, etc.) as a percentage of your rental income.",
     appreciationLocalNominal:
-      "Annual price growth in local currency before adjusting for inflation.",
+      "Shows the raw growth in Naira based on median prices in this micro-location tag. Does not account for inflation. Good for quick market comparisons and tracking price trends.",
     appreciationLocalReal:
-      "Annual price growth in local currency after adjusting for inflation (real terms).",
+      "Shows true growth in Naira after adjusting for local inflation. Useful for long-term investors who want to know real purchasing power gains.",
     appreciationUsdAdj:
-      "Annual price growth in USD terms, adjusting for FX and inflation.",
+      "Shows real returns for diaspora investors in USD, accounting for both Naira inflation and FX changes. Useful for investors thinking in foreign currency or planning cross-border investments.",
   };
 
   const toggleROIInfo = (key: ROIFieldKey) => {
@@ -870,7 +870,7 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                             <div className="w-10 h-10 bg-inda-teal/10 rounded-lg flex items-center justify-center">
                               <FaBuilding className="text-inda-teal text-lg" />
                             </div>
-                            <span className="font-medium">Developer</span>
+                            <span className="font-medium">Seller</span>
                           </div>
                           <div className="font-medium">
                             {dummyResultData.developer.name}
@@ -1162,15 +1162,11 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                           <div className="flex flex-col lg:flex-row gap-8 w-1/2">
                             <div className="flex-shrink-0">
                               <div className="flex items-baseline gap-2 mb-2">
-                                <span className="text-4xl font-black">
-                                  {dummyResultData.overallRating.toFixed(1)}
-                                </span>
+                                <span className="text-4xl font-black">0.0</span>
                               </div>
                               <div className="flex items-center gap-1 mb-3">
                                 {Array.from({ length: 5 }).map((_, i) => {
-                                  const active =
-                                    i <
-                                    Math.round(dummyResultData.overallRating);
+                                  const active = false;
                                   return (
                                     <FaStar
                                       key={i}
@@ -1184,26 +1180,26 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                                 })}
                               </div>
                               <p className="text-sm text-[#0F1417] font-normal">
-                                {dummyResultData.totalReviews} reviews
+                                0 reviews
                               </p>
                             </div>
                             <div className="space-y-2 flex-1">
-                              {dummyResultData.ratingBreakdown.map((r, idx) => (
+                              {[5, 4, 3, 2, 1].map((stars) => (
                                 <div
-                                  key={idx}
+                                  key={stars}
                                   className="flex items-center gap-3"
                                 >
                                   <span className="w-8 text-sm text-[#101820]">
-                                    {r.stars}
+                                    {stars}
                                   </span>
                                   <div className="flex-1 h-2 bg-[#E5E5E5] rounded-full overflow-hidden">
                                     <div
                                       className="h-2 bg-[#101820]/40 rounded-full"
-                                      style={{ width: `${r.percentage}%` }}
+                                      style={{ width: `0%` }}
                                     ></div>
                                   </div>
                                   <span className="w-12 text-right text-sm text-[#101820]/65">
-                                    {r.percentage}%
+                                    0%
                                   </span>
                                 </div>
                               ))}
@@ -1245,8 +1241,8 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                       Property Price Analysis
                     </h3>
 
-                    {/* Price Cards Row */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+                    {/* Price Cards Row (aligned with chart width) */}
+                    <div className="w-full max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
                       <div className="bg-[#4EA8A114] rounded-xl p-6">
                         <h4 className="text-base font-bold mb-2 text-[#101820]/70">
                           Price
@@ -1270,39 +1266,51 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                       </div>
                     </div>
 
-                    {/* Market Position - Right Aligned */}
-                    <div className="flex justify-end mb-6">
-                      <div className="bg-transparent border border-gray-200 rounded-lg px-4 py-3 ">
-                        <div className="text-xs font-medium text-gray-600 mb-1">
-                          Market Position
-                        </div>
-                        <div className="text-sm font-bold text-red-500">
-                          17% Overpriced
-                        </div>
-                      </div>
-                    </div>
+                    {/* Market Position moved into chart (top-right) */}
 
                     {/* Chart Section */}
                     <div className="bg-transparent rounded-xl p-6 mb-6">
-                      {/* Chart Header */}
-                      <div className="mb-6">
-                        <p className="text-sm text-inda-teal font-medium mb-1">
-                          ↑ 3.5% in the last 6 months
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          Sales from Aug 2024 - July 2025
-                        </p>
+                      {/* Header + Market Position row (same width as graph) */}
+                      <div className="w-full max-w-4xl mx-auto flex items-start justify-between mb-5">
+                        <div>
+                          <p className="text-sm text-inda-teal font-medium mb-1">
+                            ↑ 3.5% in the last 6 months
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            Sales from Aug 2024 - July 2025
+                          </p>
+                        </div>
+                        <div className="bg-transparent border border-gray-200 rounded-lg px-4 py-3 ">
+                          <div className="text-xs font-medium text-gray-600 mb-1">
+                            Market Position
+                          </div>
+                          <div className="text-sm font-bold text-red-500">
+                            17% Overpriced
+                          </div>
+                        </div>
                       </div>
 
                       {/* Chart Container with proper width */}
-                      <div className="w-full max-w-4xl mx-auto">
+                      <div className="w-full max-w-4xl mx-auto mt-8">
                         <div
-                          className="flex items-end justify-between h-48 bg-transparent rounded-lg p-6 relative"
+                          className="flex items-end justify-between h-48 bg-transparent rounded-lg p-6 pl-12 relative"
                           style={{
                             backgroundImage:
                               "repeating-linear-gradient(to top, rgba(78,168,161,0.1), rgba(78,168,161,0.1) 1px, transparent 1px, transparent 32px)",
                           }}
                         >
+                          {/* Y-axis labels */}
+                          <div className="absolute left-0 top-6 bottom-6 w-10 flex flex-col justify-between text-[10px] sm:text-xs text-gray-500 pr-1 select-none">
+                            <span className="text-right">100</span>
+                            <span className="text-right">75</span>
+                            <span className="text-right">50</span>
+                            <span className="text-right">25</span>
+                            <span className="text-right">0</span>
+                          </div>
+                          {/* X-axis baseline */}
+                          <div className="absolute left-12 right-6 bottom-6 h-px bg-[#00000026]" />
+                          {/* Y-axis */}
+                          <div className="absolute top-6 bottom-6 left-12 w-px bg-[#00000026]" />
                           {[
                             "Aug",
                             "Sep",
@@ -1321,7 +1329,9 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                               key={month}
                               className="flex flex-col items-center flex-1"
                             >
+                              {/* Bars share same baseline (align to bottom) */}
                               <div className="flex items-end gap-1 mb-2">
+                                {/* FMV bar */}
                                 <div
                                   className="bg-inda-teal rounded-t-sm w-3"
                                   style={{
@@ -1329,6 +1339,7 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                                     minHeight: "20px",
                                   }}
                                 />
+                                {/* Price bar */}
                                 <div
                                   className="bg-gray-300 rounded-t-sm w-3"
                                   style={{
@@ -1337,7 +1348,8 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                                   }}
                                 />
                               </div>
-                              <span className="text-xs text-gray-500 font-medium">
+                              {/* X-axis label/value */}
+                              <span className="text-[10px] sm:text-xs text-gray-600 font-medium">
                                 {month}
                               </span>
                             </div>
