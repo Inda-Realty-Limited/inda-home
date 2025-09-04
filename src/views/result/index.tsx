@@ -766,7 +766,7 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                 </div>
 
                 {/* Action Buttons Row */}
-                <div className="bg-[#4EA8A159] rounded-2xl py-6 px-6">
+                <div className="bg-[#4EA8A159] rounded-2xl py-6 pl-6 w-[96%] inline-block mx-6 my-6">
                   <div className="flex flex-wrap gap-3 justify-center md:justify-start">
                     <button className="flex items-center gap-2 px-6 py-3 bg-inda-teal text-white rounded-full text-sm font-medium hover:bg-teal-600 transition-colors">
                       <FaWhatsapp className="text-sm" />
