@@ -1,8 +1,9 @@
 import { getToken } from "@/helpers";
 import axios, { AxiosResponse } from "axios";
 
-const BASE_URL = "https://api.staging.investinda.com";
+// const BASE_URL = "https://api.staging.investinda.com";
 // const BASE_URL = "http://localhost:9009";
+const BASE_URL = "https://inda-core-backend-services.onrender.com";
 
 const apiClient = axios.create({
   baseURL: BASE_URL,
