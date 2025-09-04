@@ -59,8 +59,9 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onChoosePlan }) => {
                   </ul>
                 </div>
                 <button
-                  onClick={() => onChoosePlan?.("free")}
-                  className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base"
+                  disabled
+                  aria-disabled="true"
+                  className="w-full bg-gray-300 text-gray-600 py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium cursor-not-allowed transition-all duration-300 text-sm sm:text-base"
                 >
                   Choose plan
                 </button>
@@ -177,8 +178,9 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onChoosePlan }) => {
                   </ul>
                 </div>
                 <button
-                  onClick={() => onChoosePlan?.("deep-dive")}
-                  className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base"
+                  disabled
+                  aria-disabled="true"
+                  className="w-full bg-gray-500/40 text-white/70 py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium cursor-not-allowed transition-all duration-300 text-sm sm:text-base"
                 >
                   Choose plan
                 </button>
@@ -234,8 +236,9 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onChoosePlan }) => {
                   </ul>
                 </div>
                 <button
-                  onClick={() => onChoosePlan?.("deeper-dive")}
-                  className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base"
+                  disabled
+                  aria-disabled="true"
+                  className="w-full bg-gray-300 text-gray-600 py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium cursor-not-allowed transition-all duration-300 text-sm sm:text-base"
                 >
                   Choose plan
                 </button>

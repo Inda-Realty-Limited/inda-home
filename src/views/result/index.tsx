@@ -62,7 +62,8 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
   };
 
   const [isROISummaryOpen, setIsROISummaryOpen] = useState(false);
-  const [notFound, setNotFound] = useState(true);
+  const [notFound, setNotFound] = useState(false);
+  const [hasAttemptedFetch, setHasAttemptedFetch] = useState(false);
   const [paymentCallbackUrl, setPaymentCallbackUrl] = useState<string | null>(
     null
   );
@@ -319,6 +320,8 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
         }
 
         setIsLoading(true);
+        setNotFound(false);
+        setHasAttemptedFetch(true);
         setCurrentStep(0);
 
         const stepTimers = [
@@ -344,6 +347,7 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
         setResult(null);
         setNotFound(true);
         setIsLoading(false);
+        setHasAttemptedFetch(true);
       }
     }
   }, [router.isReady, router.query]);
@@ -2535,8 +2539,8 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
     );
   }
 
-  // Always show not found view
-  if (notFound) {
+  // Show not found view only after a fetch attempt and when not loading
+  if (hasAttemptedFetch && !isLoading && notFound) {
     // NOT FOUND VIEW
     return (
       <Container
