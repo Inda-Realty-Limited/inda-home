@@ -49,9 +49,12 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
 
       const origin =
         typeof window !== "undefined" ? window.location.origin : "";
+      const cacheBust = `cb=${Date.now()}`;
       const callbackUrl = origin
-        ? `${origin}/result?q=${encodeURIComponent(listingUrl)}&type=link`
-        : `/result?q=${encodeURIComponent(listingUrl)}&type=link`;
+        ? `${origin}/result?q=${encodeURIComponent(
+            listingUrl
+          )}&type=link&${cacheBust}`
+        : `/result?q=${encodeURIComponent(listingUrl)}&type=link&${cacheBust}`;
 
       const data = await startPayment({ listingUrl, plan, callbackUrl });
       const url = data?.authorizationUrl || data?.initResponse?.data?.link;
