@@ -1,6 +1,11 @@
 import { Container, Footer, Input, Navbar, Text } from "@/components";
 import { getToken } from "@/helpers";
-import { AnimatePresence, motion } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useAnimationFrame,
+  useMotionValue,
+} from "framer-motion";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import React, {
@@ -73,6 +78,79 @@ const searchTypes = [
     description: "Search specific properties",
   },
 ];
+
+const Marquee: React.FC<{
+  duration?: number;
+  reverse?: boolean;
+  className?: string;
+  children: React.ReactNode;
+}> = ({ duration = 20, reverse = false, className, children }) => {
+  const x = useMotionValue(0);
+  const itemRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [contentWidth, setContentWidth] = useState(0);
+  const [containerWidth, setContainerWidth] = useState(0);
+
+  useEffect(() => {
+    const update = () => {
+      const w = itemRef.current?.offsetWidth ?? 0;
+      const cw = containerRef.current?.offsetWidth ?? 0;
+      setContentWidth(w);
+      setContainerWidth(cw);
+    };
+    update();
+
+    const ro =
+      typeof ResizeObserver !== "undefined" ? new ResizeObserver(update) : null;
+    if (ro) {
+      if (itemRef.current) ro.observe(itemRef.current);
+      if (containerRef.current) ro.observe(containerRef.current);
+    }
+
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("resize", update);
+      ro?.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (contentWidth > 0) {
+      x.set(reverse ? -contentWidth : 0);
+    }
+  }, [contentWidth, reverse]);
+
+  useAnimationFrame((t, delta) => {
+    if (!contentWidth || !duration) return;
+    const baseDistance = containerWidth || contentWidth; // use visible band width to keep perceived speed constant
+    const pxPerSec = baseDistance / duration;
+    const step = (pxPerSec * delta) / 1000;
+    let next = x.get() + (reverse ? step : -step);
+
+    if (!reverse && next <= -contentWidth) next += contentWidth;
+    if (reverse && next >= 0) next -= contentWidth;
+    x.set(next);
+  });
+
+  return (
+    <div
+      ref={containerRef}
+      className={`relative w-full overflow-hidden ${className || ""}`}
+    >
+      <motion.div
+        className="flex items-center whitespace-nowrap will-change-transform leading-none h-full"
+        style={{ x }}
+      >
+        <div ref={itemRef} className="flex items-center shrink-0">
+          {children}
+        </div>
+        <div className="flex items-center shrink-0" aria-hidden="true">
+          {children}
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 
 const Landing: React.FC = () => {
   const router = useRouter();
@@ -266,7 +344,6 @@ const Landing: React.FC = () => {
                       </button>
                     </div>
 
-                    {/* Beautiful Textarea */}
                     <div className="relative">
                       <textarea
                         value={search}
@@ -290,7 +367,6 @@ const Landing: React.FC = () => {
                         }}
                       />
 
-                      {/* Enhanced Search Button */}
                       <button
                         onClick={handleSearch}
                         disabled={!isValidUrl(search)}
@@ -304,14 +380,11 @@ const Landing: React.FC = () => {
                         <span className="hidden sm:inline">Search</span>
                       </button>
 
-                      {/* Enhanced focus effects */}
                       <div className="absolute inset-0 rounded-2xl pointer-events-none transition-all duration-300 group-focus-within:ring-2 group-focus-within:ring-[#4EA8A1]/30 group-focus-within:ring-offset-2"></div>
 
-                      {/* Subtle gradient overlay */}
                       <div className="absolute inset-0 rounded-2xl pointer-events-none opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 bg-gradient-to-br from-[#4EA8A1]/5 via-transparent to-[#4EA8A1]/10"></div>
                     </div>
 
-                    {/* Mobile-friendly helper text */}
                     <div className="flex items-center justify-between mt-3 px-2">
                       <span className="text-xs text-gray-500 hidden sm:inline">
                         Press Shift+Enter for new line, Enter to search
@@ -333,7 +406,6 @@ const Landing: React.FC = () => {
                 )}
               </AnimatePresence>
 
-              {/* Dropdown Menu */}
               <AnimatePresence>
                 {isDropdownOpen && !isSearchActive && (
                   <motion.div
@@ -416,97 +488,98 @@ const Landing: React.FC = () => {
         <section className="relative flex flex-col items-center justify-center w-full px-0">
           <div className="relative w-full h-[140px] flex items-center justify-center">
             <div className="absolute left-1/2 top-0 w-[120vw] -translate-x-1/2 rotate-[-3deg] z-10 shadow-md overflow-x-hidden">
-              <div className="bg-primary h-[106px] px-0 flex items-center text-lg font-semibold whitespace-nowrap border-0 rounded-xl  overflow-x-hidden">
-                <div className="flex items-center shadow-2xl">
-                  {/* Repeat content twice for seamless loop */}
-                  {[...Array(2)].map((_, i) => (
-                    <>
-                      <span className="mx-6" key={`wrong-${i}-1`}>
-                        THE WRONG PROPERTY CAN COST MILLIONS
-                      </span>
-                      <span
-                        className="mx-2 text-inda-dark text-xl"
-                        key={`wrong-${i}-2`}
-                      >
-                        ✦
-                      </span>
-                      <span className="mx-6" key={`wrong-${i}-3`}>
-                        THE WRONG PROPERTY CAN COST MILLIONS
-                      </span>
-                      <span
-                        className="mx-2 text-inda-dark text-xl"
-                        key={`wrong-${i}-4`}
-                      >
-                        ✦
-                      </span>
-                      <span className="mx-6" key={`wrong-${i}-5`}>
-                        THE WRONG PROPERTY CAN COST MILLIONS
-                      </span>
-                      <span
-                        className="mx-2 text-inda-dark text-xl"
-                        key={`wrong-${i}-6`}
-                      >
-                        ✦
-                      </span>
-                      <span className="mx-6" key={`wrong-${i}-5`}>
-                        THE WRONG PROPERTY CAN COST MILLIONS
-                      </span>
-                      <span
-                        className="mx-2 text-inda-dark text-xl"
-                        key={`wrong-${i}-6`}
-                      >
-                        ✦
-                      </span>
-                    </>
-                  ))}
-                </div>
+              <div className="bg-primary h-[106px] px-0 flex items-center text-lg font-semibold whitespace-nowrap border-0 rounded-xl overflow-hidden leading-none">
+                {/* Left-to-right marquee (text moves left) */}
+                <Marquee duration={22}>
+                  <>
+                    <span className="mx-6">
+                      THE WRONG PROPERTY CAN COST MILLIONS
+                    </span>
+                    <span className="mx-2 text-inda-dark text-xl">✦</span>
+                    <span className="mx-6">
+                      THE WRONG PROPERTY CAN COST MILLIONS
+                    </span>
+                    <span className="mx-2 text-inda-dark text-xl">✦</span>
+                    <span className="mx-6">
+                      THE WRONG PROPERTY CAN COST MILLIONS
+                    </span>
+                    <span className="mx-2 text-inda-dark text-xl">✦</span>
+                    <span className="mx-6">
+                      THE WRONG PROPERTY CAN COST MILLIONS
+                    </span>
+                    <span className="mx-2 text-inda-dark text-xl">✦</span>
+                    <span className="mx-6">
+                      THE WRONG PROPERTY CAN COST MILLIONS
+                    </span>
+                    <span className="mx-2 text-inda-dark text-xl">✦</span>
+                    <span className="mx-6">
+                      THE WRONG PROPERTY CAN COST MILLIONS
+                    </span>
+                    <span className="mx-2 text-inda-dark text-xl">✦</span>
+                    <span className="mx-6">
+                      THE WRONG PROPERTY CAN COST MILLIONS
+                    </span>
+                    <span className="mx-2 text-inda-dark text-xl">✦</span>
+                    <span className="mx-6">
+                      THE WRONG PROPERTY CAN COST MILLIONS
+                    </span>
+                    <span className="mx-2 text-inda-dark text-xl">✦</span>
+                    <span className="mx-6">
+                      THE WRONG PROPERTY CAN COST MILLIONS
+                    </span>
+                    <span className="mx-2 text-inda-dark text-xl">✦</span>
+                    <span className="mx-6">
+                      THE WRONG PROPERTY CAN COST MILLIONS
+                    </span>
+                    <span className="mx-2 text-inda-dark text-xl">✦</span>
+                    <span className="mx-6">
+                      THE WRONG PROPERTY CAN COST MILLIONS
+                    </span>
+                    <span className="mx-2 text-inda-dark text-xl">✦</span>
+                    <span className="mx-6">
+                      THE WRONG PROPERTY CAN COST MILLIONS
+                    </span>
+                    <span className="mx-2 text-inda-dark text-xl">✦</span>
+                  </>
+                </Marquee>
               </div>
             </div>
+
             <div className="absolute left-1/2 top-0 w-[120vw] -translate-x-1/2 rotate-[3deg] z-20 overflow-x-hidden">
-              <div className="bg-primary h-[106px] px-0 flex items-center text-lg font-semibold whitespace-nowrap shadow-md border-0 rounded-xl  overflow-x-hidden">
-                <div className="flex items-center shadow-2xl">
-                  {/* Repeat content twice for seamless loop */}
-                  {[...Array(2)].map((_, i) => (
-                    <>
-                      <span className="mx-6" key={`know-${i}-1`}>
-                        KNOW BEFORE YOU BUY
-                      </span>
-                      <span
-                        className="mx-2 text-inda-dark text-xl"
-                        key={`know-${i}-2`}
-                      >
-                        ✦
-                      </span>
-                      <span className="mx-6" key={`know-${i}-3`}>
-                        KNOW BEFORE YOU BUY
-                      </span>
-                      <span
-                        className="mx-2 text-inda-dark text-xl"
-                        key={`know-${i}-4`}
-                      >
-                        ✦
-                      </span>
-                      <span className="mx-6" key={`know-${i}-5`}>
-                        KNOW BEFORE YOU BUY
-                      </span>
-                      <span
-                        className="mx-2 text-inda-dark text-xl"
-                        key={`know-${i}-6`}
-                      >
-                        ✦
-                      </span>
-                      <span className="mx-6" key={`know-${i}-5`}>
-                        KNOW BEFORE YOU BUY
-                      </span>
-                      <span
-                        className="mx-2 text-inda-dark text-xl"
-                        key={`know-${i}-6`}
-                      >
-                        ✦
-                      </span>
-                    </>
-                  ))}
-                </div>
+              <div className="bg-primary h-[106px] px-0 flex items-center text-lg font-semibold whitespace-nowrap shadow-md border-0 rounded-xl overflow-hidden leading-none">
+                {/* Reverse marquee (text moves right) */}
+                <Marquee duration={18} reverse>
+                  <>
+                    <span className="mx-6">KNOW BEFORE YOU BUY</span>
+                    <span className="mx-2 text-inda-dark text-xl">✦</span>
+                    <span className="mx-6">KNOW BEFORE YOU BUY</span>
+                    <span className="mx-2 text-inda-dark text-xl">✦</span>
+                    <span className="mx-6">KNOW BEFORE YOU BUY</span>
+                    <span className="mx-2 text-inda-dark text-xl">✦</span>
+                    <span className="mx-6">KNOW BEFORE YOU BUY</span>
+                    <span className="mx-2 text-inda-dark text-xl">✦</span>
+                    <span className="mx-6">KNOW BEFORE YOU BUY</span>
+                    <span className="mx-2 text-inda-dark text-xl">✦</span>
+                    <span className="mx-6">KNOW BEFORE YOU BUY</span>
+                    <span className="mx-2 text-inda-dark text-xl">✦</span>
+                    <span className="mx-6">KNOW BEFORE YOU BUY</span>
+                    <span className="mx-2 text-inda-dark text-xl">✦</span>
+                    <span className="mx-6">KNOW BEFORE YOU BUY</span>
+                    <span className="mx-2 text-inda-dark text-xl">✦</span>
+                    <span className="mx-6">KNOW BEFORE YOU BUY</span>
+                    <span className="mx-2 text-inda-dark text-xl">✦</span>
+                    <span className="mx-6">KNOW BEFORE YOU BUY</span>
+                    <span className="mx-2 text-inda-dark text-xl">✦</span>
+                    <span className="mx-6">KNOW BEFORE YOU BUY</span>
+                    <span className="mx-2 text-inda-dark text-xl">✦</span>
+                    <span className="mx-6">KNOW BEFORE YOU BUY</span>
+                    <span className="mx-2 text-inda-dark text-xl">✦</span>
+                    <span className="mx-6">KNOW BEFORE YOU BUY</span>
+                    <span className="mx-2 text-inda-dark text-xl">✦</span>
+                    <span className="mx-6">KNOW BEFORE YOU BUY</span>
+                    <span className="mx-2 text-inda-dark text-xl">✦</span>
+                  </>
+                </Marquee>
               </div>
             </div>
           </div>
@@ -1027,7 +1100,7 @@ const Landing: React.FC = () => {
                     transition={{ duration: 0.5, delay: 0.9 }}
                   >
                     <h4 className="text-white mb-2 text-xs sm:text-sm font-semibold">
-                      What You Get:{" "}
+                      What You Get:
                       <span className="font-normal text-gray-300">
                         Everything in Instant Report
                       </span>
@@ -1152,12 +1225,11 @@ const Landing: React.FC = () => {
                     transition={{ duration: 0.5, delay: 1.0 }}
                   >
                     <h4 className="text-gray-900 mb-3 text-xs sm:text-sm font-semibold">
-                      What You Get:{" "}
+                      What You Get:
                       <span className="font-normal text-gray-600">
                         Everything in Instant Report
                       </span>
                       <span className="text-[#4ea8a1] font-semibold">
-                        {" "}
                         Plus:
                       </span>
                     </h4>

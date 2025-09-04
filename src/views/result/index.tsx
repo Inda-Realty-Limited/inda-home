@@ -1,27 +1,37 @@
 import { getComputedListingByUrl } from "@/api/listings";
-import { Button, Container, Footer, Navbar, Text } from "@/components";
+import { hasPaid, verifyPayment } from "@/api/payments";
+import { Button, Container, Footer, Navbar } from "@/components";
+import PaymentModal from "@/components/inc/PaymentModal";
+// Removed StreetView (pano) in favor of aerial satellite embed
 import { dummyResultData } from "@/data/resultData";
-import { getToken } from "@/helpers";
-import { motion } from "framer-motion";
+import { getToken, getUser } from "@/helpers";
+import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   FaBuilding,
   FaCheckCircle,
   FaChevronDown,
   FaChevronUp,
   FaClock,
+  FaLockOpen,
   FaMapMarkerAlt,
   FaPhone,
   FaShare,
   FaStar,
-  FaTimes,
   FaWhatsapp,
 } from "react-icons/fa";
 import { IoIosInformationCircle } from "react-icons/io";
 import { RiEditFill } from "react-icons/ri";
 
-const Result = () => {
+type ResultProps = {
+  hiddenMode?: boolean;
+};
+
+const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
+  // will be overridden after hasPaid check
+  const [isPaid, setIsPaid] = useState(false);
+  const isHidden = hiddenMode && !isPaid;
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchType, setSearchType] = useState("");
@@ -33,34 +43,242 @@ const Result = () => {
     setProceed(false);
   };
   const [result, setResult] = useState<any | null>(null);
+  const [user, setUser] = useState<any | null>(null);
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
+  const [isStartingPayment, setIsStartingPayment] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [isVerifyingPayment, setIsVerifyingPayment] = useState(false);
+  const [verifyingRef, setVerifyingRef] = useState<string | null>(null);
+  const checkoutIframeRef = useRef<HTMLIFrameElement | null>(null);
+
+  // WhatsApp helper
+  const INDA_WHATSAPP =
+    process.env.NEXT_PUBLIC_INDA_WHATSAPP || "2349012345678"; // TODO: set real number in env
+  const openWhatsApp = (text: string, phone: string = INDA_WHATSAPP) => {
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+    if (typeof window !== "undefined") {
+      window.open(url, "_blank");
+    }
+  };
+
+  const [isROISummaryOpen, setIsROISummaryOpen] = useState(false);
+  const [notFound, setNotFound] = useState(true);
+  const [paymentCallbackUrl, setPaymentCallbackUrl] = useState<string | null>(
+    null
+  );
+  const [isEmbedded, setIsEmbedded] = useState(false);
+
+  useEffect(() => {
+    const u = getUser();
+    setUser(u);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      setIsEmbedded(window.self !== window.top);
+    } catch {
+      setIsEmbedded(true);
+    }
+  }, []);
 
   // Always show not found view instead of results
   const [isTooltipOpen, setIsTooltipOpen] = useState(false);
   const [isPriceSummaryOpen, setIsPriceSummaryOpen] = useState(false);
   const [isLocationSummaryOpen, setIsLocationSummaryOpen] = useState(false);
   const [isDocumentsSummaryOpen, setIsDocumentsSummaryOpen] = useState(false);
-  const [isROISummaryOpen, setIsROISummaryOpen] = useState(false);
-  const [notFound, setNotFound] = useState(true);
 
-  // Helper: validate only http(s) URLs
-  const isValidUrl = (value: string) => {
+  // ROI panel state
+  type ROIFieldKey =
+    | "purchasePrice"
+    | "financingRate"
+    | "financingTenureYears"
+    | "holdingPeriodYears"
+    | "yieldLong"
+    | "yieldShort"
+    | "expensePct"
+    | "appreciationLocalNominal"
+    | "appreciationLocalReal"
+    | "appreciationUsdAdj";
+
+  const [openROIInfo, setOpenROIInfo] = useState<ROIFieldKey | null>(null);
+  const [editingROIField, setEditingROIField] = useState<ROIFieldKey | null>(
+    null
+  );
+  const [roiValues, setRoiValues] = useState({
+    purchasePrice: 130_000_000,
+    financingRate: 4.5,
+    financingTenureYears: 10,
+    holdingPeriodYears: 3,
+    yieldLong: 5.2,
+    yieldShort: 6.8,
+    expensePct: 18.2,
+    appreciationLocalNominal: 3.2,
+    appreciationLocalReal: 0,
+    appreciationUsdAdj: 0,
+  });
+  const [roiHasEdited, setRoiHasEdited] = useState(false);
+  const [appreciationTab, setAppreciationTab] = useState<
+    "localNominal" | "localReal" | "usdAdj"
+  >("localNominal");
+
+  // Track which ROI fields have been edited at least once
+  const [editedFields, setEditedFields] = useState<
+    Partial<Record<ROIFieldKey, boolean>>
+  >({});
+
+  // Calculation state
+  type CalcResult = {
+    profit: number;
+    roiPct: number;
+    annualIncome: number;
+  };
+  const [isCalculating, setIsCalculating] = useState(false);
+  const [calcResult, setCalcResult] = useState<CalcResult | null>(null);
+  const [resultView, setResultView] = useState<"long" | "short">("long");
+  const longTabRef = useRef<HTMLButtonElement | null>(null);
+  const shortTabRef = useRef<HTMLButtonElement | null>(null);
+  const underlineRef = useRef<HTMLDivElement | null>(null);
+  const [underlineStyle, setUnderlineStyle] = useState<{
+    width: number;
+    left: number;
+  }>({ width: 0, left: 0 });
+
+  useEffect(() => {
+    const active =
+      resultView === "long" ? longTabRef.current : shortTabRef.current;
+    const container = active?.parentElement?.parentElement; // the flex tabs wrapper then the outer wrapper with the baseline
+    if (active && container) {
+      const tabRect = active.getBoundingClientRect();
+      const parentRect = container.getBoundingClientRect();
+      setUnderlineStyle({
+        width: tabRect.width,
+        left: tabRect.left - parentRect.left,
+      });
+    }
+  }, [resultView]);
+
+  // Derived appreciation values (placeholder derivation until real formula is provided)
+  const appNominal = roiValues.appreciationLocalNominal;
+  const appReal = roiValues.appreciationLocalReal || appNominal;
+  const appUsd = roiValues.appreciationUsdAdj || appReal;
+
+  // ROI helpers and formatters
+  const roiFieldInfo: Record<ROIFieldKey, string> = {
+    purchasePrice:
+      "Total price you pay to acquire the property, including land and building cost.",
+    financingRate:
+      "Annual interest rate for your mortgage/loan. If buying cash, leave as 0%.",
+    financingTenureYears:
+      "How many years you'll take to fully repay the loan (tenor).",
+    holdingPeriodYears:
+      "How long you plan to hold the asset before exit/resale.",
+    yieldLong:
+      "Average annual rental yield for long-term leases in this micro location.",
+    yieldShort:
+      "Average annualized yield for short-stay/serviced rentals in this micro location.",
+    expensePct:
+      "Total annual expenses as a percentage of rent (management, maintenance, taxes, etc).",
+    appreciationLocalNominal:
+      "Annual price growth in local currency before adjusting for inflation.",
+    appreciationLocalReal:
+      "Annual price growth in local currency after adjusting for inflation (real terms).",
+    appreciationUsdAdj:
+      "Annual price growth in USD terms, adjusting for FX and inflation.",
+  };
+
+  const toggleROIInfo = (key: ROIFieldKey) => {
+    setOpenROIInfo((prev) => (prev === key ? null : key));
+    setEditingROIField(null);
+  };
+
+  const startROIEdit = (key: ROIFieldKey) => {
+    setEditingROIField((prev) => (prev === key ? null : key));
+    setOpenROIInfo(null);
+  };
+
+  const parseNumber = (input: string | number): number => {
+    if (typeof input === "number") return input;
+    const cleaned = input.replace(/[^0-9.-]/g, "");
+    const n = parseFloat(cleaned);
+    return Number.isNaN(n) ? 0 : n;
+  };
+
+  const updateROIValue = (key: ROIFieldKey, raw: string | number) => {
+    const value = parseNumber(raw);
+    setRoiValues((prev) => ({ ...prev, [key]: value }));
+    setEditedFields((prev) => ({ ...prev, [key]: true }));
+    if (!roiHasEdited) setRoiHasEdited(true);
+  };
+
+  const formatNaira = (n: number) => `₦${Math.round(n).toLocaleString()}`;
+  const formatPercent = (n: number) => `${(n ?? 0).toFixed(2)}%`;
+
+  const isValidUrl = (str: string): boolean => {
     try {
-      const u = new URL(value.trim());
-      return u.protocol === "http:" || u.protocol === "https:";
+      new URL(str);
+      return true;
     } catch {
       return false;
     }
   };
 
+  // Motion variants for ROI section
+  const roiContainer = {
+    hidden: { opacity: 0, y: 16 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { when: "beforeChildren", staggerChildren: 0.05 },
+    },
+  } as const;
 
+  const roiItem = {
+    hidden: { opacity: 0, y: 12 },
+    show: { opacity: 1, y: 0 },
+  } as const;
 
-  function toggler(index: any) {
-    if (open === index) {
-      setOpen(null);
-    } else {
-      setOpen(index);
-    }
-  }
+  // Dummy calculation simulator
+  const handleCalculate = () => {
+    if (!roiHasEdited || isCalculating) return;
+    setIsCalculating(true);
+    // Close any open edit/info states
+    setEditingROIField(null);
+    setOpenROIInfo(null);
+
+    const {
+      purchasePrice,
+      financingRate,
+      financingTenureYears,
+      holdingPeriodYears,
+      yieldLong,
+      expensePct,
+      appreciationLocalNominal,
+    } = roiValues;
+
+    window.setTimeout(() => {
+      const years = Math.max(1, Math.min(holdingPeriodYears || 1, 50));
+      const principal = purchasePrice || 0;
+      const rentTotal = principal * (yieldLong / 100) * years;
+      const expensesTotal = principal * (expensePct / 100) * years;
+      const interestTotal =
+        principal *
+        (financingRate / 100) *
+        Math.min(years, financingTenureYears || years);
+      const appreciationGain =
+        principal * (appreciationLocalNominal / 100) * years;
+
+      const profit = Math.max(
+        0,
+        rentTotal + appreciationGain - expensesTotal - interestTotal
+      );
+      const roiPct = principal > 0 ? (profit / principal) * 100 : 0;
+      const annualIncome = principal * (yieldLong / 100);
+
+      setCalcResult({ profit, roiPct, annualIncome });
+      setIsCalculating(false);
+    }, 900);
+  };
 
   useEffect(() => {
     if (router.isReady) {
@@ -78,6 +296,28 @@ const Result = () => {
       }
 
       if (query && (type as string) === "link" && isValidUrl(query)) {
+        // If a reference is present (post-payment), verify will run in the other effect.
+        // To enforce order (verify first, then hasPaid), skip hasPaid pre-check when reference exists.
+        const refFromQuery = (router.query["reference"] as string) || "";
+        const refFromHash =
+          typeof window !== "undefined"
+            ? new URL(window.location.href).hash.replace(/^#/, "")
+            : "";
+        const hasReference = !!(refFromQuery || refFromHash);
+
+        if (!hasReference) {
+          // No reference yet, safe to pre-check payment status
+          hasPaid(query as string, "instant")
+            .then((resp) => {
+              if (resp?.paid) {
+                setIsPaid(true);
+              } else {
+                setIsPaid(false);
+              }
+            })
+            .catch(() => setIsPaid(false));
+        }
+
         setIsLoading(true);
         setCurrentStep(0);
 
@@ -108,11 +348,96 @@ const Result = () => {
     }
   }, [router.isReady, router.query]);
 
+  // If the payment provider returns with a reference (e.g., in query or hash), verify and unhide
+  useEffect(() => {
+    if (!router.isReady) return;
+    const refFromQuery = (router.query["reference"] as string) || "";
+    const refFromHash =
+      typeof window !== "undefined"
+        ? new URL(window.location.href).hash.replace(/^#/, "")
+        : "";
+    const reference = refFromQuery || refFromHash;
+    if (!reference) return;
+
+    if (isEmbedded && typeof window !== "undefined") {
+      try {
+        const url = new URL(window.location.href);
+        const listingQ = url.searchParams.get("q") || "";
+        window.parent?.postMessage(
+          { type: "payment_callback", reference, q: listingQ },
+          window.location.origin
+        );
+      } catch {}
+      return;
+    }
+
+    verifyPayment(reference)
+      .then(() => {
+        // Verified; mark as paid before any hasPaid calls
+        setIsPaid(true);
+        setProceed(false);
+        setCheckoutUrl(null);
+        setPaymentError(null);
+      })
+      .catch((e) => {
+        setPaymentError(
+          e?.response?.data?.message || e?.message || "Verification failed."
+        );
+      });
+  }, [router.isReady, router.query, isEmbedded]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    let isTop = true;
+    try {
+      isTop = window.self === window.top;
+    } catch {
+      isTop = true;
+    }
+    if (!isTop) return;
+
+    const onMessage = (event: MessageEvent) => {
+      if (!event?.data || typeof event.data !== "object") return;
+      if (event.origin !== window.location.origin) return;
+      if (event.data.type !== "payment_callback") return;
+      const reference = event.data.reference as string | undefined;
+      if (!reference) return;
+      setIsVerifyingPayment(true);
+      setVerifyingRef(reference);
+      setCheckoutUrl(null);
+      setPaymentError(null);
+      const listingQ = (event.data.q as string) || searchQuery || "";
+      verifyPayment(reference)
+        .then(() => {
+          setIsPaid(true);
+          setIsVerifyingPayment(false);
+          setProceed(false);
+          const target =
+            paymentCallbackUrl ||
+            (listingQ
+              ? `/result?q=${encodeURIComponent(listingQ)}&type=link`
+              : "/result");
+          router.push(target);
+          setPaymentCallbackUrl(null);
+        })
+        .catch((e: any) => {
+          setIsVerifyingPayment(false);
+          setPaymentError(
+            e?.response?.data?.message || e?.message || "Verification failed."
+          );
+        });
+    };
+
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, [paymentCallbackUrl, searchQuery]);
+
   if (isLoading) {
     return (
       <Container
         noPadding
         className="min-h-screen bg-[#F9F9F9] text-inda-dark flex flex-col"
+        data-hidden={isHidden ? "true" : "false"}
       >
         <Navbar />
         <main className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 bg-gradient-to-br from-[#F9F9F9] via-[#FAFAFA] to-[#F5F5F5] min-h-0 relative">
@@ -343,18 +668,26 @@ const Result = () => {
         : null;
 
     return (
-      <Container noPadding className="min-h-screen bg-[#F9F9F9] text-inda-dark">
+      <Container
+        noPadding
+        className={`min-h-screen bg-[#F9F9F9] text-inda-dark ${
+          isHidden ? "h-screen overflow-hidden" : ""
+        }`}
+        data-hidden={isHidden ? "true" : "false"}
+      >
         <Navbar />
-        <main className="flex-1 py-6">
-          <div className="text-[#101820]/90 w-full md:w-4/5 md:mx-auto space-y-6">
+        <main className="flex-1 py-8">
+          <div className="text-[#101820]/90 w-full max-w-7xl mx-auto space-y-8">
             {/* Intro Header */}
-            <div className="px-4 sm:px-6">
-              <h2 className="text-[52px] font-bold mb-2">Hi there,</h2>
-              <p className="text-[32px] font-normal">
+            <div className="px-6">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
+                Hi {user?.firstName || "there"},
+              </h2>
+              <p className="text-lg md:text-xl lg:text-2xl font-normal mb-6">
                 Here's what we found based on your search.
               </p>
               {(result?.listingUrl || result?.snapshot?.listingUrl) && (
-                <p className="mt-10 flex items-center gap-2 font-normal whitespace-nowrap overflow-hidden text-[18px] sm:text-[24px] md:text-[28px]">
+                <p className="flex items-center gap-3 font-normal whitespace-nowrap overflow-hidden text-base md:text-lg">
                   <span className="shrink-0">
                     Results for the listing link:
                   </span>
@@ -370,1355 +703,1786 @@ const Result = () => {
               )}
             </div>
 
-            {/* Inda Verdict (Top Card) */}
-            <div className="w-full px-4 sm:px-6">
-              <div>
-                <div className="bg-inda-teal text-white rounded-lg p-6 mt-5 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[32px] font-medium mb-3">
-                      Inda Trust Score{" "}
-                      <IoIosInformationCircle
-                        size={20}
-                        className="text-inda-teal inline-block"
-                      />
-                    </span>
-                    <span className="text-sm text-[32px] font-normal">
-                      {Math.round(result?.indaScore?.finalScore ?? 0)}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-[#101820]/32 rounded-full h-2">
-                    <div
-                      className="bg-[#F9F9F9] h-2 rounded-full"
-                      style={{
-                        width: `${Math.round(
-                          result?.indaScore?.finalScore ?? 0
-                        )}%`,
-                      }}
-                    />
+            {/* BEGIN hidden blur scope */}
+            <div className="relative">
+              {isHidden && (
+                <div className="absolute inset-0 z-40 pointer-events-none">
+                  {/* Keep the unlock UI centered in the viewport while scrolling this section */}
+                  <div className="sticky top-1/2 -translate-y-1/2 transform w-full">
+                    <div className="mx-auto w-[260px] h-[260px] md:w-[320px] md:h-[320px] rounded-full bg-[#4EA8A1] flex flex-col items-center justify-center shadow-2xl pointer-events-auto">
+                      <FaLockOpen className="text-white w-16 h-16 md:w-20 md:h-20 mb-5" />
+                      <button
+                        onClick={() => setProceed(true)}
+                        className="px-6 py-2 md:px-8 md:py-3 rounded-full border border-white text-white text-base md:text-lg font-semibold hover:bg-white/10 transition"
+                      >
+                        Unlock here
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Gallery */}
-            <div className="w-full px-4 sm:px-6">
-              <h3 className="text-[40px] font-bold mb-4">Gallery</h3>
+              )}
               <div
-                className="flex gap-4 overflow-x-auto pb-2"
-                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                className={
+                  isHidden ? "filter blur-sm pointer-events-none" : undefined
+                }
               >
-                <style jsx>{`
-                  div::-webkit-scrollbar {
-                    display: none;
-                  }
-                `}</style>
-                {(result?.snapshot?.imageUrls?.length
-                  ? result.snapshot.imageUrls
-                  : [
-                      "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-                      "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-                      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-                      "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-                    ]
-                )
-                  .slice(0, 6)
-                  .map((url: string, idx: number) => (
-                    <div
-                      key={idx}
-                      className="flex-shrink-0 w-80 h-48 md:w-96 md:h-64 lg:w-[28rem] lg:h-80 rounded-lg overflow-hidden"
-                    >
-                      <img
-                        src={url}
-                        alt={`property-${idx}`}
-                        className="w-[450px] h-[380px] object-cover"
-                      />
-                    </div>
-                  ))}
-              </div>
-              {/* Chips under gallery */}
-              {/* <div className="mt-4 flex flex-wrap items-center gap-2">
-                {typeof result?.snapshot?.bedrooms === "number" && (
-                  <span className="px-3 py-1 bg-[#E5F4F2] text-inda-teal rounded-full text-xs font-medium">
-                    {result.snapshot.bedrooms} Bed(s)
-                  </span>
-                )}
-                {typeof result?.snapshot?.bathrooms === "number" && (
-                  <span className="px-3 py-1 bg-[#E5F4F2] text-inda-teal rounded-full text-xs font-medium">
-                    {result.snapshot.bathrooms} Bath(s)
-                  </span>
-                )}
-                {result?.snapshot?.propertyTypeStd && (
-                  <span className="px-3 py-1 bg-[#E5F4F2] text-inda-teal rounded-full text-xs font-medium">
-                    {result.snapshot.propertyTypeStd}
-                  </span>
-                )}
-                <span className="px-3 py-1 bg-[#E5F4F2] text-inda-teal rounded-full text-xs font-medium">
-                  Amenities
-                </span>
-              </div> */}
-            </div>
-
-            {/* Action Buttons Row */}
-            <div className="overflow-x-hidden bg-[#4EA8A159] rounded-2xl py-5 sm:px-6">
-              <div className="flex flex-wrap gap-2 w-screen">
-                <button className="flex items-center gap-2 px-4 py-2 bg-inda-teal text-white rounded-full text-sm hover:bg-teal-600 transition-colors">
-                  <FaWhatsapp className="text-xs" />
-                  WhatsApp Seller
-                </button>
-                <button className="flex items-center gap-2 px-4 py-2 bg-inda-teal text-white rounded-full text-sm hover:bg-teal-600 transition-colors">
-                  <FaPhone className="text-xs" />
-                  Call Seller
-                </button>
-                <button
-                  className="flex items-center gap-2 px-4 py-2 bg-inda-teal text-white rounded-full text-sm hover:bg-teal-600 transition-colors"
-                  onClick={() =>
-                    window.open(
-                      result?.listingUrl || result?.snapshot?.listingUrl || "#",
-                      "_blank"
+                {/* Gallery */}
+                <div className="w-full px-6">
+                  <h3 className="text-2xl md:text-3xl font-bold mb-6">
+                    Gallery
+                  </h3>
+                  <div
+                    className="flex gap-4 overflow-x-auto pb-4"
+                    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                  >
+                    <style jsx>{`
+                      div::-webkit-scrollbar {
+                        display: none;
+                      }
+                    `}</style>
+                    {(result?.snapshot?.imageUrls?.length
+                      ? result.snapshot.imageUrls
+                      : [
+                          "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+                          "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+                          "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+                          "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+                        ]
                     )
-                  }
-                >
-                  <FaShare className="text-xs" />
-                  View Source
-                </button>
-              </div>
-            </div>
-
-            {/* Smart Summary */}
-            <div className="w-full px-4 sm:px-6">
-              <div className="">
-                {/* Desktop Table View */}
-                <div className="hidden md:block">
-                  <div className="space-y-2">
-                    {/* Table Header */}
-                    <div className=" pt-[62px] pb-[34px] px-[41px]  bg-[#E5E5E566] rounded-[16px] text-sm font-semibold text-gray-700">
-                      <h2 className="text-[52px] font-bold mb-6 text-inda-teal">
-                        Smart Summary
-                      </h2>
-                      <div className="grid grid-cols-3 gap-[98px] text-[44px] font-semibold">
-                        {" "}
-                        <div>Info</div>
-                        <div>Details</div>
-                        <div>Status</div>
-                      </div>
-                    </div>
-
-                    {/* Bedroom/Bathrooms Row */}
-                    <div className="grid grid-cols-3 gap-[98px] py-4 px-[22px] bg-[#E5E5E566] font-normal text-[32px] text-[#101820] rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                          <FaBuilding className="text-inda-teal text-sm" />
+                      .slice(0, 6)
+                      .map((url: string, idx: number) => (
+                        <div
+                          key={idx}
+                          className="flex-shrink-0 w-80 h-56 md:w-96 md:h-64 lg:w-[420px] lg:h-72 rounded-lg overflow-hidden"
+                        >
+                          <img
+                            src={url}
+                            alt={`property-${idx}`}
+                            className="w-full h-full object-cover"
+                          />
                         </div>
-                        <span>Bedroom/Bathrooms</span>
-                      </div>
-                      <div>
-                        {result?.snapshot?.bedrooms ?? dummyResultData.bedrooms}
-                        Bed./
-                        {result?.snapshot?.bathrooms ??
-                          dummyResultData.bathrooms}{" "}
-                        Bath.
-                      </div>
-                      <div>From listing/docs.</div>
-                    </div>
-
-                    {/* Title Row
-                    <div className="grid grid-cols-3 gap-6 py-4 px-4 bg-[#E5E5E566] font-normal text-[32px] text-[#101820] rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                          <FaCheckCircle className="text-inda-teal text-sm" />
-                        </div>
-                        <span>Title</span>
-                      </div>
-                      <div className="text-md font-medium flex items-center gap-2">
-                        {result?.aiReport?.titleSafety?.label ||
-                          dummyResultData.title_status}
-                        <FaCheckCircle className="text-green-500 text-sm" />
-                      </div>
-                      <div className="cursor-pointer hover:text-inda-teal">
-                        Verified
-                      </div>
-                    </div> */}
-
-                    {/* Developer Row */}
-                    <div className="grid grid-cols-3 gap-[98px] py-4 px-[22px] bg-[#E5E5E566] font-normal text-[32px] text-[#101820] rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                          <FaBuilding className="text-inda-teal text-sm" />
-                        </div>
-                        <span className="text-md font-medium">Developer</span>
-                      </div>
-                      <div className="text-md font-medium">
-                        {dummyResultData.developer.name}
-                      </div>
-                      <div className="text-md font-medium cursor-pointer hover:text-inda-teal">
-                        View Profile here
-                      </div>
-                    </div>
-
-                    {/* Delivery Date Row */}
-                    <div className="grid grid-cols-3 gap-[98px] py-4 px-[22px] bg-[#E5E5E566] font-normal text-[32px] text-[#101820] rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                          <FaClock className="text-inda-teal text-sm" />
-                        </div>
-                        <span className="text-md font-medium">
-                          Delivery Date
-                        </span>
-                      </div>
-                      <div className="text-md font-medium">
-                        {dummyResultData.deliveryDate}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 text-md bg-inda-teal font-medium rounded-full"></div>
-                        {dummyResultData.status}
-                      </div>
-                    </div>
-
-                    {/* Status Row */}
-                    <div className="grid grid-cols-3 gap-[98px] py-4 px-[22px] bg-[#E5E5E566] font-normal text-[32px] text-[#101820] rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                          <FaMapMarkerAlt className="text-inda-teal text-sm" />
-                        </div>
-                        <span className="text-md font-medium">Status</span>
-                      </div>
-                      <div className="text-md font-medium">
-                        {dummyResultData.status}/Completed
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 text-md font-medium bg-inda-teal rounded-full"></div>
-                        {dummyResultData.status}
-                      </div>
-                    </div>
+                      ))}
                   </div>
                 </div>
 
-                {/* Mobile Card View */}
-                <div className="md:hidden space-y-2">
-                  {/* Bedroom/Bathrooms Card */}
-                  <div className="bg-[#E5E5E566] rounded-lg p-4">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                        <FaBuilding className="text-inda-teal text-base" />
-                      </div>
-                      <h4 className="font-semibold text-base">
-                        Bedroom/Bathrooms
-                      </h4>
-                    </div>
-                    <div className="space-y-2">
-                      <div>
-                        <span className="text-sm text-gray-500">Details: </span>
-                        <span className="font-semibold text-sm">
-                          {result?.snapshot?.bedrooms ??
-                            dummyResultData.bedrooms}
-                          Bed./
-                          {result?.snapshot?.bathrooms ??
-                            dummyResultData.bathrooms}{" "}
-                          Bath.
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-500">Status: </span>
-                        <span className="text-sm">From listing/docs.</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Title Card */}
-                  <div className="bg-[#E5E5E566] rounded-lg p-4">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                        <FaCheckCircle className="text-inda-teal text-base" />
-                      </div>
-                      <h4 className="font-semibold text-base">Title</h4>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-500">Details: </span>
-                        <span className="font-semibold text-sm">
-                          {result?.aiReport?.titleSafety?.label ||
-                            dummyResultData.title_status}
-                        </span>
-                        <FaCheckCircle className="text-green-500 text-sm" />
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-500">Status: </span>
-                        <span className="text-sm text-inda-teal cursor-pointer hover:underline">
-                          Verify here
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Developer Card */}
-                  <div className="bg-[#E5E5E566] rounded-lg p-4">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                        <FaBuilding className="text-inda-teal text-base" />
-                      </div>
-                      <h4 className="font-semibold text-base">Developer</h4>
-                    </div>
-                    <div className="space-y-2">
-                      <div>
-                        <span className="text-sm text-gray-500">Details: </span>
-                        <span className="font-semibold text-sm">
-                          {dummyResultData.developer.name}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-500">Status: </span>
-                        <span className="text-sm text-inda-teal cursor-pointer hover:underline">
-                          View Profile here
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Delivery Date Card */}
-                  <div className="bg-[#E5E5E566] rounded-lg p-4">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                        <FaClock className="text-inda-teal text-base" />
-                      </div>
-                      <h4 className="font-semibold text-base">Delivery Date</h4>
-                    </div>
-                    <div className="space-y-2">
-                      <div>
-                        <span className="text-sm text-gray-500">Details: </span>
-                        <span className="font-semibold text-sm">
-                          {dummyResultData.deliveryDate}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-500">Status: </span>
-                        <div className="w-3 h-3 bg-inda-teal rounded-full"></div>
-                        <span className="text-sm text-inda-teal">
-                          {dummyResultData.status}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Status Card */}
-                  <div className="bg-[#E5E5E566] rounded-lg p-4">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                        <FaMapMarkerAlt className="text-inda-teal text-base" />
-                      </div>
-                      <h4 className="font-semibold text-base">Status</h4>
-                    </div>
-                    <div className="space-y-2">
-                      <div>
-                        <span className="text-sm text-gray-500">Details: </span>
-                        <span className="font-semibold text-sm">
-                          {dummyResultData.status}/Completed
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-500">Status: </span>
-                        <div className="w-3 h-3 bg-inda-teal rounded-full"></div>
-                        <span className="text-sm text-inda-teal">
-                          {dummyResultData.status}
-                        </span>
-                      </div>
-                    </div>
+                {/* Action Buttons Row */}
+                <div className="bg-[#4EA8A159] rounded-2xl py-6 px-6">
+                  <div className="flex flex-wrap gap-3 justify-center md:justify-start">
+                    <button className="flex items-center gap-2 px-6 py-3 bg-inda-teal text-white rounded-full text-sm font-medium hover:bg-teal-600 transition-colors">
+                      <FaWhatsapp className="text-sm" />
+                      WhatsApp Seller
+                    </button>
+                    <button className="flex items-center gap-2 px-6 py-3 bg-inda-teal text-white rounded-full text-sm font-medium hover:bg-teal-600 transition-colors">
+                      <FaPhone className="text-sm" />
+                      Call Seller
+                    </button>
+                    <button
+                      className="flex items-center gap-2 px-6 py-3 bg-inda-teal text-white rounded-full text-sm font-medium hover:bg-teal-600 transition-colors"
+                      onClick={() =>
+                        window.open(
+                          result?.listingUrl ||
+                            result?.snapshot?.listingUrl ||
+                            "#",
+                          "_blank"
+                        )
+                      }
+                    >
+                      <FaShare className="text-sm" />
+                      View Source
+                    </button>
                   </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Amenities */}
-            <div className="w-full">
-              <div className="rounded-lg p-6">
-                <h3 className="text-[40px] font-bold mb-6">Amenities</h3>
-                <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-4">
-                  {/* Keeping placeholder amenities for now */}
-                  <div className="flex-shrink-0 w-48 h-36 rounded-xl overflow-hidden relative shadow-lg">
-                    <img
-                      src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-                      alt="Swimming Pool"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/40 flex items-end p-4">
-                      <span className="text-white text-sm font-semibold">
-                        Swimming Pool
-                      </span>
+                {/* Smart Summary */}
+                <div className="w-full px-6">
+                  <div className="">
+                    {/* Desktop Table View */}
+                    <div className="hidden md:block">
+                      <div className="space-y-3">
+                        {/* Table Header */}
+                        <div className="pt-8 pb-6 px-8 bg-[#E5E5E566] rounded-2xl">
+                          <h2 className="text-2xl md:text-3xl font-bold mb-6 text-inda-teal">
+                            Smart Summary
+                          </h2>
+                          <div className="grid grid-cols-3 gap-12 text-lg font-semibold text-gray-700">
+                            <div>Info</div>
+                            <div>Details</div>
+                            <div>Status</div>
+                          </div>
+                        </div>
+
+                        {/* Bedroom/Bathrooms Row */}
+                        <div className="grid grid-cols-3 gap-12 py-6 px-6 bg-[#E5E5E566] font-normal text-base text-[#101820] rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-inda-teal/10 rounded-lg flex items-center justify-center">
+                              <FaBuilding className="text-inda-teal text-lg" />
+                            </div>
+                            <span>Bedroom/Bathrooms</span>
+                          </div>
+                          <div>
+                            {result?.snapshot?.bedrooms ??
+                              dummyResultData.bedrooms}
+                            Bed./
+                            {result?.snapshot?.bathrooms ??
+                              dummyResultData.bathrooms}{" "}
+                            Bath.
+                          </div>
+                          <div>From listing/docs.</div>
+                        </div>
+
+                        {/* Developer Row */}
+                        <div className="grid grid-cols-3 gap-12 py-6 px-6 bg-[#E5E5E566] font-normal text-base text-[#101820] rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-inda-teal/10 rounded-lg flex items-center justify-center">
+                              <FaBuilding className="text-inda-teal text-lg" />
+                            </div>
+                            <span className="font-medium">Developer</span>
+                          </div>
+                          <div className="font-medium">
+                            {dummyResultData.developer.name}
+                          </div>
+                          <div className="font-medium cursor-pointer hover:text-inda-teal">
+                            View Profile here
+                          </div>
+                        </div>
+
+                        {/* Delivery Date Row */}
+                        <div className="grid grid-cols-3 gap-12 py-6 px-6 bg-[#E5E5E566] font-normal text-base text-[#101820] rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-inda-teal/10 rounded-lg flex items-center justify-center">
+                              <FaClock className="text-inda-teal text-lg" />
+                            </div>
+                            <span className="font-medium">Delivery Date</span>
+                          </div>
+                          <div className="font-medium">
+                            {dummyResultData.deliveryDate}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-inda-teal rounded-full"></div>
+                            <span>{dummyResultData.status}</span>
+                          </div>
+                        </div>
+
+                        {/* Status Row */}
+                        <div className="grid grid-cols-3 gap-12 py-6 px-6 bg-[#E5E5E566] font-normal text-base text-[#101820] rounded-lg">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-inda-teal/10 rounded-lg flex items-center justify-center">
+                              <FaMapMarkerAlt className="text-inda-teal text-lg" />
+                            </div>
+                            <span className="font-medium">Status</span>
+                          </div>
+                          <div className="font-medium">
+                            {dummyResultData.status}/Completed
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-inda-teal rounded-full"></div>
+                            <span>{dummyResultData.status}</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="flex-shrink-0 w-48 h-36 rounded-xl overflow-hidden relative shadow-lg">
-                    <img
-                      src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-                      alt="Security"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/40 flex items-end p-4">
-                      <span className="text-white text-sm font-semibold">
-                        Security
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex-shrink-0 w-48 h-36 rounded-xl overflow-hidden relative shadow-lg">
-                    <img
-                      src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-                      alt="Accessible Roads"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/40 flex items-end p-4">
-                      <span className="text-white text-sm font-semibold">
-                        Accessible Roads
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex-shrink-0 w-48 h-36 rounded-xl overflow-hidden relative shadow-lg">
-                    <img
-                      src="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-                      alt="24 hours Electricity"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/40 flex items-end p-4">
-                      <span className="text-white text-sm font-semibold">
-                        24hrs Electricity
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex-shrink-0 w-48 h-36 rounded-xl overflow-hidden relative shadow-lg">
-                    <img
-                      src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-                      alt="Well-Planned Layout"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/40 flex items-end p-4">
-                      <span className="text-white text-sm font-semibold">
-                        Well-Planned Layout
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Inda Verdict - moved to top */}
-
-            {/* Feedback & Complaints */}
-            <div className="w-full px-4 sm:px-6">
-              <div className="bg-gray-100 rounded-lg p-6">
-                <h3 className="text-[52px] font-bold mb-6 text-inda-teal">
-                  Feedback & Complaints
-                </h3>
-                <div className="">
-                  {/* Ratings Overview */}
-                  <div className="flex gap-20 rounded-lg p-6 mb-4">
-                    <div className="flex-1">
-                      <div className="flex gap-20">
-                        <div>
-                          <div className="flex items-baseline gap-2 mb-2">
-                            <span className="text-[48px] font-black">
-                              {dummyResultData.overallRating.toFixed(1)}
+                    {/* Mobile Card View */}
+                    <div className="md:hidden space-y-4">
+                      {/* Bedroom/Bathrooms Card */}
+                      <div className="bg-[#E5E5E566] rounded-lg p-5">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-12 h-12 bg-inda-teal/10 rounded-lg flex items-center justify-center">
+                            <FaBuilding className="text-inda-teal text-lg" />
+                          </div>
+                          <h4 className="font-semibold text-lg">
+                            Bedroom/Bathrooms
+                          </h4>
+                        </div>
+                        <div className="space-y-3">
+                          <div>
+                            <span className="text-sm text-gray-500">
+                              Details:{" "}
                             </span>
-                            <span className="text-sm text-gray-600"></span>
+                            <span className="font-semibold text-base">
+                              {result?.snapshot?.bedrooms ??
+                                dummyResultData.bedrooms}
+                              Bed./
+                              {result?.snapshot?.bathrooms ??
+                                dummyResultData.bathrooms}{" "}
+                              Bath.
+                            </span>
                           </div>
-                          <div className="flex items-center gap-1 mb-3">
-                            {Array.from({ length: 5 }).map((_, i) => {
-                              const active =
-                                i < Math.round(dummyResultData.overallRating);
-                              return (
-                                <FaStar
-                                  key={i}
-                                  className={
-                                    active
-                                      ? "text-yellow-400 h-[31px] w-[31px]"
-                                      : "text-gray-300 h-[31px] w-[31px]"
-                                  }
-                                />
-                              );
-                            })}
+                          <div>
+                            <span className="text-sm text-gray-500">
+                              Status:{" "}
+                            </span>
+                            <span className="text-sm">From listing/docs.</span>
                           </div>
-                          <p className="text-[16px] text-[#0F1417] font-normal">
-                            {dummyResultData.totalReviews} reviews
+                        </div>
+                      </div>
+
+                      {/* Title Card */}
+                      <div className="bg-[#E5E5E566] rounded-lg p-5">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-12 h-12 bg-inda-teal/10 rounded-lg flex items-center justify-center">
+                            <FaCheckCircle className="text-inda-teal text-lg" />
+                          </div>
+                          <h4 className="font-semibold text-lg">Title</h4>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-500">
+                              Details:{" "}
+                            </span>
+                            <span className="font-semibold text-base">
+                              {result?.aiReport?.titleSafety?.label ||
+                                dummyResultData.title_status}
+                            </span>
+                            <FaCheckCircle className="text-green-500 text-sm" />
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-500">
+                              Status:{" "}
+                            </span>
+                            <span className="text-sm text-inda-teal cursor-pointer hover:underline">
+                              Verify here
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Developer Card */}
+                      <div className="bg-[#E5E5E566] rounded-lg p-5">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-12 h-12 bg-inda-teal/10 rounded-lg flex items-center justify-center">
+                            <FaBuilding className="text-inda-teal text-lg" />
+                          </div>
+                          <h4 className="font-semibold text-lg">Developer</h4>
+                        </div>
+                        <div className="space-y-3">
+                          <div>
+                            <span className="text-sm text-gray-500">
+                              Details:{" "}
+                            </span>
+                            <span className="font-semibold text-base">
+                              {dummyResultData.developer.name}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="text-sm text-gray-500">
+                              Status:{" "}
+                            </span>
+                            <span className="text-sm text-inda-teal cursor-pointer hover:underline">
+                              View Profile here
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Delivery Date Card */}
+                      <div className="bg-[#E5E5E566] rounded-lg p-5">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-12 h-12 bg-inda-teal/10 rounded-lg flex items-center justify-center">
+                            <FaClock className="text-inda-teal text-lg" />
+                          </div>
+                          <h4 className="font-semibold text-lg">
+                            Delivery Date
+                          </h4>
+                        </div>
+                        <div className="space-y-3">
+                          <div>
+                            <span className="text-sm text-gray-500">
+                              Details:{" "}
+                            </span>
+                            <span className="font-semibold text-base">
+                              {dummyResultData.deliveryDate}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-500">
+                              Status:{" "}
+                            </span>
+                            <div className="w-3 h-3 bg-inda-teal rounded-full"></div>
+                            <span className="text-sm text-inda-teal">
+                              {dummyResultData.status}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Status Card */}
+                      <div className="bg-[#E5E5E566] rounded-lg p-5">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="w-12 h-12 bg-inda-teal/10 rounded-lg flex items-center justify-center">
+                            <FaMapMarkerAlt className="text-inda-teal text-lg" />
+                          </div>
+                          <h4 className="font-semibold text-lg">Status</h4>
+                        </div>
+                        <div className="space-y-3">
+                          <div>
+                            <span className="text-sm text-gray-500">
+                              Details:{" "}
+                            </span>
+                            <span className="font-semibold text-base">
+                              {dummyResultData.status}/Completed
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-500">
+                              Status:{" "}
+                            </span>
+                            <div className="w-3 h-3 bg-inda-teal rounded-full"></div>
+                            <span className="text-sm text-inda-teal">
+                              {dummyResultData.status}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {/* Amenities */}
+                <div className="w-full px-6">
+                  <div className="rounded-lg py-8">
+                    <h3 className="text-2xl md:text-3xl font-bold mb-8">
+                      Amenities
+                    </h3>
+                    <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-4">
+                      {/* Keeping placeholder amenities for now */}
+                      <div className="flex-shrink-0 w-48 h-40 rounded-xl overflow-hidden relative shadow-lg">
+                        <img
+                          src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+                          alt="Swimming Pool"
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/40 flex items-end p-4">
+                          <span className="text-white text-sm font-semibold">
+                            Swimming Pool
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex-shrink-0 w-48 h-40 rounded-xl overflow-hidden relative shadow-lg">
+                        <img
+                          src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+                          alt="Security"
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/40 flex items-end p-4">
+                          <span className="text-white text-sm font-semibold">
+                            Security
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex-shrink-0 w-48 h-40 rounded-xl overflow-hidden relative shadow-lg">
+                        <img
+                          src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+                          alt="Accessible Roads"
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/40 flex items-end p-4">
+                          <span className="text-white text-sm font-semibold">
+                            Accessible Roads
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex-shrink-0 w-48 h-40 rounded-xl overflow-hidden relative shadow-lg">
+                        <img
+                          src="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+                          alt="24 hours Electricity"
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/40 flex items-end p-4">
+                          <span className="text-white text-sm font-semibold">
+                            24hrs Electricity
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex-shrink-0 w-48 h-40 rounded-xl overflow-hidden relative shadow-lg">
+                        <img
+                          src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
+                          alt="Well-Planned Layout"
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/40 flex items-end p-4">
+                          <span className="text-white text-sm font-semibold">
+                            Well-Planned Layout
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Inda Verdict - moved to top */}
+
+                {/* Feedback & Complaints */}
+                <div className="w-full px-6">
+                  <div className=" rounded-lg p-8">
+                    <h3 className="text-2xl md:text-3xl font-bold mb-8 text-inda-teal">
+                      Feedback & Complaints
+                    </h3>
+                    <div className="">
+                      {/* Ratings Overview */}
+                      <div className="flex flex-col lg:flex-row gap-8 rounded-lg p-6 mb-6">
+                        <div className="flex-1">
+                          <div className="flex flex-col lg:flex-row gap-8 w-1/2">
+                            <div className="flex-shrink-0">
+                              <div className="flex items-baseline gap-2 mb-2">
+                                <span className="text-4xl font-black">
+                                  {dummyResultData.overallRating.toFixed(1)}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1 mb-3">
+                                {Array.from({ length: 5 }).map((_, i) => {
+                                  const active =
+                                    i <
+                                    Math.round(dummyResultData.overallRating);
+                                  return (
+                                    <FaStar
+                                      key={i}
+                                      className={
+                                        active
+                                          ? "text-yellow-400 h-6 w-6"
+                                          : "text-gray-300 h-6 w-6"
+                                      }
+                                    />
+                                  );
+                                })}
+                              </div>
+                              <p className="text-sm text-[#0F1417] font-normal">
+                                {dummyResultData.totalReviews} reviews
+                              </p>
+                            </div>
+                            <div className="space-y-2 flex-1">
+                              {dummyResultData.ratingBreakdown.map((r, idx) => (
+                                <div
+                                  key={idx}
+                                  className="flex items-center gap-3"
+                                >
+                                  <span className="w-8 text-sm text-[#101820]">
+                                    {r.stars}
+                                  </span>
+                                  <div className="flex-1 h-2 bg-[#E5E5E5] rounded-full overflow-hidden">
+                                    <div
+                                      className="h-2 bg-[#101820]/40 rounded-full"
+                                      style={{ width: `${r.percentage}%` }}
+                                    ></div>
+                                  </div>
+                                  <span className="w-12 text-right text-sm text-[#101820]/65">
+                                    {r.percentage}%
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Reviews List */}
+                      <div className="space-y-6">
+                        <h1 className="font-bold text-xl">Reviews</h1>
+                        <div className="max-w-full border border-[#4EA8A1] rounded-2xl h-64 flex items-center justify-center">
+                          <p className="text-center text-lg font-medium">
+                            No Reviews Yet
                           </p>
                         </div>
-                        <div className="space-y-2 w-full">
-                          {dummyResultData.ratingBreakdown.map((r, idx) => (
-                            <div key={idx} className="flex items-center gap-3">
-                              <span className="w-10 text-[16px] text-[#101820]">
-                                {r.stars}
-                              </span>
-                              <div className="flex-1 h-[8px] bg-[#E5E5E5] rounded-full overflow-hidden">
+                        <button className="text-[#4EA8A1] text-lg font-semibold hover:underline">
+                          Report Your Experience here &lt;&lt;
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* AI Summary */}
+                    <div className="mt-8 pt-6 border-t border-gray-200">
+                      <h4 className="text-xl font-bold mb-4 text-inda-teal">
+                        AI Summary
+                      </h4>
+                      <p className="text-gray-700 text-base leading-relaxed">
+                        {result?.aiReport?.sellerCredibility?.summary ||
+                          dummyResultData.aiSummary}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="w-full px-6">
+                  <div className="bg-[#E5E5E533] rounded-2xl p-8">
+                    <h3 className="text-2xl md:text-3xl font-bold mb-8 text-inda-teal">
+                      Property Price Analysis
+                    </h3>
+
+                    {/* Price Cards Row */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
+                      <div className="bg-[#4EA8A114] rounded-xl p-6">
+                        <h4 className="text-base font-bold mb-2 text-[#101820]/70">
+                          Price
+                        </h4>
+                        <p className="text-2xl font-bold text-inda-teal">
+                          {price
+                            ? `₦${price.toLocaleString()}`
+                            : "₦120,000,000"}
+                        </p>
+                      </div>
+
+                      <div className="bg-[#4EA8A114] rounded-xl p-6">
+                        <h4 className="text-base font-bold mb-2 text-[#101820]/70">
+                          Fair Market Value
+                        </h4>
+                        <p className="text-2xl font-bold text-inda-teal">
+                          {fairValue
+                            ? `₦${fairValue.toLocaleString()}`
+                            : "₦99,600,000"}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Market Position - Right Aligned */}
+                    <div className="flex justify-end mb-6">
+                      <div className="bg-transparent border border-gray-200 rounded-lg px-4 py-3 ">
+                        <div className="text-xs font-medium text-gray-600 mb-1">
+                          Market Position
+                        </div>
+                        <div className="text-sm font-bold text-red-500">
+                          17% Overpriced
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Chart Section */}
+                    <div className="bg-transparent rounded-xl p-6 mb-6">
+                      {/* Chart Header */}
+                      <div className="mb-6">
+                        <p className="text-sm text-inda-teal font-medium mb-1">
+                          ↑ 3.5% in the last 6 months
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          Sales from Aug 2024 - July 2025
+                        </p>
+                      </div>
+
+                      {/* Chart Container with proper width */}
+                      <div className="w-full max-w-4xl mx-auto">
+                        <div
+                          className="flex items-end justify-between h-48 bg-transparent rounded-lg p-6 relative"
+                          style={{
+                            backgroundImage:
+                              "repeating-linear-gradient(to top, rgba(78,168,161,0.1), rgba(78,168,161,0.1) 1px, transparent 1px, transparent 32px)",
+                          }}
+                        >
+                          {[
+                            "Aug",
+                            "Sep",
+                            "Oct",
+                            "Nov",
+                            "Dec",
+                            "Jan",
+                            "Feb",
+                            "Mar",
+                            "Apr",
+                            "May",
+                            "Jun",
+                            "Jul",
+                          ].map((month, index) => (
+                            <div
+                              key={month}
+                              className="flex flex-col items-center flex-1"
+                            >
+                              <div className="flex items-end gap-1 mb-2">
                                 <div
-                                  className="h-[8px] bg-[#101820]/40 rounded-full"
-                                  style={{ width: `${r.percentage}%` }}
-                                ></div>
+                                  className="bg-inda-teal rounded-t-sm w-3"
+                                  style={{
+                                    height: `${60 + index * 6}px`,
+                                    minHeight: "20px",
+                                  }}
+                                />
+                                <div
+                                  className="bg-gray-300 rounded-t-sm w-3"
+                                  style={{
+                                    height: `${70 + index * 5}px`,
+                                    minHeight: "25px",
+                                  }}
+                                />
                               </div>
-                              <span className="w-10 text-right text-[16px]  text-[#101820]/65">
-                                {r.percentage}%
+                              <span className="text-xs text-gray-500 font-medium">
+                                {month}
                               </span>
                             </div>
                           ))}
                         </div>
-                      </div>
-                    </div>
-                    <div className="flex-1"> </div>
-                  </div>
 
-                  {/* Reviews List */}
-                  <div className="md:col-span-2 space-y-4 h-[499px]">
-                    <h1 className="font-bold text-[32px]">Reviews</h1>
-                    <div className="w-[1224px] border-1 border-[#4EA8A1] rounded-[32px] h-[311px]">
-                      <p className="text-center pt-[145px] text-[20px] font-medium">
-                        No Reviews Yet
-                      </p>
-                    </div>
-                    <button className="mt-[50px] ml-[30px] py-[8px] px-[3px] text-[#4EA8A1] text-[24px] font-semibold">
-                      Report Your Experience here &lt; &lt;
-                    </button>
-                  </div>
-                </div>
-
-                {/* AI Summary */}
-                <div className="mt-6 pt-4 border-t border-gray-200">
-                  <h4 className="text-lg font-bold mb-2 text-inda-teal">
-                    AI Summary
-                  </h4>
-                  <p className="text-gray-700 text-base leading-relaxed">
-                    {result?.aiReport?.sellerCredibility?.summary ||
-                      dummyResultData.aiSummary}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="w-full px-4 sm:px-6">
-              <div className="bg-gray-100 rounded-[24px] p-8">
-                <h3 className="text-[40px] font-bold mb-8 text-inda-teal">
-                  Property Price Analysis
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8">
-                  <div className="bg-[#E5F4F2] rounded-xl p-8 text-left">
-                    <h4 className="text-[18px] font-bold mb-3 text-[#101820]/80">
-                      Price
-                    </h4>
-                    <p className="text-[24px] font-semibold text-inda-teal">
-                      {price ? `₦${price.toLocaleString()}` : "₦120,000,000"}
-                    </p>
-                  </div>
-
-                  <div className="bg-[#E5F4F2] rounded-xl p-8 text-left">
-                    <h4 className="text-[18px] font-bold mb-3 text-[#101820]/80">
-                      Fair Market Value
-                    </h4>
-                    <p className="text-[24px] font-semibold text-inda-teal">
-                      {fairValue
-                        ? `₦${fairValue.toLocaleString()}`
-                        : "₦99,600,000"}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex justify-end mb-12">
-                  <div className="bg-transparent border border-gray-200 rounded-md px-4 py-3 text-right w-fit">
-                    <div className="text-xs font-medium text-gray-600">
-                      Market Position
-                    </div>
-                    <div
-                      className={`text-sm font-semibold ${
-                        marketDelta == null
-                          ? "text-red-500"
-                          : marketDelta > 0
-                          ? "text-red-500"
-                          : marketDelta < 0
-                          ? "text-green-600"
-                          : "text-amber-600"
-                      }`}
-                    >
-                      {marketDelta == null
-                        ? "17% Overpriced"
-                        : `${Math.abs(marketDelta)}% ${
-                            marketDelta > 0
-                              ? "Overpriced"
-                              : marketDelta < 0
-                              ? "Underpriced"
-                              : "Fairly Priced"
-                          }`}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-transparent rounded-xl p-8 mb-8">
-                  <div className="flex items-center justify-between mb-6">
-                    <div>
-                      <p className="text-sm text-inda-teal font-medium">
-                        ↑ 3.5% in the last 6 months
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Sales from Aug 2024 - July 2025
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Dual-series bars (deterministic) */}
-                  <div
-                    className="flex items-end justify-between h-40 bg-transparent rounded-lg p-4"
-                    style={{
-                      backgroundImage:
-                        "repeating-linear-gradient(to top, rgba(16,24,32,0.06), rgba(16,24,32,0.06) 1px, transparent 1px, transparent 24px)",
-                    }}
-                  >
-                    {[
-                      "Aug",
-                      "Sep",
-                      "Oct",
-                      "Nov",
-                      "Dec",
-                      "Jan",
-                      "Feb",
-                      "Mar",
-                      "Apr",
-                      "May",
-                      "Jun",
-                      "Jul",
-                    ].map((month, index) => (
-                      <div
-                        key={month}
-                        className="flex flex-col items-center flex-1"
-                      >
-                        <div className="flex items-end gap-1">
-                          <div
-                            className="bg-inda-teal rounded-t w-2"
-                            style={{ height: `${50 + index * 4}px` }}
-                          />
-                          <div
-                            className="bg-gray-300 rounded-t w-2"
-                            style={{ height: `${56 + index * 4}px` }}
-                          />
-                        </div>
-                        <span className="mt-2 text-[10px] text-gray-500">
-                          {month}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="flex items-center gap-4 mt-4">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-inda-teal rounded-full"></div>
-                      <span className="text-xs text-gray-600">Last 3 days</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                      <span className="text-xs text-gray-600">Last Week</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* AI Summary Collapsible */}
-                <div className="border-t border-gray-300 pt-4">
-                  <div
-                    className="flex items-center justify-between cursor-pointer"
-                    onClick={() => setIsPriceSummaryOpen(!isPriceSummaryOpen)}
-                  >
-                    <h4 className="text-[24px] font-bold text-inda-teal">
-                      AI Summary
-                    </h4>
-                    <div className="text-inda-teal">
-                      {isPriceSummaryOpen ? (
-                        <FaChevronUp className="text-sm" />
-                      ) : (
-                        <FaChevronDown className="text-sm" />
-                      )}
-                    </div>
-                  </div>
-
-                  {isPriceSummaryOpen && (
-                    <div className="mt-4 p-4 bg-transparent rounded-lg">
-                      <p className="text-sm text-gray-600 leading-relaxed">
-                        {result?.aiReport?.marketValue?.summary ||
-                          dummyResultData.priceAnalysis.aiSummary}
-                      </p>
-                      <button className="mt-3 text-inda-teal text-sm hover:underline font-medium">
-                        More Details
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Map Section - Google Maps */}
-            <div className="w-full px-4 sm:px-6">
-              <div className="bg-gray-100 rounded-lg p-6">
-                <h3 className="text-xl font-bold mb-6 text-inda-teal">
-                  Location & Micro-Market
-                </h3>
-                <div className="flex flex-col gap-6">
-                  <div>
-                    <div className="h-64 md:h-80 rounded-lg overflow-hidden bg-white">
-                      <iframe
-                        title="map"
-                        className="w-full h-full"
-                        loading="lazy"
-                        referrerPolicy="no-referrer-when-downgrade"
-                        src={`https://www.google.com/maps?q=${encodeURIComponent(
-                          (result?.snapshot?.address as string) ||
-                            (result?.snapshot?.location as string) ||
-                            "Lagos, Nigeria"
-                        )}&output=embed`}
-                      ></iframe>
-                    </div>
-                  </div>
-                  <div>
-                    <div
-                      className="flex items-center justify-between cursor-pointer mb-2"
-                      onClick={() =>
-                        setIsLocationSummaryOpen(!isLocationSummaryOpen)
-                      }
-                    >
-                      <h4 className="text-lg font-bold text-inda-teal">
-                        AI Summary
-                      </h4>
-                      {isLocationSummaryOpen ? (
-                        <FaChevronUp className="text-inda-teal" />
-                      ) : (
-                        <FaChevronDown className="text-inda-teal" />
-                      )}
-                    </div>
-                    {isLocationSummaryOpen && (
-                      <div className="bg-transparent rounded-lg p-4">
-                        <p className="text-sm text-gray-700 leading-relaxed">
-                          {result?.aiReport?.location?.summary ||
-                            "Neighborhood is fairly connected with moderate access to schools, hospitals and shopping. Average commute time to CBD is 35–45 mins."}
-                        </p>
-                        <button className="mt-3 text-inda-teal text-sm hover:underline font-medium">
-                          More Details
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* ROI Panel */}
-            <div className="w-full px-4 sm:px-6">
-              <div className="rounded-lg p-6">
-                <h3 className="text-[52px] font-bold mb-10 text-inda-teal">
-                  Investment ROI Calculator
-                </h3>
-                <p className="text[#101820] font-regular text-[20px]">
-                  Estimate your potential returns on investment properties with
-                  our
-                  <br /> comprehensive calculator
-                </p>
-                <h1 className="font-bold text-[32px] py-5">Property Details</h1>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-[73px] mb-10">
-                  {dummyResultData.roiMetrics.map((m, idx) => (
-                    <div key={idx}>
-                      <div className="flex flex-wrap justify-between">
-                        <p className="text-[20px] font-normal text-[#101820]/90 pb-3 inline-block">
-                          {m.label}
-                        </p>{" "}
-                        <div className="inline-block">
-                          <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
-                          <RiEditFill className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
-                        </div>
-                      </div>
-                      <p className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600">
-                        {m.value}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-[41px] mb-4">
-                  {dummyResultData.roiMetricsTwo.map((two, index) => {
-                    return (
-                      <div key={index}>
-                        <div className="flex flex-wrap justify-between">
-                          <p className="text-[20px] font-normal text-[#101820]/90 pb-3 inline-block">
-                            {two.label}
-                          </p>{" "}
-                          <div className="inline-block">
-                            <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
-                            <RiEditFill className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
+                        {/* Chart Legend */}
+                        <div className="flex items-center justify-start gap-6 mt-4">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-inda-teal rounded-sm"></div>
+                            <span className="text-xs text-gray-600 font-medium">
+                              FMV
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-gray-300 rounded-sm"></div>
+                            <span className="text-xs text-gray-600 font-medium">
+                              Price
+                            </span>
                           </div>
                         </div>
-                        <p className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600">
-                          {two.value}
-                        </p>
                       </div>
-                    );
-                  })}
-                </div>
-                <div>
-                  <div className="flex gap-[50px] mt-10">
-                    {dummyResultData.annualAppreciation.map((annual, index) => {
-                      return (
-                        <div onClick={() => toggler(index)} className="flex-1">
-                          {open === index ? (
-                            <div>
-                              <div className="flex justify-between border-b-[6px] rounded-[5px] w-[363px] text-inda-teal mb-5 px-[18px]">
-                                <span className="text-[20px] text-[#101820]/80 font-normal">
-                                  {annual.label}
-                                </span>
-                                <span className="inline-block">
-                                  <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
-                                </span>
-                              </div>
-                              <div>
-                                <p className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600">
-                                  {annual.value}
-                                </p>
-                              </div>
-                            </div>
+                    </div>
+
+                    {/* AI Summary Collapsible */}
+                    <div className="border-t border-gray-300 pt-6">
+                      <div
+                        className="flex items-center justify-between cursor-pointer"
+                        onClick={() =>
+                          setIsPriceSummaryOpen(!isPriceSummaryOpen)
+                        }
+                      >
+                        <h4 className="text-xl font-bold text-inda-teal">
+                          AI Summary
+                        </h4>
+                        <div className="text-inda-teal">
+                          {isPriceSummaryOpen ? (
+                            <FaChevronUp className="text-base" />
                           ) : (
-                            <div>
-                              <div className="flex justify-between">
-                                <span className="text-[20px] text-[#101820]/80 font-normal">
-                                  {annual.label}
-                                </span>
-                                <span>
-                                  <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
-                                </span>
-                              </div>
-                              <div className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600"></div>
-                            </div>
+                            <FaChevronDown className="text-base" />
                           )}
                         </div>
-                      );
-                    })}
-                  </div>
-                  <div className="mt-30 text-right">
-                    {" "}
-                    <button className="bg-[#4EA8A1] py-[12px] px-[42px] rounded-[8px]">
-                      <p className="text-[16px] text-[#E5E5E5] font-bold">
-                        Calculate
-                      </p>
-                    </button>
+                      </div>
+
+                      {isPriceSummaryOpen && (
+                        <div className="mt-4 p-4 bg-transparent rounded-lg">
+                          <p className="text-sm text-gray-600 leading-relaxed">
+                            This 3-bed in Lekki is listed at ₦120M. Our engine
+                            values it at ₦95M, based on 17 comparable sales from
+                            2023-2024. ROI is 7.2% from current rent trends.
+                          </p>
+                          <button className="mt-3 text-inda-teal text-sm hover:underline font-medium">
+                            More Details
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {/* <div className="flex gap-[50px] mt-10">
-                  <div onClick={() => toggler(1)} className="flex-1">
-                    {open === 1 ? (
+                {/* Map Section - Google Maps */}
+                <div className="w-full px-6">
+                  <div className=" rounded-lg p-8">
+                    <h3 className="text-2xl md:text-3xl font-bold mb-8 text-inda-teal">
+                      Microlocation Insights
+                    </h3>
+                    <div className="flex flex-col gap-6">
                       <div>
-                        <div className="flex justify-between">
-                          <span className="text-[20px] text-[#101820]/80 font-normal">
-                            Annual Appreciation <br />
-                            (₦, Local Nominal)
-                          </span>
-                          <span className="inline-block">
-                            <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
-                          </span>
-                        </div>
-                        <div>
-                          <p className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600">
-                            3.2%
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="flex justify-between">
-                          <span className="text-[20px] text-[#101820]/80 font-normal">
-                            Annual Appreciation <br /> (₦, Local Nominal)
-                          </span>
-                          <span>
-                            <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
-                          </span>
-                        </div>
-                        <div className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600"></div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex-1" onClick={() => toggler(2)}>
-                    {open === 2 ? (
-                      <div>
-                        <div className="flex justify-between">
-                          <span className="text-[20px] text-[#101820]/80 font-normal">
-                            Annual Appreciation (₦, <br /> Local Real)
-                          </span>
-                          <span>
-                            <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
-                          </span>
-                        </div>
-                        <div>
-                          <p className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600">
-                            3.2%
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="flex justify-between">
-                          <span className="text-[20px] text-[#101820]/80 font-normal">
-                            Annual Appreciation (₦, <br /> Local Real)
-                          </span>
-                          <span>
-                            <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
-                          </span>
-                        </div>
-                        <div className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600"></div>
-                      </div>
-                    )}
-                  </div>
-                  <div onClick={() => toggler(3)} className="flex-1">
-                    {open === 3 ? (
-                      <div className="">
-                        <div className="flex justify-between">
-                          <span className="text-[20px] text-[#101820]/80 font-normal">
-                            Annual Appreciation <br /> (USD, $FX + Inflation
-                            Adjusted)
-                          </span>
-                          <span>
-                            <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
-                          </span>
-                        </div>
-                        <div>
-                          <p className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600">
-                            3.2%
-                          </p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div>
-                        <div className="flex justify-between">
-                          <span className="text-[20px] text-[#101820]/80 font-normal">
-                            Annual Appreciation <br /> (USD, $FX + Inflation
-                            Adjusted)
-                          </span>
-                          <span>
-                            <IoIosInformationCircle className="inline-block text-inda-teal mr-1 w-[22px] h-[21px]" />
-                          </span>
-                        </div>
-                        <div className="bg-[#4EA8A159] h-[61px] rounded-lg p-4 text-lg text-center font-normal text-gray-600"></div>
-                      </div>
-                    )}
-                  </div>
-                </div> */}
-
-                {/* <div className="border-t border-gray-200 pt-4">
-                  <div
-                    className="flex items-center justify-between cursor-pointer"
-                    onClick={() => setIsROISummaryOpen(!isROISummaryOpen)}
-                  >
-                    <h4 className="text-lg font-bold text-inda-teal">
-                      AI Summary
-                    </h4>
-                    {isROISummaryOpen ? (
-                      <FaChevronUp className="text-inda-teal" />
-                    ) : (
-                      <FaChevronDown className="text-inda-teal" />
-                    )}
-                  </div>
-                  {isROISummaryOpen && (
-                    <div className="mt-3 bg-white rounded-lg p-4">
-                      <p className="text-sm text-gray-700 leading-relaxed">
-                        {result?.aiReport?.roi?.summary ||
-                          dummyResultData.roiSummary}
-                      </p>
-                      <button className="mt-3 text-inda-teal text-sm hover:underline font-medium">
-                        More Details
-                      </button>
-                    </div>
-                  )}
-                </div> */}
-              </div>
-            </div>
-
-            {/* Verified Comparables */}
-            <div className="w-full px-4 sm:px-6">
-              <div className=" rounded-lg p-6">
-                <h3 className="text-[52px] font-bold mb-6 text-inda-teal">
-                  Verified Comparables
-                </h3>
-                <div
-                  className="flex gap-4 overflow-x-auto pb-2"
-                  style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                >
-                  <style jsx>{`
-                    div::-webkit-scrollbar {
-                      display: none;
-                    }
-                  `}</style>
-                  {dummyResultData.comparables.map((c) => (
-                    <div
-                      key={c.id}
-                      className="flex-shrink-0 min-w-[320px] max-w-[320px] bg-[#E5F4F2] rounded-2xl p-4"
-                    >
-                      <div className="w-full h-40 rounded-xl overflow-hidden mb-4">
-                        <img
-                          className="w-full h-full object-cover"
-                          src={c.image}
-                          alt={c.title}
-                        />
-                      </div>
-                      <p className="text-[#101820] font-semibold text-lg mb-2">
-                        {c.title}
-                      </p>
-                      <div className="text-sm text-gray-700 space-y-1 mb-3">
-                        <div>Location: {c.location}</div>
-                        <div>Number of beds: {c.beds}</div>
-                        <div className="flex items-center justify-between">
-                          <span>Inda Trust Score</span>
-                          <span className="font-semibold">
-                            {c.developerTrustScore}%
-                          </span>
-                        </div>
-                        <div className="w-full bg-gray-300/60 rounded-full h-2">
-                          <div
-                            className="bg-inda-teal h-2 rounded-full"
-                            style={{ width: `${c.developerTrustScore}%` }}
+                        <div className="h-[700px] rounded-lg overflow-hidden bg-white">
+                          {/* Aerial satellite view (keyless Google Maps embed) */}
+                          <iframe
+                            title="Property satellite view"
+                            src="https://www.google.com/maps?q=6.4474,3.3903&t=k&z=20&output=embed"
+                            className="w-full h-full border-0"
+                            loading="lazy"
+                            allowFullScreen
+                            referrerPolicy="no-referrer-when-downgrade"
                           />
                         </div>
                       </div>
-                      <div className="text-sm text-[#101820] font-semibold">
-                        Price: {c.price}
+                      <div>
+                        <div
+                          className="flex items-center justify-between cursor-pointer mb-2"
+                          onClick={() =>
+                            setIsLocationSummaryOpen(!isLocationSummaryOpen)
+                          }
+                        >
+                          <h4 className="text-xl font-bold text-inda-teal">
+                            AI Summary
+                          </h4>
+                          {isLocationSummaryOpen ? (
+                            <FaChevronUp className="text-inda-teal" />
+                          ) : (
+                            <FaChevronDown className="text-inda-teal" />
+                          )}
+                        </div>
+                        {isLocationSummaryOpen && (
+                          <div className="bg-transparent rounded-lg p-4">
+                            <p className="text-sm text-gray-700 leading-relaxed">
+                              {result?.aiReport?.location?.summary ||
+                                "Neighborhood is fairly connected with moderate access to schools, hospitals and shopping. Average commute time to CBD is 35–45 mins."}
+                            </p>
+                            <button className="mt-3 text-inda-teal text-sm hover:underline font-medium">
+                              More Details
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* How would you like to proceed? */}
-            <div className="w-full px-4 sm:px-6">
-              <div className="rounded-lg p-6">
-                <div className="bg-gray-100 rounded-xl py-10">
-                  <h3 className="text-[52px] font-bold mb-10 text-center">
-                    How would you like to proceed?
-                  </h3>
-                  <div className="flex flex-wrap gap-3 justify-center">
-                    {/* <button className="flex items-center gap-2 px-4 py-2 bg-inda-teal text-white rounded-full text-sm hover:bg-teal-600 transition-colors">
-                    <FaWhatsapp className="text-xs" /> WhatsApp Seller
-                   </button>
-                   <button className="flex items-center gap-2 px-4 py-2 bg-inda-teal text-white rounded-full text-sm hover:bg-teal-600 transition-colors">
-                    <FaPhone className="text-xs" /> Call Seller
-                   </button> */}
-                    <button
-                      onClick={(e) => setProceed(true)}
-                      className="py-[12px] px-[42px] h-[121px] w-[339px] bg-inda-teal text-[#F9F9F9] rounded-2xl text-[24px] font-normal hover:bg-[#0A655E]"
-                    >
-                      Run Deeper Verification
-                    </button>
-                    <button className="py-[12px] px-[42px] h-[121px] w-[339px] bg-inda-teal text-[#F9F9F9] rounded-2xl text-[24px] font-normal hover:bg-[#0A655E]">
-                      Buy with Inda
-                    </button>
-                    <button className="py-[12px] px-[42px] h-[121px] w-[339px] bg-inda-teal text-[#F9F9F9] rounded-2xl text-[24px] font-normal hover:bg-[#0A655E]">
-                      Finance with Inda
-                    </button>
                   </div>
                 </div>
 
-                {/* Legal Disclaimer */}
-                <div className="mt-6 pt-4 border-t border-gray-200">
-                  <h4 className="text-lg font-bold text-gray-900 mb-2">
-                    Legal Disclaimer
-                  </h4>
-                  <p className="text-sm text-gray-700 leading-relaxed">
-                    {dummyResultData.legalDisclaimer}
-                  </p>
+                {/* ROI Panel */}
+                <div className="w-full px-6">
+                  <motion.div
+                    className="rounded-lg p-8"
+                    initial="hidden"
+                    whileInView="show"
+                    viewport={{ once: true, amount: 0.2 }}
+                    variants={roiContainer}
+                  >
+                    <h3 className="text-2xl md:text-3xl font-bold mb-4 text-inda-teal">
+                      Investment ROI Calculator
+                    </h3>
+                    <p className="text-[#101820] text-base lg:text-lg mb-8">
+                      Estimate your potential returns on investment properties
+                      with our comprehensive calculator.
+                    </p>
+
+                    <h4 className="font-bold text-xl lg:text-2xl py-4">
+                      Property Details
+                    </h4>
+
+                    {/* Top grid of inputs (info/editable) */}
+                    <motion.div
+                      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+                      variants={roiContainer}
+                    >
+                      {/* Purchase Price */}
+                      <motion.div variants={roiItem}>
+                        <div className="flex items-center justify-between mb-3">
+                          <p className="text-base lg:text-lg text-[#101820]/90">
+                            <span className="inline-flex items-center gap-2">
+                              <span>Purchase Price</span>
+                              {editedFields.purchasePrice && (
+                                <span className="text-[10px] uppercase tracking-wide bg-[#4EA8A11A] border border-[#4EA8A1]/40 text-[#0A655E] px-1.5 py-0.5 rounded">
+                                  Edited
+                                </span>
+                              )}
+                            </span>
+                          </p>
+                          <div className="flex items-center gap-2 text-inda-teal">
+                            <motion.button
+                              whileTap={{ scale: 0.97 }}
+                              animate={{
+                                rotate:
+                                  openROIInfo === "purchasePrice" ? 15 : 0,
+                              }}
+                              onClick={() => toggleROIInfo("purchasePrice")}
+                              aria-label="Info: Purchase Price"
+                            >
+                              <IoIosInformationCircle className="w-5 h-5" />
+                            </motion.button>
+                            <motion.button
+                              whileTap={{ scale: 0.97 }}
+                              onClick={() => startROIEdit("purchasePrice")}
+                              aria-label="Edit: Purchase Price"
+                            >
+                              <RiEditFill className="w-5 h-5" />
+                            </motion.button>
+                          </div>
+                        </div>
+                        <AnimatePresence mode="wait">
+                          {openROIInfo === "purchasePrice" && (
+                            <motion.div
+                              key="pp-info"
+                              className="bg-[#E5F4F2] rounded-lg p-3 text-sm text-[#101820]"
+                              initial={{ opacity: 0, y: 8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -8 }}
+                            >
+                              {roiFieldInfo.purchasePrice}
+                            </motion.div>
+                          )}
+                          {editingROIField === "purchasePrice" && (
+                            <motion.div
+                              key="pp-edit"
+                              className="relative bg-[#4EA8A129] h-16 rounded-lg px-4 text-base text-[#101820]/90 flex items-center ring-2 ring-[#4EA8A1]/50"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                            >
+                              <span className="absolute -top-2 right-2 text-[10px] uppercase tracking-wide bg-[#0A655E] text-white px-2 py-0.5 rounded-full shadow">
+                                Editing
+                              </span>
+                              <input
+                                type="text"
+                                inputMode="numeric"
+                                className="bg-transparent outline-none w-full"
+                                value={roiValues.purchasePrice.toLocaleString()}
+                                onChange={(e) =>
+                                  updateROIValue(
+                                    "purchasePrice",
+                                    e.target.value
+                                  )
+                                }
+                              />
+                            </motion.div>
+                          )}
+                          {!(
+                            openROIInfo === "purchasePrice" ||
+                            editingROIField === "purchasePrice"
+                          ) && (
+                            <motion.div
+                              key="pp-view"
+                              className="bg-[#4EA8A129] h-16 rounded-lg p-4 text-base text-center text-[#101820] flex items-center justify-center"
+                              initial={{ opacity: 0, y: 6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -6 }}
+                            >
+                              {formatNaira(roiValues.purchasePrice)}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+
+                      {/* Financing */}
+                      <motion.div variants={roiItem}>
+                        <div className="flex items-center justify-between mb-3">
+                          <p className="text-base lg:text-lg text-[#101820]/90">
+                            <span className="inline-flex items-center gap-2">
+                              <span>Financing</span>
+                              {editedFields.financingRate && (
+                                <span className="text-[10px] uppercase tracking-wide bg-[#4EA8A11A] border border-[#4EA8A1]/40 text-[#0A655E] px-1.5 py-0.5 rounded">
+                                  Edited
+                                </span>
+                              )}
+                            </span>
+                          </p>
+                          <div className="flex items-center gap-2 text-inda-teal">
+                            <motion.button
+                              whileTap={{ scale: 0.97 }}
+                              animate={{
+                                rotate:
+                                  openROIInfo === "financingRate" ? 15 : 0,
+                              }}
+                              onClick={() => toggleROIInfo("financingRate")}
+                              aria-label="Info: Financing"
+                            >
+                              <IoIosInformationCircle className="w-5 h-5" />
+                            </motion.button>
+                            <motion.button
+                              whileTap={{ scale: 0.97 }}
+                              onClick={() => startROIEdit("financingRate")}
+                              aria-label="Edit: Financing"
+                            >
+                              <RiEditFill className="w-5 h-5" />
+                            </motion.button>
+                          </div>
+                        </div>
+                        <AnimatePresence mode="wait">
+                          {openROIInfo === "financingRate" && (
+                            <motion.div
+                              key="fin-info"
+                              className="bg-[#E5F4F2] rounded-lg p-3 text-sm text-[#101820]"
+                              initial={{ opacity: 0, y: 8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -8 }}
+                            >
+                              {roiFieldInfo.financingRate}
+                            </motion.div>
+                          )}
+                          {editingROIField === "financingRate" && (
+                            <motion.div
+                              key="fin-edit"
+                              className="relative bg-[#4EA8A129] h-16 rounded-lg px-4 text-base text-[#101820]/90 flex items-center ring-2 ring-[#4EA8A1]/50"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                            >
+                              <span className="absolute -top-2 right-2 text-[10px] uppercase tracking-wide bg-[#0A655E] text-white px-2 py-0.5 rounded-full shadow">
+                                Editing
+                              </span>
+                              <input
+                                type="number"
+                                step="0.01"
+                                className="bg-transparent outline-none w-full"
+                                value={roiValues.financingRate}
+                                onChange={(e) =>
+                                  updateROIValue(
+                                    "financingRate",
+                                    e.target.value
+                                  )
+                                }
+                              />
+                              <span className="ml-1">%</span>
+                            </motion.div>
+                          )}
+                          {!(
+                            openROIInfo === "financingRate" ||
+                            editingROIField === "financingRate"
+                          ) && (
+                            <motion.div
+                              key="fin-view"
+                              className="bg-[#4EA8A129] h-16 rounded-lg p-4 text-base text-center text-[#101820] flex items-center justify-center"
+                              initial={{ opacity: 0, y: 6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -6 }}
+                            >
+                              {formatPercent(roiValues.financingRate)}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+
+                      {/* Financing Tenure */}
+                      <motion.div variants={roiItem}>
+                        <div className="flex items-center justify-between mb-3">
+                          <p className="text-base lg:text-lg text-[#101820]/90">
+                            <span className="inline-flex items-center gap-2">
+                              <span>Financing Tenure</span>
+                              {editedFields.financingTenureYears && (
+                                <span className="text-[10px] uppercase tracking-wide bg-[#4EA8A11A] border border-[#4EA8A1]/40 text-[#0A655E] px-1.5 py-0.5 rounded">
+                                  Edited
+                                </span>
+                              )}
+                            </span>
+                          </p>
+                          <div className="flex items-center gap-2 text-inda-teal">
+                            <motion.button
+                              whileTap={{ scale: 0.97 }}
+                              animate={{
+                                rotate:
+                                  openROIInfo === "financingTenureYears"
+                                    ? 15
+                                    : 0,
+                              }}
+                              onClick={() =>
+                                toggleROIInfo("financingTenureYears")
+                              }
+                              aria-label="Info: Financing Tenure"
+                            >
+                              <IoIosInformationCircle className="w-5 h-5" />
+                            </motion.button>
+                            <motion.button
+                              whileTap={{ scale: 0.97 }}
+                              onClick={() =>
+                                startROIEdit("financingTenureYears")
+                              }
+                              aria-label="Edit: Financing Tenure"
+                            >
+                              <RiEditFill className="w-5 h-5" />
+                            </motion.button>
+                          </div>
+                        </div>
+                        <AnimatePresence mode="wait">
+                          {openROIInfo === "financingTenureYears" && (
+                            <motion.div
+                              key="tenure-info"
+                              className="bg-[#E5F4F2] rounded-lg p-3 text-sm text-[#101820]"
+                              initial={{ opacity: 0, y: 8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -8 }}
+                            >
+                              {roiFieldInfo.financingTenureYears}
+                            </motion.div>
+                          )}
+                          {editingROIField === "financingTenureYears" && (
+                            <motion.div
+                              key="tenure-edit"
+                              className="relative bg-[#4EA8A129] h-16 rounded-lg px-4 text-base text-[#101820]/90 flex items-center ring-2 ring-[#4EA8A1]/50"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                            >
+                              <span className="absolute -top-2 right-2 text-[10px] uppercase tracking-wide bg-[#0A655E] text-white px-2 py-0.5 rounded-full shadow">
+                                Editing
+                              </span>
+                              <input
+                                type="number"
+                                step="1"
+                                className="bg-transparent outline-none w-full"
+                                value={roiValues.financingTenureYears}
+                                onChange={(e) =>
+                                  updateROIValue(
+                                    "financingTenureYears",
+                                    e.target.value
+                                  )
+                                }
+                              />
+                              <span className="ml-1">years</span>
+                            </motion.div>
+                          )}
+                          {!(
+                            openROIInfo === "financingTenureYears" ||
+                            editingROIField === "financingTenureYears"
+                          ) && (
+                            <motion.div
+                              key="tenure-view"
+                              className="bg-[#4EA8A129] h-16 rounded-lg p-4 text-base text-center text-[#101820] flex items-center justify-center"
+                              initial={{ opacity: 0, y: 6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -6 }}
+                            >
+                              {roiValues.financingTenureYears} years
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+
+                      {/* Holding Period */}
+                      <motion.div variants={roiItem}>
+                        <div className="flex items-center justify-between mb-3">
+                          <p className="text-base lg:text-lg text-[#101820]/90">
+                            <span className="inline-flex items-center gap-2">
+                              <span>Holding Period</span>
+                              {editedFields.holdingPeriodYears && (
+                                <span className="text-[10px] uppercase tracking-wide bg-[#4EA8A11A] border border-[#4EA8A1]/40 text-[#0A655E] px-1.5 py-0.5 rounded">
+                                  Edited
+                                </span>
+                              )}
+                            </span>
+                          </p>
+                          <div className="flex items-center gap-2 text-inda-teal">
+                            <motion.button
+                              whileTap={{ scale: 0.97 }}
+                              animate={{
+                                rotate:
+                                  openROIInfo === "holdingPeriodYears" ? 15 : 0,
+                              }}
+                              onClick={() =>
+                                toggleROIInfo("holdingPeriodYears")
+                              }
+                              aria-label="Info: Holding Period"
+                            >
+                              <IoIosInformationCircle className="w-5 h-5" />
+                            </motion.button>
+                            <motion.button
+                              whileTap={{ scale: 0.97 }}
+                              onClick={() => startROIEdit("holdingPeriodYears")}
+                              aria-label="Edit: Holding Period"
+                            >
+                              <RiEditFill className="w-5 h-5" />
+                            </motion.button>
+                          </div>
+                        </div>
+                        <AnimatePresence mode="wait">
+                          {openROIInfo === "holdingPeriodYears" && (
+                            <motion.div
+                              key="hold-info"
+                              className="bg-[#E5F4F2] rounded-lg p-3 text-sm text-[#101820]"
+                              initial={{ opacity: 0, y: 8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -8 }}
+                            >
+                              {roiFieldInfo.holdingPeriodYears}
+                            </motion.div>
+                          )}
+                          {editingROIField === "holdingPeriodYears" && (
+                            <motion.div
+                              key="hold-edit"
+                              className="relative bg-[#4EA8A129] h-16 rounded-lg px-4 text-base text-[#101820]/90 flex items-center ring-2 ring-[#4EA8A1]/50"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                            >
+                              <span className="absolute -top-2 right-2 text-[10px] uppercase tracking-wide bg-[#0A655E] text-white px-2 py-0.5 rounded-full shadow">
+                                Editing
+                              </span>
+                              <input
+                                type="number"
+                                step="1"
+                                className="bg-transparent outline-none w-full"
+                                value={roiValues.holdingPeriodYears}
+                                onChange={(e) =>
+                                  updateROIValue(
+                                    "holdingPeriodYears",
+                                    e.target.value
+                                  )
+                                }
+                              />
+                              <span className="ml-1">years</span>
+                            </motion.div>
+                          )}
+                          {!(
+                            openROIInfo === "holdingPeriodYears" ||
+                            editingROIField === "holdingPeriodYears"
+                          ) && (
+                            <motion.div
+                              key="hold-view"
+                              className="bg-[#4EA8A129] h-16 rounded-lg p-4 text-base text-center text-[#101820] flex items-center justify-center"
+                              initial={{ opacity: 0, y: 6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -6 }}
+                            >
+                              {roiValues.holdingPeriodYears} years
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+                    </motion.div>
+
+                    {/* Middle grid of yields/expenses (info/editable) */}
+                    <motion.div
+                      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-6"
+                      variants={roiContainer}
+                    >
+                      {/* Avg. Rental Yield (Long Term) */}
+                      <motion.div variants={roiItem}>
+                        <div className="flex items-center justify-between mb-3">
+                          <p className="text-base lg:text-lg text-[#101820]/90">
+                            <span className="inline-flex items-center gap-2">
+                              <span>Avg. Rental Yield (Long Term)</span>
+                              {editedFields.yieldLong && (
+                                <span className="text-[10px] uppercase tracking-wide bg-[#4EA8A11A] border border-[#4EA8A1]/40 text-[#0A655E] px-1.5 py-0.5 rounded">
+                                  Edited
+                                </span>
+                              )}
+                            </span>
+                          </p>
+                          <div className="flex items-center gap-2 text-inda-teal">
+                            <motion.button
+                              whileTap={{ scale: 0.97 }}
+                              animate={{
+                                rotate: openROIInfo === "yieldLong" ? 15 : 0,
+                              }}
+                              onClick={() => toggleROIInfo("yieldLong")}
+                              aria-label="Info: Yield Long"
+                            >
+                              <IoIosInformationCircle className="w-5 h-5" />
+                            </motion.button>
+                            <motion.button
+                              whileTap={{ scale: 0.97 }}
+                              onClick={() => startROIEdit("yieldLong")}
+                              aria-label="Edit: Yield Long"
+                            >
+                              <RiEditFill className="w-5 h-5" />
+                            </motion.button>
+                          </div>
+                        </div>
+                        <AnimatePresence mode="wait">
+                          {openROIInfo === "yieldLong" && (
+                            <motion.div
+                              key="yl-info"
+                              className="bg-[#E5F4F2] rounded-lg p-3 text-sm text-[#101820]"
+                              initial={{ opacity: 0, y: 8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -8 }}
+                            >
+                              {roiFieldInfo.yieldLong}
+                            </motion.div>
+                          )}
+                          {editingROIField === "yieldLong" && (
+                            <motion.div
+                              key="yl-edit"
+                              className="relative bg-[#4EA8A129] h-16 rounded-lg px-4 text-base text-[#101820]/90 flex items-center ring-2 ring-[#4EA8A1]/50"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                            >
+                              <span className="absolute -top-2 right-2 text-[10px] uppercase tracking-wide bg-[#0A655E] text-white px-2 py-0.5 rounded-full shadow">
+                                Editing
+                              </span>
+                              <input
+                                type="number"
+                                step="0.01"
+                                className="bg-transparent outline-none w-full"
+                                value={roiValues.yieldLong}
+                                onChange={(e) =>
+                                  updateROIValue("yieldLong", e.target.value)
+                                }
+                              />
+                              <span className="ml-1">%</span>
+                            </motion.div>
+                          )}
+                          {!(
+                            openROIInfo === "yieldLong" ||
+                            editingROIField === "yieldLong"
+                          ) && (
+                            <motion.div
+                              key="yl-view"
+                              className="bg-[#4EA8A129] h-16 rounded-lg p-4 text-base text-center text-[#101820] flex items-center justify-center"
+                              initial={{ opacity: 0, y: 6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -6 }}
+                            >
+                              {formatPercent(roiValues.yieldLong)}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+
+                      {/* Avg. Rental Yield (Short Term) */}
+                      <motion.div variants={roiItem}>
+                        <div className="flex items-center justify-between mb-3">
+                          <p className="text-base lg:text-lg text-[#101820]/90">
+                            <span className="inline-flex items-center gap-2">
+                              <span>Avg. Rental Yield (Short Term)</span>
+                              {editedFields.yieldShort && (
+                                <span className="text-[10px] uppercase tracking-wide bg-[#4EA8A11A] border border-[#4EA8A1]/40 text-[#0A655E] px-1.5 py-0.5 rounded">
+                                  Edited
+                                </span>
+                              )}
+                            </span>
+                          </p>
+                          <div className="flex items-center gap-2 text-inda-teal">
+                            <motion.button
+                              whileTap={{ scale: 0.97 }}
+                              animate={{
+                                rotate: openROIInfo === "yieldShort" ? 15 : 0,
+                              }}
+                              onClick={() => toggleROIInfo("yieldShort")}
+                              aria-label="Info: Yield Short"
+                            >
+                              <IoIosInformationCircle className="w-5 h-5" />
+                            </motion.button>
+                            <motion.button
+                              whileTap={{ scale: 0.97 }}
+                              onClick={() => startROIEdit("yieldShort")}
+                              aria-label="Edit: Yield Short"
+                            >
+                              <RiEditFill className="w-5 h-5" />
+                            </motion.button>
+                          </div>
+                        </div>
+                        <AnimatePresence mode="wait">
+                          {openROIInfo === "yieldShort" && (
+                            <motion.div
+                              key="ys-info"
+                              className="bg-[#E5F4F2] rounded-lg p-3 text-sm text-[#101820]"
+                              initial={{ opacity: 0, y: 8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -8 }}
+                            >
+                              {roiFieldInfo.yieldShort}
+                            </motion.div>
+                          )}
+                          {editingROIField === "yieldShort" && (
+                            <motion.div
+                              key="ys-edit"
+                              className="relative bg-[#4EA8A129] h-16 rounded-lg px-4 text-base text-[#101820]/90 flex items-center ring-2 ring-[#4EA8A1]/50"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                            >
+                              <span className="absolute -top-2 right-2 text-[10px] uppercase tracking-wide bg-[#0A655E] text-white px-2 py-0.5 rounded-full shadow">
+                                Editing
+                              </span>
+                              <input
+                                type="number"
+                                step="0.01"
+                                className="bg-transparent outline-none w-full"
+                                value={roiValues.yieldShort}
+                                onChange={(e) =>
+                                  updateROIValue("yieldShort", e.target.value)
+                                }
+                              />
+                              <span className="ml-1">%</span>
+                            </motion.div>
+                          )}
+                          {!(
+                            openROIInfo === "yieldShort" ||
+                            editingROIField === "yieldShort"
+                          ) && (
+                            <motion.div
+                              key="ys-view"
+                              className="bg-[#4EA8A129] h-16 rounded-lg p-4 text-base text-center text-[#101820] flex items-center justify-center"
+                              initial={{ opacity: 0, y: 6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -6 }}
+                            >
+                              {formatPercent(roiValues.yieldShort)}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+
+                      {/* Total Expense (% of Rent) */}
+                      <motion.div variants={roiItem}>
+                        <div className="flex items-center justify-between mb-3">
+                          <p className="text-base lg:text-lg text-[#101820]/90">
+                            <span className="inline-flex items-center gap-2">
+                              <span>Total Expense (% of Rent)</span>
+                              {editedFields.expensePct && (
+                                <span className="text-[10px] uppercase tracking-wide bg-[#4EA8A11A] border border-[#4EA8A1]/40 text-[#0A655E] px-1.5 py-0.5 rounded">
+                                  Edited
+                                </span>
+                              )}
+                            </span>
+                          </p>
+                          <div className="flex items-center gap-2 text-inda-teal">
+                            <motion.button
+                              whileTap={{ scale: 0.97 }}
+                              animate={{
+                                rotate: openROIInfo === "expensePct" ? 15 : 0,
+                              }}
+                              onClick={() => toggleROIInfo("expensePct")}
+                              aria-label="Info: Expense %"
+                            >
+                              <IoIosInformationCircle className="w-5 h-5" />
+                            </motion.button>
+                            <motion.button
+                              whileTap={{ scale: 0.97 }}
+                              onClick={() => startROIEdit("expensePct")}
+                              aria-label="Edit: Expense %"
+                            >
+                              <RiEditFill className="w-5 h-5" />
+                            </motion.button>
+                          </div>
+                        </div>
+                        <AnimatePresence mode="wait">
+                          {openROIInfo === "expensePct" && (
+                            <motion.div
+                              key="ex-info"
+                              className="bg-[#E5F4F2] rounded-lg p-3 text-sm text-[#101820]"
+                              initial={{ opacity: 0, y: 8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -8 }}
+                            >
+                              {roiFieldInfo.expensePct}
+                            </motion.div>
+                          )}
+                          {editingROIField === "expensePct" && (
+                            <motion.div
+                              key="ex-edit"
+                              className="relative bg-[#4EA8A129] h-16 rounded-lg px-4 text-base text-[#101820]/90 flex items-center ring-2 ring-[#4EA8A1]/50"
+                              initial={{ opacity: 0 }}
+                              animate={{ opacity: 1 }}
+                              exit={{ opacity: 0 }}
+                            >
+                              <span className="absolute -top-2 right-2 text-[10px] uppercase tracking-wide bg-[#0A655E] text-white px-2 py-0.5 rounded-full shadow">
+                                Editing
+                              </span>
+                              <input
+                                type="number"
+                                step="0.01"
+                                className="bg-transparent outline-none w-full"
+                                value={roiValues.expensePct}
+                                onChange={(e) =>
+                                  updateROIValue("expensePct", e.target.value)
+                                }
+                              />
+                              <span className="ml-1">%</span>
+                            </motion.div>
+                          )}
+                          {!(
+                            openROIInfo === "expensePct" ||
+                            editingROIField === "expensePct"
+                          ) && (
+                            <motion.div
+                              key="ex-view"
+                              className="bg-[#4EA8A129] h-16 rounded-lg p-4 text-base text-center text-[#101820] flex items-center justify-center"
+                              initial={{ opacity: 0, y: 6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -6 }}
+                            >
+                              {formatPercent(roiValues.expensePct)}
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </motion.div>
+                    </motion.div>
+
+                    {/* Appreciation: show one at a time with tabs (non-editable) */}
+                    <motion.div
+                      className="bg-[#4EA8A129] rounded-xl p-4 mb-8"
+                      variants={roiItem}
+                    >
+                      <div className="flex gap-2 mb-4">
+                        <motion.button
+                          whileTap={{ scale: 0.98 }}
+                          className={`px-3 py-2 rounded-md text-sm font-medium ${
+                            appreciationTab === "localNominal"
+                              ? "bg-[#4EA8A1] text-white"
+                              : "bg-transparent text-[#101820]/80 border border-[#4EA8A1]/40 hover:bg-[#4EA8A11A]"
+                          }`}
+                          onClick={() => setAppreciationTab("localNominal")}
+                        >
+                          ₦ Local Nominal
+                        </motion.button>
+                        <motion.button
+                          whileTap={{ scale: 0.98 }}
+                          className={`px-3 py-2 rounded-md text-sm font-medium ${
+                            appreciationTab === "localReal"
+                              ? "bg-[#4EA8A1] text-white"
+                              : "bg-transparent text-[#101820]/80 border border-[#4EA8A1]/40 hover:bg-[#4EA8A11A]"
+                          }`}
+                          onClick={() => setAppreciationTab("localReal")}
+                        >
+                          ₦ Local Real
+                        </motion.button>
+                        <motion.button
+                          whileTap={{ scale: 0.98 }}
+                          className={`px-3 py-2 rounded-md text-sm font-medium ${
+                            appreciationTab === "usdAdj"
+                              ? "bg-[#4EA8A1] text-white"
+                              : "bg-transparent text-[#101820]/80 border border-[#4EA8A1]/40 hover:bg-[#4EA8A11A]"
+                          }`}
+                          onClick={() => setAppreciationTab("usdAdj")}
+                        >
+                          USD (FX + Inflation Adj)
+                        </motion.button>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="text-base lg:text-lg font-semibold text-[#101820]">
+                          {appreciationTab === "localNominal" && (
+                            <span>Annual Appreciation (₦, Local Nominal)</span>
+                          )}
+                          {appreciationTab === "localReal" && (
+                            <span>Annual Appreciation (₦, Local Real)</span>
+                          )}
+                          {appreciationTab === "usdAdj" && (
+                            <span>
+                              Annual Appreciation (USD, FX + Inflation Adjusted)
+                            </span>
+                          )}
+                        </div>
+                        <motion.button
+                          whileTap={{ scale: 0.97 }}
+                          onClick={() =>
+                            setOpenROIInfo((prev) =>
+                              prev ===
+                              (appreciationTab === "localNominal"
+                                ? "appreciationLocalNominal"
+                                : appreciationTab === "localReal"
+                                ? "appreciationLocalReal"
+                                : "appreciationUsdAdj")
+                                ? null
+                                : appreciationTab === "localNominal"
+                                ? "appreciationLocalNominal"
+                                : appreciationTab === "localReal"
+                                ? "appreciationLocalReal"
+                                : "appreciationUsdAdj"
+                            )
+                          }
+                          aria-label="Info: Appreciation"
+                          className="text-inda-teal"
+                        >
+                          <IoIosInformationCircle className="w-5 h-5" />
+                        </motion.button>
+                      </div>
+                      <AnimatePresence mode="wait">
+                        {openROIInfo === "appreciationLocalNominal" &&
+                          appreciationTab === "localNominal" && (
+                            <motion.div
+                              key="app-info-nominal"
+                              className="mt-3 bg-[#E5F4F2] rounded-lg p-3 text-sm text-[#101820]"
+                              initial={{ opacity: 0, y: 8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -8 }}
+                            >
+                              {roiFieldInfo.appreciationLocalNominal}
+                            </motion.div>
+                          )}
+                        {openROIInfo === "appreciationLocalReal" &&
+                          appreciationTab === "localReal" && (
+                            <motion.div
+                              key="app-info-real"
+                              className="mt-3 bg-[#E5F4F2] rounded-lg p-3 text-sm text-[#101820]"
+                              initial={{ opacity: 0, y: 8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -8 }}
+                            >
+                              {roiFieldInfo.appreciationLocalReal}
+                            </motion.div>
+                          )}
+                        {openROIInfo === "appreciationUsdAdj" &&
+                          appreciationTab === "usdAdj" && (
+                            <motion.div
+                              key="app-info-usd"
+                              className="mt-3 bg-[#E5F4F2] rounded-lg p-3 text-sm text-[#101820]"
+                              initial={{ opacity: 0, y: 8 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -8 }}
+                            >
+                              {roiFieldInfo.appreciationUsdAdj}
+                            </motion.div>
+                          )}
+                      </AnimatePresence>
+                      <AnimatePresence mode="wait">
+                        <motion.div
+                          key={`app-val-${appreciationTab}`}
+                          className="mt-4 bg-[#4EA8A129] rounded-lg p-4 text-center text-xl font-bold text-[#101820]"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                        >
+                          {appreciationTab === "localNominal" &&
+                            formatPercent(appNominal)}
+                          {appreciationTab === "localReal" &&
+                            formatPercent(appReal)}
+                          {appreciationTab === "usdAdj" &&
+                            formatPercent(appUsd)}
+                        </motion.div>
+                      </AnimatePresence>
+                    </motion.div>
+
+                    {/* Calculate button (enabled only after edit) */}
+                    <div className="flex justify-end mb-8">
+                      <motion.button
+                        onClick={handleCalculate}
+                        className={`py-3 px-8 rounded-lg text-base font-semibold transition text-white flex items-center gap-2 ${
+                          roiHasEdited
+                            ? "bg-[#4EA8A1] hover:bg-[#0A655E]"
+                            : "bg-gray-300 cursor-not-allowed"
+                        }`}
+                        disabled={!roiHasEdited}
+                        whileTap={roiHasEdited ? { scale: 0.98 } : undefined}
+                        whileHover={roiHasEdited ? { y: -1 } : undefined}
+                      >
+                        {isCalculating && (
+                          <svg
+                            className="animate-spin -ml-1 mr-1 h-4 w-4 text-white"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            ></circle>
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                            ></path>
+                          </svg>
+                        )}
+                        {isCalculating ? "Calculating…" : "Calculate"}
+                      </motion.button>
+                    </div>
+
+                    {/* Results */}
+                    <div className="mb-8">
+                      <h4 className="text-[#101820] font-bold text-xl mb-4">
+                        Results
+                      </h4>
+                      <div className="relative flex items-center gap-4 mb-3">
+                        <button
+                          ref={longTabRef}
+                          onClick={() => setResultView("long")}
+                          className={`px-6 py-3 rounded-md border text-inda-teal bg-transparent ${
+                            resultView === "long"
+                              ? "border-inda-teal"
+                              : "border-inda-teal/70"
+                          }`}
+                        >
+                          Long Term Rental
+                        </button>
+                        <button
+                          ref={shortTabRef}
+                          onClick={() => setResultView("short")}
+                          className={`px-6 py-3 rounded-md border text-inda-teal bg-transparent ${
+                            resultView === "short"
+                              ? "border-inda-teal"
+                              : "border-inda-teal/70"
+                          }`}
+                        >
+                          Short Term Rental
+                        </button>
+                        <div className="absolute -bottom-2 left-0 right-0 h-1 bg-gray-200 rounded-full" />
+                        <div
+                          ref={underlineRef}
+                          className="absolute -bottom-2 h-1 bg-inda-teal rounded-full transition-all duration-300"
+                          style={{
+                            width: underlineStyle.width,
+                            left: underlineStyle.left,
+                          }}
+                        />
+                      </div>
+                      <div className="mb-6" />
+                      <div
+                        className="rounded-2xl p-8 text-white"
+                        style={{
+                          background:
+                            "linear-gradient(90deg, #0A655E 5.77%, #4EA8A1 95.19%)",
+                        }}
+                      >
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                          <div className="rounded-lg p-6">
+                            <p className="text-lg mb-4 opacity-90">
+                              Projected Total Profit
+                            </p>
+                            <div className="inline-block bg-white text-[#0F5E57] px-6 py-4 rounded-xl font-bold text-xl shadow-sm">
+                              {formatNaira(calcResult?.profit ?? 122_500_000)}
+                            </div>
+                          </div>
+                          <div className="rounded-lg p-6">
+                            <p className="text-lg mb-4 opacity-90">
+                              Return on Investment (ROI)
+                            </p>
+                            <div className="inline-block bg-white text-[#0F5E57] px-6 py-4 rounded-xl font-bold text-xl shadow-sm">
+                              {formatPercent(calcResult?.roiPct ?? 96.25)}
+                            </div>
+                          </div>
+                          <div className="rounded-lg p-6">
+                            <p className="text-lg mb-4 opacity-90">
+                              Annual Rental Income
+                            </p>
+                            <div className="inline-block bg-white text-[#0F5E57] px-6 py-4 rounded-xl font-bold text-xl shadow-sm">
+                              {formatNaira(
+                                calcResult?.annualIncome ?? 7_500_000
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* AI Summary */}
+                    <div className="mt-8 pt-6 border-t border-gray-200">
+                      <div className="flex items-center justify-between cursor-pointer">
+                        <h4 className="text-lg lg:text-xl font-bold text-inda-teal">
+                          AI Summary
+                        </h4>
+                        <FaChevronDown className="text-inda-teal" />
+                      </div>
+                      <p className="text-sm text-[#101820]/70 leading-relaxed mt-4">
+                        Summarize ROI projection using rental yield,
+                        appreciation trends, and future resale value. Highlight
+                        how it compares to micro location average and what kind
+                        of buyer it suits (e.g., rental investor, flip buyer,
+                        etc.).
+                      </p>
+                    </div>
+                  </motion.div>
+                </div>
+
+                {/* Verified Comparables */}
+                <div className="w-full px-6">
+                  <div className="rounded-lg p-8">
+                    <h3 className="text-2xl md:text-3xl font-bold mb-8 text-inda-teal">
+                      Verified Comparables
+                    </h3>
+                    <div
+                      className="flex gap-6 overflow-x-auto pb-4"
+                      style={{
+                        scrollbarWidth: "none",
+                        msOverflowStyle: "none",
+                      }}
+                    >
+                      <style jsx>{`
+                        div::-webkit-scrollbar {
+                          display: none;
+                        }
+                      `}</style>
+                      {dummyResultData.comparables.map((c) => (
+                        <div
+                          key={c.id}
+                          className="flex-shrink-0 min-w-[320px] max-w-[320px] bg-[#E5F4F2] rounded-2xl p-6"
+                        >
+                          <div className="w-full h-48 rounded-xl overflow-hidden mb-4">
+                            <img
+                              className="w-full h-full object-cover"
+                              src={c.image}
+                              alt={c.title}
+                            />
+                          </div>
+                          <p className="text-[#101820] font-semibold text-lg mb-3">
+                            {c.title}
+                          </p>
+                          <div className="text-sm text-gray-700 space-y-2 mb-4">
+                            <div>Location: {c.location}</div>
+                            <div>Number of beds: {c.beds}</div>
+                            <div className="flex items-center justify-between">
+                              <span>Inda Trust Score</span>
+                              <span className="font-semibold">
+                                {c.developerTrustScore}%
+                              </span>
+                            </div>
+                            <div className="w-full bg-gray-300/60 rounded-full h-2">
+                              <div
+                                className="bg-inda-teal h-2 rounded-full"
+                                style={{ width: `${c.developerTrustScore}%` }}
+                              />
+                            </div>
+                          </div>
+                          <div className="text-base text-[#101820] font-semibold">
+                            Price: {c.price}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* How would you like to proceed? */}
+                <div className="w-full px-6">
+                  <div className="rounded-lg p-8">
+                    <div className=" rounded-xl py-12 px-8">
+                      <h3 className="text-2xl md:text-3xl font-bold mb-10 text-center">
+                        How would you like to proceed?
+                      </h3>
+                      <div className="flex flex-wrap gap-4 justify-center">
+                        <button
+                          onClick={(e) => setProceed(true)}
+                          className="py-4 px-8 h-24 w-72 bg-inda-teal text-[#F9F9F9] rounded-2xl text-lg font-normal hover:bg-[#0A655E] transition-colors"
+                        >
+                          Run Deeper Verification
+                        </button>
+                        <button
+                          onClick={() =>
+                            openWhatsApp(
+                              `Hello Inda team, I'm interested in buying this property with Inda.\n\nProperty: ${
+                                result?.title ||
+                                result?.snapshot?.title ||
+                                "(no title)"
+                              }\nLocation: ${
+                                result?.location ||
+                                result?.snapshot?.location ||
+                                "(no location)"
+                              }\nListing: ${
+                                result?.listingUrl ||
+                                result?.snapshot?.listingUrl ||
+                                "N/A"
+                              }\n\nPlease share the next steps to proceed with a purchase.`
+                            )
+                          }
+                          className="py-4 px-8 h-24 w-72 bg-inda-teal text-[#F9F9F9] rounded-2xl text-lg font-normal hover:bg-[#0A655E] transition-colors"
+                        >
+                          Buy with Inda
+                        </button>
+                        <button
+                          onClick={() =>
+                            openWhatsApp(
+                              `Hello Inda team, I'd like to finance this property via Inda.\n\nProperty: ${
+                                result?.title ||
+                                result?.snapshot?.title ||
+                                "(no title)"
+                              }\nLocation: ${
+                                result?.location ||
+                                result?.snapshot?.location ||
+                                "(no location)"
+                              }\nListing: ${
+                                result?.listingUrl ||
+                                result?.snapshot?.listingUrl ||
+                                "N/A"
+                              }\n\nPlease guide me through the next steps.`
+                            )
+                          }
+                          className="py-4 px-8 h-24 w-72 bg-inda-teal text-[#F9F9F9] rounded-2xl text-lg font-normal hover:bg-[#0A655E] transition-colors"
+                        >
+                          Finance with Inda
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Legal Disclaimer */}
+                    <div className="mt-8 pt-6 border-t border-gray-200">
+                      <h4 className="text-xl font-bold text-gray-900 mb-4">
+                        Legal Disclaimer
+                      </h4>
+                      <p className="text-sm text-gray-700 leading-relaxed">
+                        {dummyResultData.legalDisclaimer}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-          <div>
-            {proceed && (
-              <div className="fixed inset-0 backdrop-blur-sm bg-opacity-60 flex justify-center items-center z-50">
-                <div className="max-h-[90vh] bg-white rounded-lg max-w-5xl w-full max-md:w-3/4 overflow-y-auto relative">
-                  <motion.section
-                    className="w-full py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8"
-                    initial={{ opacity: 0, y: 50 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true, amount: 0.2 }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                  >
-                    <div className="max-w-[80%] mx-auto ">
-                      <motion.div
-                        className="bg-[#1018200A] rounded-[48px] p-8 sm:p-12 shadow-xl"
-                        initial={{ opacity: 0, y: 30 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 0.8, delay: 0.4 }}
-                      >
-                        <button
-                          onClick={() => setProceed(false)}
-                          className="absolute top-4 right-4 text-gray-600 hover:text-black"
-                        >
-                          <FaTimes size={30} />
-                        </button>
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          whileInView={{ opacity: 1, y: 0 }}
-                          viewport={{ once: true }}
-                          transition={{ duration: 0.8, delay: 0.2 }}
-                          className="text-left mb-12"
-                        >
-                          <Text className="text-inda-dark font-bold text-2xl sm:text-3xl mb-2">
-                            Plans & Pricing
-                          </Text>
-                          <p className="font-normal text-md text-[#556457]">
-                            Inda Pricing Guide (Lagos Listings Only)
-                          </p>
-                        </motion.div>
-                        <div className="bg-[#F9F9F980] rounded-[24px] p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-0">
-                          {/* Deep Dive Report - Elevated */}
-                          <motion.div
-                            initial={{ opacity: 0, y: 40, scale: 0.85 }}
-                            whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                            viewport={{ once: true }}
-                            transition={{
-                              duration: 0.7,
-                              delay: 0.4,
-                              ease: "easeOut",
-                            }}
-                            whileHover={{
-                              scale: 1.03,
-                              y: -5,
-                              transition: { duration: 0.3 },
-                            }}
-                            className="relative -mt-4 sm:-mt-8 lg:-mt-12 w-full"
-                          >
-                            <div className="bg-[#2A2A2A] rounded-[20px] sm:rounded-[32px] p-4 sm:p-6 h-full flex flex-col shadow-2xl hover:shadow-3xl transition-all duration-300 ">
-                              <div className="text-left mb-4 sm:mb-6">
-                                <motion.div
-                                  className="font-bold text-3xl sm:text-4xl mb-2 text-white"
-                                  initial={{ opacity: 0, x: -20 }}
-                                  whileInView={{ opacity: 1, x: 0 }}
-                                  transition={{ duration: 0.5, delay: 0.6 }}
-                                >
-                                  ₦25,000
-                                </motion.div>
-                                <motion.h3
-                                  className="text-lg sm:text-xl font-bold text-white mb-2"
-                                  initial={{ opacity: 0, x: -20 }}
-                                  whileInView={{ opacity: 1, x: 0 }}
-                                  transition={{ duration: 0.5, delay: 0.7 }}
-                                >
-                                  Deep Dive Report
-                                </motion.h3>
-                                <motion.p
-                                  className="text-xs sm:text-sm text-gray-300 mb-4"
-                                  initial={{ opacity: 0 }}
-                                  whileInView={{ opacity: 1 }}
-                                  transition={{ duration: 0.5, delay: 0.8 }}
-                                >
-                                  Delivery Time: 24-48 hours (via email PDF)
-                                </motion.p>
-                              </div>
+          {/* end main content container */}
 
-                              <motion.div
-                                className="flex-1 mb-4 sm:mb-6"
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.5, delay: 0.9 }}
-                              >
-                                <h4 className="text-white mb-2 text-xs sm:text-sm font-semibold">
-                                  What You Get:{" "}
-                                  <span className="font-normal text-gray-300">
-                                    Everything in Instant Report
-                                  </span>
-                                  <span className="text-white font-semibold">
-                                    {" "}
-                                    Plus:
-                                  </span>
-                                </h4>
-                                <h5 className="text-white text-xs sm:text-sm font-semibold mb-3">
-                                  Title & Legal Verification:
-                                </h5>
-                                <ul className="space-y-2">
-                                  <motion.li
-                                    className="flex items-center gap-3 text-xs sm:text-sm text-gray-300"
-                                    initial={{ opacity: 0, x: -10 }}
-                                    whileInView={{ opacity: 1, x: 0 }}
-                                    transition={{ duration: 0.4, delay: 1.0 }}
-                                  >
-                                    <span className="text-white text-base sm:text-lg">
-                                      ✓
-                                    </span>
-                                    Certificate of Occupancy (C of O) or Deed
-                                    check
-                                  </motion.li>
-                                  <motion.li
-                                    className="flex items-center gap-3 text-xs sm:text-sm text-gray-300"
-                                    initial={{ opacity: 0, x: -10 }}
-                                    whileInView={{ opacity: 1, x: 0 }}
-                                    transition={{ duration: 0.4, delay: 1.1 }}
-                                  >
-                                    <span className="text-white text-base sm:text-lg">
-                                      ✓
-                                    </span>
-                                    Governor's consent check
-                                  </motion.li>
-                                  <motion.li
-                                    className="flex items-center gap-3 text-xs sm:text-sm text-gray-300"
-                                    initial={{ opacity: 0, x: -10 }}
-                                    whileInView={{ opacity: 1, x: 0 }}
-                                    transition={{ duration: 0.4, delay: 1.2 }}
-                                  >
-                                    <span className="text-white text-base sm:text-lg">
-                                      ✓
-                                    </span>
-                                    Zoning compliance check
-                                  </motion.li>
-                                  <motion.li
-                                    className="flex items-center gap-3 text-xs sm:text-sm text-gray-300"
-                                    initial={{ opacity: 0, x: -10 }}
-                                    whileInView={{ opacity: 1, x: 0 }}
-                                    transition={{ duration: 0.4, delay: 1.3 }}
-                                  >
-                                    <span className="text-white text-base sm:text-lg">
-                                      ✓
-                                    </span>
-                                    Litigation search (court registry)
-                                  </motion.li>
-                                  <motion.li
-                                    className="flex items-center gap-3 text-xs sm:text-sm text-gray-300"
-                                    initial={{ opacity: 0, x: -10 }}
-                                    whileInView={{ opacity: 1, x: 0 }}
-                                    transition={{ duration: 0.4, delay: 1.4 }}
-                                  >
-                                    <span className="text-white text-base sm:text-lg">
-                                      ✓
-                                    </span>
-                                    Survey plan verification (boundaries &
-                                    location)
-                                  </motion.li>
-                                </ul>
-                              </motion.div>
-
-                              <motion.button
-                                className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base"
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.5, delay: 1.5 }}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                              >
-                                Choose plan
-                              </motion.button>
-                            </div>
-                          </motion.div>
-
-                          {/* Deeper Dive */}
-                          <motion.div
-                            initial={{ opacity: 0, y: 30, scale: 0.9 }}
-                            whileInView={{ opacity: 1, y: 0, scale: 1 }}
-                            viewport={{ once: true }}
-                            transition={{
-                              duration: 0.6,
-                              delay: 0.5,
-                              ease: "easeOut",
-                            }}
-                            whileHover={{
-                              scale: 1.02,
-                              transition: { duration: 0.3 },
-                            }}
-                            className="w-full"
-                          >
-                            <div className="p-4 sm:p-6 h-full flex flex-col transition-all duration-300 hover:shadow-md rounded-lg sm:rounded-none">
-                              <div className="text-left mb-4 sm:mb-6">
-                                <motion.div
-                                  className="font-bold text-3xl sm:text-4xl mb-2 text-gray-900"
-                                  initial={{ opacity: 0, x: -20 }}
-                                  whileInView={{ opacity: 1, x: 0 }}
-                                  transition={{ duration: 0.5, delay: 0.7 }}
-                                >
-                                  ₦75,000
-                                </motion.div>
-                                <motion.h3
-                                  className="text-lg sm:text-xl font-bold text-gray-900 mb-2"
-                                  initial={{ opacity: 0, x: -20 }}
-                                  whileInView={{ opacity: 1, x: 0 }}
-                                  transition={{ duration: 0.5, delay: 0.8 }}
-                                >
-                                  Deeper Dive
-                                </motion.h3>
-                                <motion.p
-                                  className="text-xs sm:text-sm text-gray-600 mb-4"
-                                  initial={{ opacity: 0 }}
-                                  whileInView={{ opacity: 1 }}
-                                  transition={{ duration: 0.5, delay: 0.9 }}
-                                >
-                                  Delivery Time: 2-4 Days
-                                </motion.p>
-                              </div>
-
-                              <motion.div
-                                className="flex-1 mb-4 sm:mb-6"
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.5, delay: 1.0 }}
-                              >
-                                <h4 className="text-gray-900 mb-3 text-xs sm:text-sm font-semibold">
-                                  What You Get:{" "}
-                                  <span className="font-normal text-gray-600">
-                                    Everything in Instant Report
-                                  </span>
-                                  <span className="text-[#4ea8a1] font-semibold">
-                                    {" "}
-                                    Plus:
-                                  </span>
-                                </h4>
-                                <ul className="space-y-2">
-                                  <motion.li
-                                    className="flex items-center gap-3 text-xs sm:text-sm text-gray-700"
-                                    initial={{ opacity: 0, x: -10 }}
-                                    whileInView={{ opacity: 1, x: 0 }}
-                                    transition={{ duration: 0.4, delay: 1.1 }}
-                                  >
-                                    <span className="text-[#4ea8a1] text-base sm:text-lg">
-                                      ✓
-                                    </span>
-                                    Seller identity verification
-                                  </motion.li>
-                                  <motion.li
-                                    className="flex items-center gap-3 text-xs sm:text-sm text-gray-700"
-                                    initial={{ opacity: 0, x: -10 }}
-                                    whileInView={{ opacity: 1, x: 0 }}
-                                    transition={{ duration: 0.4, delay: 1.2 }}
-                                  >
-                                    <span className="text-[#4ea8a1] text-base sm:text-lg">
-                                      ✓
-                                    </span>
-                                    On-site property visit
-                                  </motion.li>
-                                  <motion.li
-                                    className="flex items-center gap-3 text-xs sm:text-sm text-gray-700"
-                                    initial={{ opacity: 0, x: -10 }}
-                                    whileInView={{ opacity: 1, x: 0 }}
-                                    transition={{ duration: 0.4, delay: 1.3 }}
-                                  >
-                                    <span className="text-[#4ea8a1] text-base sm:text-lg">
-                                      ✓
-                                    </span>
-                                    Photo evidence
-                                  </motion.li>
-                                </ul>
-                              </motion.div>
-
-                              <motion.button
-                                className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base"
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.5, delay: 1.4 }}
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                              >
-                                Choose plan
-                              </motion.button>
-                            </div>
-                          </motion.div>
-                        </div>
-                      </motion.div>
-                    </div>
-                  </motion.section>
-                </div>
-              </div>
-            )}
-          </div>
+          {proceed && (
+            <PaymentModal
+              isOpen={proceed}
+              onClose={() => setProceed(false)}
+              listingUrl={
+                (result?.listingUrl as string) ||
+                (result?.snapshot?.listingUrl as string) ||
+                (isValidUrl(searchQuery) ? (searchQuery as string) : "")
+              }
+              onPaid={() => setIsPaid(true)}
+            />
+          )}
         </main>
         <Footer />
       </Container>
@@ -1899,67 +2663,6 @@ const Result = () => {
       </Container>
     );
   }
-
-  // (No fallback "else" block; result and notFound branches handle all cases)
 };
 
 export default Result;
-
-// {dummyResultData.reviews.map((rev) => (
-//                       <div
-//                         key={rev.id}
-//                         className="bg-white rounded-lg p-4 flex flex-row w-[313px] mr-10 inline-block"
-//                       >
-//                         <div className="flex flex-col gap-5  w-[313px]">
-//                           <div className="flex gap-5">
-//                             <div className="flex flex-col gap-3">
-//                               <div>
-//                                 <div className="rounded-full w-[48px] h-[44px] bg-[#C6E3E1]"></div>
-//                                 <span className="text-[14px] font-medium p-1">
-//                                   Image
-//                                 </span>
-//                               </div>
-//                               <div>
-//                                 <span className="text-[14px] font-medium text-[#101820]">
-//                                   Rating
-//                                 </span>
-//                                 <div className="flex items-center gap-1">
-//                                   {Array.from({ length: 5 }).map((_, i) => (
-//                                     <FaStar
-//                                       key={i}
-//                                       className={
-//                                         i < rev.rating
-//                                           ? "h-[16px] w-[19px] text-[#101820]/40"
-//                                           : "h-[16px] w-[19px] text-[#989C9F]"
-//                                       }
-//                                     />
-//                                   ))}
-//                                 </div>
-//                               </div>
-//                             </div>
-//                             <div className="flex items-center justify-between mb-2">
-//                               <div>
-//                                 <p className="font-medium text-[14px] text-[#101820]">
-//                                   Name
-//                                 </p>
-//                                 <div className="w-[156px] h-[41px] rounded-[6px] bg-[#4EA8A152]/32"></div>
-//                                 <div>
-//                                   <p className="font-medium text-[14px] text-[#101820]">
-//                                     Review date
-//                                   </p>
-//                                   <div className="w-[156px] h-[24px] rounded-[6px] bg-[#4EA8A152]/32"></div>
-//                                 </div>
-//                               </div>
-//                             </div>
-//                           </div>
-//                           <div>
-//                             <div>
-//                               <p className="font-medium text-[14px] text-[#101820]">
-//                                 Review
-//                               </p>
-//                               <div className="w-[269px] h-[77px] rounded-[6px] bg-[#4EA8A152]/32"></div>
-//                             </div>
-//                           </div>
-//                         </div>
-//                       </div>
-//                     ))}

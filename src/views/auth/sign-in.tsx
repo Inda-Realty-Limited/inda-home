@@ -1,7 +1,7 @@
 import { login } from "@/api/auth";
 import { Button, Container, Footer, Input, Navbar } from "@/components";
 import { useToast } from "@/components/ToastProvider";
-import { setToken } from "@/helpers";
+import { setToken, setUser } from "@/helpers";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
@@ -27,6 +27,9 @@ const SignIn: React.FC = () => {
   const handleSuccess = (data: any) => {
     if (data?.token) {
       setToken(data.token);
+      if (data?.user) {
+        setUser(data.user);
+      }
       toast.showToast("Sign in successful!", 2000, "success");
       setTimeout(() => {
         // If there's a search query, redirect to results, otherwise go to home
