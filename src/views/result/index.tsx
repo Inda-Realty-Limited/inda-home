@@ -11,6 +11,8 @@ import {
   FaBuilding,
   FaCheckCircle,
   FaChevronDown,
+  FaChevronLeft,
+  FaChevronRight,
   FaChevronUp,
   FaClock,
   FaLock,
@@ -261,6 +263,16 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
   const appNominal = roiValues.appreciationLocalNominal;
   const appReal = roiValues.appreciationLocalReal || appNominal;
   const appUsd = roiValues.appreciationUsdAdj || appReal;
+
+  // Gallery scroller ref and controls
+  const galleryRef = useRef<HTMLDivElement | null>(null);
+  const scrollGalleryBy = (dir: 1 | -1) => {
+    const el = galleryRef.current;
+    if (!el) return;
+    const card = el.querySelector<HTMLDivElement>("div > div");
+    const cardWidth = card?.getBoundingClientRect().width || 320;
+    el.scrollBy({ left: dir * (cardWidth + 16), behavior: "smooth" });
+  };
 
   // ROI helpers and formatters
   const roiFieldInfo: Record<ROIFieldKey, string> = {
@@ -865,37 +877,62 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                   <h3 className="text-2xl md:text-3xl font-bold mb-6">
                     Gallery
                   </h3>
-                  <div
-                    className="flex gap-4 overflow-x-auto pb-4"
-                    style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-                  >
-                    <style jsx>{`
-                      div::-webkit-scrollbar {
-                        display: none;
-                      }
-                    `}</style>
-                    {(result?.snapshot?.imageUrls?.length
-                      ? result.snapshot.imageUrls
-                      : [
-                          "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-                          "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-                          "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-                          "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-                        ]
-                    )
-                      .slice(0, 6)
-                      .map((url: string, idx: number) => (
-                        <div
-                          key={idx}
-                          className="flex-shrink-0 w-80 h-56 md:w-96 md:h-64 lg:w-[420px] lg:h-72 rounded-lg overflow-hidden"
-                        >
-                          <img
-                            src={url}
-                            alt={`property-${idx}`}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      ))}
+                  <div className="relative group">
+                    {/* Left arrow (desktop only) */}
+                    <button
+                      type="button"
+                      aria-label="Scroll left"
+                      onClick={() => scrollGalleryBy(-1)}
+                      className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center rounded-full bg-black/30 text-white hover:bg-black/50 transition-opacity opacity-0 group-hover:opacity-100"
+                    >
+                      <FaChevronLeft />
+                    </button>
+                    {/* Scroll container */}
+                    <div
+                      ref={galleryRef}
+                      className="flex gap-4 overflow-x-auto pb-4 scroll-smooth"
+                      style={{
+                        scrollbarWidth: "none",
+                        msOverflowStyle: "none",
+                      }}
+                    >
+                      <style jsx>{`
+                        div::-webkit-scrollbar {
+                          display: none;
+                        }
+                      `}</style>
+                      {(result?.snapshot?.imageUrls?.length
+                        ? result.snapshot.imageUrls
+                        : [
+                            "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+                            "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+                            "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+                            "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+                          ]
+                      )
+                        .slice(0, 6)
+                        .map((url: string, idx: number) => (
+                          <div
+                            key={idx}
+                            className="flex-shrink-0 w-80 h-56 md:w-96 md:h-64 lg:w-[420px] lg:h-72 rounded-lg overflow-hidden"
+                          >
+                            <img
+                              src={url}
+                              alt={`property-${idx}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        ))}
+                    </div>
+                    {/* Right arrow (desktop only) */}
+                    <button
+                      type="button"
+                      aria-label="Scroll right"
+                      onClick={() => scrollGalleryBy(1)}
+                      className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 items-center justify-center rounded-full bg-black/30 text-white hover:bg-black/50 transition-opacity opacity-0 group-hover:opacity-100"
+                    >
+                      <FaChevronRight />
+                    </button>
                   </div>
                 </div>
 

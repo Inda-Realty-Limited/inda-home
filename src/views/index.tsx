@@ -797,7 +797,7 @@ const Landing: React.FC = () => {
       >
         <div className="w-full max-w-full sm:max-w-[80%] mx-auto">
           <motion.div
-            className="bg-[#1018200A] rounded-[48px] p-8 sm:p-12 shadow-xl"
+            className="bg-[rgba(105,217,188,0.35)] rounded-[48px] p-8 sm:p-12 shadow-xl"
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -1020,7 +1020,7 @@ const Landing: React.FC = () => {
                       whileInView={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.5, delay: 0.6 }}
                     >
-                      ₦25,000
+                      ₦75,000
                     </motion.div>
                     <motion.h3
                       className="text-lg sm:text-xl font-bold text-white mb-2"
@@ -1145,7 +1145,7 @@ const Landing: React.FC = () => {
                       whileInView={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.5, delay: 0.7 }}
                     >
-                      ₦75,000
+                      ₦100,000
                     </motion.div>
                     <motion.h3
                       className="text-lg sm:text-xl font-bold text-gray-900 mb-2"

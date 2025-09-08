@@ -8,8 +8,8 @@ type PricingPlansProps = {
 const PricingPlans: React.FC<PricingPlansProps> = ({ onChoosePlan }) => {
   return (
     <div className="w-full">
-      <div className="max-w-[1314px] mx-auto ">
-        <div className="bg-[#1018200A] rounded-[24px] sm:rounded-[32px] p-6 sm:p-10 shadow-xl">
+      <div className="max-w-[1314px] mx-auto bg-white rounded-[24px] ">
+        <div className="bg-[rgba(105,217,188,0.35)] rounded-[24px] sm:rounded-[32px] p-6 sm:p-10 shadow-xl">
           <div className="text-left mb-8">
             <Text className="text-inda-dark font-bold text-2xl sm:text-3xl mb-2">
               Plans & Pricing
@@ -116,7 +116,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onChoosePlan }) => {
               <div className="bg-[#2A2A2A] rounded-[16px] sm:rounded-[24px] p-4 sm:p-6 h-full flex flex-col shadow-2xl border border-transparent hover:border-transparent outline-none ring-0 focus-within:ring-0 focus-within:outline-none">
                 <div className="text-left mb-4 sm:mb-6">
                   <div className="font-bold text-3xl sm:text-4xl mb-2 text-white">
-                    ₦25,000
+                    ₦75,000
                   </div>
                   <h3 className="text-lg sm:text-xl font-bold text-white mb-2">
                     Deep Dive Report
@@ -171,7 +171,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onChoosePlan }) => {
               <div className="p-4 sm:p-6 h-full flex flex-col transition-all duration-300 rounded-lg border border-transparent hover:border-transparent outline-none ring-0 focus-within:ring-0 focus-within:outline-none">
                 <div className="text-left mb-4 sm:mb-6">
                   <div className="font-bold text-3xl sm:text-4xl mb-2 text-gray-900">
-                    ₦75,000
+                    ₦100,000
                   </div>
                   <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
                     Deeper Dive
