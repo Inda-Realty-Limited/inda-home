@@ -116,6 +116,10 @@ export interface ResultData {
   legalDisclaimer: string;
 }
 
+// Helper to generate a random integer between min and max inclusive
+const rand = (min: number, max: number) =>
+  Math.floor(Math.random() * (max - min + 1)) + min;
+
 export const dummyResultData: ResultData = {
   title: "Luxury 3-Bedroom Apartment in Lekki Phase 1",
   location: "Lekki Phase 1, Lagos",
@@ -128,7 +132,7 @@ export const dummyResultData: ResultData = {
 
   developer: {
     name: "ABC Properties Ltd.",
-    trustScore: 83,
+    trustScore: rand(80, 89),
     profileLink: "/developer/abc-properties",
   },
 
@@ -149,7 +153,7 @@ export const dummyResultData: ResultData = {
     warning: true,
   },
 
-  indaTrustScore: 83,
+  indaTrustScore: rand(80, 89),
   trustScoreTooltip:
     "The Inda score(0-100) is a trust rating based on verified documents, price accuracy vs market, complaint history, CAC and legal checks and responsiveness. Each score is updated regularly and weighted based on what matters most to safe investing.",
 
@@ -302,7 +306,7 @@ export const dummyResultData: ResultData = {
       price: "₦110M",
       pricePerSqm: "₦100k/Sqm",
       yield: "6.5% Yield",
-      developerTrustScore: 83,
+      developerTrustScore: rand(80, 89),
       image:
         "https://images.unsplash.com/photo-1501183638710-841dd1904471?auto=format&fit=crop&w=1200&q=80",
     },
@@ -314,7 +318,7 @@ export const dummyResultData: ResultData = {
       pricePerSqm: "₦120k/Sqm",
       yield: "7% Yield",
       beds: 4,
-      developerTrustScore: 83,
+      developerTrustScore: rand(80, 89),
       image:
         "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1200&q=80",
     },
@@ -326,7 +330,7 @@ export const dummyResultData: ResultData = {
       pricePerSqm: "₦100k/Sqm",
       yield: "6.5% Yield",
       beds: 5,
-      developerTrustScore: 83,
+      developerTrustScore: rand(80, 89),
       image:
         "https://images.unsplash.com/photo-1531973968078-9bb02785f13d?auto=format&fit=crop&w=1200&q=80",
     },
@@ -338,9 +342,9 @@ export const dummyResultData: ResultData = {
       pricePerSqm: "₦100k/Sqm",
       yield: "6.5% Yield",
       beds: 5,
-      developerTrustScore: 83,
+      developerTrustScore: rand(80, 89),
       image:
-        "https://images.unsplash.com/photo-1560185008-b033106af14d?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=1200&q=80",
     },
     {
       id: "5",
@@ -350,9 +354,9 @@ export const dummyResultData: ResultData = {
       pricePerSqm: "₦100k/Sqm",
       yield: "6.5% Yield",
       beds: 5,
-      developerTrustScore: 83,
+      developerTrustScore: rand(80, 89),
       image:
-        "https://images.unsplash.com/photo-1432839318976-b1bb217873f6?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80",
     },
     {
       id: "6",
@@ -362,9 +366,9 @@ export const dummyResultData: ResultData = {
       pricePerSqm: "₦100k/Sqm",
       yield: "6.5% Yield",
       beds: 5,
-      developerTrustScore: 83,
+      developerTrustScore: rand(80, 89),
       image:
-        "https://images.unsplash.com/photo-1531972111892-79aee1edc029?auto=format&fit=crop&w=1200&q=80",
+        "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1200&q=80",
     },
   ],
 

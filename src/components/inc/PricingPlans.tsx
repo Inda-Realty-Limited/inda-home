@@ -1,5 +1,4 @@
 import { Text } from "@/components";
-import { motion } from "framer-motion";
 import React from "react";
 
 type PricingPlansProps = {
@@ -10,12 +9,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onChoosePlan }) => {
   return (
     <div className="w-full">
       <div className="max-w-[1314px] mx-auto ">
-        <motion.div
-          className="bg-[#1018200A] rounded-[24px] sm:rounded-[32px] p-6 sm:p-10 shadow-xl"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-        >
+        <div className="bg-[#1018200A] rounded-[24px] sm:rounded-[32px] p-6 sm:p-10 shadow-xl">
           <div className="text-left mb-8">
             <Text className="text-inda-dark font-bold text-2xl sm:text-3xl mb-2">
               Plans & Pricing
@@ -27,13 +21,8 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onChoosePlan }) => {
 
           <div className="bg-[#F9F9F980] rounded-[16px] sm:rounded-[24px] p-4 sm:p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Free */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.05 }}
-              className="w-full"
-            >
-              <div className="p-4 sm:p-6 h-full flex flex-col transition-all duration-300 hover:shadow-md rounded-lg">
+            <div className="w-full">
+              <div className="p-4 sm:p-6 h-full flex flex-col transition-all duration-300 rounded-lg border border-transparent hover:border-transparent outline-none ring-0 focus-within:ring-0 focus-within:outline-none">
                 <div className="text-left mb-4 sm:mb-6">
                   <div className="font-bold text-3xl sm:text-4xl mb-2 text-gray-900">
                     ₦0
@@ -61,21 +50,16 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onChoosePlan }) => {
                 <button
                   disabled
                   aria-disabled="true"
-                  className="w-full bg-gray-300 text-gray-600 py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium cursor-not-allowed transition-all duration-300 text-sm sm:text-base"
+                  className="w-full bg-gray-300 text-gray-600 py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium cursor-not-allowed transition-all duration-300 text-sm sm:text-base outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 hover:outline-none"
                 >
                   Choose plan
                 </button>
               </div>
-            </motion.div>
+            </div>
 
             {/* Instant */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-              className="w-full"
-            >
-              <div className="p-4 sm:p-6 h-full flex flex-col transition-all duration-300 hover:shadow-md rounded-lg border-l-0 sm:border-l sm:border-l-gray-200">
+            <div className="w-full">
+              <div className="p-4 sm:p-6 h-full flex flex-col transition-all duration-300 rounded-lg border border-transparent hover:border-transparent outline-none ring-0 focus-within:ring-0 focus-within:outline-none ">
                 <div className="text-left mb-4 sm:mb-6">
                   <div className="font-bold text-3xl sm:text-4xl mb-2 text-gray-900">
                     ₦3,000
@@ -120,21 +104,16 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onChoosePlan }) => {
                 </div>
                 <button
                   onClick={() => onChoosePlan?.("instant")}
-                  className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base"
+                  className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 hover:outline-none"
                 >
                   Choose plan
                 </button>
               </div>
-            </motion.div>
+            </div>
 
             {/* Deep Dive */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.15 }}
-              className="w-full"
-            >
-              <div className="bg-[#2A2A2A] rounded-[16px] sm:rounded-[24px] p-4 sm:p-6 h-full flex flex-col shadow-2xl">
+            <div className="w-full">
+              <div className="bg-[#2A2A2A] rounded-[16px] sm:rounded-[24px] p-4 sm:p-6 h-full flex flex-col shadow-2xl border border-transparent hover:border-transparent outline-none ring-0 focus-within:ring-0 focus-within:outline-none">
                 <div className="text-left mb-4 sm:mb-6">
                   <div className="font-bold text-3xl sm:text-4xl mb-2 text-white">
                     ₦25,000
@@ -180,21 +159,16 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onChoosePlan }) => {
                 <button
                   disabled
                   aria-disabled="true"
-                  className="w-full bg-gray-500/40 text-white/70 py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium cursor-not-allowed transition-all duration-300 text-sm sm:text-base"
+                  className="w-full bg-gray-500/40 text-white/70 py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium cursor-not-allowed transition-all duration-300 text-sm sm:text-base outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 hover:outline-none"
                 >
                   Choose plan
                 </button>
               </div>
-            </motion.div>
+            </div>
 
             {/* Deeper Dive */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.2 }}
-              className="w-full"
-            >
-              <div className="p-4 sm:p-6 h-full flex flex-col transition-all duration-300 hover:shadow-md rounded-lg border-l-0 sm:border-l sm:border-l-gray-200">
+            <div className="w-full">
+              <div className="p-4 sm:p-6 h-full flex flex-col transition-all duration-300 rounded-lg border border-transparent hover:border-transparent outline-none ring-0 focus-within:ring-0 focus-within:outline-none">
                 <div className="text-left mb-4 sm:mb-6">
                   <div className="font-bold text-3xl sm:text-4xl mb-2 text-gray-900">
                     ₦75,000
@@ -238,14 +212,14 @@ const PricingPlans: React.FC<PricingPlansProps> = ({ onChoosePlan }) => {
                 <button
                   disabled
                   aria-disabled="true"
-                  className="w-full bg-gray-300 text-gray-600 py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium cursor-not-allowed transition-all duration-300 text-sm sm:text-base"
+                  className="w-full bg-gray-300 text-gray-600 py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium cursor-not-allowed transition-all duration-300 text-sm sm:text-base outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 hover:outline-none"
                 >
                   Choose plan
                 </button>
               </div>
-            </motion.div>
+            </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

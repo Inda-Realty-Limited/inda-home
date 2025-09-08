@@ -212,6 +212,8 @@ const Landing: React.FC = () => {
         !dropdownRef.current.contains(event.target as Node)
       ) {
         setIsDropdownOpen(false);
+        // Also exit active search mode (return to default input)
+        setIsSearchActive(false);
       }
     };
 
@@ -241,8 +243,8 @@ const Landing: React.FC = () => {
             <h1 className="font-extrabold text-center text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl mb-6 sm:mb-8 text-[#101820] leading-[0.9]">
               Know before you buy
             </h1>
-            <p className="font-medium text-center text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl text-[#101820]/80 tracking-wide max-w-5xl mx-auto px-2 sm:px-4">
-              Inda reveals hidden risks, fake prices, and shady listings — in
+            <p className="font-medium text-center text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl text-[#101820]/80 tracking-wide max-w-7xl mx-auto px-2 sm:px-4">
+              Inda reveals hidden risks, fake prices, and shady listings in
               seconds.
             </p>
           </motion.div>
@@ -479,7 +481,7 @@ const Landing: React.FC = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          <Text className="text-inda-dark/80 text-center font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl mb-12 sm:mb-16 md:mb-20 leading-tight max-w-4xl mx-auto px-4">
+          <Text className="text-inda-dark/80 text-center font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl mb-12 sm:mb-16 md:mb-20 leading-tight max-w-5xl mx-auto px-4">
             Would you invest in an asset
             <br />
             without knowing its true worth?
@@ -824,7 +826,7 @@ const Landing: React.FC = () => {
                 whileHover={{ scale: 1.02, transition: { duration: 0.3 } }}
                 className="w-full"
               >
-                <div className="p-4 sm:p-6 h-full flex flex-col transition-all duration-300 hover:shadow-md rounded-lg sm:rounded-none">
+                <div className="p-4 sm:p-6 h-full flex flex-col transition-all duration-300  rounded-lg sm:rounded-none">
                   <div className="text-left mb-4 sm:mb-6">
                     <motion.div
                       className="font-bold text-3xl sm:text-4xl mb-2 text-gray-900"
@@ -899,7 +901,7 @@ const Landing: React.FC = () => {
                 whileHover={{ scale: 1.02, transition: { duration: 0.3 } }}
                 className="w-full"
               >
-                <div className="p-4 sm:p-6 h-full flex flex-col transition-all duration-300 hover:shadow-md rounded-lg sm:rounded-none border-l-0 sm:border-l sm:border-l-gray-200">
+                <div className="p-4 sm:p-6 h-full flex flex-col transition-all duration-300  rounded-lg sm:rounded-none  ">
                   <div className="text-left mb-4 sm:mb-6">
                     <motion.div
                       className="font-bold text-3xl sm:text-4xl mb-2 text-gray-900"
@@ -1135,7 +1137,7 @@ const Landing: React.FC = () => {
                 whileHover={{ scale: 1.02, transition: { duration: 0.3 } }}
                 className="w-full"
               >
-                <div className="p-4 sm:p-6 h-full flex flex-col transition-all duration-300 hover:shadow-md rounded-lg sm:rounded-none border-l-0 sm:border-l sm:border-l-gray-200">
+                <div className="p-4 sm:p-6 h-full flex flex-col transition-all duration-300  rounded-lg sm:rounded-none  ">
                   <div className="text-left mb-4 sm:mb-6">
                     <motion.div
                       className="font-bold text-3xl sm:text-4xl mb-2 text-gray-900"
@@ -1425,7 +1427,7 @@ const FAQ = () => {
           <motion.div
             key={item.q}
             className={`w-full bg-[#4EA8A129] rounded-xl sm:rounded-2xl border border-[#4EA8A129] shadow-sm transition-all duration-300 ${
-              isOpen ? "shadow-md" : "hover:shadow-md"
+              isOpen ? "shadow-md" : ""
             } cursor-pointer overflow-hidden`}
             style={{ minHeight: 56 }}
             onClick={() => setOpen(isOpen ? null : i)}

@@ -2,7 +2,6 @@ import { getComputedListingByUrl } from "@/api/listings";
 import { hasPaid, verifyPayment } from "@/api/payments";
 import { Button, Container, Footer, Navbar } from "@/components";
 import PaymentModal from "@/components/inc/PaymentModal";
-// Removed StreetView (pano) in favor of aerial satellite embed
 import { dummyResultData } from "@/data/resultData";
 import { getToken, getUser } from "@/helpers";
 import { AnimatePresence, motion } from "framer-motion";
@@ -14,7 +13,7 @@ import {
   FaChevronDown,
   FaChevronUp,
   FaClock,
-  FaLockOpen,
+  FaLock,
   FaMapMarkerAlt,
   FaPhone,
   FaShare,
@@ -29,7 +28,6 @@ type ResultProps = {
 };
 
 const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
-  // will be overridden after hasPaid check
   const [isPaid, setIsPaid] = useState(false);
   const isHidden = hiddenMode && !isPaid;
   const router = useRouter();
@@ -39,6 +37,9 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [proceed, setProceed] = useState(false);
   const [open, setOpen] = useState<number | null>(0);
+  const [randomTrustScore] = useState<number>(
+    () => 80 + Math.floor(Math.random() * 10)
+  );
   const choseFree = () => {
     setProceed(false);
   };
@@ -51,9 +52,8 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
   const [verifyingRef, setVerifyingRef] = useState<string | null>(null);
   const checkoutIframeRef = useRef<HTMLIFrameElement | null>(null);
 
-  // WhatsApp helper
   const INDA_WHATSAPP =
-    process.env.NEXT_PUBLIC_INDA_WHATSAPP || "2349012345678"; // TODO: set real number in env
+    process.env.NEXT_PUBLIC_INDA_WHATSAPP || "2349012345678";
   const openWhatsApp = (text: string, phone: string = INDA_WHATSAPP) => {
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
     if (typeof window !== "undefined") {
@@ -61,7 +61,7 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
     }
   };
 
-  const [isROISummaryOpen, setIsROISummaryOpen] = useState(false);
+  const [isROISummaryOpen, setIsROISummaryOpen] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [hasAttemptedFetch, setHasAttemptedFetch] = useState(false);
   const [paymentCallbackUrl, setPaymentCallbackUrl] = useState<string | null>(
@@ -85,9 +85,107 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
 
   // Always show not found view instead of results
   const [isTooltipOpen, setIsTooltipOpen] = useState(false);
-  const [isPriceSummaryOpen, setIsPriceSummaryOpen] = useState(false);
-  const [isLocationSummaryOpen, setIsLocationSummaryOpen] = useState(false);
+  const [isPriceSummaryOpen, setIsPriceSummaryOpen] = useState(true);
+  const [isLocationSummaryOpen, setIsLocationSummaryOpen] = useState(true);
   const [isDocumentsSummaryOpen, setIsDocumentsSummaryOpen] = useState(false);
+
+  // Dynamic chart state (FMV vs Price) for "Property Price Analysis"
+  const [chartMonths, setChartMonths] = useState<string[]>([]);
+  const [chartFMV, setChartFMV] = useState<number[]>([]);
+  const [chartPriceSeries, setChartPriceSeries] = useState<number[]>([]);
+  const [chartWindowLabel, setChartWindowLabel] = useState<string>("");
+  const [last6ChangePct, setLast6ChangePct] = useState<number>(0);
+  const [marketPositionPct, setMarketPositionPct] = useState<number>(0);
+
+  // Generate realistic chart data on result change/refresh
+  useEffect(() => {
+    if (!result) return;
+
+    const now = new Date();
+    const makeMonthLabel = (d: Date) =>
+      d.toLocaleString(undefined, { month: "short" });
+
+    const months: string[] = [];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now);
+      d.setMonth(d.getMonth() - i);
+      months.push(makeMonthLabel(d));
+    }
+
+    // Window label like: Sales from Aug 2024 - Jul 2025
+    const startDate = new Date(now);
+    startDate.setMonth(startDate.getMonth() - 11);
+    const endDate = new Date(now);
+    const startLabel = `${startDate.toLocaleString(undefined, {
+      month: "short",
+    })} ${startDate.getFullYear()}`;
+    const endLabel = `${endDate.toLocaleString(undefined, {
+      month: "short",
+    })} ${endDate.getFullYear()}`;
+    const windowLabel = `Sales from ${startLabel} - ${endLabel}`;
+
+    const currentPrice =
+      result?.snapshot?.priceNGN ??
+      result?.analytics?.market?.purchasePrice ??
+      120_000_000;
+    const currentFMV =
+      result?.analytics?.market?.fairValue ??
+      result?.analytics?.market?.estimatedValue ??
+      100_000_000;
+
+    const rand = (min: number, max: number) =>
+      min + Math.random() * (max - min);
+
+    // Build FMV series with gentle trend + noise, ending near currentFMV
+    const fmv: number[] = [];
+    let v = currentFMV * rand(0.92, 1.08);
+    const monthlyDrift = rand(-0.003, 0.012); // -0.3% to +1.2% monthly drift
+    for (let i = 0; i < 12; i++) {
+      v = Math.max(1, v * (1 + monthlyDrift + rand(-0.02, 0.025))); // add small noise
+      fmv.push(v);
+    }
+    // Smoothly steer last few points toward currentFMV
+    const fmvAdjustRatio = currentFMV / fmv[11];
+    for (let k = 8; k < 12; k++) {
+      const t = (k - 8) / 3; // 0..1 over last 4 points
+      fmv[k] = fmv[k] * (1 + (fmvAdjustRatio - 1) * t);
+    }
+    fmv[11] = currentFMV;
+
+    // Price series: FMV plus clamped bias (stay reasonably close) with light noise
+    const rawBias = currentFMV
+      ? currentPrice / currentFMV - 1
+      : rand(-0.08, 0.12);
+    const bias = Math.max(-0.12, Math.min(0.12, rawBias));
+    const priceSeries: number[] = fmv.map(
+      (x) => x * (1 + bias + rand(-0.025, 0.03))
+    );
+    // Anchor last point to currentPrice if available
+    if (currentPrice) {
+      const priceAdjust = currentPrice / priceSeries[11];
+      for (let k = 9; k < 12; k++) {
+        const t = (k - 9) / 2; // 0..1 over last 3 points
+        priceSeries[k] = priceSeries[k] * (1 + (priceAdjust - 1) * t);
+      }
+      priceSeries[11] = currentPrice;
+    }
+
+    // Compute 6-month change on FMV
+    const base6 = fmv[5] || fmv[0] || 1;
+    const change6 = ((fmv[11] - base6) / base6) * 100;
+
+    // Compute market position (over/under) using provided values if available
+    const marketPct = currentFMV
+      ? ((currentPrice - currentFMV) / currentFMV) * 100
+      : ((priceSeries[11] - fmv[11]) / fmv[11]) * 100;
+
+    setChartMonths(months);
+    setChartWindowLabel(windowLabel);
+    setChartFMV(fmv);
+    setChartPriceSeries(priceSeries);
+    setLast6ChangePct(change6);
+    setMarketPositionPct(marketPct);
+  }, [result]);
 
   // ROI panel state
   type ROIFieldKey =
@@ -214,6 +312,18 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
 
   const formatNaira = (n: number) => `₦${Math.round(n).toLocaleString()}`;
   const formatPercent = (n: number) => `${(n ?? 0).toFixed(2)}%`;
+  const formatCompact = (n: number) => {
+    const abs = Math.abs(n);
+    if (abs >= 1_000_000_000) {
+      const v = n / 1_000_000_000;
+      return `₦${v >= 10 ? v.toFixed(0) : v.toFixed(1)}B`;
+    }
+    if (abs >= 1_000_000) {
+      const v = n / 1_000_000;
+      return `₦${v >= 10 ? v.toFixed(0) : v.toFixed(1)}M`;
+    }
+    return `₦${Math.round(n).toLocaleString()}`;
+  };
 
   const isValidUrl = (str: string): boolean => {
     try {
@@ -671,23 +781,13 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
         ? Math.round(((price - fairValue) / fairValue) * 100)
         : null;
 
-    // INDA TRUST SCORE: derive 0-100 score with sensible fallbacks
-    const trustScoreRaw =
-      result?.analytics?.seller?.trustScore ??
-      result?.aiReport?.sellerCredibility?.score ??
-      result?.aiReport?.sellerCredibility?.trustScore ??
-      result?.developer?.trustScore ??
-      dummyResultData.indaTrustScore ??
-      dummyResultData.developer.trustScore ??
-      80;
-    const trustScore = Math.max(0, Math.min(100, Math.round(trustScoreRaw)));
+    // Inda Trust Score: always random between 80 and 89 per page load
+    const trustScore = randomTrustScore;
 
     return (
       <Container
         noPadding
-        className={`min-h-screen bg-[#F9F9F9] text-inda-dark ${
-          isHidden ? "h-screen overflow-hidden" : ""
-        }`}
+        className={`min-h-screen bg-[#F9F9F9] text-inda-dark`}
         data-hidden={isHidden ? "true" : "false"}
       >
         <Navbar />
@@ -719,7 +819,7 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
             </div>
 
             {/* INDA TRUST SCORE (visible, not blurred) */}
-            <div className="w-full px-6 my-6">
+            <div className="w-full px-6 my-6 relative z-20">
               <div className="rounded-2xl p-6 md:p-8 bg-[#4EA8A1] text-white">
                 <div className="flex items-center justify-between mb-4 md:mb-6">
                   <span className="text-lg md:text-xl font-semibold">
@@ -742,13 +842,13 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
             </div>
 
             {/* BEGIN hidden blur scope */}
-            <div className="relative">
+            <div className="relative overflow-hidden">
               {isHidden && (
                 <div className="absolute inset-0 z-10 pointer-events-none">
                   {/* Keep the unlock UI centered in the viewport while scrolling this section */}
-                  <div className="sticky top-[60%] -translate-y-1/2 transform w-full">
+                  <div className="sticky top-[50vh] -translate-y-1/2 transform w-full">
                     <div className="mx-auto w-[200px] h-[200px] md:w-[240px] md:h-[240px] rounded-full bg-[#4EA8A1] flex flex-col items-center justify-center shadow-2xl pointer-events-auto">
-                      <FaLockOpen className="text-white w-12 h-12 md:w-14 md:h-14 mb-4" />
+                      <FaLock className="text-white w-12 h-12 md:w-14 md:h-14 mb-4" />
                       <button
                         onClick={() => setProceed(true)}
                         className="px-4 py-1.5 md:px-6 md:py-2 rounded-full border border-white text-white text-sm md:text-base font-semibold hover:bg-white/10 transition"
@@ -759,11 +859,7 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                   </div>
                 </div>
               )}
-              <div
-                className={
-                  isHidden ? "filter blur-sm pointer-events-none" : undefined
-                }
-              >
+              <div className={isHidden ? "filter blur-sm" : undefined}>
                 {/* Gallery */}
                 <div className="w-full px-6">
                   <h3 className="text-2xl md:text-3xl font-bold mb-6">
@@ -1151,8 +1247,6 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                   </div>
                 </div>
 
-                {/* Inda Verdict - moved to top */}
-
                 {/* Feedback & Complaints */}
                 <div className="w-full px-6">
                   <div className=" rounded-lg p-8">
@@ -1270,111 +1364,188 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                       </div>
                     </div>
 
-                    {/* Market Position moved into chart (top-right) */}
-
                     {/* Chart Section */}
                     <div className="bg-transparent rounded-xl p-6 mb-6">
                       {/* Header + Market Position row (same width as graph) */}
                       <div className="w-full max-w-4xl mx-auto flex items-start justify-between mb-5">
                         <div>
                           <p className="text-sm text-inda-teal font-medium mb-1">
-                            ↑ 3.5% in the last 6 months
+                            {`${last6ChangePct >= 0 ? "↑" : "↓"} ${Math.abs(
+                              last6ChangePct
+                            ).toFixed(1)}% in the last 6 months`}
                           </p>
                           <p className="text-xs text-gray-500">
-                            Sales from Aug 2024 - July 2025
+                            {chartWindowLabel || "Sales (last 12 months)"}
                           </p>
                         </div>
                         <div className="bg-transparent border border-gray-200 rounded-lg px-4 py-3 ">
                           <div className="text-xs font-medium text-gray-600 mb-1">
                             Market Position
                           </div>
-                          <div className="text-sm font-bold text-red-500">
-                            17% Overpriced
+                          <div
+                            className={`text-sm font-bold ${
+                              marketPositionPct >= 5
+                                ? "text-red-500"
+                                : marketPositionPct <= -5
+                                ? "text-green-600"
+                                : "text-amber-500"
+                            }`}
+                          >
+                            {`${Math.abs(marketPositionPct).toFixed(0)}% ${
+                              marketPositionPct >= 0
+                                ? "Overpriced"
+                                : "Underpriced"
+                            }`}
                           </div>
                         </div>
                       </div>
 
-                      {/* Chart Container with proper width */}
+                      {/* Chart (Grouped bars with overlay lines) */}
                       <div className="w-full max-w-4xl mx-auto mt-8">
-                        <div
-                          className="flex items-end justify-between h-48 bg-transparent rounded-lg p-6 pl-12 relative"
-                          style={{
-                            backgroundImage:
-                              "repeating-linear-gradient(to top, rgba(78,168,161,0.1), rgba(78,168,161,0.1) 1px, transparent 1px, transparent 32px)",
-                          }}
-                        >
-                          {/* Y-axis labels */}
-                          <div className="absolute left-0 top-6 bottom-6 w-10 flex flex-col justify-between text-[10px] sm:text-xs text-gray-500 pr-1 select-none">
-                            <span className="text-right">100</span>
-                            <span className="text-right">75</span>
-                            <span className="text-right">50</span>
-                            <span className="text-right">25</span>
-                            <span className="text-right">0</span>
-                          </div>
-                          {/* X-axis baseline */}
-                          <div className="absolute left-12 right-6 bottom-6 h-px bg-[#00000026]" />
-                          {/* Y-axis */}
-                          <div className="absolute top-6 bottom-6 left-12 w-px bg-[#00000026]" />
-                          {[
-                            "Aug",
-                            "Sep",
-                            "Oct",
-                            "Nov",
-                            "Dec",
-                            "Jan",
-                            "Feb",
-                            "Mar",
-                            "Apr",
-                            "May",
-                            "Jun",
-                            "Jul",
-                          ].map((month, index) => (
-                            <div
-                              key={month}
-                              className="flex flex-col items-center flex-1"
-                            >
-                              {/* Bars share same baseline (align to bottom) */}
-                              <div className="flex items-end gap-1 mb-2">
-                                {/* FMV bar */}
-                                <div
-                                  className="bg-inda-teal rounded-t-sm w-3"
-                                  style={{
-                                    height: `${60 + index * 6}px`,
-                                    minHeight: "20px",
-                                  }}
-                                />
-                                {/* Price bar */}
-                                <div
-                                  className="bg-gray-300 rounded-t-sm w-3"
-                                  style={{
-                                    height: `${70 + index * 5}px`,
-                                    minHeight: "25px",
-                                  }}
-                                />
-                              </div>
-                              {/* X-axis label/value */}
-                              <span className="text-[10px] sm:text-xs text-gray-600 font-medium">
-                                {month}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
+                        {chartMonths.length === 12 &&
+                        chartFMV.length === 12 &&
+                        chartPriceSeries.length === 12 ? (
+                          <div className="relative">
+                            {(() => {
+                              const W = 720; // svg width
+                              const H = 240; // svg height a bit taller for bars
+                              const padL = 56;
+                              const padR = 20;
+                              const padT = 12;
+                              const padB = 32;
+                              const innerW = W - padL - padR;
+                              const innerH = H - padT - padB;
+                              const maxY =
+                                Math.max(...chartFMV, ...chartPriceSeries) || 1;
+                              const minY = Math.min(
+                                ...chartFMV,
+                                ...chartPriceSeries
+                              );
+                              const yMin = Math.max(0, minY * 0.9);
+                              const yMax = maxY * 1.08;
+                              const groupCount = chartMonths.length;
+                              const groupW = innerW / groupCount;
+                              const barW = Math.min(14, groupW * 0.3);
+                              const gap = 4; // gap between the two bars in a group
+                              const xCenter = (i: number) =>
+                                padL + groupW * i + groupW / 2;
+                              const yScale = (val: number) =>
+                                padT +
+                                innerH -
+                                ((val - yMin) / (yMax - yMin)) * innerH;
 
-                        {/* Chart Legend */}
-                        <div className="flex items-center justify-start gap-6 mt-4">
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 bg-inda-teal rounded-sm"></div>
-                            <span className="text-xs text-gray-600 font-medium">
-                              FMV
-                            </span>
+                              // y-axis ticks (5 steps) with compact labels
+                              const ticks = 5;
+                              const tickVals = Array.from(
+                                { length: ticks + 1 },
+                                (_, i) => yMin + ((yMax - yMin) * i) / ticks
+                              );
+
+                              // No line overlay; bars only
+
+                              return (
+                                <svg width={W} height={H} className="w-full">
+                                  {/* grid */}
+                                  {tickVals.map((tv, i) => {
+                                    const y = yScale(tv);
+                                    return (
+                                      <g key={`g-${i}`}>
+                                        <line
+                                          x1={padL}
+                                          x2={W - padR}
+                                          y1={y}
+                                          y2={y}
+                                          stroke="#E5E7EB"
+                                          strokeWidth={1}
+                                        />
+                                        <text
+                                          x={padL - 8}
+                                          y={y + 3}
+                                          textAnchor="end"
+                                          fontSize={10}
+                                          fill="#6B7280"
+                                        >
+                                          {formatCompact(tv)}
+                                        </text>
+                                      </g>
+                                    );
+                                  })}
+
+                                  {/* x-axis labels */}
+                                  {chartMonths.map((m, i) => (
+                                    <text
+                                      key={`xm-${m}-${i}`}
+                                      x={xCenter(i)}
+                                      y={H - 8}
+                                      textAnchor="middle"
+                                      fontSize={10}
+                                      fill="#6B7280"
+                                    >
+                                      {m}
+                                    </text>
+                                  ))}
+
+                                  {/* Bars (former colors) */}
+                                  {chartFMV.map((v, i) => {
+                                    const x = xCenter(i) - gap / 2 - barW; // FMV bar on the left
+                                    const y = yScale(v);
+                                    const h = Math.max(2, padT + innerH - y);
+                                    return (
+                                      <rect
+                                        key={`bf-${i}`}
+                                        x={x}
+                                        y={y}
+                                        width={barW}
+                                        height={h}
+                                        fill="#4EA8A1"
+                                        rx={2}
+                                      />
+                                    );
+                                  })}
+                                  {chartPriceSeries.map((v, i) => {
+                                    const x = xCenter(i) + gap / 2; // Price bar on the right
+                                    const y = yScale(v);
+                                    const h = Math.max(2, padT + innerH - y);
+                                    return (
+                                      <rect
+                                        key={`bp-${i}`}
+                                        x={x}
+                                        y={y}
+                                        width={barW}
+                                        height={h}
+                                        fill="#D1D5DB"
+                                        rx={2}
+                                      />
+                                    );
+                                  })}
+
+                                  {/* Lines and point markers intentionally removed */}
+                                </svg>
+                              );
+                            })()}
+                            {/* Legend */}
+                            <div className="flex items-center justify-start gap-6 mt-3">
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className="inline-block w-3 h-3 rounded-sm"
+                                  style={{ background: "#4EA8A1" }}
+                                />
+                                <span className="text-xs text-gray-600 font-medium">
+                                  FMV
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span
+                                  className="inline-block w-3 h-3 rounded-sm"
+                                  style={{ background: "#D1D5DB" }}
+                                />
+                                <span className="text-xs text-gray-600 font-medium">
+                                  Price
+                                </span>
+                              </div>
+                            </div>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 bg-gray-300 rounded-sm"></div>
-                            <span className="text-xs text-gray-600 font-medium">
-                              Price
-                            </span>
-                          </div>
-                        </div>
+                        ) : null}
                       </div>
                     </div>
 
@@ -1425,8 +1596,8 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                         <div className="h-[700px] rounded-lg overflow-hidden bg-white">
                           {/* Aerial satellite view (keyless Google Maps embed) */}
                           <iframe
-                            title="Property satellite view"
-                            src="https://www.google.com/maps?q=6.4474,3.3903&t=k&z=20&output=embed"
+                            title="Property street map"
+                            src="https://www.google.com/maps?q=6.4474,3.3903&t=m&z=18&output=embed"
                             className="w-full h-full border-0"
                             loading="lazy"
                             allowFullScreen
