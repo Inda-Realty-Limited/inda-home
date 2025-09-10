@@ -160,7 +160,15 @@ const Landing: React.FC = () => {
   );
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSearchActive, setIsSearchActive] = useState(false);
-  const [free, setFree] = useState(false);
+  // WhatsApp (Joshua) env for CTA chat
+  const INDA_WHATSAPP =
+    process.env.NEXT_PUBLIC_WHATSAPP_JOSHUA ||
+    process.env.NEXT_PUBLIC_INDA_WHATSAPP ||
+    "2349012345678";
+  const openWhatsApp = (text: string, phone: string = INDA_WHATSAPP) => {
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+    if (typeof window !== "undefined") window.open(url, "_blank");
+  };
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Only allow valid URLs when pasting links
@@ -177,9 +185,33 @@ const Landing: React.FC = () => {
     item.name.toLowerCase().includes(search.toLowerCase())
   );
 
-  function choseFree() {
-    setFree(true);
-  }
+  // Landing CTA actions
+  const handleSeeSample = () => {
+    const demo =
+      process.env.NEXT_PUBLIC_DEMO_LISTING_URL ||
+      "https://www.propertypro.ng/property";
+    router.push(`/result/hidden?q=${encodeURIComponent(demo)}&type=link`);
+  };
+
+  const handlePlanSelect = (
+    plan: "free" | "instant" | "deep-dive" | "deeper-dive"
+  ) => {
+    const base = "/auth";
+    const params = new URLSearchParams();
+    params.set("plan", plan);
+    if (selectedSearchType.id === "link" && isValidUrl(search)) {
+      params.set("q", search.trim());
+      params.set("type", "link");
+    }
+    router.push(`${base}?${params.toString()}`);
+  };
+
+  const handleCTA = () => {
+    // Open the rich textarea and focus (autoFocus is set there)
+    setIsDropdownOpen(false);
+    setSelectedSearchType(searchTypes.find((t) => t.id === "link")!);
+    setIsSearchActive(true);
+  };
 
   // Function to handle search with authentication check
   const handleSearch = () => {
@@ -240,10 +272,10 @@ const Landing: React.FC = () => {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="text-center mb-8 sm:mb-12"
           >
-            <h1 className="font-extrabold text-center text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl mb-6 sm:mb-8 text-[#101820] leading-[0.9]">
+            <h1 className="font-extrabold text-center text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl 2xl:text-8xl mb-6 sm:mb-8 text-[#101820F2] leading-[0.9]">
               Know before you buy
             </h1>
-            <p className="font-medium text-center text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl text-[#101820]/80 tracking-wide max-w-7xl mx-auto px-2 sm:px-4">
+            <p className="font-medium text-center text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl text-[#101820E5] tracking-wide max-w-7xl mx-auto px-2 sm:px-4">
               Inda reveals hidden risks, fake prices, and shady listings in
               seconds.
             </p>
@@ -481,7 +513,7 @@ const Landing: React.FC = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          <Text className="text-inda-dark/80 text-center font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl mb-12 sm:mb-16 md:mb-20 leading-tight max-w-5xl mx-auto px-4">
+          <Text className="text-[#101820F2] text-center font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl mb-12 sm:mb-16 md:mb-20 leading-tight max-w-5xl mx-auto px-4">
             Would you invest in an asset
             <br />
             without knowing its true worth?
@@ -601,10 +633,10 @@ const Landing: React.FC = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          <Text className="text-inda-dark text-center font-extrabold text-xl sm:text-2xl md:text-3xl lg:text-4xl mb-6 sm:mb-8">
+          <Text className="text-[#101820F2] text-center font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl mb-4 leading-tight max-w-5xl mx-auto px-4">
             See Every Risk. <br /> Spot Every Opportunity.
           </Text>
-          <Text className="text-inda-dark text-center font-normal w-full max-w-[600px] lg:text-[22px] mb-6 sm:mb-8">
+          <Text className="text-[#101820E5] text-center font-normal w-full max-w-[700px] lg:text-[22px] mb-6 sm:mb-8">
             Whether it’s valuation, due diligence, or investment potential, Inda
             delivers a clear, data-backed answer you can trust.
           </Text>
@@ -626,7 +658,7 @@ const Landing: React.FC = () => {
         transition={{ duration: 0.8, ease: "easeOut" }}
       >
         <motion.p
-          className="text-inda-dark text-center font-bold text-2xl sm:text-3xl md:text-4xl mb-4 sm:mb-6"
+          className="text-[#101820F2] text-center font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl mb-4 leading-tight max-w-5xl mx-auto px-4"
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -668,12 +700,12 @@ const Landing: React.FC = () => {
               company—including verification status, legal risks, ROI
               projections, and agent trust ratings.
             </p>
-            <a
-              href="#"
+            <button
+              onClick={handleSeeSample}
               className="w-full sm:w-auto bg-[#0A1A22] text-white text-lg sm:text-xl px-8 sm:px-10 h-[56px] sm:h-[67px] flex items-center justify-center rounded-full hover:bg-[#11242e] transition-all duration-300 hover:scale-105"
             >
               See full report sample
-            </a>
+            </button>
           </motion.div>
         </div>
       </motion.section>
@@ -879,7 +911,7 @@ const Landing: React.FC = () => {
                   </motion.div>
 
                   <motion.button
-                    onClick={choseFree}
+                    onClick={() => handlePlanSelect("free")}
                     className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -909,7 +941,7 @@ const Landing: React.FC = () => {
                       whileInView={{ opacity: 1, x: 0 }}
                       transition={{ duration: 0.5, delay: 0.4 }}
                     >
-                      ₦3,000
+                      ₦7,500
                     </motion.div>
                     <motion.h3
                       className="text-lg sm:text-xl font-bold text-gray-900 mb-2"
@@ -987,6 +1019,7 @@ const Landing: React.FC = () => {
                   </motion.div>
 
                   <motion.button
+                    onClick={() => handlePlanSelect("instant")}
                     className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -1116,6 +1149,7 @@ const Landing: React.FC = () => {
                   </motion.div>
 
                   <motion.button
+                    onClick={() => handlePlanSelect("deep-dive")}
                     className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -1218,6 +1252,7 @@ const Landing: React.FC = () => {
                   </motion.div>
 
                   <motion.button
+                    onClick={() => handlePlanSelect("deeper-dive")}
                     className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base"
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -1263,10 +1298,10 @@ const Landing: React.FC = () => {
         transition={{ duration: 0.8, ease: "easeOut" }}
       >
         <motion.div
-          className="relative w-[95%] mx-auto overflow-hidden rounded-[48px] sm:rounded-[64px] bg-[#E5E5E599] flex flex-col items-center justify-center px-4 sm:px-6 md:px-8"
+          className="relative w-[80%] mx-auto rounded-[48px] sm:rounded-[64px] border border-[#4EA8A1]  flex flex-col items-center justify-center px-4 sm:px-6 md:px-8"
           style={{
             minHeight: 450,
-            border: "1.5px solid #fff",
+            border: "0.5px solid #4EA8A1",
             boxSizing: "border-box",
           }}
           initial={{ opacity: 0, scale: 0.9 }}
@@ -1274,64 +1309,50 @@ const Landing: React.FC = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          {/* Thin white border inside */}
-          <div className="absolute inset-0 pointer-events-none">
-            <div
-              className="w-full h-full rounded-[40px] sm:rounded-[56px] border border-[#00000040] opacity-60 absolute top-3 sm:top-4 left-3 sm:left-4"
-              style={{ zIndex: 1 }}
-            ></div>
-          </div>
-          {/* Main content */}
           <div className="relative z-10 flex flex-col items-center justify-center w-full h-full py-12 sm:py-16">
             <motion.h2
-              className="text-inda-dark text-center font-extrabold text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl leading-tight mb-8 sm:mb-10"
+              className="text-[#101820F2] text-center font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl mb-8 sm:mb-12 md:mb-16 leading-tight max-w-5xl mx-auto px-4"
               style={{ letterSpacing: 0 }}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8, delay: 0.4 }}
             >
-              See the truth behind
+              See the truth behind that
               <br className="hidden sm:block" />
-              that listing today!
+              listing today!
             </motion.h2>
             <motion.button
-              className="bg-[#4EA8A1] text-white text-lg sm:text-xl md:text-2xl font-normal rounded-full px-8 sm:px-10 md:px-12 py-4 sm:py-5 mt-2 shadow-lg hover:bg-[#1a2a33] transition-all duration-300 hover:scale-105 focus:outline-none"
+              className="bg-[#4EA8A1] text-white text-lg sm:text-xl md:text-2xl font-normal rounded-full px-8 sm:px-10 md:px-12 py-4 sm:py-5 mt-0 shadow-lg hover:bg-[#1a2a33] transition-all duration-300 hover:scale-105 focus:outline-none"
               style={{ minWidth: 280 }}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8, delay: 0.6 }}
+              onClick={handleCTA}
             >
               Try your first search now
             </motion.button>
           </div>
           <motion.button
             id="cta-chat-btn"
-            className="absolute left-4 sm:left-6 md:left-8 bottom-12 sm:bottom-16 bg-[#4EA8A1] text-white text-base sm:text-lg md:text-xl font-normal rounded-full px-6 sm:px-8 md:px-10 py-3 sm:py-4 shadow-lg hover:bg-[#1a2a33] transition-all duration-300 hover:scale-105 focus:outline-none"
+            className="absolute left-1/2 -translate-x-1/2 -bottom-40 sm:-bottom-6 z-50 bg-[#4EA8A1] text-white text-base sm:text-lg md:text-xl font-normal rounded-full px-6 sm:px-8 md:px-10 py-3 sm:py-4 shadow-lg hover:bg-[#1a2a33] transition-all duration-300 hover:scale-105 focus:outline-none"
             style={{ minWidth: 200, zIndex: 10 }}
             initial={{ opacity: 0, x: -20 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.8 }}
+            onClick={() =>
+              openWhatsApp(
+                "Hello Inda team, I have a question about verifying a property."
+              )
+            }
           >
             Chat with Us
           </motion.button>
-          <motion.div
-            className="absolute bottom-12 sm:bottom-16 bg-[#00000040] opacity-60 h-px hidden sm:block"
-            style={{
-              left: `calc(24px + 200px + 2rem)`, // left + minWidth + padding
-              right: 0,
-              zIndex: 2,
-            }}
-            initial={{ opacity: 0, scaleX: 0 }}
-            whileInView={{ opacity: 0.6, scaleX: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 1 }}
-          ></motion.div>
         </motion.div>
       </motion.section>
-      {free && <a href="./result/hidden.tsx" />}
+      {/* End landing content */}
       <Footer />
     </Container>
   );

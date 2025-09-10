@@ -1,5 +1,7 @@
 import { ToastProvider } from "@/components/ToastProvider";
 import "@/styles/globals.css";
+// Mapbox GL styles (for MapboxMap component)
+// Mapbox styles no longer needed after reverting to Google Street View
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { AppProps } from "next/app";
 import Head from "next/head";

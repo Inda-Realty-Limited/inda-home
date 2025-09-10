@@ -27,9 +27,12 @@ const StreetView: React.FC<Props> = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [scriptReady, setScriptReady] = useState(false);
   const [noCoverage, setNoCoverage] = useState(false);
-  const [useDemo, setUseDemo] = useState(false);
-
+  // Demo mode shows a known-covered residential area with houses
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+  // Default demo location to a well-known urban area with coverage
+  const demoLat = Number(process.env.NEXT_PUBLIC_SV_DEMO_LAT ?? 40.758);
+  const demoLng = Number(process.env.NEXT_PUBLIC_SV_DEMO_LNG ?? -73.9855);
+  const [useDemo, setUseDemo] = useState<boolean>(!apiKey);
 
   useEffect(() => {
     if (!apiKey) return; // we'll render iframe fallback below
@@ -39,13 +42,17 @@ const StreetView: React.FC<Props> = ({
       const sv = new window.google.maps.StreetViewService();
       const tryRadii = [50, 100, 250, 500, 1000, 2000, 5000];
 
-      const target = useDemo
-        ? { lat: 40.758, lng: -73.9855 } // Times Square demo
-        : { lat, lng };
+      const target = useDemo ? { lat: demoLat, lng: demoLng } : { lat, lng };
 
       const tryFind = (i: number) => {
         if (i >= tryRadii.length) {
-          setNoCoverage(true);
+          // No coverage near target; auto-switch to demo area once
+          if (!useDemo) {
+            setUseDemo(true);
+            setNoCoverage(false);
+          } else {
+            setNoCoverage(true);
+          }
           return;
         }
         sv.getPanorama(
@@ -86,7 +93,7 @@ const StreetView: React.FC<Props> = ({
     init();
   }, [scriptReady, apiKey, lat, lng, heading, pitch, fov, useDemo]);
 
-  // If no API key provided, fall back to keyless Street View iframe; if that shows no coverage, user will see Google's message.
+  // If no API key provided, fall back to keyless Street View iframe (use demo if requested)
   const fallbackIframe = (
     <div className="w-full h-full relative">
       <iframe
@@ -94,7 +101,9 @@ const StreetView: React.FC<Props> = ({
         className="w-full h-full"
         loading="lazy"
         referrerPolicy="no-referrer-when-downgrade"
-        src={`https://maps.google.com/?layer=c&cbll=${lat},${lng}&cbp=11,${heading},0,0,0&output=svembed`}
+        src={`https://maps.google.com/?layer=c&cbll=${
+          useDemo ? demoLat : lat
+        },${useDemo ? demoLng : lng}&cbp=11,${heading},0,0,0&output=svembed`}
       />
       <div className="absolute bottom-2 right-2">
         <button
@@ -129,7 +138,9 @@ const StreetView: React.FC<Props> = ({
                     className="w-full h-full"
                     loading="lazy"
                     referrerPolicy="no-referrer-when-downgrade"
-                    src={`https://www.google.com/maps?q=${lat},${lng}&t=k&z=18&output=embed`}
+                    src={`https://www.google.com/maps?q=${
+                      useDemo ? demoLat : lat
+                    },${useDemo ? demoLng : lng}&t=k&z=18&output=embed`}
                   />
                 </div>
                 <button
@@ -142,17 +153,17 @@ const StreetView: React.FC<Props> = ({
             </div>
           )}
         </>
-      ) : // No API key: allow user to try demo Street View via iframe location change
-      useDemo ? (
+      ) : (
+        // No API key: show keyless Street View (demo by default)
         <iframe
           title="street-view-demo"
           className="w-full h-full"
           loading="lazy"
           referrerPolicy="no-referrer-when-downgrade"
-          src={`https://maps.google.com/?layer=c&cbll=40.758,-73.9855&cbp=11,${heading},0,0,0&output=svembed`}
+          src={`https://maps.google.com/?layer=c&cbll=${
+            useDemo ? demoLat : lat
+          },${useDemo ? demoLng : lng}&cbp=11,${heading},0,0,0&output=svembed`}
         />
-      ) : (
-        fallbackIframe
       )}
     </div>
   );

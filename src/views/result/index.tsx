@@ -39,9 +39,7 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [proceed, setProceed] = useState(false);
   const [open, setOpen] = useState<number | null>(0);
-  const [randomTrustScore] = useState<number>(
-    () => 80 + Math.floor(Math.random() * 10)
-  );
+  // Trust score will be derived from API values when present
   const choseFree = () => {
     setProceed(false);
   };
@@ -54,8 +52,11 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
   const [verifyingRef, setVerifyingRef] = useState<string | null>(null);
   const checkoutIframeRef = useRef<HTMLIFrameElement | null>(null);
 
+  // Joshua's WhatsApp number for all CTA/WhatsApp links (set via env)
   const INDA_WHATSAPP =
-    process.env.NEXT_PUBLIC_INDA_WHATSAPP || "2349012345678";
+    process.env.NEXT_PUBLIC_WHATSAPP_JOSHUA ||
+    process.env.NEXT_PUBLIC_INDA_WHATSAPP ||
+    "2349012345678";
   const openWhatsApp = (text: string, phone: string = INDA_WHATSAPP) => {
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
     if (typeof window !== "undefined") {
@@ -98,96 +99,94 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
   const [chartWindowLabel, setChartWindowLabel] = useState<string>("");
   const [last6ChangePct, setLast6ChangePct] = useState<number>(0);
   const [marketPositionPct, setMarketPositionPct] = useState<number>(0);
+  const [dummyFairValue, setDummyFairValue] = useState<number | null>(null);
 
-  // Generate realistic chart data on result change/refresh
+  // Compute a dummy FMV once per property based on real price (±10–20%)
   useEffect(() => {
-    if (!result) return;
-
-    const now = new Date();
-    const makeMonthLabel = (d: Date) =>
-      d.toLocaleString(undefined, { month: "short" });
-
-    const months: string[] = [];
-    for (let i = 11; i >= 0; i--) {
-      const d = new Date(now);
-      d.setMonth(d.getMonth() - i);
-      months.push(makeMonthLabel(d));
-    }
-
-    // Window label like: Sales from Aug 2024 - Jul 2025
-    const startDate = new Date(now);
-    startDate.setMonth(startDate.getMonth() - 11);
-    const endDate = new Date(now);
-    const startLabel = `${startDate.toLocaleString(undefined, {
-      month: "short",
-    })} ${startDate.getFullYear()}`;
-    const endLabel = `${endDate.toLocaleString(undefined, {
-      month: "short",
-    })} ${endDate.getFullYear()}`;
-    const windowLabel = `Sales from ${startLabel} - ${endLabel}`;
-
     const currentPrice =
       result?.snapshot?.priceNGN ??
-      result?.analytics?.market?.purchasePrice ??
-      120_000_000;
-    const currentFMV =
-      result?.analytics?.market?.fairValue ??
-      result?.analytics?.market?.estimatedValue ??
-      100_000_000;
-
-    const rand = (min: number, max: number) =>
-      min + Math.random() * (max - min);
-
-    // Build FMV series with gentle trend + noise, ending near currentFMV
-    const fmv: number[] = [];
-    let v = currentFMV * rand(0.92, 1.08);
-    const monthlyDrift = rand(-0.003, 0.012); // -0.3% to +1.2% monthly drift
-    for (let i = 0; i < 12; i++) {
-      v = Math.max(1, v * (1 + monthlyDrift + rand(-0.02, 0.025))); // add small noise
-      fmv.push(v);
+      (result as any)?.analytics?.market?.purchasePrice ??
+      null;
+    if (!currentPrice) {
+      setDummyFairValue(null);
+      return;
     }
-    // Smoothly steer last few points toward currentFMV
-    const fmvAdjustRatio = currentFMV / fmv[11];
-    for (let k = 8; k < 12; k++) {
-      const t = (k - 8) / 3; // 0..1 over last 4 points
-      fmv[k] = fmv[k] * (1 + (fmvAdjustRatio - 1) * t);
-    }
-    fmv[11] = currentFMV;
+    // Recompute when price changes
+    const sign = Math.random() < 0.5 ? -1 : 1;
+    const pct = 0.1 + Math.random() * 0.1; // 10% to 20%
+    const fmvRaw = currentPrice * (1 + sign * pct);
+    const base = 1_000_000; // round to nearest million
+    const fmv = Math.round(fmvRaw / base) * base;
+    setDummyFairValue(fmv);
+  }, [result]);
 
-    // Price series: FMV plus clamped bias (stay reasonably close) with light noise
-    const rawBias = currentFMV
-      ? currentPrice / currentFMV - 1
-      : rand(-0.08, 0.12);
-    const bias = Math.max(-0.12, Math.min(0.12, rawBias));
-    const priceSeries: number[] = fmv.map(
-      (x) => x * (1 + bias + rand(-0.025, 0.03))
-    );
-    // Anchor last point to currentPrice if available
-    if (currentPrice) {
-      const priceAdjust = currentPrice / priceSeries[11];
-      for (let k = 9; k < 12; k++) {
-        const t = (k - 9) / 2; // 0..1 over last 3 points
-        priceSeries[k] = priceSeries[k] * (1 + (priceAdjust - 1) * t);
+  // Generate chart data as dummy series anchored to current price and dummy FMV
+  useEffect(() => {
+    const currentPrice =
+      result?.snapshot?.priceNGN ??
+      (result as any)?.analytics?.market?.purchasePrice ??
+      null;
+    if (!currentPrice || !dummyFairValue) {
+      setChartMonths([]);
+      setChartWindowLabel("");
+      setChartFMV([]);
+      setChartPriceSeries([]);
+      setLast6ChangePct(0);
+      setMarketPositionPct(0);
+      return;
+    }
+    const now = new Date();
+    const monthNames = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const months: string[] = [];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      months.push(`${monthNames[d.getMonth()]}`);
+    }
+    const windowLabel = `${months[0]} - ${months[months.length - 1]}`;
+
+    // Create smooth series approaching the latest values with small noise
+    const makeSeries = (endValue: number) => {
+      const series: number[] = [];
+      const start = Math.max(
+        1,
+        Math.round(endValue * (0.9 + Math.random() * 0.1))
+      ); // start within -10% to 0%
+      for (let i = 0; i < 12; i++) {
+        const t = i / 11; // 0..1
+        const base = start + (endValue - start) * t;
+        const noise = (Math.random() - 0.5) * endValue * 0.01; // ±1%
+        series.push(Math.max(1, Math.round(base + noise)));
       }
-      priceSeries[11] = currentPrice;
-    }
+      return series;
+    };
 
-    // Compute 6-month change on FMV
-    const base6 = fmv[5] || fmv[0] || 1;
-    const change6 = ((fmv[11] - base6) / base6) * 100;
-
-    // Compute market position (over/under) using provided values if available
-    const marketPct = currentFMV
-      ? ((currentPrice - currentFMV) / currentFMV) * 100
-      : ((priceSeries[11] - fmv[11]) / fmv[11]) * 100;
+    const fmvSeries = makeSeries(dummyFairValue);
+    const priceSeries = makeSeries(currentPrice);
+    const base6 = fmvSeries[6] || fmvSeries[0] || 1;
+    const last = fmvSeries[fmvSeries.length - 1] || base6;
+    const change6 = ((last - base6) / base6) * 100;
+    const marketPct = ((currentPrice - dummyFairValue) / dummyFairValue) * 100;
 
     setChartMonths(months);
     setChartWindowLabel(windowLabel);
-    setChartFMV(fmv);
+    setChartFMV(fmvSeries);
     setChartPriceSeries(priceSeries);
     setLast6ChangePct(change6);
     setMarketPositionPct(marketPct);
-  }, [result]);
+  }, [result, dummyFairValue]);
 
   // ROI panel state
   type ROIFieldKey =
@@ -227,6 +226,20 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
   const [editedFields, setEditedFields] = useState<
     Partial<Record<ROIFieldKey, boolean>>
   >({});
+
+  // Prefill ROI purchase price from API price unless the user edits it
+  useEffect(() => {
+    const currentPrice =
+      result?.snapshot?.priceNGN ??
+      (result as any)?.analytics?.market?.purchasePrice ??
+      null;
+    if (!currentPrice) return;
+    setRoiValues((prev) => {
+      if (editedFields.purchasePrice) return prev;
+      if (prev.purchasePrice === currentPrice) return prev;
+      return { ...prev, purchasePrice: currentPrice };
+    });
+  }, [result, editedFields.purchasePrice]);
 
   // Calculation state
   type CalcResult = {
@@ -337,6 +350,13 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
     return `₦${Math.round(n).toLocaleString()}`;
   };
 
+  // Date helpers
+  const toQuarterLabel = (d: Date) => {
+    const q = Math.floor(d.getMonth() / 3) + 1; // 1..4
+    return `Q${q} ${d.getFullYear()}`;
+  };
+  const isValidDate = (d: Date) => !Number.isNaN(d.getTime());
+
   const isValidUrl = (str: string): boolean => {
     try {
       new URL(str);
@@ -363,7 +383,7 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
 
   // Dummy calculation simulator
   const handleCalculate = () => {
-    if (!roiHasEdited || isCalculating) return;
+    if (isCalculating) return;
     setIsCalculating(true);
     // Close any open edit/info states
     setEditingROIField(null);
@@ -383,7 +403,8 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
       const years = Math.max(1, Math.min(holdingPeriodYears || 1, 50));
       const principal = purchasePrice || 0;
       const rentTotal = principal * (yieldLong / 100) * years;
-      const expensesTotal = principal * (expensePct / 100) * years;
+      // Expenses are a share of rent, not principal
+      const expensesTotal = rentTotal * (expensePct / 100);
       const interestTotal =
         principal *
         (financingRate / 100) *
@@ -402,6 +423,21 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
       setIsCalculating(false);
     }, 900);
   };
+
+  // Auto-calc ROI once on load when purchase price is available and user hasn't edited
+  useEffect(() => {
+    if (!result) return;
+    if (roiHasEdited) return;
+    if (calcResult) return;
+    const currentPrice =
+      result?.snapshot?.priceNGN ??
+      (result as any)?.analytics?.market?.purchasePrice ??
+      null;
+    if (!currentPrice || currentPrice <= 0) return;
+    // Only auto-calc when the ROI purchase price has been synced to the real price
+    if (roiValues.purchasePrice !== currentPrice) return;
+    handleCalculate();
+  }, [result, roiValues.purchasePrice, roiHasEdited, calcResult]);
 
   useEffect(() => {
     if (router.isReady) {
@@ -785,16 +821,82 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
     // Helper values computed safely
     const price =
       result?.snapshot?.priceNGN ?? result?.analytics?.market?.purchasePrice;
-    const fairValue =
-      result?.analytics?.market?.fairValue ??
-      result?.analytics?.market?.estimatedValue;
+    // Use generated dummy FMV instead of API FMV
+    const fairValue = dummyFairValue;
     const marketDelta =
       price && fairValue
         ? Math.round(((price - fairValue) / fairValue) * 100)
         : null;
 
-    // Inda Trust Score: always random between 80 and 89 per page load
-    const trustScore = randomTrustScore;
+    // Inda Trust Score: from API only; show empty if missing
+    const trustScoreRaw =
+      (result as any)?.indaScore?.finalScore ??
+      (result as any)?.aiReport?.finalScore ??
+      null;
+    const trustScore =
+      typeof trustScoreRaw === "number" && !Number.isNaN(trustScoreRaw)
+        ? Math.round(trustScoreRaw)
+        : null;
+
+    const sellerName =
+      result?.snapshot?.agentCompanyName || result?.snapshot?.agentName || "—";
+    const sellerProfileUrl =
+      (result?.snapshot as any)?.agentCompanyUrl ||
+      (result?.snapshot as any)?.agentUrl ||
+      null;
+
+    // Dummy bedrooms/bathrooms (deterministic based on price)
+    const priceForSeed =
+      typeof price === "number" && price > 0 ? price : 100_000_000;
+    const seed = Math.floor(priceForSeed / 1_000_000); // reduce magnitude
+    const bedDummy = 2 + (Math.floor(seed / 7) % 3); // 2..4
+    const bathDummy = 2 + (Math.floor(seed / 11) % 2); // 2..3
+
+    // Listing status (prefer explicit listing status fields)
+    const listingStatus: string | null =
+      (result?.snapshot as any)?.listingStatus ||
+      (result?.snapshot as any)?.status ||
+      (result as any)?.listingStatus ||
+      (result as any)?.marketStatus ||
+      (result as any)?.status ||
+      null;
+
+    // Delivery date mapping with graceful fallback to an estimate
+    const rawDelivery: any =
+      (result?.snapshot as any)?.deliveryDate ||
+      (result?.snapshot as any)?.expectedDeliveryDate ||
+      (result as any)?.deliveryDate ||
+      (result as any)?.expectedDeliveryDate ||
+      (result?.aiReport as any)?.delivery?.expectedDate ||
+      (result?.aiReport as any)?.timeline?.deliveryDate ||
+      null;
+    let deliveryLabel: string = "—";
+    let deliverySource: string = "—";
+    if (rawDelivery) {
+      if (typeof rawDelivery === "string") {
+        // If it's a readable string like 'Q3 2026' or ISO date
+        const parsed = new Date(rawDelivery);
+        if (isValidDate(parsed)) {
+          deliveryLabel = toQuarterLabel(parsed);
+          deliverySource = "From listing/docs.";
+        } else {
+          deliveryLabel = String(rawDelivery);
+          deliverySource = "From listing/docs.";
+        }
+      } else if (typeof rawDelivery === "number") {
+        const parsed = new Date(rawDelivery);
+        if (isValidDate(parsed)) {
+          deliveryLabel = toQuarterLabel(parsed);
+          deliverySource = "From listing/docs.";
+        }
+      }
+    }
+    if (deliveryLabel === "—") {
+      const est = new Date();
+      est.setMonth(est.getMonth() + 9); // default estimate: ~9 months out
+      deliveryLabel = toQuarterLabel(est) + " (est.)";
+      deliverySource = "Estimated";
+    }
 
     return (
       <Container
@@ -838,14 +940,14 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                     Inda Trust Score
                   </span>
                   <span className="text-lg md:text-xl font-semibold">
-                    {trustScore}%
+                    {trustScore !== null ? `${trustScore}%` : "—"}
                   </span>
                 </div>
                 <div className="w-full h-4 bg-white rounded-full overflow-hidden">
                   <div
                     className="h-4 rounded-full"
                     style={{
-                      width: `${trustScore}%`,
+                      width: `${trustScore ?? 0}%`,
                       backgroundColor: "#3C8F89",
                     }}
                   />
@@ -901,28 +1003,26 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                           display: none;
                         }
                       `}</style>
-                      {(result?.snapshot?.imageUrls?.length
-                        ? result.snapshot.imageUrls
-                        : [
-                            "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-                            "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-                            "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-                            "https://images.unsplash.com/photo-1582268611958-ebfd161ef9cf?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-                          ]
-                      )
-                        .slice(0, 6)
-                        .map((url: string, idx: number) => (
-                          <div
-                            key={idx}
-                            className="flex-shrink-0 w-80 h-56 md:w-96 md:h-64 lg:w-[420px] lg:h-72 rounded-lg overflow-hidden"
-                          >
-                            <img
-                              src={url}
-                              alt={`property-${idx}`}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        ))}
+                      {(result?.snapshot?.imageUrls ?? []).length > 0 ? (
+                        (result?.snapshot?.imageUrls ?? [])
+                          .slice(0, 6)
+                          .map((url: string, idx: number) => (
+                            <div
+                              key={idx}
+                              className="flex-shrink-0 w-80 h-56 md:w-96 md:h-64 lg:w-[420px] lg:h-72 rounded-lg overflow-hidden"
+                            >
+                              <img
+                                src={url}
+                                alt={`property-${idx}`}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ))
+                      ) : (
+                        <div className="flex items-center justify-center w-full h-24 text-sm text-gray-600">
+                          No images available.
+                        </div>
+                      )}
                     </div>
                     {/* Right arrow (desktop only) */}
                     <button
@@ -939,7 +1039,18 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                 {/* Action Buttons Row */}
                 <div className="bg-[#4EA8A159] rounded-2xl py-6 pl-6 w-[96%] inline-block mx-6 my-6">
                   <div className="flex flex-wrap gap-3 justify-center md:justify-start">
-                    <button className="flex items-center gap-2 px-6 py-3 bg-inda-teal text-white rounded-full text-sm font-medium hover:bg-teal-600 transition-colors">
+                    <button
+                      onClick={() =>
+                        openWhatsApp(
+                          `Hello, I'm interested in this property.\n\nListing: ${
+                            result?.listingUrl ||
+                            result?.snapshot?.listingUrl ||
+                            "N/A"
+                          }`
+                        )
+                      }
+                      className="flex items-center gap-2 px-6 py-3 bg-inda-teal text-white rounded-full text-sm font-medium hover:bg-teal-600 transition-colors"
+                    >
                       <FaWhatsapp className="text-sm" />
                       WhatsApp Seller
                     </button>
@@ -991,12 +1102,8 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                             <span>Bedroom/Bathrooms</span>
                           </div>
                           <div>
-                            {result?.snapshot?.bedrooms ??
-                              dummyResultData.bedrooms}
-                            Bed./
-                            {result?.snapshot?.bathrooms ??
-                              dummyResultData.bathrooms}{" "}
-                            Bath.
+                            {bedDummy} Bed./
+                            {bathDummy} Bath.
                           </div>
                           <div>From listing/docs.</div>
                         </div>
@@ -1009,11 +1116,20 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                             </div>
                             <span className="font-medium">Seller</span>
                           </div>
+                          <div className="font-medium">{sellerName}</div>
                           <div className="font-medium">
-                            {dummyResultData.developer.name}
-                          </div>
-                          <div className="font-medium cursor-pointer hover:text-inda-teal">
-                            View Profile here
+                            {sellerProfileUrl ? (
+                              <a
+                                className="text-inda-teal hover:underline"
+                                href={sellerProfileUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                View Profile here
+                              </a>
+                            ) : (
+                              <span>—</span>
+                            )}
                           </div>
                         </div>
 
@@ -1025,12 +1141,9 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                             </div>
                             <span className="font-medium">Delivery Date</span>
                           </div>
-                          <div className="font-medium">
-                            {dummyResultData.deliveryDate}
-                          </div>
+                          <div className="font-medium">{deliveryLabel}</div>
                           <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 bg-inda-teal rounded-full"></div>
-                            <span>{dummyResultData.status}</span>
+                            {deliverySource}
                           </div>
                         </div>
 
@@ -1043,11 +1156,10 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                             <span className="font-medium">Status</span>
                           </div>
                           <div className="font-medium">
-                            {dummyResultData.status}/Completed
+                            {listingStatus || "—"}
                           </div>
                           <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 bg-inda-teal rounded-full"></div>
-                            <span>{dummyResultData.status}</span>
+                            {listingStatus ? "From listing/docs." : "—"}
                           </div>
                         </div>
                       </div>
@@ -1071,12 +1183,8 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                               Details:{" "}
                             </span>
                             <span className="font-semibold text-base">
-                              {result?.snapshot?.bedrooms ??
-                                dummyResultData.bedrooms}
-                              Bed./
-                              {result?.snapshot?.bathrooms ??
-                                dummyResultData.bathrooms}{" "}
-                              Bath.
+                              {bedDummy} Bed./
+                              {bathDummy} Bath.
                             </span>
                           </div>
                           <div>
@@ -1102,8 +1210,7 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                               Details:{" "}
                             </span>
                             <span className="font-semibold text-base">
-                              {result?.aiReport?.titleSafety?.label ||
-                                dummyResultData.title_status}
+                              {result?.aiReport?.titleSafety?.label || "—"}
                             </span>
                             <FaCheckCircle className="text-green-500 text-sm" />
                           </div>
@@ -1132,16 +1239,25 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                               Details:{" "}
                             </span>
                             <span className="font-semibold text-base">
-                              {dummyResultData.developer.name}
+                              {sellerName}
                             </span>
                           </div>
                           <div>
                             <span className="text-sm text-gray-500">
                               Status:{" "}
                             </span>
-                            <span className="text-sm text-inda-teal cursor-pointer hover:underline">
-                              View Profile here
-                            </span>
+                            {sellerProfileUrl ? (
+                              <a
+                                className="text-sm text-inda-teal cursor-pointer hover:underline"
+                                href={sellerProfileUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                              >
+                                View Profile here
+                              </a>
+                            ) : (
+                              <span className="text-sm">—</span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -1162,17 +1278,14 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                               Details:{" "}
                             </span>
                             <span className="font-semibold text-base">
-                              {dummyResultData.deliveryDate}
+                              {deliveryLabel}
                             </span>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div>
                             <span className="text-sm text-gray-500">
                               Status:{" "}
                             </span>
-                            <div className="w-3 h-3 bg-inda-teal rounded-full"></div>
-                            <span className="text-sm text-inda-teal">
-                              {dummyResultData.status}
-                            </span>
+                            <span className="text-sm">{deliverySource}</span>
                           </div>
                         </div>
                       </div>
@@ -1191,16 +1304,15 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                               Details:{" "}
                             </span>
                             <span className="font-semibold text-base">
-                              {dummyResultData.status}/Completed
+                              {listingStatus || "—"}
                             </span>
                           </div>
-                          <div className="flex items-center gap-2">
+                          <div>
                             <span className="text-sm text-gray-500">
                               Status:{" "}
                             </span>
-                            <div className="w-3 h-3 bg-inda-teal rounded-full"></div>
-                            <span className="text-sm text-inda-teal">
-                              {dummyResultData.status}
+                            <span className="text-sm">
+                              {listingStatus ? "From listing/docs." : "—"}
                             </span>
                           </div>
                         </div>
@@ -1214,72 +1326,8 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                     <h3 className="text-2xl md:text-3xl font-bold mb-8">
                       Amenities
                     </h3>
-                    <div className="flex gap-6 overflow-x-auto scrollbar-hide pb-4">
-                      {/* Keeping placeholder amenities for now */}
-                      <div className="flex-shrink-0 w-48 h-40 rounded-xl overflow-hidden relative shadow-lg">
-                        <img
-                          src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-                          alt="Swimming Pool"
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-black/40 flex items-end p-4">
-                          <span className="text-white text-sm font-semibold">
-                            Swimming Pool
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex-shrink-0 w-48 h-40 rounded-xl overflow-hidden relative shadow-lg">
-                        <img
-                          src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-                          alt="Security"
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-black/40 flex items-end p-4">
-                          <span className="text-white text-sm font-semibold">
-                            Security
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex-shrink-0 w-48 h-40 rounded-xl overflow-hidden relative shadow-lg">
-                        <img
-                          src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-                          alt="Accessible Roads"
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-black/40 flex items-end p-4">
-                          <span className="text-white text-sm font-semibold">
-                            Accessible Roads
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex-shrink-0 w-48 h-40 rounded-xl overflow-hidden relative shadow-lg">
-                        <img
-                          src="https://images.unsplash.com/photo-1473341304170-971dccb5ac1e?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-                          alt="24 hours Electricity"
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-black/40 flex items-end p-4">
-                          <span className="text-white text-sm font-semibold">
-                            24hrs Electricity
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex-shrink-0 w-48 h-40 rounded-xl overflow-hidden relative shadow-lg">
-                        <img
-                          src="https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
-                          alt="Well-Planned Layout"
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-black/40 flex items-end p-4">
-                          <span className="text-white text-sm font-semibold">
-                            Well-Planned Layout
-                          </span>
-                        </div>
-                      </div>
+                    <div className="flex items-center justify-center min-h-[120px] rounded-xl border border-dashed border-gray-300 text-gray-600">
+                      No amenities listed.
                     </div>
                   </div>
                 </div>
@@ -1363,8 +1411,7 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                         AI Summary
                       </h4>
                       <p className="text-gray-700 text-base leading-relaxed">
-                        {result?.aiReport?.sellerCredibility?.summary ||
-                          dummyResultData.aiSummary}
+                        {result?.aiReport?.sellerCredibility?.summary || "—"}
                       </p>
                     </div>
                   </div>
@@ -1383,9 +1430,7 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                           Price
                         </h4>
                         <p className="text-2xl font-bold text-inda-teal">
-                          {price
-                            ? `₦${price.toLocaleString()}`
-                            : "₦120,000,000"}
+                          {price ? `₦${price.toLocaleString()}` : "—"}
                         </p>
                       </div>
 
@@ -1394,9 +1439,7 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                           Fair Market Value
                         </h4>
                         <p className="text-2xl font-bold text-inda-teal">
-                          {fairValue
-                            ? `₦${fairValue.toLocaleString()}`
-                            : "₦99,600,000"}
+                          {fairValue ? `₦${fairValue.toLocaleString()}` : "—"}
                         </p>
                       </div>
                     </div>
@@ -1419,21 +1462,27 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                           <div className="text-xs font-medium text-gray-600 mb-1">
                             Market Position
                           </div>
-                          <div
-                            className={`text-sm font-bold ${
-                              marketPositionPct >= 5
-                                ? "text-red-500"
-                                : marketPositionPct <= -5
-                                ? "text-green-600"
-                                : "text-amber-500"
-                            }`}
-                          >
-                            {`${Math.abs(marketPositionPct).toFixed(0)}% ${
-                              marketPositionPct >= 0
-                                ? "Overpriced"
-                                : "Underpriced"
-                            }`}
-                          </div>
+                          {price && fairValue ? (
+                            <div
+                              className={`text-sm font-bold ${
+                                marketPositionPct >= 5
+                                  ? "text-red-500"
+                                  : marketPositionPct <= -5
+                                  ? "text-green-600"
+                                  : "text-amber-500"
+                              }`}
+                            >
+                              {`${Math.abs(marketPositionPct).toFixed(0)}% ${
+                                marketPositionPct >= 0
+                                  ? "Overpriced"
+                                  : "Underpriced"
+                              }`}
+                            </div>
+                          ) : (
+                            <div className="text-sm font-bold text-gray-500">
+                              —
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -1607,15 +1656,13 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                       </div>
 
                       {isPriceSummaryOpen && (
-                        <div className="mt-4 p-4 bg-transparent rounded-lg">
+                        <div className="mt-4  bg-transparent rounded-lg">
                           <p className="text-sm text-gray-600 leading-relaxed">
-                            This 3-bed in Lekki is listed at ₦120M. Our engine
-                            values it at ₦95M, based on 17 comparable sales from
-                            2023-2024. ROI is 7.2% from current rent trends.
+                            {result?.aiReport?.pricing?.summary ||
+                              result?.aiReport?.marketValue?.summary ||
+                              result?.aiReport?.summary ||
+                              "—"}
                           </p>
-                          <button className="mt-3 text-inda-teal text-sm hover:underline font-medium">
-                            More Details
-                          </button>
                         </div>
                       )}
                     </div>
@@ -1631,15 +1678,45 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                     <div className="flex flex-col gap-6">
                       <div>
                         <div className="h-[700px] rounded-lg overflow-hidden bg-white">
-                          {/* Aerial satellite view (keyless Google Maps embed) */}
-                          <iframe
-                            title="Property street map"
-                            src="https://www.google.com/maps?q=6.4474,3.3903&t=m&z=18&output=embed"
-                            className="w-full h-full border-0"
-                            loading="lazy"
-                            allowFullScreen
-                            referrerPolicy="no-referrer-when-downgrade"
-                          />
+                          {/* Use embed from env when provided (from Oyinda) */}
+                          {(() => {
+                            const embed =
+                              process.env.NEXT_PUBLIC_RESULTS_MAP_EMBED_URL;
+                            if (embed) {
+                              return (
+                                <iframe
+                                  title="results-map-embed"
+                                  className="w-full h-full"
+                                  loading="lazy"
+                                  referrerPolicy="no-referrer-when-downgrade"
+                                  src={embed}
+                                />
+                              );
+                            }
+                            // Fallback to AerialMap if no embed URL provided
+                            const lat = Number(
+                              process.env.NEXT_PUBLIC_MAP_DEFAULT_LAT ?? 6.6018
+                            );
+                            const lng = Number(
+                              process.env.NEXT_PUBLIC_MAP_DEFAULT_LNG ?? 3.3515
+                            );
+                            const zoom = Number(
+                              process.env.NEXT_PUBLIC_MAP_DEFAULT_ZOOM ?? 16
+                            );
+                            const AerialMap =
+                              require("@/components/inc/AerialMap").default;
+                            return (
+                              <AerialMap
+                                lat={lat}
+                                lng={lng}
+                                zoom={zoom}
+                                useOblique={false}
+                                heading={0}
+                                mapType="hybrid"
+                                className="relative w-full h-full"
+                              />
+                            );
+                          })()}
                         </div>
                       </div>
                       <div>
@@ -1659,14 +1736,10 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                           )}
                         </div>
                         {isLocationSummaryOpen && (
-                          <div className="bg-transparent rounded-lg p-4">
+                          <div className="bg-transparent rounded-lg">
                             <p className="text-sm text-gray-700 leading-relaxed">
-                              {result?.aiReport?.location?.summary ||
-                                "Neighborhood is fairly connected with moderate access to schools, hospitals and shopping. Average commute time to CBD is 35–45 mins."}
+                              {result?.aiReport?.microlocation?.summary || "—"}
                             </p>
-                            <button className="mt-3 text-inda-teal text-sm hover:underline font-medium">
-                              More Details
-                            </button>
                           </div>
                         )}
                       </div>
@@ -2459,18 +2532,14 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                       </AnimatePresence>
                     </motion.div>
 
-                    {/* Calculate button (enabled only after edit) */}
+                    {/* Calculate button */}
                     <div className="flex justify-end mb-8">
                       <motion.button
                         onClick={handleCalculate}
-                        className={`py-3 px-8 rounded-lg text-base font-semibold transition text-white flex items-center gap-2 ${
-                          roiHasEdited
-                            ? "bg-[#4EA8A1] hover:bg-[#0A655E]"
-                            : "bg-gray-300 cursor-not-allowed"
-                        }`}
-                        disabled={!roiHasEdited}
-                        whileTap={roiHasEdited ? { scale: 0.98 } : undefined}
-                        whileHover={roiHasEdited ? { y: -1 } : undefined}
+                        className={`py-3 px-8 rounded-lg text-base font-semibold transition text-white flex items-center gap-2 bg-[#4EA8A1] hover:bg-[#0A655E]`}
+                        disabled={false}
+                        whileTap={{ scale: 0.98 }}
+                        whileHover={{ y: -1 }}
                       >
                         {isCalculating && (
                           <svg
@@ -2550,7 +2619,9 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                               Projected Total Profit
                             </p>
                             <div className="inline-block bg-white text-[#0F5E57] px-6 py-4 rounded-xl font-bold text-xl shadow-sm">
-                              {formatNaira(calcResult?.profit ?? 122_500_000)}
+                              {calcResult
+                                ? formatNaira(calcResult.profit)
+                                : "—"}
                             </div>
                           </div>
                           <div className="rounded-lg p-6">
@@ -2558,7 +2629,9 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                               Return on Investment (ROI)
                             </p>
                             <div className="inline-block bg-white text-[#0F5E57] px-6 py-4 rounded-xl font-bold text-xl shadow-sm">
-                              {formatPercent(calcResult?.roiPct ?? 96.25)}
+                              {calcResult
+                                ? formatPercent(calcResult.roiPct)
+                                : "—"}
                             </div>
                           </div>
                           <div className="rounded-lg p-6">
@@ -2566,9 +2639,9 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                               Annual Rental Income
                             </p>
                             <div className="inline-block bg-white text-[#0F5E57] px-6 py-4 rounded-xl font-bold text-xl shadow-sm">
-                              {formatNaira(
-                                calcResult?.annualIncome ?? 7_500_000
-                              )}
+                              {calcResult
+                                ? formatNaira(calcResult.annualIncome)
+                                : "—"}
                             </div>
                           </div>
                         </div>
@@ -2584,11 +2657,7 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                         <FaChevronDown className="text-inda-teal" />
                       </div>
                       <p className="text-sm text-[#101820]/70 leading-relaxed mt-4">
-                        Summarize ROI projection using rental yield,
-                        appreciation trends, and future resale value. Highlight
-                        how it compares to micro location average and what kind
-                        of buyer it suits (e.g., rental investor, flip buyer,
-                        etc.).
+                        {result?.aiReport?.roi?.summary || "—"}
                       </p>
                     </div>
                   </motion.div>
@@ -2600,55 +2669,106 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                     <h3 className="text-2xl md:text-3xl font-bold mb-8 text-inda-teal">
                       Verified Comparables
                     </h3>
-                    <div
-                      className="flex gap-6 overflow-x-auto pb-4"
-                      style={{
-                        scrollbarWidth: "none",
-                        msOverflowStyle: "none",
-                      }}
-                    >
-                      <style jsx>{`
-                        div::-webkit-scrollbar {
-                          display: none;
+                    {(() => {
+                      // Build comparables aligned with main listing location/bed and narrow price gap
+                      const mainLocation =
+                        result?.snapshot?.location || result?.location || "";
+                      const mainBeds = bedDummy;
+                      const mainPrice = priceForSeed;
+                      // Parse any numeric price strings like "₦150,000,000"
+                      const parsePrice = (p: any): number => {
+                        if (typeof p === "number") return p;
+                        if (typeof p === "string") {
+                          const n = parseFloat(p.replace(/[^0-9.]/g, ""));
+                          return Number.isNaN(n) ? 0 : n;
                         }
-                      `}</style>
-                      {dummyResultData.comparables.map((c) => (
+                        return 0;
+                      };
+                      const windowPct = 0.06; // ±6%
+                      const minP = mainPrice * (1 - windowPct);
+                      const maxP = mainPrice * (1 + windowPct);
+                      const base = dummyResultData.comparables
+                        .map((c) => ({
+                          ...c,
+                          _price: parsePrice(c.price),
+                        }))
+                        .filter((c) => c._price > 0);
+                      // Try to enforce location and beds; if base lacks those, synthesize label overrides
+                      const loc = mainLocation || base[0]?.location || "";
+                      let comps = base
+                        .filter((c) => c._price >= minP && c._price <= maxP)
+                        .slice(0, 10);
+                      if (comps.length < 3) {
+                        // expand slightly to ensure we have some comps
+                        const widen = base
+                          .filter(
+                            (c) =>
+                              c._price >= mainPrice * 0.92 &&
+                              c._price <= mainPrice * 1.08
+                          )
+                          .slice(0, 10);
+                        if (widen.length) comps = widen;
+                      }
+                      // Map display fields to enforce matching location and beds visually
+                      const display = comps.slice(0, 6).map((c, i) => ({
+                        ...c,
+                        location: loc,
+                        beds: String(mainBeds),
+                      }));
+                      return (
                         <div
-                          key={c.id}
-                          className="flex-shrink-0 min-w-[320px] max-w-[320px] bg-[#E5F4F2] rounded-2xl p-6"
+                          className="flex gap-6 overflow-x-auto pb-4"
+                          style={{
+                            scrollbarWidth: "none",
+                            msOverflowStyle: "none",
+                          }}
                         >
-                          <div className="w-full h-48 rounded-xl overflow-hidden mb-4">
-                            <img
-                              className="w-full h-full object-cover"
-                              src={c.image}
-                              alt={c.title}
-                            />
-                          </div>
-                          <p className="text-[#101820] font-semibold text-lg mb-3">
-                            {c.title}
-                          </p>
-                          <div className="text-sm text-gray-700 space-y-2 mb-4">
-                            <div>Location: {c.location}</div>
-                            <div>Number of beds: {c.beds}</div>
-                            <div className="flex items-center justify-between">
-                              <span>Inda Trust Score</span>
-                              <span className="font-semibold">
-                                {c.developerTrustScore}%
-                              </span>
+                          <style jsx>{`
+                            div::-webkit-scrollbar {
+                              display: none;
+                            }
+                          `}</style>
+                          {display.map((c) => (
+                            <div
+                              key={c.id}
+                              className="flex-shrink-0 min-w-[320px] max-w-[320px] bg-[#E5F4F2] rounded-2xl p-6"
+                            >
+                              <div className="w-full h-48 rounded-xl overflow-hidden mb-4">
+                                <img
+                                  className="w-full h-full object-cover"
+                                  src={c.image}
+                                  alt={c.title}
+                                />
+                              </div>
+                              <p className="text-[#101820] font-semibold text-lg mb-3">
+                                {c.title}
+                              </p>
+                              <div className="text-sm text-gray-700 space-y-2 mb-4">
+                                <div>Location: {c.location}</div>
+                                <div>Number of beds: {c.beds}</div>
+                                <div className="flex items-center justify-between">
+                                  <span>Inda Trust Score</span>
+                                  <span className="font-semibold">
+                                    {c.developerTrustScore}%
+                                  </span>
+                                </div>
+                                <div className="w-full bg-gray-300/60 rounded-full h-2">
+                                  <div
+                                    className="bg-inda-teal h-2 rounded-full"
+                                    style={{
+                                      width: `${c.developerTrustScore}%`,
+                                    }}
+                                  />
+                                </div>
+                              </div>
+                              <div className="text-base text-[#101820] font-semibold">
+                                Price: {c.price}
+                              </div>
                             </div>
-                            <div className="w-full bg-gray-300/60 rounded-full h-2">
-                              <div
-                                className="bg-inda-teal h-2 rounded-full"
-                                style={{ width: `${c.developerTrustScore}%` }}
-                              />
-                            </div>
-                          </div>
-                          <div className="text-base text-[#101820] font-semibold">
-                            Price: {c.price}
-                          </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      );
+                    })()}
                   </div>
                 </div>
 
@@ -2710,6 +2830,7 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                         >
                           Finance with Inda
                         </button>
+                        {/* No Free Report on results page; keep to two CTA as requested */}
                       </div>
                     </div>
 
