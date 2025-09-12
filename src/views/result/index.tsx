@@ -9,6 +9,7 @@ import { useRouter } from "next/router";
 import { useEffect, useRef, useState } from "react";
 import {
   FaBed,
+  FaBolt,
   FaBoxes,
   FaBuilding,
   FaCar,
@@ -22,11 +23,13 @@ import {
   FaLock,
   FaMapMarkerAlt,
   FaPhone,
+  FaRoad,
   FaShare,
   FaShieldAlt,
   FaShower,
   FaStar,
   FaUtensils,
+  FaWater,
   FaWhatsapp,
 } from "react-icons/fa";
 import { IoIosInformationCircle } from "react-icons/io";
@@ -427,25 +430,35 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
     return `₦${Math.round(n).toLocaleString()}`;
   };
 
-  // Extract amenities from snapshot.amenities (if present) or parse from description lines
+  // Extract amenities from snapshot.amenities (if present) or parse from title/description
   const extractAmenities = (snap: any): string[] => {
     const fromField = Array.isArray(snap?.amenities)
       ? snap.amenities.filter(Boolean).map((x: any) => String(x))
       : [];
     if (fromField.length) return fromField;
 
-    const desc: string = String(snap?.description || "").trim();
-    if (!desc) return [];
+    const title: string = String(snap?.title || "");
+    const desc: string = String(snap?.description || "");
+    const textBank = `${title}\n${desc}`.toLowerCase();
+
+    // Parse structured lists under a Features: header (flexible)
     const lines = desc
       .split(/\r?\n/)
       .map((l) => l.trim())
       .filter(Boolean);
-
-    // Prefer items after a "Features:" header
-    const startIdx = lines.findIndex((l) => /^features:?$/i.test(l));
     let feats: string[] = [];
-    if (startIdx !== -1) {
-      for (let i = startIdx + 1; i < lines.length; i++) {
+    const headerIdx = lines.findIndex((l) => /^features\s*:?.*$/i.test(l));
+    if (headerIdx !== -1) {
+      const headerLine = lines[headerIdx];
+      const afterColon = headerLine.split(/:/)[1];
+      if (afterColon) {
+        afterColon
+          .split(/,|·|•|\||\/|;|\s{2,}/)
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .forEach((s) => feats.push(s));
+      }
+      for (let i = headerIdx + 1; i < lines.length; i++) {
         const l = lines[i];
         // Stop at the next section header like "Title:", "Price:", etc.
         if (
@@ -455,13 +468,48 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
         ) {
           break;
         }
-        feats.push(l.replace(/^[-•*]\s*/, ""));
+        if (/^[\-•*·]/.test(l)) {
+          feats.push(l.replace(/^[\-−•*·]\s*/, ""));
+        } else if (/,/.test(l)) {
+          l.split(/,|·|•|\||\/|;|\s{2,}/)
+            .map((s) => s.trim())
+            .filter(Boolean)
+            .forEach((s) => feats.push(s));
+        } else {
+          feats.push(l);
+        }
       }
     } else {
-      // Fallback: bullet-like lines
+      // Generic bullets anywhere
       feats = lines
-        .filter((l) => /^[-•*]/.test(l))
-        .map((l) => l.replace(/^[-•*]\s*/, ""));
+        .filter((l) => /^[\-•*·]/.test(l))
+        .map((l) => l.replace(/^[\-−•*·]\s*/, ""));
+    }
+
+    // Heuristic keywords from title/description (works for land listings like "Fenced and Gated")
+    type KeyHint = { re: RegExp; label: string };
+    const hints: KeyHint[] = [
+      { re: /\bgated\b/, label: "Gated" },
+      { re: /\bfenc(e|ed|ing)\b/, label: "Fenced" },
+      { re: /\bsecurity|secure|estate security\b/, label: "24/7 Security" },
+      {
+        re: /\btarred road|good road|paved road|access road\b/,
+        label: "Good Road Access",
+      },
+      { re: /\bdrainage\b/, label: "Drainage" },
+      { re: /\bwater( supply)?\b/, label: "Water Supply" },
+      { re: /\belectric(it(y|ies))?|power|light(s)?\b/, label: "Electricity" },
+      { re: /\bparking|car park\b/, label: "Parking" },
+    ];
+    hints.forEach((h) => {
+      if (h.re.test(textBank)) feats.push(h.label);
+    });
+
+    // If property is land and title indicates fenced/gated but not captured
+    const typeStd = String(snap?.propertyTypeStd || "").toLowerCase();
+    if (typeStd.includes("land")) {
+      if (/\bgated\b/.test(title.toLowerCase())) feats.push("Gated");
+      if (/\bfenc(e|ed|ing)\b/.test(title.toLowerCase())) feats.push("Fenced");
     }
 
     // Deduplicate and trim
@@ -479,7 +527,42 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
   const getAmenityMeta = (label: string) => {
     const l = label.toLowerCase();
     const entry =
-      l.includes("parking") || l.includes("car")
+      l.includes("gated") || l.includes("fence")
+        ? {
+            icon: FaShieldAlt,
+            bg: "bg-emerald-50",
+            fg: "text-emerald-700",
+            ring: "ring-emerald-200",
+          }
+        : l.includes("drainage")
+        ? {
+            icon: FaWater,
+            bg: "bg-cyan-50",
+            fg: "text-cyan-700",
+            ring: "ring-cyan-200",
+          }
+        : l.includes("water")
+        ? {
+            icon: FaWater,
+            bg: "bg-sky-50",
+            fg: "text-sky-700",
+            ring: "ring-sky-200",
+          }
+        : l.includes("electric") || l.includes("power") || l.includes("light")
+        ? {
+            icon: FaBolt,
+            bg: "bg-amber-50",
+            fg: "text-amber-700",
+            ring: "ring-amber-200",
+          }
+        : l.includes("road")
+        ? {
+            icon: FaRoad,
+            bg: "bg-slate-50",
+            fg: "text-slate-700",
+            ring: "ring-slate-200",
+          }
+        : l.includes("parking") || l.includes("car")
         ? {
             icon: FaCar,
             bg: "bg-emerald-50",

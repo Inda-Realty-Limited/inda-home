@@ -50,11 +50,15 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       const origin =
         typeof window !== "undefined" ? window.location.origin : "";
       const cacheBust = `cb=${Date.now()}`;
-      const callbackUrl = origin
-        ? `${origin}/result?q=${encodeURIComponent(
-            listingUrl
-          )}&type=link&${cacheBust}`
+      // For Deep Dive and Deeper Dive, redirect to the order received page.
+      // Instant should continue to return to the results page.
+      const isDeep = plan === "deepDive" || plan === "deeperDive";
+      const callbackPath = isDeep
+        ? `/order/received?plan=${encodeURIComponent(
+            plan
+          )}&q=${encodeURIComponent(listingUrl)}&${cacheBust}`
         : `/result?q=${encodeURIComponent(listingUrl)}&type=link&${cacheBust}`;
+      const callbackUrl = origin ? `${origin}${callbackPath}` : callbackPath;
 
       const data = await startPayment({ listingUrl, plan, callbackUrl });
       const url = data?.authorizationUrl || data?.initResponse?.data?.link;
