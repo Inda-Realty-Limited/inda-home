@@ -632,26 +632,27 @@ const Landing: React.FC = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, delay: 0.2 }}
+          className="flex flex-col items-center"
         >
-          <Text className="text-[#101820F2] text-center font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl mb-4 leading-tight max-w-5xl mx-auto px-4">
+          <Text className="text-[#101820F2] text-center font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl mb-2 leading-tight max-w-5xl mx-auto px-4">
             See Every Risk. <br /> Spot Every Opportunity.
           </Text>
-          <Text className="text-[#101820E5] text-center font-normal w-full max-w-[700px] lg:text-[22px] mb-6 sm:mb-8">
+          <Text className="text-[#101820E5] text-center font-normal w-full max-w-[700px] lg:text-[22px] mb-4 sm:mb-6">
             Whether it’s valuation, due diligence, or investment potential, Inda
             delivers a clear, data-backed answer you can trust.
           </Text>
+          <Image
+            src="/assets/images/risk.png"
+            width={800}
+            height={400}
+            alt="Risk & opportunity visual"
+            className="mt-4 w-full max-w-4xl h-auto"
+          />
         </motion.div>
-        <Image
-          src="/assets/images/risk.png"
-          width={800}
-          height={400}
-          alt="Feature illustration"
-          className="mt-8 w-full max-w-4xl h-auto"
-        />
       </motion.section>
       {/* Inda Report Preview Section */}
       <motion.section
-        className="w-[90%] flex flex-col px-4 sm:px-6 md:px-8 lg:mx-auto items-center pt-6 sm:pt-8 justify-center min-h-[400px] sm:min-h-[465px] bg-[#F9F9F9]"
+        className="w-[90%] max-sm:w-full flex flex-col px-4 sm:px-6 md:px-8 lg:mx-auto items-center pt-6 sm:pt-8 justify-center min-h-[400px] sm:min-h-[465px] bg-[#F9F9F9]"
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.2 }}
@@ -1291,65 +1292,75 @@ const Landing: React.FC = () => {
 
       {/* CTA Section - See the truth behind that listing today! */}
       <motion.section
-        className="w-full flex justify-center items-center py-16 sm:py-20 md:py-24 bg-transparent px-4 sm:px-6"
+        className="w-full flex justify-center items-center py-14 sm:py-20 md:py-24 bg-transparent px-4 sm:px-6"
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.2 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
       >
         <motion.div
-          className="relative w-[80%] mx-auto rounded-[48px] sm:rounded-[64px] border border-[#4EA8A1]  flex flex-col items-center justify-center px-4 sm:px-6 md:px-8"
-          style={{
-            minHeight: 450,
-            border: "0.5px solid #4EA8A1",
-            boxSizing: "border-box",
-          }}
-          initial={{ opacity: 0, scale: 0.9 }}
+          className="relative w-full max-w-6xl mx-auto rounded-[40px] sm:rounded-[56px] border border-[#4EA8A1]/60 flex flex-col items-center justify-center px-4 sm:px-8"
+          style={{ boxSizing: "border-box" }}
+          initial={{ opacity: 0, scale: 0.94 }}
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          <div className="relative z-10 flex flex-col items-center justify-center w-full h-full py-12 sm:py-16">
+          {/* Background subtle radial for depth (desktop only) */}
+          <div className="hidden sm:block absolute inset-0 pointer-events-none rounded-[56px] overflow-hidden">
+            <div className="absolute inset-0 opacity-[0.12] bg-[radial-gradient(circle_at_30%_30%,#4EA8A1_0%,transparent_60%)]" />
+          </div>
+          <div className="relative z-10 flex flex-col items-center w-full py-10 sm:py-14 md:py-16">
             <motion.h2
-              className="text-[#101820F2] text-center font-bold text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl 2xl:text-6xl mb-8 sm:mb-12 md:mb-16 leading-tight max-w-5xl mx-auto px-4"
+              className="text-[#101820F2] text-center font-bold text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl leading-tight max-w-4xl mx-auto px-2 sm:px-4 mb-6 sm:mb-10"
               style={{ letterSpacing: 0 }}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.4 }}
+              transition={{ duration: 0.8, delay: 0.35 }}
             >
-              See the truth behind that
-              <br className="hidden sm:block" />
-              listing today!
+              See the truth behind that listing today!
             </motion.h2>
-            <motion.button
-              className="bg-[#4EA8A1] text-white text-lg sm:text-xl md:text-2xl font-normal rounded-full px-8 sm:px-10 md:px-12 py-4 sm:py-5 mt-0 shadow-lg hover:bg-[#1a2a33] transition-all duration-300 hover:scale-105 focus:outline-none"
-              style={{ minWidth: 280 }}
-              initial={{ opacity: 0, y: 20 }}
+            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 w-full justify-center">
+              <motion.button
+                className="w-full sm:w-auto bg-[#4EA8A1] text-white text-base sm:text-lg md:text-xl font-medium rounded-full px-8 sm:px-10 md:px-12 py-4 sm:py-5 shadow-lg hover:bg-[#1a2a33] transition-all duration-300 hover:scale-[1.04] focus:outline-none focus:ring-4 focus:ring-[#4EA8A1]/30"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: 0.55 }}
+                onClick={handleCTA}
+              >
+                Try your first search now
+              </motion.button>
+              {/* Chat button inline on mobile; secondary on desktop below */}
+              <motion.button
+                className="w-full sm:w-auto bg-white text-[#0F5E57] border border-[#4EA8A1] text-base sm:text-lg font-medium rounded-full px-8 sm:px-10 py-4 sm:py-5 shadow-sm hover:bg-[#F2FCFB] transition-all duration-300 hover:scale-[1.03] focus:outline-none focus:ring-4 focus:ring-[#4EA8A1]/20"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: 0.65 }}
+                onClick={() =>
+                  openWhatsApp(
+                    "Hello Inda team, I have a question about verifying a property."
+                  )
+                }
+              >
+                Chat with Us
+              </motion.button>
+            </div>
+            {/* Supporting micro-copy for mobile clarity */}
+            <motion.p
+              className="mt-6 text-center text-sm sm:text-base text-[#101820B2] max-w-lg"
+              initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.8, delay: 0.6 }}
-              onClick={handleCTA}
+              transition={{ duration: 0.6, delay: 0.75 }}
             >
-              Try your first search now
-            </motion.button>
+              Paste a listing link to see risks, fair value and red flags in
+              seconds.
+            </motion.p>
           </div>
-          <motion.button
-            id="cta-chat-btn"
-            className="absolute left-1/2 -translate-x-1/2 -bottom-40 sm:-bottom-6 z-50 bg-[#4EA8A1] text-white text-base sm:text-lg md:text-xl font-normal rounded-full px-6 sm:px-8 md:px-10 py-3 sm:py-4 shadow-lg hover:bg-[#1a2a33] transition-all duration-300 hover:scale-105 focus:outline-none"
-            style={{ minWidth: 200, zIndex: 10 }}
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8, delay: 0.8 }}
-            onClick={() =>
-              openWhatsApp(
-                "Hello Inda team, I have a question about verifying a property."
-              )
-            }
-          >
-            Chat with Us
-          </motion.button>
+          {/* Desktop floating chat badge (kept for continuity) */}
         </motion.div>
       </motion.section>
       {/* End landing content */}
@@ -1386,17 +1397,27 @@ const faqData = [
     q: "What’s the difference between Instant, Deep Dive, and Deeper Dive reports?",
     a: (
       <>
-        <span className="block">
-          Instant Report (₦3k): Quick check on price, ROI, and Inda Score (30
-          seconds).
+        <span className="block font-medium">Free Preview (₦0):</span>
+        <span className="block mb-2 text-[13.5px] sm:text-sm">
+          Basic snapshot with limited Inda Score visibility so you can confirm
+          the link works before paying.
         </span>
-        <span className="block">
-          Deep Dive (₦25k): Adds title verification + government approvals
-          (24-48 hours).
+        <span className="block font-medium">Instant Report (₦7,500):</span>
+        <span className="block mb-2 text-[13.5px] sm:text-sm">
+          30–60s automated analysis – Fair Value (FMV) range, pricing flags, ROI
+          projection seed, Inda Trust Score, agent signals & red flag scan.
         </span>
-        <span className="block">
-          Deeper Dive (₦75k): Includes seller verification + on-site inspection
-          (2-4 days).
+        <span className="block font-medium">Deep Dive (₦75,000):</span>
+        <span className="block mb-2 text-[13.5px] sm:text-sm">
+          Everything in Instant + title & document verification (registry
+          lookups), government approval checks, micro‑location &
+          flood/encroachment risk profiling (24–48 hrs).
+        </span>
+        <span className="block font-medium">Deeper Dive (₦100,000):</span>
+        <span className="block text-[13.5px] sm:text-sm">
+          Adds seller / ownership vetting, on‑site inspection with media
+          evidence, utility & build quality assessment, enhanced fraud screening
+          (2–4 days).
         </span>
       </>
     ),
@@ -1483,9 +1504,16 @@ const FAQ = () => {
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  transition={{ duration: 0.35, ease: "easeInOut" }}
                 >
-                  <div>{item.a}</div>
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.4, delay: 0.05 }}
+                    className="leading-relaxed"
+                  >
+                    {item.a}
+                  </motion.div>
                 </motion.div>
               )}
             </AnimatePresence>
