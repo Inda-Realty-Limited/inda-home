@@ -2,8 +2,8 @@ import apiClient from "./index";
 
 type StartPaymentPayload = {
   listingUrl: string;
-  plan: string;
-  callbackUrl: string;
+  plan: string; // "free" | "instant" | "deepDive" | "deeperDive"
+  callbackUrl?: string; // optional for free plan (auto-completes)
 };
 
 // Starts a payment session and returns the provider session payload
@@ -27,4 +27,24 @@ export const verifyPayment = async (reference: string) => {
     params: { reference },
   });
   return res.data?.data;
+};
+
+// Free view status for the authenticated user
+export type FreeViewStatus = {
+  hasUsedFreeView: boolean;
+  freeViewAvailable: boolean;
+  freeViewDetails?: {
+    usedOn?: string;
+    usedAt?: string;
+    reference?: string;
+  } | null;
+};
+
+export const getFreeViewStatus = async (): Promise<FreeViewStatus> => {
+  const res = await apiClient.get("/payments/free-status");
+  return (res.data?.data || {
+    hasUsedFreeView: false,
+    freeViewAvailable: true,
+    freeViewDetails: null,
+  }) as FreeViewStatus;
 };

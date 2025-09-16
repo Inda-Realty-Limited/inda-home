@@ -1,5 +1,5 @@
 import { getComputedListingByUrl } from "@/api/listings";
-import { hasPaid, verifyPayment } from "@/api/payments";
+import { getFreeViewStatus, hasPaid, verifyPayment } from "@/api/payments";
 import { Button, Container, Footer, Navbar } from "@/components";
 import PaymentModal from "@/components/inc/PaymentModal";
 import { dummyResultData } from "@/data/resultData";
@@ -36,12 +36,14 @@ import { IoIosInformationCircle } from "react-icons/io";
 import { RiEditFill } from "react-icons/ri";
 
 type ResultProps = {
-  hiddenMode?: boolean;
+  hiddenMode?: boolean; // deprecated; gating is now based solely on payment status
 };
 
 const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
   const [isPaid, setIsPaid] = useState(false);
-  const isHidden = hiddenMode && !isPaid;
+  // Backend-driven free view availability
+  const [freeViewAvailable, setFreeViewAvailable] = useState<boolean>(false);
+  const isHidden = !isPaid; // hide unless paid (free plan marks as paid server-side)
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchType, setSearchType] = useState("");
@@ -94,6 +96,15 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
     const u = getUser();
     setUser(u);
   }, []);
+
+  // Query backend for free view availability (do not auto-unlock on frontend)
+  useEffect(() => {
+    if (!router.isReady) return;
+    if (isEmbedded) return;
+    getFreeViewStatus()
+      .then((st) => setFreeViewAvailable(!!st?.freeViewAvailable))
+      .catch(() => setFreeViewAvailable(false));
+  }, [router.isReady, isEmbedded]);
 
   // Animate Trust Score from 0 to the value in 4s whenever result changes
   useEffect(() => {
@@ -3331,6 +3342,7 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                 (isValidUrl(searchQuery) ? (searchQuery as string) : "")
               }
               onPaid={() => setIsPaid(true)}
+              freeAvailable={freeViewAvailable}
             />
           )}
         </main>

@@ -1,8 +1,21 @@
-import { getToken } from "@/helpers";
+import {
+  getToken,
+  getUser,
+  removeToken,
+  removeUser,
+  StoredUser,
+} from "@/helpers";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import React, { useEffect, useState } from "react";
-import { FiBell, FiMenu, FiUser, FiX } from "react-icons/fi";
+import React, { useEffect, useRef, useState } from "react";
+import {
+  FiBell,
+  FiFileText,
+  FiLogOut,
+  FiMenu,
+  FiUser,
+  FiX,
+} from "react-icons/fi";
 import Button from "../base/Button";
 import XStack from "../base/XStack";
 
@@ -14,13 +27,55 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
   const router = useRouter();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
+  const [user, setUser] = useState<StoredUser | null>(null);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const profileRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
     const token = getToken();
     if (token) {
       setIsLoggedIn(true);
+      const u = getUser();
+      if (u) setUser(u);
     }
   }, []);
   // const isLoggedIn = typeof window !== "undefined" && !!getToken();
+
+  // Close profile dropdown on outside click / ESC
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      if (!profileRef.current) return;
+      if (!profileRef.current.contains(e.target as Node)) {
+        setProfileOpen(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setProfileOpen(false);
+      }
+    }
+    if (profileOpen) {
+      document.addEventListener("mousedown", onDocClick);
+      document.addEventListener("keydown", onKey);
+    }
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [profileOpen]);
+
+  const handleLogout = () => {
+    try {
+      removeToken();
+      removeUser();
+    } catch {}
+    setIsLoggedIn(false);
+    setProfileOpen(false);
+    setMobileProfileOpen(false);
+    setMobileOpen(false);
+    router.push("/");
+  };
 
   if (isLoggedIn) {
     return (
@@ -43,46 +98,81 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
             gap={40}
             className="hidden lg:flex items-center justify-center space-x-10"
           >
-            <div className="flex items-center justify-center gap-2.5 cursor-pointer select-none group bg-[#F9F9F90A] hover:bg-white/10 rounded-full px-4 py-2 transition-all duration-200">
+            <div className="relative flex items-center justify-center cursor-pointer select-none group bg-[#F9F9F90A] hover:bg-white/10 rounded-full w-12 h-12 transition-all duration-200">
               <FiBell
                 size={22}
                 color="#F9F9F9"
                 className="group-hover:scale-110 transition-transform duration-200"
               />
-              <span className="text-white text-lg font-medium group-hover:text-white/90 transition-colors duration-200">
-                Notifications
-              </span>
+              {/* Notification count badge */}
+              {notificationCount > 0 && (
+                <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                  {notificationCount > 99 ? "99+" : notificationCount}
+                </div>
+              )}
             </div>
-            {/* Profile (no dropdown) */}
-            <div className="flex items-center justify-center gap-2.5 cursor-pointer select-none group bg-[#F9F9F90A] hover:bg-white/10 rounded-full px-4 py-2 transition-all duration-200">
-              <FiUser
-                size={22}
-                color="#F9F9F9"
-                className="group-hover:scale-110 transition-transform duration-200"
-              />
-              <span className="text-white text-lg font-medium group-hover:text-white/90 transition-colors duration-200">
-                Profile
-              </span>
-            </div>
-            <div className="flex items-center justify-center gap-2.5 cursor-pointer select-none group bg-[#F9F9F90A] hover:bg-white/10 rounded-full px-4 py-2 transition-all duration-200">
-              <svg
-                width="20"
-                height="14"
-                viewBox="0 0 36 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="group-hover:scale-110 transition-transform duration-200"
+            {/* Profile (dropdown) */}
+            <div
+              ref={profileRef}
+              className="relative"
+              onMouseEnter={() => setProfileOpen(true)}
+              onMouseLeave={() => setProfileOpen(false)}
+            >
+              <button
+                onClick={() => setProfileOpen((v) => !v)}
+                className="flex items-center justify-center gap-2.5 cursor-pointer select-none group bg-[#F9F9F90A] hover:bg-white/10 rounded-full px-4 py-2 transition-all duration-200"
+                aria-haspopup="menu"
+                aria-expanded={profileOpen}
               >
-                <path
-                  fillRule="evenodd"
-                  clipRule="evenodd"
-                  d="M16.4883 16.2075C19.5841 14.1465 20.9654 10.3015 19.8887 6.74161C18.8121 3.18172 15.5316 0.746577 11.8125 0.746577C8.09337 0.746577 4.81286 3.18172 3.73625 6.74161C2.65965 10.3015 4.04089 14.1465 7.13672 16.2075C4.40929 17.2127 2.07999 19.0729 0.496406 21.5105C0.269898 21.8471 0.242226 22.2797 0.42399 22.6424C0.605754 23.0052 0.968785 23.242 1.37405 23.2621C1.77931 23.2822 2.164 23.0825 2.38078 22.7395C4.45614 19.5475 8.00515 17.6218 11.8125 17.6218C15.6198 17.6218 19.1689 19.5475 21.2442 22.7395C21.5876 23.2498 22.2771 23.3898 22.7922 23.0538C23.3074 22.7178 23.4572 22.0304 23.1286 21.5105C21.545 19.0729 19.2157 17.2127 16.4883 16.2075ZM5.625 9.1875C5.625 5.77024 8.39524 3 11.8125 3C15.2298 3 18 5.77024 18 9.1875C18 12.6048 15.2298 15.375 11.8125 15.375C8.39684 15.3711 5.62887 12.6032 5.625 9.1875ZM35.1759 23.0672C34.6556 23.4065 33.9587 23.2598 33.6192 22.7395C31.5462 19.5454 27.9954 17.6199 24.1875 17.625C23.5662 17.625 23.0625 17.1213 23.0625 16.5C23.0625 15.8787 23.5662 15.375 24.1875 15.375C26.6795 15.3727 28.9268 13.8756 29.8892 11.577C30.8515 9.27832 30.341 6.62669 28.594 4.84967C26.8469 3.07265 24.2044 2.51708 21.8897 3.44016C21.514 3.60257 21.0797 3.54812 20.7557 3.29797C20.4318 3.04782 20.2692 2.64145 20.3313 2.23688C20.3934 1.8323 20.6703 1.49337 21.0544 1.35187C25.0663 -0.248149 29.6388 1.44001 31.6485 5.26324C33.6582 9.08647 32.4561 13.8101 28.8633 16.2075C31.5907 17.2127 33.92 19.0729 35.5036 21.5105C35.8429 22.0308 35.6962 22.7278 35.1759 23.0672Z"
-                  fill="#F9F9F9"
+                <FiUser
+                  size={22}
+                  color="#F9F9F9"
+                  className="group-hover:scale-110 transition-transform duration-200"
                 />
-              </svg>
-              <span className="text-white text-lg font-medium group-hover:text-white/90 transition-colors duration-200">
-                My Portfolio
-              </span>
+                <span className="text-white text-lg font-medium group-hover:text-white/90 transition-colors duration-200">
+                  {user?.firstName ? `${user.firstName}` : "Profile"}
+                </span>
+              </button>
+
+              {profileOpen && (
+                <div
+                  role="menu"
+                  className="absolute right-0 top-full z-[99] w-72 rounded-xl border border-white/10 bg-inda-dark/95 backdrop-blur-md shadow-xl shadow-black/30 overflow-hidden"
+                >
+                  <div className="px-4 py-4 bg-white/5">
+                    <div className="text-white text-base font-semibold">
+                      {user?.firstName || "User"} {user?.lastName || ""}
+                    </div>
+                    <div className="text-white/70 text-sm truncate">
+                      {user?.email || "no-email@inda.africa"}
+                    </div>
+                  </div>
+                  <div className="py-2">
+                    <button
+                      className="w-full text-left px-4 py-2 text-sm text-white/90 hover:bg-white/10 inline-flex items-center gap-2"
+                      onClick={() => router.push("/profile")}
+                    >
+                      <FiUser className="opacity-90" />
+                      View Profile
+                    </button>
+                    <button
+                      className="w-full text-left px-4 py-2 text-sm text-white/90 hover:bg-white/10 inline-flex items-center gap-2"
+                      onClick={() => router.push("/orders")}
+                    >
+                      <FiFileText className="opacity-90" />
+                      Orders & Reports
+                    </button>
+                    <div className="my-2 h-px bg-white/10" />
+                    <button
+                      className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 inline-flex items-center gap-2"
+                      onClick={handleLogout}
+                    >
+                      <FiLogOut />
+                      Log out
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </XStack>
 
@@ -121,39 +211,78 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
                 </button>
               </div>
               <button
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white text-base"
+                className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white text-base"
                 onClick={() => setMobileOpen(false)}
               >
-                <FiBell /> Notifications
-              </button>
-              <button
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white text-base"
-                onClick={() => setMobileOpen(false)}
-              >
-                <FiUser /> Profile
-              </button>
-              <button
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white text-base"
-                onClick={() => setMobileOpen(false)}
-              >
-                <span className="inline-flex w-5 h-5 items-center justify-center">
-                  <svg
-                    width="20"
-                    height="14"
-                    viewBox="0 0 36 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      clipRule="evenodd"
-                      d="M16.4883 16.2075C19.5841 14.1465 20.9654 10.3015 19.8887 6.74161C18.8121 3.18172 15.5316 0.746577 11.8125 0.746577C8.09337 0.746577 4.81286 3.18172 3.73625 6.74161C2.65965 10.3015 4.04089 14.1465 7.13672 16.2075C4.40929 17.2127 2.07999 19.0729 0.496406 21.5105C0.269898 21.8471 0.242226 22.2797 0.42399 22.6424C0.605754 23.0052 0.968785 23.242 1.37405 23.2621C1.77931 23.2822 2.164 23.0825 2.38078 22.7395C4.45614 19.5475 8.00515 17.6218 11.8125 17.6218C15.6198 17.6218 19.1689 19.5475 21.2442 22.7395C21.5876 23.2498 22.2771 23.3898 22.7922 23.0538C23.3074 22.7178 23.4572 22.0304 23.1286 21.5105C21.545 19.0729 19.2157 17.2127 16.4883 16.2075ZM5.625 9.1875C5.625 5.77024 8.39524 3 11.8125 3C15.2298 3 18 5.77024 18 9.1875C18 12.6048 15.2298 15.375 11.8125 15.375C8.39684 15.3711 5.62887 12.6032 5.625 9.1875ZM35.1759 23.0672C34.6556 23.4065 33.9587 23.2598 33.6192 22.7395C31.5462 19.5454 27.9954 17.6199 24.1875 17.625C23.5662 17.625 23.0625 17.1213 23.0625 16.5C23.0625 15.8787 23.5662 15.375 24.1875 15.375C26.6795 15.3727 28.9268 13.8756 29.8892 11.577C30.8515 9.27832 30.341 6.62669 28.594 4.84967C26.8469 3.07265 24.2044 2.51708 21.8897 3.44016C21.514 3.60257 21.0797 3.54812 20.7557 3.29797C20.4318 3.04782 20.2692 2.64145 20.3313 2.23688C20.3934 1.8323 20.6703 1.49337 21.0544 1.35187C25.0663 -0.248149 29.6388 1.44001 31.6485 5.26324C33.6582 9.08647 32.4561 13.8101 28.8633 16.2075C31.5907 17.2127 33.92 19.0729 35.5036 21.5105C35.8429 22.0308 35.6962 22.7278 35.1759 23.0672Z"
-                      fill="#F9F9F9"
-                    />
-                  </svg>
+                <span className="flex items-center gap-3">
+                  <FiBell /> Notifications
                 </span>
-                My Portfolio
+                {notificationCount > 0 && (
+                  <div className="bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                    {notificationCount > 99 ? "99+" : notificationCount}
+                  </div>
+                )}
               </button>
+              {/* Mobile Profile submenu */}
+              <div className="w-full">
+                <button
+                  className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white text-base"
+                  onClick={() => setMobileProfileOpen((v) => !v)}
+                >
+                  <span className="inline-flex items-center gap-3">
+                    <FiUser /> Profile
+                  </span>
+                  <span
+                    className={`transition-transform ${
+                      mobileProfileOpen ? "rotate-180" : "rotate-0"
+                    }`}
+                  >
+                    ▾
+                  </span>
+                </button>
+                {mobileProfileOpen && (
+                  <div className="mt-2 mx-2 rounded-xl border border-white/10 bg-inda-dark/90">
+                    <div className="px-4 py-3 text-white">
+                      <div className="font-semibold text-base">
+                        {user?.firstName || "User"} {user?.lastName || ""}
+                      </div>
+                      <div className="text-white/70 text-sm break-all">
+                        {user?.email || "no-email@inda.africa"}
+                      </div>
+                    </div>
+                    <div className="py-1">
+                      <button
+                        className="w-full text-left px-4 py-2 text-sm text-white/90 hover:bg-white/10 inline-flex items-center gap-2"
+                        onClick={() => {
+                          setMobileOpen(false);
+                          router.push("/profile");
+                        }}
+                      >
+                        <FiUser className="opacity-90" />
+                        View Profile
+                      </button>
+                      <button
+                        className="w-full text-left px-4 py-2 text-sm text-white/90 hover:bg-white/10 inline-flex items-center gap-2"
+                        onClick={() => {
+                          setMobileOpen(false);
+                          router.push("/orders");
+                        }}
+                      >
+                        <FiFileText className="opacity-90" />
+                        Orders & Reports
+                      </button>
+                      <div className="my-2 h-px bg-white/10" />
+                      <button
+                        className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-red-500/10 inline-flex items-center gap-2"
+                        onClick={handleLogout}
+                      >
+                        <FiLogOut />
+                        Log out
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </>
         )}

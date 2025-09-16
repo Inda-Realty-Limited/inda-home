@@ -190,7 +190,7 @@ const Landing: React.FC = () => {
     const demo =
       process.env.NEXT_PUBLIC_DEMO_LISTING_URL ||
       "https://www.propertypro.ng/property";
-    router.push(`/result/hidden?q=${encodeURIComponent(demo)}&type=link`);
+    router.push(`/result?q=${encodeURIComponent(demo)}&type=link`);
   };
 
   const handlePlanSelect = (
@@ -229,9 +229,7 @@ const Landing: React.FC = () => {
     } else {
       // User is authenticated, proceed to result page
       router.push(
-        `/result/hidden?q=${encodeURIComponent(search)}&type=${
-          selectedSearchType.id
-        }`
+        `/result?q=${encodeURIComponent(search)}&type=${selectedSearchType.id}`
       );
     }
   };
@@ -253,13 +251,10 @@ const Landing: React.FC = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
   return (
-    <Container
-      noPadding
-      className="min-h-screen bg-[#F9F9F9] text-inda-dark overflow-hidden"
-    >
+    <Container noPadding className="min-h-screen bg-[#F9F9F9] text-inda-dark">
       <Navbar />
       <motion.section
-        className="flex flex-col bg-[#f9f9f9] items-center justify-center min-h-[70vh] relative z-10 px-4 sm:px-6 lg:px-8 py-8"
+        className="flex flex-col bg-[#f9f9f9] items-center justify-center min-h-[70vh]  z-0 px-4 sm:px-6 lg:px-8 py-8"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -20 }}
@@ -668,11 +663,11 @@ const Landing: React.FC = () => {
           See an Inda Report in Action
         </motion.p>
         <div
-          className="flex flex-col lg:flex-row items-center lg:items-start w-full sm:w-[70%] mx-auto gap-6 sm:gap-8 bg-[#4EA8A129] rounded-2xl p-5 sm:p-[57px] overflow-hidden"
+          className="flex flex-col lg:flex-row items-center lg:items-start w-full max-w-[1100px] 2xl:max-w-[1100px] mx-auto gap-6 sm:gap-8 bg-[#4EA8A129] rounded-2xl p-5 sm:p-[57px] overflow-hidden"
           style={{ boxShadow: "0px 2px 2px 0px #00000026" }}
         >
           <motion.div
-            className="flex flex-col items-center justify-center w-full lg:w-auto"
+            className="flex flex-col items-center justify-center w-full lg:w-auto lg:min-w-[540px]"
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
@@ -687,7 +682,7 @@ const Landing: React.FC = () => {
             />
           </motion.div>
           <motion.div
-            className="flex flex-col space-y-3 items-center lg:items-start justify-between text-center lg:text-left lg:pl-8 xl:pl-12"
+            className="flex flex-col space-y-3 items-center lg:items-start justify-between text-center lg:text-left lg:pl-8 xl:pl-12 w-full lg:flex-1"
             initial={{ opacity: 0, x: 30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
@@ -910,18 +905,6 @@ const Landing: React.FC = () => {
                       </motion.li>
                     </ul>
                   </motion.div>
-
-                  <motion.button
-                    onClick={() => handlePlanSelect("free")}
-                    className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base"
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 1.0 }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    Choose plan
-                  </motion.button>
                 </div>
               </motion.div>
 
@@ -1018,18 +1001,6 @@ const Landing: React.FC = () => {
                       </motion.li>
                     </ul>
                   </motion.div>
-
-                  <motion.button
-                    onClick={() => handlePlanSelect("instant")}
-                    className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base"
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 1.2 }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    Choose plan
-                  </motion.button>
                 </div>
               </motion.div>
 
@@ -1148,18 +1119,6 @@ const Landing: React.FC = () => {
                       </motion.li>
                     </ul>
                   </motion.div>
-
-                  <motion.button
-                    onClick={() => handlePlanSelect("deep-dive")}
-                    className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base"
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 1.5 }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    Choose plan
-                  </motion.button>
                 </div>
               </motion.div>
 
@@ -1251,18 +1210,6 @@ const Landing: React.FC = () => {
                       </motion.li>
                     </ul>
                   </motion.div>
-
-                  <motion.button
-                    onClick={() => handlePlanSelect("deeper-dive")}
-                    className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base"
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 1.4 }}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    Choose plan
-                  </motion.button>
                 </div>
               </motion.div>
             </div>
