@@ -22,15 +22,12 @@ import {
   FaHome,
   FaLock,
   FaMapMarkerAlt,
-  FaPhone,
   FaRoad,
-  FaShare,
   FaShieldAlt,
   FaShower,
   FaStar,
   FaUtensils,
   FaWater,
-  FaWhatsapp,
 } from "react-icons/fa";
 import { IoIosInformationCircle } from "react-icons/io";
 import { RiEditFill } from "react-icons/ri";
@@ -43,7 +40,8 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
   const [isPaid, setIsPaid] = useState(false);
   // Backend-driven free view availability
   const [freeViewAvailable, setFreeViewAvailable] = useState<boolean>(false);
-  const isHidden = !isPaid; // hide unless paid (free plan marks as paid server-side)
+  // Hide gated content unless user has paid OR a backend-controlled free view is available
+  const isHidden = !(isPaid || freeViewAvailable);
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchType, setSearchType] = useState("");
@@ -91,6 +89,10 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
     null
   );
   const [isEmbedded, setIsEmbedded] = useState(false);
+  const [selectedBar, setSelectedBar] = useState<null | {
+    series: "fmv" | "price";
+    index: number;
+  }>(null);
 
   useEffect(() => {
     const u = getUser();
@@ -1329,48 +1331,98 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                 </div>
 
                 {/* Action Buttons Row */}
-                <div className="w-full px-6">
+                {/* <div className="w-full px-6">
                   <div className="bg-[#4EA8A159] rounded-2xl my-6 px-4 sm:px-6 py-4 sm:py-6">
                     <div
-                      className="flex flex-nowrap items-center gap-2 sm:gap-3 justify-start overflow-x-auto sm:overflow-visible"
+                      className="flex flex-nowrap items-center gap-2 sm:gap-3 justify-start overflow-x-auto sm:overflow-visible relative"
                       style={{
                         scrollbarWidth: "none",
                         msOverflowStyle: "none",
                       }}
                     >
-                      <button
-                        onClick={() =>
-                          openWhatsApp(
-                            `Hello, I'm interested in this property.\n\nListing: ${
-                              result?.listingUrl ||
-                              result?.snapshot?.listingUrl ||
-                              "N/A"
-                            }`
-                          )
-                        }
-                        className="flex items-center justify-center gap-2 whitespace-nowrap px-4 sm:px-5 py-2 sm:py-2.5 bg-inda-teal text-white rounded-full text-xs sm:text-sm font-medium hover:bg-teal-600 transition-colors"
-                      >
-                        <FaWhatsapp className="text-sm" />
-                        WhatsApp Seller
-                      </button>
-                      <button className="flex items-center justify-center gap-2 whitespace-nowrap px-4 sm:px-5 py-2 sm:py-2.5 bg-inda-teal text-white rounded-full text-xs sm:text-sm font-medium hover:bg-teal-600 transition-colors">
-                        <FaPhone className="text-sm" />
-                        Call Seller
-                      </button>
-                      <button
-                        className="flex items-center justify-center gap-2 whitespace-nowrap px-4 sm:px-5 py-2 sm:py-2.5 bg-inda-teal text-white rounded-full text-xs sm:text-sm font-medium hover:bg-teal-600 transition-colors"
-                        onClick={() =>
-                          window.open(
-                            result?.listingUrl ||
-                              result?.snapshot?.listingUrl ||
-                              "#",
-                            "_blank"
-                          )
-                        }
-                      >
-                        <FaShare className="text-sm" />
-                        View Source
-                      </button>
+                      {(() => {
+                        const listingLink = (
+                          result?.listingUrl ||
+                          result?.snapshot?.listingUrl ||
+                          ""
+                        ).toString();
+                        const rawPhone: string =
+                          (result?.snapshot as any)?.agentPhone ||
+                          (result?.snapshot as any)?.sellerPhone ||
+                          (result?.snapshot as any)?.contactPhone ||
+                          "";
+                        const phone = sanitizePhone(rawPhone);
+                        const hasPhone = phone.length >= 10;
+                        const waText = `Hello, I'm interested in this property.\n\nListing: ${
+                          listingLink || "N/A"
+                        }`;
+                        const onShare = async () => {
+                          try {
+                            if (navigator.share) {
+                              await navigator.share({
+                                title: "Property on INDA",
+                                text: waText,
+                                url: listingLink || window.location.href,
+                              });
+                              return;
+                            }
+                          } catch {}
+                          try {
+                            await navigator.clipboard.writeText(
+                              listingLink || window.location.href
+                            );
+                            alert("Link copied to clipboard");
+                          } catch {
+                            window.open(listingLink || "#", "_blank");
+                          }
+                        };
+                        return (
+                          <>
+                            <button
+                              onClick={() =>
+                                openWhatsApp(
+                                  waText,
+                                  hasPhone ? phone : INDA_WHATSAPP
+                                )
+                              }
+                              className="flex items-center justify-center gap-2 whitespace-nowrap px-4 sm:px-5 py-2 sm:py-2.5 bg-inda-teal text-white rounded-full text-xs sm:text-sm font-medium hover:bg-teal-600 transition-colors"
+                            >
+                              <FaWhatsapp className="text-sm" />
+                              {hasPhone ? "WhatsApp Seller" : "WhatsApp Us"}
+                            </button>
+                            <button
+                              disabled={!hasPhone}
+                              onClick={() =>
+                                hasPhone && window.open(`tel:${phone}`, "_self")
+                              }
+                              className={`flex items-center justify-center gap-2 whitespace-nowrap px-4 sm:px-5 py-2 sm:py-2.5 rounded-full text-xs sm:text-sm font-medium transition-colors ${
+                                hasPhone
+                                  ? "bg-inda-teal text-white hover:bg-teal-600"
+                                  : "bg-gray-300 text-gray-600 cursor-not-allowed"
+                              }`}
+                            >
+                              <FaPhone className="text-sm" />
+                              Call Seller
+                            </button>
+                            <button
+                              className="flex items-center justify-center gap-2 whitespace-nowrap px-4 sm:px-5 py-2 sm:py-2.5 bg-inda-teal text-white rounded-full text-xs sm:text-sm font-medium hover:bg-teal-600 transition-colors"
+                              onClick={() =>
+                                window.open(listingLink || "#", "_blank")
+                              }
+                            >
+                              <FaExternalLinkAlt className="text-sm" />
+                              View Source
+                            </button>
+                            <button
+                              onClick={onShare}
+                              className="flex items-center justify-center gap-2 whitespace-nowrap px-4 sm:px-5 py-2 sm:py-2.5 bg-inda-teal text-white rounded-full text-xs sm:text-sm font-medium hover:bg-teal-600 transition-colors"
+                            >
+                              <FaShare className="text-sm" />
+                              Share
+                            </button>
+                          </>
+                        );
+                      })()}
                       <style jsx>{`
                         div::-webkit-scrollbar {
                           display: none;
@@ -1378,7 +1430,7 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                       `}</style>
                     </div>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Smart Summary */}
                 <div className="w-full px-6">
@@ -1596,6 +1648,7 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                     </div>
                   </div>
                 </div>
+
                 {/* Amenities */}
                 <div className="w-full px-6">
                   <div className="rounded-lg py-8">
@@ -1908,6 +1961,9 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                                     const x = xCenter(i) - gap / 2 - barW; // FMV bar on the left
                                     const y = yScale(v);
                                     const h = Math.max(2, padT + innerH - y);
+                                    const isSelected =
+                                      selectedBar?.series === "fmv" &&
+                                      selectedBar.index === i;
                                     return (
                                       <rect
                                         key={`bf-${i}`}
@@ -1915,8 +1971,18 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                                         y={y}
                                         width={barW}
                                         height={h}
-                                        fill="#4EA8A1"
+                                        fill={
+                                          isSelected ? "#3b8f89" : "#4EA8A1"
+                                        }
                                         rx={2}
+                                        className="cursor-pointer"
+                                        onClick={() =>
+                                          setSelectedBar(
+                                            isSelected
+                                              ? null
+                                              : { series: "fmv", index: i }
+                                          )
+                                        }
                                       />
                                     );
                                   })}
@@ -1924,6 +1990,9 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                                     const x = xCenter(i) + gap / 2; // Price bar on the right
                                     const y = yScale(v);
                                     const h = Math.max(2, padT + innerH - y);
+                                    const isSelected =
+                                      selectedBar?.series === "price" &&
+                                      selectedBar.index === i;
                                     return (
                                       <rect
                                         key={`bp-${i}`}
@@ -1931,13 +2000,90 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                                         y={y}
                                         width={barW}
                                         height={h}
-                                        fill="#D1D5DB"
+                                        fill={
+                                          isSelected ? "#9aa4ae" : "#D1D5DB"
+                                        }
                                         rx={2}
+                                        className="cursor-pointer"
+                                        onClick={() =>
+                                          setSelectedBar(
+                                            isSelected
+                                              ? null
+                                              : { series: "price", index: i }
+                                          )
+                                        }
                                       />
                                     );
                                   })}
 
-                                  {/* Lines and point markers intentionally removed */}
+                                  {/* Tooltip bubble for selected bar */}
+                                  {(() => {
+                                    if (!selectedBar) return null;
+                                    const isFMV = selectedBar.series === "fmv";
+                                    const i = selectedBar.index;
+                                    const val = isFMV
+                                      ? chartFMV[i]
+                                      : chartPriceSeries[i];
+                                    const x = isFMV
+                                      ? xCenter(i) - gap / 2 - barW + barW / 2
+                                      : xCenter(i) + gap / 2 + barW / 2;
+                                    const y = yScale(val) - 8; // a bit above the bar top
+                                    const label = `₦${Math.round(
+                                      val
+                                    ).toLocaleString()}`;
+                                    const bubblePadX = 8;
+                                    const bubblePadY = 6;
+                                    // compute text width roughly (8px per char at fontSize 11)
+                                    const textW = Math.max(
+                                      40,
+                                      label.length * 7.2
+                                    );
+                                    const rectW = textW + bubblePadX * 2;
+                                    const rectH = 24;
+                                    const rectX = Math.max(
+                                      padL,
+                                      Math.min(x - rectW / 2, W - padR - rectW)
+                                    );
+                                    const rectY = Math.max(padT, y - rectH - 8);
+                                    const pointerX = x;
+                                    const pointerY = rectY + rectH; // top of pointer triangle
+                                    const color = isFMV ? "#4EA8A1" : "#9AA4AE";
+                                    return (
+                                      <g key="tooltip">
+                                        <rect
+                                          x={rectX}
+                                          y={rectY}
+                                          width={rectW}
+                                          height={rectH}
+                                          rx={6}
+                                          fill={color}
+                                          opacity={0.95}
+                                        />
+                                        <text
+                                          x={rectX + rectW / 2}
+                                          y={rectY + rectH / 2 + 4}
+                                          textAnchor="middle"
+                                          fontSize={11}
+                                          fill="#ffffff"
+                                          fontWeight={600}
+                                        >
+                                          {label}
+                                        </text>
+                                        {/* pointer triangle */}
+                                        <path
+                                          d={`M ${pointerX - 6} ${
+                                            rectY + rectH
+                                          } L ${pointerX + 6} ${
+                                            rectY + rectH
+                                          } L ${pointerX} ${
+                                            rectY + rectH + 8
+                                          } Z`}
+                                          fill={color}
+                                          opacity={0.95}
+                                        />
+                                      </g>
+                                    );
+                                  })()}
                                 </svg>
                               );
                             })()}
@@ -2011,8 +2157,8 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                 </div>
 
                 {/* Map Section - Google Maps */}
-                <div className="w-full px-6">
-                  <div className=" rounded-lg p-8">
+                <div className="w-full px-4">
+                  <div className=" rounded-lg p-4">
                     <h3 className="text-2xl md:text-3xl font-bold mb-8 text-inda-teal">
                       Microlocation Insights
                     </h3>
@@ -2099,11 +2245,9 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                 </div>
 
                 {/* ROI Panel */}
-                <div className="w-full px-6">
+                <div className="w-full px-4">
                   <motion.div
-                    className="rounded-lg p-8"
-                    initial="hidden"
-                    whileInView="show"
+                    className="rounded-lg p-4"
                     viewport={{ once: true, amount: 0.2 }}
                     variants={roiContainer}
                   >
@@ -3252,19 +3396,19 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                       );
                     })()}
                   </div>
-                </div> */}
+                </div>
 
                 {/* How would you like to proceed? */}
                 <div className="w-full px-6">
-                  <div className="rounded-lg p-8">
-                    <div className=" rounded-xl py-12 px-8">
-                      <h3 className="text-2xl md:text-3xl font-bold mb-10 text-center">
+                  <div className="rounded-lg p-6 sm:p-8">
+                    <div className="rounded-xl py-8 sm:py-12 px-4 sm:px-8 bg-white/60">
+                      <h3 className="text-2xl md:text-3xl font-bold mb-6 sm:mb-10 text-center">
                         How would you like to proceed?
                       </h3>
-                      <div className="flex flex-wrap gap-4 justify-center">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 max-w-4xl mx-auto">
                         <button
                           onClick={(e) => setProceed(true)}
-                          className="py-4 px-8 h-24 w-72 bg-inda-teal text-[#F9F9F9] rounded-2xl text-lg font-normal hover:bg-[#0A655E] transition-colors"
+                          className="w-full min-h-[56px] sm:min-h-[64px] px-5 sm:px-6 bg-inda-teal text-[#F9F9F9] rounded-2xl text-base sm:text-lg font-medium hover:bg-[#0A655E] transition-colors"
                         >
                           Run Deeper Verification
                         </button>
@@ -3286,7 +3430,7 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                               }\n\nPlease share the next steps to proceed with a purchase.`
                             )
                           }
-                          className="py-4 px-8 h-24 w-72 bg-inda-teal text-[#F9F9F9] rounded-2xl text-lg font-normal hover:bg-[#0A655E] transition-colors"
+                          className="w-full min-h-[56px] sm:min-h-[64px] px-5 sm:px-6 bg-inda-teal text-[#F9F9F9] rounded-2xl text-base sm:text-lg font-medium hover:bg-[#0A655E] transition-colors"
                         >
                           Buy with Inda
                         </button>
@@ -3308,7 +3452,7 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                               }\n\nPlease guide me through the next steps.`
                             )
                           }
-                          className="py-4 px-8 h-24 w-72 bg-inda-teal text-[#F9F9F9] rounded-2xl text-lg font-normal hover:bg-[#0A655E] transition-colors"
+                          className="w-full min-h-[56px] sm:min-h-[64px] px-5 sm:px-6 bg-inda-teal text-[#F9F9F9] rounded-2xl text-base sm:text-lg font-medium hover:bg-[#0A655E] transition-colors"
                         >
                           Finance with Inda
                         </button>
@@ -3317,11 +3461,11 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                     </div>
 
                     {/* Legal Disclaimer */}
-                    <div className="mt-8 pt-6 border-t border-gray-200">
-                      <h4 className="text-xl font-bold text-gray-900 mb-4">
+                    <div className="mt-6 sm:mt-8 pt-6 border-t border-gray-200">
+                      <h4 className="text-lg sm:text-xl font-bold text-gray-900 mb-3 sm:mb-4">
                         Legal Disclaimer
                       </h4>
-                      <p className="text-sm text-gray-700 leading-relaxed">
+                      <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
                         {dummyResultData.legalDisclaimer}
                       </p>
                     </div>
@@ -3380,8 +3524,8 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                       <path
                         strokeLinecap="round"
                         strokeLinejoin="round"
-                        strokeWidth={1.5}
-                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        strokeWidth={2}
+                        d="M12 4v16m8-8H4"
                       />
                     </svg>
                   </div>

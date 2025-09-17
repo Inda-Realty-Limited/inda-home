@@ -48,3 +48,55 @@ export const getFreeViewStatus = async (): Promise<FreeViewStatus> => {
     freeViewDetails: null,
   }) as FreeViewStatus;
 };
+
+export type OrdersSummary = {
+  totalOrders: number;
+  totalListings: number;
+  totalPayments: number;
+  page: number;
+  pageSize: number;
+};
+
+export type OrdersByListingItem = {
+  listingId: string;
+  listing: {
+    _id?: string;
+    title: string | null;
+    listingUrl?: string | null;
+    priceNGN?: number;
+    priceOriginal?: number;
+    state?: string;
+    lga?: string;
+    microlocationStd?: string;
+    propertyTypeStd?: string;
+    imageUrls?: string[];
+  };
+  plans: Array<{
+    plan: string;
+    reference: string;
+    provider: string;
+    paidAt?: string | null;
+  }>;
+  lastPaidAt?: string | null;
+  firstPaidAt?: string | null;
+};
+
+export type OrdersApiResponse = {
+  summary: OrdersSummary;
+  orders: OrdersByListingItem[];
+  payments: {
+    total: number;
+    page: number;
+    pageSize: number;
+    items: any[];
+  };
+};
+
+export async function getOrdersAndPayments(params?: {
+  status?: string;
+  page?: number;
+  limit?: number;
+}): Promise<OrdersApiResponse> {
+  const res = await apiClient.get("/payments/orders", { params });
+  return res.data?.data as OrdersApiResponse;
+}

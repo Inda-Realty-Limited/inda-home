@@ -23,6 +23,9 @@ export function setToken(token: string) {
   try {
     const encrypted = CryptoJS.AES.encrypt(token, SECRET_KEY).toString();
     localStorage.setItem(TOKEN_KEY, encrypted);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("inda:token-changed"));
+    }
   } catch (e) {}
 }
 
@@ -41,6 +44,9 @@ export function getToken(): string | null {
 export function removeToken() {
   try {
     localStorage.removeItem(TOKEN_KEY);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("inda:token-removed"));
+    }
   } catch (e) {}
 }
 
