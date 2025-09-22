@@ -37,7 +37,7 @@ export interface RequestResetPasswordPayload {
 
 export const requestResetPassword = (data: RequestResetPasswordPayload) => {
   return apiClient
-    .post("/auth/request-reset-password", data)
+    .post("/auth/request-password-reset", data)
     .then((res) => res.data);
 };
 
