@@ -19,6 +19,16 @@ import {
   FiUsers,
 } from "react-icons/fi";
 
+export enum HowDidYouHearAboutUs {
+  SearchEngines = "Search Engines – Google, Bing, Yahoo, etc.",
+  SocialMediaOrganic = "Social Media (Organic) – Facebook, Instagram, Twitter/X, YouTube, TikTok",
+  SocialMediaPaidAds = "Social Media (Paid Ads) – Facebook Ads, Instagram Ads, Twitter Ads, YouTube Ads",
+  Referrals = "Referrals – Direct mentions, backlinks, influencer shares",
+  CommunityGroupsForums = "Community Groups & Forums – WhatsApp groups, Telegram, niche online forums",
+  EmailNewsletters = "Email / Newsletters – Campaigns, drip sequences, updates",
+  Other = "Other",
+}
+
 const Signup: React.FC = () => {
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
@@ -26,7 +36,7 @@ const Signup: React.FC = () => {
   const [lastName, setLastName] = useState("");
   const [password, setPassword] = useState("");
   const [lookingToDo, setLookingToDo] = useState("");
-  const [hearAboutUs, setHearAboutUs] = useState("");
+  const [hearAboutUs, setHearAboutUs] = useState<HowDidYouHearAboutUs | "">("");
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchType, setSearchType] = useState("");
@@ -107,39 +117,45 @@ const Signup: React.FC = () => {
     { value: "Just Browsing", label: "Just Browsing", icon: <FiGlobe /> },
   ];
 
-  const hearAboutUsOptions = [
+  const hearAboutUsOptions: {
+    value: HowDidYouHearAboutUs;
+    label: string;
+    icon: React.ReactNode;
+  }[] = [
     {
-      value: "Search Engines: Google, Bing, etc.",
-      label: "Search Engines: Google, Bing, etc.",
+      value: HowDidYouHearAboutUs.SearchEngines,
+      label: "Search Engines – Google, Bing, Yahoo, etc.",
       icon: <FiSearch />,
     },
     {
-      value: "Social Media: Facebook, Instagram, Twitter, YouTube, etc.",
-      label: "Social Media: Facebook, Instagram, Twitter, YouTube, etc.",
+      value: HowDidYouHearAboutUs.SocialMediaOrganic,
+      label:
+        "Social Media (Organic) – Facebook, Instagram, Twitter/X, YouTube, TikTok",
       icon: <FiUsers />,
     },
     {
-      value: "Online Ads: Google Ads, social media ads, etc.",
-      label: "Online Ads: Google Ads, social media ads, etc.",
+      value: HowDidYouHearAboutUs.SocialMediaPaidAds,
+      label:
+        "Social Media (Paid Ads) – Facebook Ads, Instagram Ads, Twitter Ads, YouTube Ads",
       icon: <FiTag />,
     },
     {
-      value: "Referral: A friend, family member, or colleague",
-      label: "Referral: A friend, family member, or colleague",
+      value: HowDidYouHearAboutUs.Referrals,
+      label: "Referrals – Direct mentions, backlinks, influencer shares",
       icon: <FiUser />,
     },
     {
-      value: "Website: Direct visit to our website",
-      label: "Website: Direct visit to our website",
+      value: HowDidYouHearAboutUs.CommunityGroupsForums,
+      label:
+        "Community Groups & Forums – WhatsApp groups, Telegram, niche online forums",
       icon: <FiGlobe />,
     },
-    { value: "Email Newsletter", label: "Email Newsletter", icon: <FiMail /> },
     {
-      value: "Print Ads: Newspaper, magazine, or flyer",
-      label: "Print Ads: Newspaper, magazine, or flyer",
-      icon: <FiTag />,
+      value: HowDidYouHearAboutUs.EmailNewsletters,
+      label: "Email / Newsletters – Campaigns, drip sequences, updates",
+      icon: <FiMail />,
     },
-    { value: "Other", label: "Other", icon: <FiTag /> },
+    { value: HowDidYouHearAboutUs.Other, label: "Other", icon: <FiTag /> },
   ];
 
   return (

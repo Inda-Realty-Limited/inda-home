@@ -49,6 +49,8 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [proceed, setProceed] = useState(false);
   const [open, setOpen] = useState<number | null>(0);
+  // Controls whether PaymentModal starts directly on paid-only (deep) step
+  const [startPaidFlow, setStartPaidFlow] = useState<boolean>(false);
   // Trust score will be derived from API values when present
   const choseFree = () => {
     setProceed(false);
@@ -1258,7 +1260,11 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                     <div className="mx-auto w-[200px] h-[200px] md:w-[240px] md:h-[240px] rounded-full bg-[#4EA8A1] flex flex-col items-center justify-center shadow-2xl pointer-events-auto">
                       <FaLock className="text-white w-12 h-12 md:w-14 md:h-14 mb-4" />
                       <button
-                        onClick={() => setProceed(true)}
+                        onClick={() => {
+                          // Unlock should open the normal two-step flow (include Instant, show Step 1)
+                          setStartPaidFlow(false);
+                          setProceed(true);
+                        }}
                         className="px-4 py-1.5 md:px-6 md:py-2 rounded-full border border-white text-white text-sm md:text-base font-semibold hover:bg-white/10 transition"
                       >
                         Unlock here
@@ -3407,7 +3413,11 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
                       </h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 max-w-4xl mx-auto">
                         <button
-                          onClick={(e) => setProceed(true)}
+                          onClick={(e) => {
+                            // Deeper verification should open paid-only step directly
+                            setStartPaidFlow(true);
+                            setProceed(true);
+                          }}
                           className="w-full min-h-[56px] sm:min-h-[64px] px-5 sm:px-6 bg-inda-teal text-[#F9F9F9] rounded-2xl text-base sm:text-lg font-medium hover:bg-[#0A655E] transition-colors"
                         >
                           Run Deeper Verification
@@ -3479,7 +3489,12 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
           {proceed && (
             <PaymentModal
               isOpen={proceed}
-              onClose={() => setProceed(false)}
+              onClose={() => {
+                setProceed(false);
+                // reset to default (normal two-step) when modal closes
+                setStartPaidFlow(false);
+              }}
+              startOnPaid={startPaidFlow}
               listingUrl={
                 (result?.listingUrl as string) ||
                 (result?.snapshot?.listingUrl as string) ||

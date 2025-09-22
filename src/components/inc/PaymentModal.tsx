@@ -10,6 +10,8 @@ export type PaymentModalProps = {
   listingUrl: string | null | undefined;
   onPaid?: () => void;
   freeAvailable?: boolean;
+  // If true, open directly on paid plans and use deep-only variant
+  startOnPaid?: boolean;
 };
 
 const PaymentModal: React.FC<PaymentModalProps> = ({
@@ -18,15 +20,16 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   listingUrl,
   onPaid,
   freeAvailable,
+  startOnPaid,
 }) => {
   const [isStartingPayment, setIsStartingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
-  const [showPaidPlans, setShowPaidPlans] = useState(false);
+  const [showPaidPlans, setShowPaidPlans] = useState(!!startOnPaid);
 
   const reset = () => {
     setIsStartingPayment(false);
     setPaymentError(null);
-    setShowPaidPlans(false);
+    setShowPaidPlans(!!startOnPaid);
   };
 
   const handleClose = () => {
@@ -260,27 +263,32 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             <div className="w-full">
               <div className="max-w-[1314px] mx-auto bg-white rounded-[16px] sm:rounded-[24px]">
                 <div className="bg-[rgba(105,217,188,0.35)] rounded-[16px] sm:rounded-[24px] md:rounded-[32px] p-4 sm:p-6 md:p-8 lg:p-10 shadow-xl">
-                  {/* Header with Back and Cancel */}
+                  {/* Header with Back (hidden when startOnPaid) and Cancel */}
                   <div className="flex justify-between items-center mb-6 sm:mb-8">
-                    <button
-                      onClick={() => setShowPaidPlans(false)}
-                      className="flex items-center gap-1 sm:gap-2 text-[#556457] hover:text-[#4ea8a1] transition-colors text-sm sm:text-base"
-                    >
-                      <svg
-                        className="w-4 h-4 sm:w-5 sm:h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+                    {startOnPaid ? (
+                      // spacer to keep title centered when back is hidden
+                      <div className="w-8 sm:w-10" aria-hidden="true" />
+                    ) : (
+                      <button
+                        onClick={() => setShowPaidPlans(false)}
+                        className="flex items-center gap-1 sm:gap-2 text-[#556457] hover:text-[#4ea8a1] transition-colors text-sm sm:text-base"
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 19l-7-7 7-7"
-                        />
-                      </svg>
-                      Back
-                    </button>
+                        <svg
+                          className="w-4 h-4 sm:w-5 sm:h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 19l-7-7 7-7"
+                          />
+                        </svg>
+                        Back
+                      </button>
+                    )}
                     <div className="text-center flex-1 px-2">
                       <h2 className="text-inda-dark font-bold text-lg sm:text-2xl md:text-3xl mb-1 sm:mb-2">
                         Premium Plans
@@ -311,6 +319,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                   <PricingPlans
                     onChoosePlan={handleChoosePlan}
                     showOnlyPaid={true}
+                    onlyDeep={!!startOnPaid}
                   />
                 </div>
               </div>
