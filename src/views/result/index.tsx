@@ -32,6 +32,118 @@ import {
 import { IoIosInformationCircle } from "react-icons/io";
 import { RiEditFill } from "react-icons/ri";
 
+// Helper to build an enriched sample result object for demo mode
+const buildEnrichedSampleResult = () => {
+  // Base dummy data
+  const base: any = { ...dummyResultData };
+  // Expand amenities
+  const extraAmenities = [
+    "Smart Access Control",
+    "EV Charging Ready",
+    "Water Treatment Plant",
+    "24/7 Armed Response",
+    "Fiber Internet Backbone",
+    "Facility Management On-Site",
+    "Dedicated Parking",
+    "CCTV Coverage",
+    "Backup Solar Hybrid",
+    "Rainwater Harvest System",
+  ];
+  base.amenities = Array.from(
+    new Set([...(base.amenities || []), ...extraAmenities])
+  );
+
+  // Multiple AI narrative variants (only first currently shown in UI, but available for future tabs)
+  base.aiSummaries = [
+    base.aiSummary,
+    "Risk profile moderate: Pricing above median; developer delay incidence 25%; legal docs partially verified.",
+    "Liquidity window est. 3–5 months; comparable velocity stable; rental yield modest with upside via short-let conversion.",
+    "Title chain clean to 2016; surveillance suggests neighborhood gentrification accelerating; monitor infrastructure expansion.",
+  ];
+
+  // Enrich reviews: retain existing and append more dummy reviews
+  const moreReviews = [
+    {
+      id: "4",
+      reviewer: "Adesuwa T.",
+      location: "Lagos, NG",
+      timeAgo: "2 weeks ago",
+      rating: 4,
+      title: "Solid mid-tier investment",
+      content:
+        "Not the cheapest entry price but fundamentals look resilient. Would like faster customer support SLAs though.",
+    },
+    {
+      id: "5",
+      reviewer: "Kunle B.",
+      location: "Abuja, NG",
+      timeAgo: "1 week ago",
+      rating: 5,
+      title: "Exceeded expectations",
+      content:
+        "Their documentation portal was surprisingly organized. Valuation delta explained transparently. Impressed so far.",
+    },
+    {
+      id: "6",
+      reviewer: "Lola K.",
+      location: "Lagos, NG",
+      timeAgo: "6 days ago",
+      rating: 2,
+      title: "Communication lag",
+      content:
+        "Follow-up on a title clarification took 10 days. Delivery risk feels underplayed in marketing materials.",
+    },
+    {
+      id: "7",
+      reviewer: "Segun A.",
+      location: "London, UK",
+      timeAgo: "3 days ago",
+      rating: 4,
+      title: "Decent offshore option",
+      content:
+        "Using this as a diversification piece. Yield could be higher but capital preservation looks fine.",
+    },
+    {
+      id: "8",
+      reviewer: "Ify N.",
+      location: "Lagos, NG",
+      timeAgo: "1 day ago",
+      rating: 3,
+      title: "Average overall",
+      content:
+        "Nothing catastrophic, nothing spectacular. Monitoring macro headwinds before scaling position.",
+    },
+  ];
+  base.reviews = [...(base.reviews || []), ...moreReviews];
+  base.totalReviews = base.reviews.length;
+  // Recompute overall rating (simple average)
+  const avg =
+    base.reviews.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) /
+    Math.max(1, base.reviews.length);
+  base.overallRating = Number(avg.toFixed(1));
+  // Build rating breakdown percentages dynamically
+  const counts: Record<number, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  base.reviews.forEach((r: any) => {
+    if (counts[r.rating] !== undefined) counts[r.rating] += 1;
+  });
+  base.ratingBreakdown = Object.keys(counts)
+    .map((k) => Number(k))
+    .sort((a, b) => b - a)
+    .map((stars) => ({
+      stars,
+      percentage: Math.round((counts[stars] / base.reviews.length) * 100),
+    }));
+
+  // Sample-specific meta for potential UI badges
+  base.sampleMeta = {
+    generatedAt: new Date().toISOString(),
+    version: 1,
+    disclaimer: "Sample demo data. Not an actual property or developer.",
+  };
+
+  return base;
+};
+
 type ResultProps = {
   hiddenMode?: boolean; // deprecated; gating is now based solely on payment status
 };
@@ -736,7 +848,61 @@ const Result: React.FC<ResultProps> = ({ hiddenMode = false }) => {
 
   useEffect(() => {
     if (router.isReady) {
-      const { q, type } = router.query;
+      const { q, type, sample } = router.query;
+      // SAMPLE MODE: if sample=1, bypass auth + network and show a fully dummy report
+      if (sample === "1") {
+        const enriched = buildEnrichedSampleResult();
+        setSearchQuery("(Sample Report)");
+        setSearchType("sample");
+        setIsPaid(true); // unlock everything for sample
+        setFreeViewAvailable(true);
+        setResult({
+          ...enriched,
+          snapshot: {
+            title: enriched.title,
+            location: enriched.location,
+            priceNGN: 120_000_000,
+            listingUrl: "https://sample.inda/report",
+            imageUrls: [
+              "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80",
+              "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1200&q=80",
+              "https://images.unsplash.com/photo-1501183638710-841dd1904471?auto=format&fit=crop&w=1200&q=80",
+              "https://images.unsplash.com/photo-1531973968078-9bb02785f13d?auto=format&fit=crop&w=1200&q=80",
+            ],
+            analytics: { holding: { holdingPeriodYears: 3 } },
+          },
+          analytics: {
+            market: { purchasePrice: 120_000_000 },
+            financing: { interestRatePct: 4.5, tenorYearsDefault: 10 },
+            yields: {
+              longTermPct: 5.2,
+              shortTermPct: 6.8,
+              annualLongTermIncomeNGN: 6_240_000,
+              annualShortTermIncomeNGN: 8_160_000,
+            },
+            expenses: { totalExpensesPct: 18.2 },
+            appreciation: {
+              nominalPct: 3.2,
+              realPct: 2.1,
+              usdFxInflAdjPct: 1.4,
+            },
+            projections: {
+              roiLongTermPct: 22.4,
+              roiShortTermPct: 18.1,
+              projectedTotalProfitLongTerm: 28_500_000,
+              projectedTotalProfitShortTerm: 16_900_000,
+            },
+          },
+          indaScore: { finalScore: enriched.indaTrustScore },
+        });
+        setIsLoading(false);
+        setNotFound(false);
+        setHasAttemptedFetch(true);
+        setCurrentStep(3);
+        return; // do not proceed with normal flow
+      }
+
+      const { q: _qIgnoredSample, type: _tIgnoredSample } = router.query;
       const query = (q as string) || "";
       setSearchQuery(query);
       setSearchType((type as string) || "");

@@ -187,10 +187,8 @@ const Landing: React.FC = () => {
 
   // Landing CTA actions
   const handleSeeSample = () => {
-    const demo =
-      process.env.NEXT_PUBLIC_DEMO_LISTING_URL ||
-      "https://www.propertypro.ng/property";
-    router.push(`/result?q=${encodeURIComponent(demo)}&type=link`);
+    // Route to a pure client-side sample (no real listing URL fetched)
+    router.push("/result?sample=1");
   };
 
   const handlePlanSelect = (
