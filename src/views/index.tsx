@@ -188,7 +188,7 @@ const Landing: React.FC = () => {
   // Landing CTA actions
   const handleSeeSample = () => {
     // Route to a pure client-side sample (no real listing URL fetched)
-    router.push("/result?sample=1");
+    router.push("/result/sample");
   };
 
   const handlePlanSelect = (
