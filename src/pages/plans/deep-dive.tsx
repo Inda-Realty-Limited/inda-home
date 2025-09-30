@@ -331,7 +331,9 @@ const DeepDiveWizardPage: React.FC = () => {
       return {
         ...prev,
         propertyTypes: next,
-        propertyTypeOther: next.includes("Others") ? prev.propertyTypeOther : "",
+        propertyTypeOther: next.includes("Others")
+          ? prev.propertyTypeOther
+          : "",
       };
     });
   }, []);
@@ -500,13 +502,15 @@ const DeepDiveWizardPage: React.FC = () => {
               ? propertyDetails.categoryOther.trim() || undefined
               : undefined,
           propertyType: primaryType ? toCamelCaseKey(primaryType) : "",
-          propertyTypeOther: primaryType === "Others"
-            ? propertyDetails.propertyTypeOther.trim() || undefined
-            : undefined,
+          propertyTypeOther:
+            primaryType === "Others"
+              ? propertyDetails.propertyTypeOther.trim() || undefined
+              : undefined,
           propertyStatus: primaryStatus ? toCamelCaseKey(primaryStatus) : "",
-          propertyStatusOther: primaryStatus === "Others"
-            ? propertyDetails.propertyStatusOther.trim() || undefined
-            : undefined,
+          propertyStatusOther:
+            primaryStatus === "Others"
+              ? propertyDetails.propertyStatusOther.trim() || undefined
+              : undefined,
           listingUrl: propertyDetails.listingLink.trim() || undefined,
         },
         legalDocuments: {

@@ -3,17 +3,17 @@ import { Container, Footer, Input, Navbar } from "@/components";
 import { useToast } from "@/components/ToastProvider";
 import { getUser, StoredUser } from "@/helpers";
 import {
-    DueDiligenceQuestionnairePayload,
-    QuestionnaireFileRef,
+  DueDiligenceQuestionnairePayload,
+  QuestionnaireFileRef,
 } from "@/types/questionnaire";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-    FiArrowLeft,
-    FiCheckCircle,
-    FiLoader,
-    FiUploadCloud,
+  FiArrowLeft,
+  FiCheckCircle,
+  FiLoader,
+  FiUploadCloud,
 } from "react-icons/fi";
 
 const residentialTypes = ["House", "Duplex", "Flat", "Land", "Others"];
@@ -46,7 +46,10 @@ const resolveErrorMessage = (error: unknown): string => {
   if (typeof error === "string") return error;
   if (error instanceof Error) return error.message;
   const maybeAxios = error as {
-    response?: { data?: { message?: string; errors?: unknown }; status?: number };
+    response?: {
+      data?: { message?: string; errors?: unknown };
+      status?: number;
+    };
     message?: string;
   };
   const apiMessage = maybeAxios?.response?.data?.message;
@@ -62,9 +65,7 @@ const toCamelCaseKey = (value: string): string => {
     .split(/[^a-z0-9]+/)
     .filter(Boolean)
     .map((segment, index) =>
-      index === 0
-        ? segment
-        : segment.charAt(0).toUpperCase() + segment.slice(1)
+      index === 0 ? segment : segment.charAt(0).toUpperCase() + segment.slice(1)
     )
     .join("");
 };
@@ -239,7 +240,12 @@ const DeeperDiveWizardPage: React.FC = () => {
         listingLink: prev.listingLink || listingUrlParam,
       }));
     }
-  }, [router.isReady, listingIdParam, listingUrlParam, propertyDetails.listingLink]);
+  }, [
+    router.isReady,
+    listingIdParam,
+    listingUrlParam,
+    propertyDetails.listingLink,
+  ]);
 
   const handleDocumentUpload = useCallback(
     async (key: UploadRequirementKey, fileList: FileList | null) => {
@@ -426,7 +432,11 @@ const DeeperDiveWizardPage: React.FC = () => {
       propertyDetails.category === "Other" &&
       !propertyDetails.categoryOther.trim()
     ) {
-      showToast("Describe the category when Other is selected.", 4200, "warning");
+      showToast(
+        "Describe the category when Other is selected.",
+        4200,
+        "warning"
+      );
       return false;
     }
     if (propertyDetails.propertyTypes.length === 0) {
@@ -470,11 +480,19 @@ const DeeperDiveWizardPage: React.FC = () => {
         return false;
       }
       if (entry.uploading) {
-        showToast("Wait for uploads to finish before continuing.", 4500, "info");
+        showToast(
+          "Wait for uploads to finish before continuing.",
+          4500,
+          "info"
+        );
         return false;
       }
       if (!entry.refs || entry.refs.length === 0) {
-        showToast("Upload at least one file for each required slot.", 4500, "warning");
+        showToast(
+          "Upload at least one file for each required slot.",
+          4500,
+          "warning"
+        );
         return false;
       }
     }
@@ -486,7 +504,10 @@ const DeeperDiveWizardPage: React.FC = () => {
       showToast("Select the seller type.", 4200, "warning");
       return false;
     }
-    if (sellerInfo.sellerType === "Other" && !sellerInfo.sellerTypeOther.trim()) {
+    if (
+      sellerInfo.sellerType === "Other" &&
+      !sellerInfo.sellerTypeOther.trim()
+    ) {
       showToast("Describe the seller type.", 4200, "warning");
       return false;
     }
@@ -543,13 +564,11 @@ const DeeperDiveWizardPage: React.FC = () => {
     return true;
   }, [buyerInfo, showToast]);
 
-  const buildQuestionnairePayload = useCallback(
-    (): DueDiligenceQuestionnairePayload => {
-      const certificateRefs =
-        documentUploads["primary-title-doc"]?.refs ?? [];
+  const buildQuestionnairePayload =
+    useCallback((): DueDiligenceQuestionnairePayload => {
+      const certificateRefs = documentUploads["primary-title-doc"]?.refs ?? [];
       const surveyRefs = documentUploads["survey-plan"]?.refs ?? [];
-      const governorsRefs =
-        documentUploads["governors-consent"]?.refs ?? [];
+      const governorsRefs = documentUploads["governors-consent"]?.refs ?? [];
       const zoningRefs = documentUploads["zoning-permits"]?.refs ?? [];
 
       const meta: Record<string, unknown> = {
@@ -576,24 +595,22 @@ const DeeperDiveWizardPage: React.FC = () => {
               ? propertyDetails.categoryOther.trim() || undefined
               : undefined,
           propertyType: primaryType ? toCamelCaseKey(primaryType) : "",
-          propertyTypeOther: primaryType === "Others"
-            ? propertyDetails.propertyTypeOther.trim() || undefined
-            : undefined,
+          propertyTypeOther:
+            primaryType === "Others"
+              ? propertyDetails.propertyTypeOther.trim() || undefined
+              : undefined,
           propertyStatus: primaryStatus ? toCamelCaseKey(primaryStatus) : "",
-          propertyStatusOther: primaryStatus === "Others"
-            ? propertyDetails.propertyStatusOther.trim() || undefined
-            : undefined,
+          propertyStatusOther:
+            primaryStatus === "Others"
+              ? propertyDetails.propertyStatusOther.trim() || undefined
+              : undefined,
           listingUrl: propertyDetails.listingLink.trim() || undefined,
         },
         legalDocuments: {
           certificateOfOccupancyOrDeed: certificateRefs,
           surveyPlan: surveyRefs,
-          ...(governorsRefs.length
-            ? { governorsConsent: governorsRefs }
-            : {}),
-          ...(zoningRefs.length
-            ? { zoningOrBuildingPermits: zoningRefs }
-            : {}),
+          ...(governorsRefs.length ? { governorsConsent: governorsRefs } : {}),
+          ...(zoningRefs.length ? { zoningOrBuildingPermits: zoningRefs } : {}),
         },
         buyerInformation: {
           fullName: buyerInfo.fullName.trim(),
@@ -606,7 +623,9 @@ const DeeperDiveWizardPage: React.FC = () => {
           sellerEmail: sellerInfo.sellerEmail.trim(),
           sellerPhone: sellerInfo.sellerPhone.trim(),
           ...(sellerInfo.sellerType === "Other"
-            ? { sellerTypeOther: sellerInfo.sellerTypeOther.trim() || undefined }
+            ? {
+                sellerTypeOther: sellerInfo.sellerTypeOther.trim() || undefined,
+              }
             : {}),
         },
         siteAccess: {
@@ -618,8 +637,7 @@ const DeeperDiveWizardPage: React.FC = () => {
         },
         metadata: meta,
       };
-    },
-    [
+    }, [
       buyerInfo.email,
       buyerInfo.fullName,
       buyerInfo.phone,
@@ -643,8 +661,7 @@ const DeeperDiveWizardPage: React.FC = () => {
       siteAccess.contactName,
       siteAccess.contactPhone,
       siteAccess.specialInstructions,
-    ]
-  );
+    ]);
 
   const handleSubmit = useCallback(async () => {
     if (!user) {
@@ -975,9 +992,7 @@ const SectionedOptionGroup: React.FC<{
 
 type PropertyBasicsStepProps = {
   values: PropertyDetails;
-  onChange: (
-    field: keyof PropertyDetails
-  ) => (event: TextInputEvent) => void;
+  onChange: (field: keyof PropertyDetails) => (event: TextInputEvent) => void;
   onSelectCategory: (category: PropertyDetails["category"]) => void;
   onToggleType: (option: string) => void;
   onToggleStatus: (option: string) => void;
@@ -1389,7 +1404,9 @@ const UploadCard: React.FC<UploadCardProps> = ({
       <label
         htmlFor={inputId}
         className={`flex h-32 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#DCEAE8] bg-[#4EA8A11F] transition sm:w-48 ${
-          isUploading ? "pointer-events-none opacity-60" : "hover:border-[#4EA8A1]"
+          isUploading
+            ? "pointer-events-none opacity-60"
+            : "hover:border-[#4EA8A1]"
         }`}
       >
         {isUploading ? (
