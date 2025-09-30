@@ -1,3 +1,8 @@
+import {
+  QuestionnaireFileRef,
+  StartListingPaymentPayload,
+  StartListingPaymentResponse,
+} from "@/types/questionnaire";
 import apiClient from "./index";
 
 type StartPaymentPayload = {
@@ -100,3 +105,25 @@ export async function getOrdersAndPayments(params?: {
   const res = await apiClient.get("/payments/orders", { params });
   return res.data?.data as OrdersApiResponse;
 }
+
+export const uploadQuestionnaireFiles = async (
+  files: File[]
+): Promise<QuestionnaireFileRef[]> => {
+  const formData = new FormData();
+  files.forEach((file) => formData.append("files", file));
+
+  const res = await apiClient.post("/payments/questionnaire/upload", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  return (res.data?.data || []) as QuestionnaireFileRef[];
+};
+
+export const startListingPayment = async (
+  payload: StartListingPaymentPayload
+): Promise<StartListingPaymentResponse> => {
+  const res = await apiClient.post("/payments/start", payload);
+  return (res.data?.data || {}) as StartListingPaymentResponse;
+};

@@ -3,17 +3,17 @@ import { Container, Footer, Input, Navbar } from "@/components";
 import { useToast } from "@/components/ToastProvider";
 import { getUser, StoredUser } from "@/helpers";
 import {
-  DueDiligenceQuestionnairePayload,
-  QuestionnaireFileRef,
+    DueDiligenceQuestionnairePayload,
+    QuestionnaireFileRef,
 } from "@/types/questionnaire";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  FiArrowLeft,
-  FiCheckCircle,
-  FiLoader,
-  FiUploadCloud,
+    FiArrowLeft,
+    FiCheckCircle,
+    FiLoader,
+    FiUploadCloud,
 } from "react-icons/fi";
 
 const residentialTypes = ["House", "Duplex", "Flat", "Land", "Others"];
@@ -30,6 +30,13 @@ const propertyCategoryOptions = [
   "Mixed Use",
   "Other",
 ] as const;
+const sellerTypeOptions = [
+  "Individual",
+  "Company",
+  "Developer",
+  "Family Estate",
+  "Other",
+] as const;
 
 const QUESTIONNAIRE_FILE_MAX_COUNT = 10;
 const QUESTIONNAIRE_FILE_MAX_BYTES = 25 * 1024 * 1024;
@@ -39,10 +46,7 @@ const resolveErrorMessage = (error: unknown): string => {
   if (typeof error === "string") return error;
   if (error instanceof Error) return error.message;
   const maybeAxios = error as {
-    response?: {
-      data?: { message?: string; errors?: unknown };
-      status?: number;
-    };
+    response?: { data?: { message?: string; errors?: unknown }; status?: number };
     message?: string;
   };
   const apiMessage = maybeAxios?.response?.data?.message;
@@ -58,7 +62,9 @@ const toCamelCaseKey = (value: string): string => {
     .split(/[^a-z0-9]+/)
     .filter(Boolean)
     .map((segment, index) =>
-      index === 0 ? segment : segment.charAt(0).toUpperCase() + segment.slice(1)
+      index === 0
+        ? segment
+        : segment.charAt(0).toUpperCase() + segment.slice(1)
     )
     .join("");
 };
@@ -101,17 +107,7 @@ const uploadRequirements = [
 
 type UploadRequirementKey = (typeof uploadRequirements)[number]["key"];
 type PropertyCategoryOption = (typeof propertyCategoryOptions)[number];
-
-type TextInputEvent = React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
-
-type UploadEntry = {
-  files: File[];
-  refs: QuestionnaireFileRef[];
-  uploading: boolean;
-  error?: string | null;
-};
-
-type UploadState = Partial<Record<UploadRequirementKey, UploadEntry>>;
+type SellerTypeOption = (typeof sellerTypeOptions)[number];
 
 type PropertyDetails = {
   address: string;
@@ -125,16 +121,42 @@ type PropertyDetails = {
   propertyStatusOther: string;
 };
 
+type SellerInformation = {
+  sellerType: SellerTypeOption | "";
+  sellerName: string;
+  sellerPhone: string;
+  sellerEmail: string;
+  sellerTypeOther: string;
+};
+
+type SiteAccessDetails = {
+  contactName: string;
+  contactPhone: string;
+  specialInstructions: string;
+};
+
 type BuyerInfo = {
   fullName: string;
   email: string;
   phone: string;
 };
 
-const DeepDiveWizardPage: React.FC = () => {
+type UploadEntry = {
+  files: File[];
+  refs: QuestionnaireFileRef[];
+  uploading: boolean;
+  error?: string | null;
+};
+
+type UploadState = Partial<Record<UploadRequirementKey, UploadEntry>>;
+
+type TextInputEvent = React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
+
+const DeeperDiveWizardPage: React.FC = () => {
   const router = useRouter();
   const { showToast } = useToast();
   const [user, setUser] = useState<StoredUser | null>(null);
+  const [stepIndex, setStepIndex] = useState(0);
   const [propertyDetails, setPropertyDetails] = useState<PropertyDetails>({
     address: "",
     description: "",
@@ -146,13 +168,24 @@ const DeepDiveWizardPage: React.FC = () => {
     propertyStatus: [],
     propertyStatusOther: "",
   });
+  const [sellerInfo, setSellerInfo] = useState<SellerInformation>({
+    sellerType: "",
+    sellerName: "",
+    sellerPhone: "",
+    sellerEmail: "",
+    sellerTypeOther: "",
+  });
+  const [siteAccess, setSiteAccess] = useState<SiteAccessDetails>({
+    contactName: "",
+    contactPhone: "",
+    specialInstructions: "",
+  });
   const [buyerInfo, setBuyerInfo] = useState<BuyerInfo>({
     fullName: "",
     email: "",
     phone: "",
   });
   const [documentUploads, setDocumentUploads] = useState<UploadState>({});
-  const [stepIndex, setStepIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [listingContext, setListingContext] = useState<{
     listingId?: string;
@@ -206,21 +239,7 @@ const DeepDiveWizardPage: React.FC = () => {
         listingLink: prev.listingLink || listingUrlParam,
       }));
     }
-  }, [
-    router.isReady,
-    listingIdParam,
-    listingUrlParam,
-    propertyDetails.listingLink,
-  ]);
-
-  const handleBuyerInfoChange = useCallback(
-    (field: keyof BuyerInfo) =>
-      (event: React.ChangeEvent<HTMLInputElement>) => {
-        const { value } = event.target;
-        setBuyerInfo((prev) => ({ ...prev, [field]: value }));
-      },
-    []
-  );
+  }, [router.isReady, listingIdParam, listingUrlParam, propertyDetails.listingLink]);
 
   const handleDocumentUpload = useCallback(
     async (key: UploadRequirementKey, fileList: FileList | null) => {
@@ -313,7 +332,7 @@ const DeepDiveWizardPage: React.FC = () => {
   );
 
   const handleCategorySelect = useCallback(
-    (category: PropertyCategoryOption) => {
+    (category: PropertyDetails["category"]) => {
       setPropertyDetails((prev) => ({
         ...prev,
         category,
@@ -331,7 +350,9 @@ const DeepDiveWizardPage: React.FC = () => {
       return {
         ...prev,
         propertyTypes: next,
-        propertyTypeOther: next.includes("Others") ? prev.propertyTypeOther : "",
+        propertyTypeOther: next.includes("Others")
+          ? prev.propertyTypeOther
+          : "",
       };
     });
   }, []);
@@ -351,17 +372,50 @@ const DeepDiveWizardPage: React.FC = () => {
     });
   }, []);
 
+  const handleSellerFieldChange = useCallback(
+    (field: keyof SellerInformation) =>
+      (event: React.ChangeEvent<HTMLInputElement>) => {
+        const { value } = event.target;
+        setSellerInfo((prev) => ({ ...prev, [field]: value }));
+      },
+    []
+  );
+
+  const handleSellerTypeSelect = useCallback(
+    (sellerType: SellerInformation["sellerType"]) => {
+      setSellerInfo((prev) => ({
+        ...prev,
+        sellerType,
+        sellerTypeOther: sellerType === "Other" ? prev.sellerTypeOther : "",
+      }));
+    },
+    []
+  );
+
+  const handleSiteFieldChange = useCallback(
+    (field: keyof SiteAccessDetails) => (event: TextInputEvent) => {
+      const { value } = event.target;
+      setSiteAccess((prev) => ({ ...prev, [field]: value }));
+    },
+    []
+  );
+
+  const handleBuyerFieldChange = useCallback(
+    (field: keyof BuyerInfo) =>
+      (event: React.ChangeEvent<HTMLInputElement>) => {
+        const { value } = event.target;
+        setBuyerInfo((prev) => ({ ...prev, [field]: value }));
+      },
+    []
+  );
+
   const validatePropertyBasics = useCallback(() => {
     if (!propertyDetails.address.trim()) {
       showToast("Please enter the property address.", 4200, "warning");
       return false;
     }
     if (!propertyDetails.description.trim()) {
-      showToast(
-        "Add a short property description to continue.",
-        4200,
-        "warning"
-      );
+      showToast("Add a short property description.", 4200, "warning");
       return false;
     }
     if (!propertyDetails.category) {
@@ -372,7 +426,7 @@ const DeepDiveWizardPage: React.FC = () => {
       propertyDetails.category === "Other" &&
       !propertyDetails.categoryOther.trim()
     ) {
-      showToast("Describe the category when selecting Other.", 4200, "warning");
+      showToast("Describe the category when Other is selected.", 4200, "warning");
       return false;
     }
     if (propertyDetails.propertyTypes.length === 0) {
@@ -383,15 +437,11 @@ const DeepDiveWizardPage: React.FC = () => {
       propertyDetails.propertyTypes.includes("Others") &&
       !propertyDetails.propertyTypeOther.trim()
     ) {
-      showToast(
-        "Describe the property type when selecting Others.",
-        4200,
-        "warning"
-      );
+      showToast("Describe the property type for Others.", 4200, "warning");
       return false;
     }
     if (propertyDetails.propertyStatus.length === 0) {
-      showToast("Select the current property status.", 4200, "warning");
+      showToast("Select the property status.", 4200, "warning");
       return false;
     }
     if (
@@ -402,11 +452,7 @@ const DeepDiveWizardPage: React.FC = () => {
       return false;
     }
     if (!propertyDetails.listingLink.trim()) {
-      showToast(
-        "Include the listing link so we can match this property.",
-        4200,
-        "warning"
-      );
+      showToast("Include the listing link.", 4200, "warning");
       return false;
     }
     return true;
@@ -417,36 +463,64 @@ const DeepDiveWizardPage: React.FC = () => {
       "primary-title-doc",
       "survey-plan",
     ];
-
     for (const key of requiredKeys) {
       const entry = documentUploads[key];
       if (!entry) {
-        showToast(
-          "Please upload all required legal documents.",
-          4500,
-          "warning"
-        );
+        showToast("Upload the required legal documents.", 4500, "warning");
         return false;
       }
       if (entry.uploading) {
-        showToast(
-          "Wait for the uploads to finish before continuing.",
-          4500,
-          "info"
-        );
+        showToast("Wait for uploads to finish before continuing.", 4500, "info");
         return false;
       }
       if (!entry.refs || entry.refs.length === 0) {
-        showToast(
-          "Upload at least one file for each required document.",
-          4500,
-          "warning"
-        );
+        showToast("Upload at least one file for each required slot.", 4500, "warning");
         return false;
       }
     }
     return true;
   }, [documentUploads, showToast]);
+
+  const validateSeller = useCallback(() => {
+    if (!sellerInfo.sellerType) {
+      showToast("Select the seller type.", 4200, "warning");
+      return false;
+    }
+    if (sellerInfo.sellerType === "Other" && !sellerInfo.sellerTypeOther.trim()) {
+      showToast("Describe the seller type.", 4200, "warning");
+      return false;
+    }
+    if (!sellerInfo.sellerName.trim()) {
+      showToast("Enter the seller's name.", 4200, "warning");
+      return false;
+    }
+    if (!sellerInfo.sellerPhone.trim()) {
+      showToast("Add the seller's phone number.", 4200, "warning");
+      return false;
+    }
+    if (!sellerInfo.sellerEmail.trim()) {
+      showToast("Provide the seller's email.", 4200, "warning");
+      return false;
+    }
+    const emailPattern = /[^\s@]+@[^\s@]+\.[^\s@]+/;
+    if (!emailPattern.test(sellerInfo.sellerEmail.trim())) {
+      showToast("That seller email looks invalid.", 4200, "warning");
+      return false;
+    }
+    return true;
+  }, [sellerInfo, showToast]);
+
+  const validateSiteAccess = useCallback(() => {
+    if (!siteAccess.contactName.trim()) {
+      showToast("Enter the site contact name.", 4200, "warning");
+      return false;
+    }
+    if (!siteAccess.contactPhone.trim()) {
+      showToast("Provide the site contact phone number.", 4200, "warning");
+      return false;
+    }
+    return true;
+  }, [siteAccess, showToast]);
 
   const validateBuyer = useCallback(() => {
     if (!buyerInfo.fullName.trim()) {
@@ -469,16 +543,18 @@ const DeepDiveWizardPage: React.FC = () => {
     return true;
   }, [buyerInfo, showToast]);
 
-  const buildQuestionnairePayload =
-    useCallback((): DueDiligenceQuestionnairePayload => {
-      const certificateRefs = documentUploads["primary-title-doc"]?.refs ?? [];
+  const buildQuestionnairePayload = useCallback(
+    (): DueDiligenceQuestionnairePayload => {
+      const certificateRefs =
+        documentUploads["primary-title-doc"]?.refs ?? [];
       const surveyRefs = documentUploads["survey-plan"]?.refs ?? [];
-      const governorsRefs = documentUploads["governors-consent"]?.refs ?? [];
+      const governorsRefs =
+        documentUploads["governors-consent"]?.refs ?? [];
       const zoningRefs = documentUploads["zoning-permits"]?.refs ?? [];
 
       const meta: Record<string, unknown> = {
-        formVersion: "deep-dive-2025-09",
-        uiPath: "plans/deep-dive",
+        formVersion: "deeper-dive-2025-09",
+        uiPath: "plans/deeper-dive",
       };
       if (listingContext.listingId) {
         meta.listingId = listingContext.listingId;
@@ -512,17 +588,38 @@ const DeepDiveWizardPage: React.FC = () => {
         legalDocuments: {
           certificateOfOccupancyOrDeed: certificateRefs,
           surveyPlan: surveyRefs,
-          ...(governorsRefs.length ? { governorsConsent: governorsRefs } : {}),
-          ...(zoningRefs.length ? { zoningOrBuildingPermits: zoningRefs } : {}),
+          ...(governorsRefs.length
+            ? { governorsConsent: governorsRefs }
+            : {}),
+          ...(zoningRefs.length
+            ? { zoningOrBuildingPermits: zoningRefs }
+            : {}),
         },
         buyerInformation: {
           fullName: buyerInfo.fullName.trim(),
           email: buyerInfo.email.trim(),
           phoneNumber: buyerInfo.phone.trim(),
         },
+        sellerInformation: {
+          sellerType: toCamelCaseKey(sellerInfo.sellerType || ""),
+          sellerName: sellerInfo.sellerName.trim(),
+          sellerEmail: sellerInfo.sellerEmail.trim(),
+          sellerPhone: sellerInfo.sellerPhone.trim(),
+          ...(sellerInfo.sellerType === "Other"
+            ? { sellerTypeOther: sellerInfo.sellerTypeOther.trim() || undefined }
+            : {}),
+        },
+        siteAccess: {
+          contactName: siteAccess.contactName.trim(),
+          contactPhone: siteAccess.contactPhone.trim(),
+          ...(siteAccess.specialInstructions.trim()
+            ? { specialInstructions: siteAccess.specialInstructions.trim() }
+            : {}),
+        },
         metadata: meta,
       };
-    }, [
+    },
+    [
       buyerInfo.email,
       buyerInfo.fullName,
       buyerInfo.phone,
@@ -538,7 +635,16 @@ const DeepDiveWizardPage: React.FC = () => {
       propertyDetails.propertyStatusOther,
       propertyDetails.propertyTypes,
       propertyDetails.propertyTypeOther,
-    ]);
+      sellerInfo.sellerEmail,
+      sellerInfo.sellerName,
+      sellerInfo.sellerPhone,
+      sellerInfo.sellerType,
+      sellerInfo.sellerTypeOther,
+      siteAccess.contactName,
+      siteAccess.contactPhone,
+      siteAccess.specialInstructions,
+    ]
+  );
 
   const handleSubmit = useCallback(async () => {
     if (!user) {
@@ -554,13 +660,13 @@ const DeepDiveWizardPage: React.FC = () => {
 
     const origin =
       typeof window !== "undefined" ? window.location.origin : undefined;
-    const callbackPath = `/order/received?plan=deepDive&q=${encodeURIComponent(
+    const callbackPath = `/order/received?plan=deeperDive&q=${encodeURIComponent(
       primaryListingUrl
     )}`;
     const callbackUrl = origin ? `${origin}${callbackPath}` : undefined;
 
     const payload = {
-      plan: "deepDive" as const,
+      plan: "deeperDive" as const,
       questionnaire,
       ...(listingId ? { listingId } : {}),
       ...(primaryListingUrl ? { listingUrl: primaryListingUrl } : {}),
@@ -581,7 +687,7 @@ const DeepDiveWizardPage: React.FC = () => {
           response.reference || response.payment?.reference || "";
         if (origin) {
           const params = new URLSearchParams({
-            plan: "deepDive",
+            plan: "deeperDive",
             q: primaryListingUrl,
           });
           if (reference) {
@@ -628,8 +734,8 @@ const DeepDiveWizardPage: React.FC = () => {
     () => [
       {
         key: "property-basics",
-        title: "Step 1/3 - Property Basics",
-        highlightWidthPct: 35,
+        title: "Step 1/5 - Property Basics",
+        highlightWidthPct: 20,
         render: () => (
           <PropertyBasicsStep
             values={propertyDetails}
@@ -642,8 +748,8 @@ const DeepDiveWizardPage: React.FC = () => {
       },
       {
         key: "legal-documents",
-        title: "Step 2/3 - Legal Documents Upload",
-        highlightWidthPct: 65,
+        title: "Step 2/5 - Legal Documents Upload",
+        highlightWidthPct: 40,
         render: () => (
           <LegalDocumentsStep
             uploads={uploadRequirements}
@@ -654,13 +760,36 @@ const DeepDiveWizardPage: React.FC = () => {
         ),
       },
       {
+        key: "seller-information",
+        title: "Step 3/5 - Seller Information",
+        highlightWidthPct: 60,
+        render: () => (
+          <SellerInformationStep
+            values={sellerInfo}
+            onChange={handleSellerFieldChange}
+            onSelectSellerType={handleSellerTypeSelect}
+          />
+        ),
+      },
+      {
+        key: "site-access",
+        title: "Step 4/5 - Site Access Details",
+        highlightWidthPct: 80,
+        render: () => (
+          <SiteAccessStep
+            values={siteAccess}
+            onChange={handleSiteFieldChange}
+          />
+        ),
+      },
+      {
         key: "buyer-information",
-        title: "Step 3/3 - Buyer Information",
+        title: "Step 5/5 - Buyer Information",
         highlightWidthPct: 100,
         render: () => (
           <BuyerInformationStep
             values={buyerInfo}
-            onChange={handleBuyerInfoChange}
+            onChange={handleBuyerFieldChange}
             hasUserContext={Boolean(user)}
           />
         ),
@@ -669,25 +798,29 @@ const DeepDiveWizardPage: React.FC = () => {
     [
       buyerInfo,
       documentUploads,
-      handleBuyerInfoChange,
+      handleBuyerFieldChange,
       handleDocumentClear,
       handleDocumentUpload,
       handleCategorySelect,
       handlePropertyFieldChange,
+      handleSellerFieldChange,
+      handleSellerTypeSelect,
+      handleSiteFieldChange,
       handleTogglePropertyStatus,
       handleTogglePropertyType,
       propertyDetails,
+      sellerInfo,
+      siteAccess,
       user,
     ]
   );
 
   const totalSteps = steps.length;
-  const activeStep = useMemo(() => steps[stepIndex], [steps, stepIndex]);
+  const activeStep = useMemo(() => steps[stepIndex], [stepIndex, steps]);
 
   const goNext = () =>
     setStepIndex((prev) => Math.min(prev + 1, totalSteps - 1));
   const goBack = () => setStepIndex((prev) => Math.max(prev - 1, 0));
-
   const isFirst = stepIndex === 0;
   const isLast = stepIndex === totalSteps - 1;
 
@@ -702,6 +835,8 @@ const DeepDiveWizardPage: React.FC = () => {
     const checklist = [
       validatePropertyBasics,
       validateDocuments,
+      validateSeller,
+      validateSiteAccess,
       validateBuyer,
     ];
     const validator = checklist[stepIndex];
@@ -722,16 +857,18 @@ const DeepDiveWizardPage: React.FC = () => {
     validateBuyer,
     validateDocuments,
     validatePropertyBasics,
+    validateSeller,
+    validateSiteAccess,
   ]);
 
   const disableNext =
     (activeStep.key === "legal-documents" && anyUploadsInProgress) ||
-    (isLast && isSubmitting);
+    isSubmitting;
 
   return (
     <>
       <Head>
-        <title>Deep Dive • Inda</title>
+        <title>Deeper Dive • Inda</title>
       </Head>
       <Container noPadding className="min-h-screen bg-white text-[#0B1D27]">
         <Navbar />
@@ -750,7 +887,7 @@ const DeepDiveWizardPage: React.FC = () => {
               isFirst={isFirst}
               isLast={isLast}
               disableNext={disableNext}
-              isBusy={isLast && isSubmitting}
+              isBusy={isSubmitting && isLast}
             />
           </section>
         </main>
@@ -777,10 +914,71 @@ const StepHeading: React.FC<{ title: string; highlightPct: number }> = ({
   </div>
 );
 
+const FieldGroup: React.FC<{
+  title: string;
+  description?: string;
+  children: React.ReactNode;
+}> = ({ title, description, children }) => (
+  <div className="w-full rounded-[28px] border border-[#D7EBE7] bg-white/95 px-5 py-5 sm:px-7 sm:py-6 shadow-[0_6px_24px_rgba(17,31,39,0.06)] space-y-5">
+    <div className="space-y-2">
+      <h3 className="text-lg sm:text-xl font-semibold">{title}</h3>
+      {description && <p className="text-sm text-[#5E7572]">{description}</p>}
+    </div>
+    <div className="space-y-4">{children}</div>
+  </div>
+);
+
+const OptionPill: React.FC<{
+  label: string;
+  selected: boolean;
+  onClick: () => void;
+}> = ({ label, selected, onClick }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    aria-pressed={selected}
+    className={`rounded-xl border px-3 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-[#4EA8A1]/40 focus:ring-offset-1 ${
+      selected
+        ? "bg-[#4EA8A1] text-white border-transparent"
+        : "bg-white text-[#0B1D27] border-[#4EA8A1]/40 hover:border-[#4EA8A1]"
+    }`}
+  >
+    {label}
+  </button>
+);
+
+const SectionedOptionGroup: React.FC<{
+  title: string;
+  options: string[];
+  selected: string[];
+  onToggle: (option: string) => void;
+}> = ({ title, options, selected, onToggle }) => (
+  <div className="space-y-3">
+    <p className="text-xs uppercase tracking-wide text-[#6B8C8A] font-semibold">
+      {title}
+    </p>
+    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+      {options.map((option) => {
+        const isSelected = selected.includes(option);
+        return (
+          <OptionPill
+            key={option}
+            label={option}
+            selected={isSelected}
+            onClick={() => onToggle(option)}
+          />
+        );
+      })}
+    </div>
+  </div>
+);
+
 type PropertyBasicsStepProps = {
   values: PropertyDetails;
-  onChange: (field: keyof PropertyDetails) => (event: TextInputEvent) => void;
-  onSelectCategory: (category: PropertyCategoryOption) => void;
+  onChange: (
+    field: keyof PropertyDetails
+  ) => (event: TextInputEvent) => void;
+  onSelectCategory: (category: PropertyDetails["category"]) => void;
   onToggleType: (option: string) => void;
   onToggleStatus: (option: string) => void;
 };
@@ -925,67 +1123,6 @@ const PropertyBasicsStep: React.FC<PropertyBasicsStepProps> = ({
   </div>
 );
 
-const FieldGroup: React.FC<{
-  title: string;
-  description?: string;
-  children: React.ReactNode;
-}> = ({ title, description, children }) => (
-  <div className="w-full rounded-[28px] border border-[#D7EBE7] bg-white/95 px-5 py-5 sm:px-7 sm:py-6 shadow-[0_6px_24px_rgba(17,31,39,0.06)] space-y-5">
-    <div className="space-y-2">
-      <h3 className="text-lg sm:text-xl font-semibold text-[#0B1D27]">
-        {title}
-      </h3>
-      {description && <p className="text-sm text-[#5E7572]">{description}</p>}
-    </div>
-    <div className="space-y-4">{children}</div>
-  </div>
-);
-
-const OptionPill: React.FC<{
-  label: string;
-  selected: boolean;
-  onClick: () => void;
-}> = ({ label, selected, onClick }) => (
-  <button
-    type="button"
-    onClick={onClick}
-    aria-pressed={selected}
-    className={`rounded-xl border px-3 py-2 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-[#4EA8A1]/40 focus:ring-offset-1 ${
-      selected
-        ? "border-transparent bg-[#4EA8A1] text-white"
-        : "border-[#4EA8A1]/40 bg-white text-[#0B1D27] hover:border-[#4EA8A1]"
-    }`}
-  >
-    {label}
-  </button>
-);
-
-const SectionedOptionGroup: React.FC<{
-  title: string;
-  options: string[];
-  selected: string[];
-  onToggle: (option: string) => void;
-}> = ({ title, options, selected, onToggle }) => (
-  <div className="space-y-3">
-    <p className="text-xs font-semibold uppercase tracking-wide text-[#6B8C8A]">
-      {title}
-    </p>
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-      {options.map((option) => {
-        const isSelected = selected.includes(option);
-        return (
-          <OptionPill
-            key={option}
-            label={option}
-            selected={isSelected}
-            onClick={() => onToggle(option)}
-          />
-        );
-      })}
-    </div>
-  </div>
-);
-
 type LegalDocumentsStepProps = {
   uploads: typeof uploadRequirements;
   selectedFiles: UploadState;
@@ -1011,7 +1148,7 @@ const LegalDocumentsStep: React.FC<LegalDocumentsStepProps> = ({
       {uploads.map((item) => (
         <UploadCard
           key={item.key}
-          inputId={`deep-dive-${item.key}`}
+          inputId={`deeper-${item.key}`}
           title={item.title}
           optional={item.optional}
           files={selectedFiles[item.key]?.files ?? []}
@@ -1022,6 +1159,203 @@ const LegalDocumentsStep: React.FC<LegalDocumentsStepProps> = ({
         />
       ))}
     </div>
+  </div>
+);
+
+type SellerInformationStepProps = {
+  values: SellerInformation;
+  onChange: (
+    field: keyof SellerInformation
+  ) => (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onSelectSellerType: (sellerType: SellerInformation["sellerType"]) => void;
+};
+
+const SellerInformationStep: React.FC<SellerInformationStepProps> = ({
+  values,
+  onChange,
+  onSelectSellerType,
+}) => (
+  <div className="space-y-6">
+    <div className="space-y-2">
+      <h2 className="text-xl font-semibold">Full Details</h2>
+      <p className="text-sm text-[#5E7572]">Tell us about the seller.</p>
+    </div>
+    <FieldGroup title="Seller Type" description="Select seller type">
+      <div className="flex flex-wrap gap-2">
+        {sellerTypeOptions.map((option) => (
+          <OptionPill
+            key={option}
+            label={option}
+            selected={values.sellerType === option}
+            onClick={() => onSelectSellerType(option)}
+          />
+        ))}
+      </div>
+      {values.sellerType === "Other" && (
+        <label className="block">
+          <span className="text-xs font-medium text-[#5E7572]">
+            Describe the seller type
+          </span>
+          <Input
+            placeholder="e.g. Family Trust"
+            className="mt-2 w-full sm:w-3/4"
+            value={values.sellerTypeOther}
+            onChange={onChange("sellerTypeOther")}
+          />
+        </label>
+      )}
+    </FieldGroup>
+    <div className="grid gap-4 sm:max-w-md">
+      <label className="block">
+        <span className="block text-sm font-medium mb-2">
+          Full Name of Seller / Company
+        </span>
+        <Input
+          placeholder="Enter Name"
+          className="w-full"
+          value={values.sellerName}
+          onChange={onChange("sellerName")}
+          autoComplete="name"
+        />
+      </label>
+      <label className="block">
+        <span className="block text-sm font-medium mb-2">Contact Phone</span>
+        <Input
+          placeholder="Enter No."
+          className="w-full"
+          value={values.sellerPhone}
+          onChange={onChange("sellerPhone")}
+          autoComplete="tel"
+        />
+      </label>
+      <label className="block">
+        <span className="block text-sm font-medium mb-2">Email</span>
+        <Input
+          type="email"
+          placeholder="Enter Email"
+          className="w-full"
+          value={values.sellerEmail}
+          onChange={onChange("sellerEmail")}
+          autoComplete="email"
+        />
+      </label>
+    </div>
+  </div>
+);
+
+type SiteAccessStepProps = {
+  values: SiteAccessDetails;
+  onChange: (field: keyof SiteAccessDetails) => (event: TextInputEvent) => void;
+};
+
+const SiteAccessStep: React.FC<SiteAccessStepProps> = ({
+  values,
+  onChange,
+}) => (
+  <div className="space-y-6">
+    <div className="space-y-2">
+      <h2 className="text-xl font-semibold">Site Access Details</h2>
+      <p className="text-sm text-[#5E7572]">
+        Help our field team plan the site visit.
+      </p>
+    </div>
+    <div className="grid gap-4 sm:max-w-md">
+      <label className="block">
+        <span className="block text-sm font-medium mb-2">
+          Site Contact Full Name
+        </span>
+        <Input
+          placeholder="Enter Name"
+          className="w-full"
+          value={values.contactName}
+          onChange={onChange("contactName")}
+          autoComplete="name"
+        />
+      </label>
+      <label className="block">
+        <span className="block text-sm font-medium mb-2">Phone Number</span>
+        <Input
+          placeholder="Enter No."
+          className="w-full"
+          value={values.contactPhone}
+          onChange={onChange("contactPhone")}
+          autoComplete="tel"
+        />
+      </label>
+      <label className="block">
+        <span className="block text-sm font-medium mb-2">
+          Any Special Instructions for Access?
+        </span>
+        <textarea
+          placeholder="Enter instructions"
+          className="w-full h-32 rounded-lg border border-[#4EA8A1]/60 bg-white px-3 py-2 text-sm text-[#0B1D27] shadow-sm focus:outline-none focus:ring-2 focus:ring-[#4EA8A1]/40"
+          value={values.specialInstructions}
+          onChange={onChange("specialInstructions")}
+        />
+      </label>
+    </div>
+  </div>
+);
+
+type BuyerInformationStepProps = {
+  values: BuyerInfo;
+  onChange: (
+    field: keyof BuyerInfo
+  ) => (event: React.ChangeEvent<HTMLInputElement>) => void;
+  hasUserContext?: boolean;
+};
+
+const BuyerInformationStep: React.FC<BuyerInformationStepProps> = ({
+  values,
+  onChange,
+  hasUserContext = false,
+}) => (
+  <div className="space-y-6">
+    <div className="space-y-2">
+      <h2 className="text-xl font-semibold">Full Details</h2>
+      <p className="text-sm text-[#5E7572]">
+        {hasUserContext
+          ? "We pre-filled this with your Inda profile—update anything that looks off."
+          : "This section is optional but recommended for verification communication."}
+      </p>
+    </div>
+    <div className="grid gap-4 sm:max-w-md">
+      <label className="block">
+        <span className="block text-sm font-medium mb-2">Full Name</span>
+        <Input
+          placeholder="Enter address"
+          className="w-full"
+          value={values.fullName}
+          onChange={onChange("fullName")}
+          autoComplete="name"
+        />
+      </label>
+      <label className="block">
+        <span className="block text-sm font-medium mb-2">Contact Email</span>
+        <Input
+          type="email"
+          placeholder="Enter Email"
+          className="w-full"
+          value={values.email}
+          onChange={onChange("email")}
+          autoComplete="email"
+        />
+      </label>
+      <label className="block">
+        <span className="block text-sm font-medium mb-2">Phone number</span>
+        <Input
+          placeholder="Enter No."
+          className="w-full"
+          value={values.phone}
+          onChange={onChange("phone")}
+          autoComplete="tel"
+        />
+      </label>
+    </div>
+    <p className="text-xs italic text-[#5E7572]">
+      Note: This section is optional but recommended for verification
+      communication.
+    </p>
   </div>
 );
 
@@ -1055,9 +1389,7 @@ const UploadCard: React.FC<UploadCardProps> = ({
       <label
         htmlFor={inputId}
         className={`flex h-32 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#DCEAE8] bg-[#4EA8A11F] transition sm:w-48 ${
-          isUploading
-            ? "pointer-events-none opacity-60"
-            : "hover:border-[#4EA8A1]"
+          isUploading ? "pointer-events-none opacity-60" : "hover:border-[#4EA8A1]"
         }`}
       >
         {isUploading ? (
@@ -1125,75 +1457,6 @@ const UploadCard: React.FC<UploadCardProps> = ({
   );
 };
 
-type BuyerInformationStepProps = {
-  values: BuyerInfo;
-  onChange: (
-    field: keyof BuyerInfo
-  ) => (event: React.ChangeEvent<HTMLInputElement>) => void;
-  hasUserContext?: boolean;
-};
-
-const BuyerInformationStep: React.FC<BuyerInformationStepProps> = ({
-  values,
-  onChange,
-  hasUserContext = false,
-}) => (
-  <div className="space-y-6">
-    <div className="space-y-2">
-      <h2 className="text-xl font-semibold">Full Details</h2>
-      <p className="text-sm text-[#5E7572]">
-        {hasUserContext
-          ? "We pre-filled this with your Inda profile—update anything that looks off."
-          : "This section is optional but recommended for verification communication."}
-      </p>
-    </div>
-    <div className="grid gap-4 sm:max-w-md">
-      <label className="block">
-        <span className="block text-sm font-medium text-[#0B1D27] mb-2">
-          Full Name
-        </span>
-        <Input
-          placeholder="Enter name"
-          className="w-full"
-          value={values.fullName}
-          onChange={onChange("fullName")}
-          autoComplete="name"
-        />
-      </label>
-      <label className="block">
-        <span className="block text-sm font-medium text-[#0B1D27] mb-2">
-          Contact Email
-        </span>
-        <Input
-          type="email"
-          placeholder="Enter email"
-          className="w-full"
-          value={values.email}
-          onChange={onChange("email")}
-          autoComplete="email"
-        />
-      </label>
-      <label className="block">
-        <span className="block text-sm font-medium text-[#0B1D27] mb-2">
-          Phone number
-        </span>
-        <Input
-          type="tel"
-          placeholder="Enter phone"
-          className="w-full"
-          value={values.phone}
-          onChange={onChange("phone")}
-          autoComplete="tel"
-        />
-      </label>
-    </div>
-    <p className="text-xs italic text-[#5E7572]">
-      Note: This section is optional but recommended for verification
-      communication.
-    </p>
-  </div>
-);
-
 type WizardControlsProps = {
   onBack: () => void;
   onNext: () => Promise<void> | void;
@@ -1246,4 +1509,4 @@ const WizardControls: React.FC<WizardControlsProps> = ({
   );
 };
 
-export default DeepDiveWizardPage;
+export default DeeperDiveWizardPage;

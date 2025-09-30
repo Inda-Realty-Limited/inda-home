@@ -18,6 +18,10 @@ const PlansPricingSection: React.FC = () => {
           router.push("/plans/deep-dive");
           return;
         }
+        if (plan === "deeper-dive") {
+          router.push("/plans/deeper-dive");
+          return;
+        }
         const params = new URLSearchParams();
         params.set("plan", plan);
         router.push(`/auth?${params.toString()}`);
