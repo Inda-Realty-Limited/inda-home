@@ -9,7 +9,6 @@ import {
   MapInsights,
   PriceAnalysis,
   ProceedActions,
-  ResultHeader,
   ROICalculator,
   SmartSummary,
   TrustScoreBar,
@@ -31,6 +30,62 @@ const SampleResultPage: React.FC = () => {
       "https://images.unsplash.com/photo-1484154218962-a197022b5858?q=80&w=1600&auto=format&fit=crop",
       "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=1600&auto=format&fit=crop",
     ];
+    const purchasePrice = 120_000_000;
+    const fairValue = 142_000_000;
+    const longYieldPct = 5.5;
+    const shortYieldPct = 8.0;
+    const annualLongIncome = Math.round(purchasePrice * (longYieldPct / 100));
+    const annualShortIncome = Math.round(purchasePrice * (shortYieldPct / 100));
+    const projectedProfitLong = Math.round(purchasePrice * 0.215);
+    const projectedProfitShort = Math.round(purchasePrice * 0.35);
+    const monthlyProjection = Array.from({ length: 12 }, (_, idx) => {
+      const monthDate = new Date();
+      monthDate.setMonth(monthDate.getMonth() - (11 - idx));
+      const baseFactor = 0.9 + idx * 0.012;
+      return {
+        month: idx + 1,
+        monthLabel: monthDate.toLocaleString(undefined, {
+          month: "short",
+          year: "numeric",
+        }),
+        priceNGN: Math.round(purchasePrice * (0.92 + idx * 0.015)),
+        fmvNGN: Math.round(fairValue * baseFactor),
+      };
+    });
+    const sampleAnalytics = {
+      market: {
+        purchasePrice,
+        fairValueNGN: fairValue,
+      },
+      holding: {
+        holdingPeriodYears: 3,
+      },
+      financing: {
+        interestRatePct: 14.5,
+        tenorYearsDefault: 10,
+      },
+      yields: {
+        longTermPct: longYieldPct,
+        shortTermPct: shortYieldPct,
+        annualLongTermIncomeNGN: annualLongIncome,
+        annualShortTermIncomeNGN: annualShortIncome,
+      },
+      expenses: {
+        totalExpensesPct: 18,
+      },
+      appreciation: {
+        nominalPct: 6.5,
+        realPct: 3.0,
+        usdFxInflAdjPct: 2.5,
+      },
+      projections: {
+        roiLongTermPct: 21.5,
+        roiShortTermPct: 35.0,
+        projectedTotalProfitLongTerm: projectedProfitLong,
+        projectedTotalProfitShortTerm: projectedProfitShort,
+        monthlyProjection,
+      },
+    };
     const base = {
       title: "Modern 2-Bedroom Apartment, Lekki Phase 1",
       location: "Lekki Phase 1, Lagos",
@@ -51,13 +106,13 @@ const SampleResultPage: React.FC = () => {
         "24/7 Power supply",
       ],
       indaTrustScore: 85,
-      overallRating: 3.5,
-      totalReviews: 2,
+      overallRating: 4.0,
+      totalReviews: 4,
       ratingBreakdown: [
-        { stars: 5, percentage: 50 },
-        { stars: 4, percentage: 0 },
+        { stars: 5, percentage: 50.0 },
+        { stars: 4, percentage: 25.0 },
         { stars: 3, percentage: 0 },
-        { stars: 2, percentage: 50 },
+        { stars: 2, percentage: 25.0 },
         { stars: 1, percentage: 0 },
       ],
       reviews: [
@@ -79,6 +134,24 @@ const SampleResultPage: React.FC = () => {
           content:
             "I came for inspection hoping to consider it as an investment property. While the exterior looks fine, the finishing inside didn’t meet my expectations — I noticed uneven tiles in one of the bathrooms and some cracks in the paint already. For the asking price, I think the developer could have done better. Rental demand in the area is good, but personally, I wouldn’t proceed unless they fix those details.",
         },
+        {
+          id: "r3",
+          reviewer: "Amina",
+          timeAgo: "a month ago",
+          rating: 4,
+          title: "Great location but noisy at times",
+          content:
+            "The apartment is in a fantastic location, close to shops and public transport. However, I found it to be a bit noisy during the evenings due to nearby nightlife. The apartment itself is well-maintained and has a modern feel. If you're sensitive to noise, you might want to consider this before making a decision.",
+        },
+        {
+          id: "r4",
+          reviewer: "Kemi",
+          timeAgo: "2 weeks ago",
+          rating: 5,
+          title: "Exceeded expectations in every way",
+          content:
+            "I recently moved into this apartment and I'm absolutely thrilled with my choice. The build quality is exceptional - you can tell no corners were cut during construction. The amenities are top-notch, especially the gym and swimming pool which are always clean and well-maintained. The security is excellent with professional guards who are both friendly and vigilant. What really impressed me was the attention to detail in the finishing - from the high-quality fixtures to the spacious layout. The developer clearly prioritized quality over cutting costs. Highly recommend for anyone looking for a premium living experience in Lekki.",
+        },
       ],
       aiSummary:
         "Developer active ~8 years; 5 projects completed (4 on time, 1 delayed by 6 months). No litigations; minor snagging historically resolved. Trusted (Low Risk).",
@@ -86,8 +159,8 @@ const SampleResultPage: React.FC = () => {
         "This report is a sample demo and not financial advice. Always verify with licensed professionals before transacting.",
       roiMetricsTwo: [
         { label: "Avg. Rental Yield (Long Term)", value: "5.5%" },
-        { label: "Avg. Rental Yield (Short Term)", value: "8.0" },
-        { label: "Total Expense (% of Rent)", value: "18.0" },
+        { label: "Avg. Rental Yield (Short Term)", value: "8.0%" },
+        { label: "Total Expense (% of Rent)", value: "18.0%" },
       ],
       annualAppreciation: [
         {
@@ -134,6 +207,7 @@ const SampleResultPage: React.FC = () => {
           nextStep: "Provide title docs for verification",
         },
       },
+      analytics: sampleAnalytics,
       snapshot: {
         title: "Modern 2-Bedroom Apartment, Lekki Phase 1",
         location: "Lekki Phase 1, Lagos",
@@ -153,6 +227,8 @@ const SampleResultPage: React.FC = () => {
         agentCompanyUrl: "#",
         imageUrls: sampleImages,
         listingUrl: "#",
+        priceNGN: purchasePrice,
+        fairValueNGN: fairValue,
       },
     } as any;
     return base;
@@ -443,7 +519,7 @@ const SampleResultPage: React.FC = () => {
           <TrustScoreBar trustScore={trustScore} displayScore={displayScore} />
 
           {/* Same section composition as live page, without locking/payment */}
-          <ResultHeader title={result.title} address={result.location} />
+          {/* <ResultHeader title={result.title} address={result.location} /> */}
           <GallerySection imageUrls={result?.snapshot?.imageUrls || []} />
           <SmartSummary
             result={result as any}
@@ -521,7 +597,7 @@ const SampleResultPage: React.FC = () => {
             handleCalculate={handleCalculate}
             isCalculating={isCalculating}
             calcResult={calcResult}
-            aAny={undefined}
+            aAny={(result as any)?.analytics}
             resultView={resultView}
             setResultView={setResultView}
             longTabRef={longTabRef}

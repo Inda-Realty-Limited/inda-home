@@ -110,8 +110,49 @@ const getAmenityMeta = (label: string) => {
 };
 
 const extractAmenities = (snap: any): string[] => {
+  // Alias mapping to unify common phrases
+  const aliasMap: Record<string, string> = {
+    "car park": "Parking",
+    "car parking": "Parking",
+    "parking space": "Parking",
+    "swimming pool": "Swimming Pool",
+    "walk in closet": "Walk-in Closet",
+    wardrobes: "Wardrobes",
+    "water heater": "Water Heater",
+    "heat extractor": "Kitchen Heat Extractor",
+    "modern day pop ceiling": "POP Ceiling",
+    "pop ceiling": "POP Ceiling",
+    elevator: "Elevator",
+    lift: "Elevator",
+    "fully furnished": "Fully Furnished",
+    "private terrace": "Private Terrace",
+    "outdoor kitchen": "Outdoor Kitchen",
+    "communal gym": "Communal Gym",
+    "24/7 power supply": "24/7 Power Supply",
+    "24/7 security guards": "24/7 Security",
+  };
+
+  const cleanAmenity = (txt: string): string => {
+    if (!txt) return "";
+    let s = String(txt);
+    // Remove zero-width/invisible chars
+    s = s.replace(/[\u200B-\u200D\uFEFF\u2060]/g, "");
+    // Remove leading checkbox markers like [ ], [x], including with invisible char prefix
+    s = s.replace(/^\s*(?:\[\s*[xX]?\s*\])\s*/i, "");
+    // Remove common bullet prefixes or dashes
+    s = s.replace(/^[\-\u2022\u2219\*·•]+\s*/, "");
+    s = s.replace(/^[–—]\s*/, "");
+    // Collapse spaces
+    s = s.replace(/\s+/g, " ").trim();
+    const lower = s.toLowerCase();
+    return aliasMap[lower] || s;
+  };
+
   const fromField = Array.isArray(snap?.amenities)
-    ? snap.amenities.filter(Boolean).map((x: any) => String(x))
+    ? snap.amenities
+        .filter(Boolean)
+        .map((x: any) => cleanAmenity(String(x)))
+        .filter(Boolean)
     : [];
   if (fromField.length) return fromField;
   const title: string = String(snap?.title || "");
@@ -128,7 +169,7 @@ const extractAmenities = (snap: any): string[] => {
     if (afterColon) {
       afterColon
         .split(/,|·|•|\||\/|;|\s{2,}/)
-        .map((s) => s.trim())
+        .map((s) => cleanAmenity(s))
         .filter(Boolean)
         .forEach((s) => feats.push(s));
     }
@@ -140,18 +181,22 @@ const extractAmenities = (snap: any): string[] => {
         )
       )
         break;
-      if (/^[\-•*·]/.test(l)) feats.push(l.replace(/^[\-−•*·]\s*/, ""));
-      else if (/,/.test(l)) {
+      if (/^[\-•*·\[]/.test(l)) {
+        feats.push(cleanAmenity(l));
+      } else if (/,/.test(l)) {
         l.split(/,|·|•|\||\/|;|\s{2,}/)
-          .map((s) => s.trim())
+          .map((s) => cleanAmenity(s))
           .filter(Boolean)
           .forEach((s) => feats.push(s));
-      } else feats.push(l);
+      } else {
+        const cleaned = cleanAmenity(l);
+        if (cleaned) feats.push(cleaned);
+      }
     }
   } else {
     feats = lines
-      .filter((l) => /^[\-•*·]/.test(l))
-      .map((l) => l.replace(/^[\-−•*·]\s*/, ""));
+      .filter((l) => /^[\-•*·\[]/.test(l))
+      .map((l) => cleanAmenity(l));
   }
   const textBank = `${title}\n${desc}`.toLowerCase();
   const hints = [
@@ -177,7 +222,7 @@ const extractAmenities = (snap: any): string[] => {
   }
   const uniq: string[] = [];
   feats.forEach((f) => {
-    const norm = f.replace(/\s+/g, " ").trim();
+    const norm = cleanAmenity(f);
     if (norm && !uniq.some((u) => u.toLowerCase() === norm.toLowerCase()))
       uniq.push(norm);
   });
@@ -187,7 +232,10 @@ const extractAmenities = (snap: any): string[] => {
 type Props = { result: any };
 
 const AmenitiesSection: React.FC<Props> = ({ result }) => {
-  const amenities = extractAmenities(result?.snapshot || result);
+  const source = result?.snapshot || result;
+  const amenities = extractAmenities(source);
+  const incoming = Array.isArray(source?.amenities) ? source.amenities : null;
+
   return (
     <div className="w-full px-6">
       <div className="rounded-lg py-8">

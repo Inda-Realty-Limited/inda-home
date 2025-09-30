@@ -85,46 +85,141 @@ const FeedbackComplaints: React.FC<Props> = ({
             </div>
           </div>
 
-          <div className="space-y-4 sm:space-y-6">
-            <h1 className="font-bold text-lg sm:text-xl">Reviews</h1>
+          <div className="space-y-6 sm:space-y-8">
+            <div className="flex items-center justify-between">
+              <h1 className="font-bold text-xl sm:text-2xl text-[#0A1A22]">
+                Customer Reviews
+              </h1>
+              <button className="inline-flex items-center gap-2 px-4 py-2 text-[#4EA8A1] text-sm font-semibold hover:bg-[#4EA8A1]/5 rounded-lg transition-colors">
+                <svg
+                  className="w-4 h-4"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                Share Your Experience
+              </button>
+            </div>
+
             {!reviews || reviews.length === 0 ? (
-              <div className="w-full border border-[#4EA8A1] rounded-2xl min-h-40 sm:min-h-56 md:min-h-64 flex items-center justify-center px-4">
-                <p className="text-center text-base sm:text-lg font-medium">
-                  No Reviews Yet
-                </p>
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-[#4EA8A1]/5 via-transparent to-[#4EA8A1]/10 rounded-3xl"></div>
+                <div className="relative w-full border-2 border-dashed border-[#4EA8A1]/30 rounded-3xl min-h-48 sm:min-h-56 md:min-h-64 flex flex-col items-center justify-center px-6 py-8">
+                  <div className="w-16 h-16 bg-[#4EA8A1]/10 rounded-full flex items-center justify-center mb-4">
+                    <svg
+                      className="w-8 h-8 text-[#4EA8A1]"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-[#0A1A22] mb-2">
+                    No Reviews Yet
+                  </h3>
+                  <p className="text-center text-base text-gray-600 max-w-md">
+                    Be the first to share your experience with this property and
+                    help others make informed decisions.
+                  </p>
+                </div>
               </div>
             ) : (
-              <div className="grid grid-cols-1 gap-4">
-                {reviews.map((r) => (
-                  <div key={r.id} className="border rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="font-semibold">
-                        {r.title || r.reviewer || "Review"}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {reviews.map((r, index) => (
+                  <div
+                    key={r.id}
+                    className="group relative bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
+                  >
+                    {/* Gradient accent */}
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#4EA8A1] via-[#6BB6B0] to-[#4EA8A1]"></div>
+
+                    <div className="p-6">
+                      {/* Header */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="w-10 h-10 bg-gradient-to-br from-[#4EA8A1] to-[#0A655E] rounded-full flex items-center justify-center text-white font-bold text-sm">
+                              {(r.reviewer || "R").charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-[#0A1A22] text-base">
+                                {r.reviewer || "Anonymous"}
+                              </h4>
+                              {r.location && (
+                                <p className="text-xs text-gray-500 flex items-center gap-1">
+                                  <svg
+                                    className="w-3 h-3"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
+                                  {r.location}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                        {r.timeAgo && (
+                          <span className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
+                            {r.timeAgo}
+                          </span>
+                        )}
                       </div>
-                      <div className="text-xs text-gray-500">
-                        {r.timeAgo || r.location}
+
+                      {/* Rating */}
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <FaStar
+                              key={i}
+                              className={`text-lg ${
+                                (r.rating ?? 0) > i
+                                  ? "text-yellow-400"
+                                  : "text-gray-200"
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-sm font-medium text-gray-600">
+                          {r.rating}/5
+                        </span>
+                      </div>
+
+                      {/* Title */}
+                      {r.title && (
+                        <h5 className="font-semibold text-[#0A1A22] mb-3 text-base leading-tight">
+                          "{r.title}"
+                        </h5>
+                      )}
+
+                      {/* Content */}
+                      <div className="relative">
+                        <p className="text-gray-700 text-sm leading-relaxed">
+                          {r.content}
+                        </p>
+                        {/* Quote decoration */}
+                        <div className="absolute -top-2 -left-2 text-4xl text-[#4EA8A1]/20 font-serif leading-none">
+                          "
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 mb-2">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <FaStar
-                          key={i}
-                          className={
-                            (r.rating ?? 0) > i
-                              ? "text-yellow-400"
-                              : "text-gray-300"
-                          }
-                        />
-                      ))}
-                    </div>
-                    <div className="text-sm text-gray-700">{r.content}</div>
+
+                    {/* Hover effect overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#4EA8A1]/0 via-transparent to-[#4EA8A1]/0 group-hover:from-[#4EA8A1]/5 group-hover:to-[#4EA8A1]/10 transition-all duration-300 pointer-events-none rounded-2xl"></div>
                   </div>
                 ))}
               </div>
             )}
-            <button className="text-[#4EA8A1] text-base sm:text-lg font-semibold hover:underline">
-              Report Your Experience here &lt;&lt;
-            </button>
           </div>
 
           <div className="mt-6 sm:mt-8 pt-6 border-top border-gray-200">
