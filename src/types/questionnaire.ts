@@ -24,8 +24,8 @@ export interface PropertyBasicsPayload {
 }
 
 export interface LegalDocumentsPayload {
-  certificateOfOccupancyOrDeed: QuestionnaireFileRef[];
-  surveyPlan: QuestionnaireFileRef[];
+  certificateOfOccupancyOrDeed?: QuestionnaireFileRef[];
+  surveyPlan?: QuestionnaireFileRef[];
   governorsConsent?: QuestionnaireFileRef[];
   zoningOrBuildingPermits?: QuestionnaireFileRef[];
 }

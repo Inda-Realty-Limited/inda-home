@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
 type Props = {
   price?: number | null;
@@ -40,6 +40,57 @@ const PriceAnalysis: React.FC<Props> = ({
   selectedBar,
   setSelectedBar,
 }) => {
+  const chartContainerRef = useRef<HTMLDivElement | null>(null);
+  const [chartWidth, setChartWidth] = useState<number>(0);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+    const element = chartContainerRef.current;
+    if (!element) {
+      return;
+    }
+
+    const updateWidth = () => {
+      setChartWidth(element.clientWidth);
+    };
+
+    updateWidth();
+
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", updateWidth);
+      return () => {
+        window.removeEventListener("resize", updateWidth);
+      };
+    }
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries.find((item) => item.target === element);
+      if (!entry) {
+        return;
+      }
+      setChartWidth(entry.contentRect.width);
+    });
+
+    observer.observe(element);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  const chartDimensions = useMemo(() => {
+    const baseWidth = chartWidth > 0 ? chartWidth : 720;
+    const clampedWidth = Math.min(Math.max(baseWidth, 320), 1024);
+    const proportionalHeight = clampedWidth * 0.45;
+    const clampedHeight = Math.min(
+      Math.max(Math.round(proportionalHeight), 220),
+      360
+    );
+    return { width: clampedWidth, height: clampedHeight };
+  }, [chartWidth]);
+
   return (
     <div className="w-full px-6">
       <div className="bg-[#E5E5E533] rounded-2xl p-6 sm:p-8">
@@ -106,38 +157,34 @@ const PriceAnalysis: React.FC<Props> = ({
           fmvSeries.length === months.length &&
           priceSeries.length === months.length ? (
             <div
-              className="relative min-w-[600px] sm:min-w-0 w-full max-w-4xl mx-auto overflow-x-auto"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+              ref={chartContainerRef}
+              className="relative w-full max-w-4xl mx-auto"
             >
-              <style jsx>{`
-                div::-webkit-scrollbar {
-                  display: none;
-                }
-              `}</style>
               {(() => {
-                const W = 720;
-                const H = 240;
-                const padL = 56,
-                  padR = 20,
-                  padT = 12,
-                  padB = 32;
-                const innerW = W - padL - padR;
-                const innerH = H - padT - padB;
+                const { width: W, height: H } = chartDimensions;
+                const padL = Math.max(40, Math.min(72, W * 0.12));
+                const padR = Math.max(16, Math.min(32, W * 0.06));
+                const padT = 12;
+                const padB = Math.max(28, Math.min(40, H * 0.18));
+                const innerW = Math.max(1, W - padL - padR);
+                const innerH = Math.max(1, H - padT - padB);
                 const maxY = Math.max(...fmvSeries, ...priceSeries, 1);
                 const minY = Math.min(...fmvSeries, ...priceSeries, 0);
                 const yMin = Math.max(0, minY * 0.9);
-                const yMax = maxY * 1.08;
+                const yMax = maxY <= 0 ? 1 : maxY * 1.08;
+                const yRange = yMax - yMin || 1;
                 const groupCount = months.length;
                 const groupW = innerW / groupCount;
-                const barW = Math.min(14, groupW * 0.3);
-                const gap = 4;
+                const gap = Math.max(4, Math.min(12, groupW * 0.18));
+                const barW = Math.max(2, Math.min(18, (groupW - gap) / 2));
+                const halfGap = gap / 2;
                 const xCenter = (i: number) => padL + groupW * i + groupW / 2;
                 const yScale = (val: number) =>
-                  padT + innerH - ((val - yMin) / (yMax - yMin)) * innerH;
-                const ticks = 5;
+                  padT + innerH - ((val - yMin) / yRange) * innerH;
+                const tickCount = H > 280 ? 5 : 4;
                 const tickVals = Array.from(
-                  { length: ticks + 1 },
-                  (_, i) => yMin + ((yMax - yMin) * i) / ticks
+                  { length: tickCount + 1 },
+                  (_, i) => yMin + (yRange * i) / tickCount
                 );
                 return (
                   <svg
@@ -182,7 +229,7 @@ const PriceAnalysis: React.FC<Props> = ({
                       </text>
                     ))}
                     {fmvSeries.map((v, i) => {
-                      const x = xCenter(i) - gap / 2 - barW;
+                      const x = xCenter(i) - halfGap - barW;
                       const y = yScale(v);
                       const h = Math.max(2, padT + innerH - y);
                       const isSelected =
@@ -207,7 +254,7 @@ const PriceAnalysis: React.FC<Props> = ({
                       );
                     })}
                     {priceSeries.map((v, i) => {
-                      const x = xCenter(i) + gap / 2;
+                      const x = xCenter(i) + halfGap;
                       const y = yScale(v);
                       const h = Math.max(2, padT + innerH - y);
                       const isSelected =
@@ -237,8 +284,8 @@ const PriceAnalysis: React.FC<Props> = ({
                         const i = selectedBar.index;
                         const val = isFMV ? fmvSeries[i] : priceSeries[i];
                         const x = isFMV
-                          ? xCenter(i) - gap / 2 - barW + barW / 2
-                          : xCenter(i) + gap / 2 + barW / 2;
+                          ? xCenter(i) - halfGap - barW + barW / 2
+                          : xCenter(i) + halfGap + barW / 2;
                         const y = yScale(val) - 8;
                         const label = `₦${Math.round(val).toLocaleString()}`;
                         const bubblePadX = 8;

@@ -80,12 +80,12 @@ const uploadRequirements = [
   {
     key: "primary-title-doc",
     title: "Upload Certificate of Occupancy (C of O) OR Deed of Assignment",
-    optional: false,
+    optional: true,
   },
   {
     key: "survey-plan",
     title: "Upload Survey Plan",
-    optional: false,
+    optional: true,
   },
   {
     key: "governors-consent",
@@ -415,21 +415,8 @@ const DeepDiveWizardPage: React.FC = () => {
   }, [propertyDetails, showToast]);
 
   const validateDocuments = useCallback(() => {
-    const requiredKeys: UploadRequirementKey[] = [
-      "primary-title-doc",
-      "survey-plan",
-    ];
-
-    for (const key of requiredKeys) {
-      const entry = documentUploads[key];
-      if (!entry) {
-        showToast(
-          "Please upload all required legal documents.",
-          4500,
-          "warning"
-        );
-        return false;
-      }
+    for (const entry of Object.values(documentUploads)) {
+      if (!entry) continue;
       if (entry.uploading) {
         showToast(
           "Wait for the uploads to finish before continuing.",
@@ -440,7 +427,7 @@ const DeepDiveWizardPage: React.FC = () => {
       }
       if (!entry.refs || entry.refs.length === 0) {
         showToast(
-          "Upload at least one file for each required document.",
+          "Remove or complete any pending uploads before continuing.",
           4500,
           "warning"
         );
@@ -492,6 +479,15 @@ const DeepDiveWizardPage: React.FC = () => {
       const primaryType = propertyDetails.propertyTypes[0] ?? "";
       const primaryStatus = propertyDetails.propertyStatus[0] ?? "";
 
+      const legalDocuments = {
+        ...(certificateRefs.length
+          ? { certificateOfOccupancyOrDeed: certificateRefs }
+          : {}),
+        ...(surveyRefs.length ? { surveyPlan: surveyRefs } : {}),
+        ...(governorsRefs.length ? { governorsConsent: governorsRefs } : {}),
+        ...(zoningRefs.length ? { zoningOrBuildingPermits: zoningRefs } : {}),
+      } as const;
+
       return {
         propertyBasics: {
           propertyAddress: propertyDetails.address.trim(),
@@ -513,12 +509,7 @@ const DeepDiveWizardPage: React.FC = () => {
               : undefined,
           listingUrl: propertyDetails.listingLink.trim() || undefined,
         },
-        legalDocuments: {
-          certificateOfOccupancyOrDeed: certificateRefs,
-          surveyPlan: surveyRefs,
-          ...(governorsRefs.length ? { governorsConsent: governorsRefs } : {}),
-          ...(zoningRefs.length ? { zoningOrBuildingPermits: zoningRefs } : {}),
-        },
+        legalDocuments,
         buyerInformation: {
           fullName: buyerInfo.fullName.trim(),
           email: buyerInfo.email.trim(),
@@ -646,7 +637,7 @@ const DeepDiveWizardPage: React.FC = () => {
       },
       {
         key: "legal-documents",
-        title: "Step 2/3 - Legal Documents Upload",
+        title: "Step 2/3 - Legal Documents (Optional)",
         highlightWidthPct: 65,
         render: () => (
           <LegalDocumentsStep
@@ -700,6 +691,14 @@ const DeepDiveWizardPage: React.FC = () => {
       Object.values(documentUploads).some((entry) => entry && entry.uploading),
     [documentUploads]
   );
+  const hasUploadedDocuments = useMemo(
+    () =>
+      Object.values(documentUploads).some(
+        (entry) => entry?.refs && entry.refs.length > 0
+      ),
+    [documentUploads]
+  );
+  const isLegalDocumentStep = activeStep.key === "legal-documents";
 
   const handlePrimaryAction = useCallback(async () => {
     if (isSubmitting) return;
@@ -729,7 +728,7 @@ const DeepDiveWizardPage: React.FC = () => {
   ]);
 
   const disableNext =
-    (activeStep.key === "legal-documents" && anyUploadsInProgress) ||
+    (isLegalDocumentStep && anyUploadsInProgress) ||
     (isLast && isSubmitting);
 
   return (
@@ -755,6 +754,11 @@ const DeepDiveWizardPage: React.FC = () => {
               isLast={isLast}
               disableNext={disableNext}
               isBusy={isLast && isSubmitting}
+              nextLabelOverride={
+                isLegalDocumentStep && !hasUploadedDocuments
+                  ? "Skip for now"
+                  : undefined
+              }
             />
           </section>
         </main>
@@ -1005,10 +1009,10 @@ const LegalDocumentsStep: React.FC<LegalDocumentsStepProps> = ({
 }) => (
   <div className="space-y-6">
     <div className="space-y-2">
-      <h2 className="text-xl font-semibold">Upload Documents</h2>
+      <h2 className="text-xl font-semibold">Upload Documents (optional)</h2>
       <p className="text-sm text-[#5E7572]">
-        Provide the necessary legal documents to expedite verification. PDF,
-        JPG, PNG (max 5MB).
+        Share any legal documents you already have to speed up verification. You
+        can skip this for now and return later. PDF, JPG, PNG (max 25MB).
       </p>
     </div>
     <div className="flex flex-col gap-6">
@@ -1205,6 +1209,7 @@ type WizardControlsProps = {
   isLast: boolean;
   disableNext?: boolean;
   isBusy?: boolean;
+  nextLabelOverride?: string;
 };
 
 const WizardControls: React.FC<WizardControlsProps> = ({
@@ -1214,16 +1219,19 @@ const WizardControls: React.FC<WizardControlsProps> = ({
   isLast,
   disableNext,
   isBusy,
+  nextLabelOverride,
 }) => {
   const backDisabled = isFirst || Boolean(isBusy);
   const nextDisabled = Boolean(disableNext || isBusy);
-  const label = isLast
+  const baseLabel = isLast
     ? isBusy
       ? "Saving…"
       : "Save"
     : isBusy
     ? "Working…"
     : "Next";
+  const label =
+    !isLast && !isBusy && nextLabelOverride ? nextLabelOverride : baseLabel;
 
   return (
     <div className="flex items-center justify-end gap-3">

@@ -87,12 +87,12 @@ const uploadRequirements = [
   {
     key: "primary-title-doc",
     title: "Upload Certificate of Occupancy (C of O) OR Deed of Assignment",
-    optional: false,
+    optional: true,
   },
   {
     key: "survey-plan",
     title: "Upload Survey Plan",
-    optional: false,
+    optional: true,
   },
   {
     key: "governors-consent",
@@ -468,37 +468,6 @@ const DeeperDiveWizardPage: React.FC = () => {
     return true;
   }, [propertyDetails, showToast]);
 
-  const validateDocuments = useCallback(() => {
-    const requiredKeys: UploadRequirementKey[] = [
-      "primary-title-doc",
-      "survey-plan",
-    ];
-    for (const key of requiredKeys) {
-      const entry = documentUploads[key];
-      if (!entry) {
-        showToast("Upload the required legal documents.", 4500, "warning");
-        return false;
-      }
-      if (entry.uploading) {
-        showToast(
-          "Wait for uploads to finish before continuing.",
-          4500,
-          "info"
-        );
-        return false;
-      }
-      if (!entry.refs || entry.refs.length === 0) {
-        showToast(
-          "Upload at least one file for each required slot.",
-          4500,
-          "warning"
-        );
-        return false;
-      }
-    }
-    return true;
-  }, [documentUploads, showToast]);
-
   const validateSeller = useCallback(() => {
     if (!sellerInfo.sellerType) {
       showToast("Select the seller type.", 4200, "warning");
@@ -543,26 +512,28 @@ const DeeperDiveWizardPage: React.FC = () => {
     return true;
   }, [siteAccess, showToast]);
 
-  const validateBuyer = useCallback(() => {
-    if (!buyerInfo.fullName.trim()) {
-      showToast("Enter the buyer's full name.", 4200, "warning");
-      return false;
-    }
-    if (!buyerInfo.email.trim()) {
-      showToast("Provide a contact email.", 4200, "warning");
-      return false;
-    }
-    const emailPattern = /[^\s@]+@[^\s@]+\.[^\s@]+/;
-    if (!emailPattern.test(buyerInfo.email.trim())) {
-      showToast("That email doesn't look right.", 4200, "warning");
-      return false;
-    }
-    if (!buyerInfo.phone.trim()) {
-      showToast("Add a contact phone number.", 4200, "warning");
-      return false;
+  const validateDocuments = useCallback(() => {
+    for (const entry of Object.values(documentUploads)) {
+      if (!entry) continue;
+      if (entry.uploading) {
+        showToast(
+          "Wait for uploads to finish before continuing.",
+          4500,
+          "info"
+        );
+        return false;
+      }
+      if (!entry.refs || entry.refs.length === 0) {
+        showToast(
+          "Remove or complete any pending uploads before continuing.",
+          4500,
+          "warning"
+        );
+        return false;
+      }
     }
     return true;
-  }, [buyerInfo, showToast]);
+  }, [documentUploads, showToast]);
 
   const buildQuestionnairePayload =
     useCallback((): DueDiligenceQuestionnairePayload => {
@@ -585,6 +556,15 @@ const DeeperDiveWizardPage: React.FC = () => {
       const primaryType = propertyDetails.propertyTypes[0] ?? "";
       const primaryStatus = propertyDetails.propertyStatus[0] ?? "";
 
+      const legalDocuments = {
+        ...(certificateRefs.length
+          ? { certificateOfOccupancyOrDeed: certificateRefs }
+          : {}),
+        ...(surveyRefs.length ? { surveyPlan: surveyRefs } : {}),
+        ...(governorsRefs.length ? { governorsConsent: governorsRefs } : {}),
+        ...(zoningRefs.length ? { zoningOrBuildingPermits: zoningRefs } : {}),
+      } as const;
+
       return {
         propertyBasics: {
           propertyAddress: propertyDetails.address.trim(),
@@ -606,12 +586,7 @@ const DeeperDiveWizardPage: React.FC = () => {
               : undefined,
           listingUrl: propertyDetails.listingLink.trim() || undefined,
         },
-        legalDocuments: {
-          certificateOfOccupancyOrDeed: certificateRefs,
-          surveyPlan: surveyRefs,
-          ...(governorsRefs.length ? { governorsConsent: governorsRefs } : {}),
-          ...(zoningRefs.length ? { zoningOrBuildingPermits: zoningRefs } : {}),
-        },
+        legalDocuments,
         buyerInformation: {
           fullName: buyerInfo.fullName.trim(),
           email: buyerInfo.email.trim(),
@@ -765,7 +740,7 @@ const DeeperDiveWizardPage: React.FC = () => {
       },
       {
         key: "legal-documents",
-        title: "Step 2/5 - Legal Documents Upload",
+        title: "Step 2/5 - Legal Documents (Optional)",
         highlightWidthPct: 40,
         render: () => (
           <LegalDocumentsStep
@@ -846,6 +821,17 @@ const DeeperDiveWizardPage: React.FC = () => {
       Object.values(documentUploads).some((entry) => entry && entry.uploading),
     [documentUploads]
   );
+  const hasUploadedDocuments = useMemo(
+    () =>
+      Object.values(documentUploads).some(
+        (entry) => entry?.refs && entry.refs.length > 0
+      ),
+    [documentUploads]
+  );
+  const isLegalDocumentStep = activeStep.key === "legal-documents";
+
+  // Buyer info is optional, always return true
+  const validateBuyer = () => true;
 
   const handlePrimaryAction = useCallback(async () => {
     if (isSubmitting) return;
@@ -856,6 +842,7 @@ const DeeperDiveWizardPage: React.FC = () => {
       validateSiteAccess,
       validateBuyer,
     ];
+
     const validator = checklist[stepIndex];
     const isValid = validator ? validator() : true;
     if (!isValid) return;
@@ -872,15 +859,14 @@ const DeeperDiveWizardPage: React.FC = () => {
     goNext,
     isSubmitting,
     validateBuyer,
-    validateDocuments,
     validatePropertyBasics,
     validateSeller,
     validateSiteAccess,
+    validateDocuments,
   ]);
 
   const disableNext =
-    (activeStep.key === "legal-documents" && anyUploadsInProgress) ||
-    isSubmitting;
+    (isLegalDocumentStep && anyUploadsInProgress) || isSubmitting;
 
   return (
     <>
@@ -905,6 +891,11 @@ const DeeperDiveWizardPage: React.FC = () => {
               isLast={isLast}
               disableNext={disableNext}
               isBusy={isSubmitting && isLast}
+              nextLabelOverride={
+                isLegalDocumentStep && !hasUploadedDocuments
+                  ? "Skip for now"
+                  : undefined
+              }
             />
           </section>
         </main>
@@ -1153,10 +1144,10 @@ const LegalDocumentsStep: React.FC<LegalDocumentsStepProps> = ({
 }) => (
   <div className="space-y-6">
     <div className="space-y-2">
-      <h2 className="text-xl font-semibold">Upload Documents</h2>
+      <h2 className="text-xl font-semibold">Upload Documents (optional)</h2>
       <p className="text-sm text-[#5E7572]">
-        Provide the necessary legal documents to expedite verification. PDF,
-        JPG, PNG (max 5MB).
+        Share any legal documents you already have to speed up verification. You
+        can skip this for now and return later. PDF, JPG, PNG (max 25MB).
       </p>
     </div>
     <div className="flex flex-col gap-6">
@@ -1481,6 +1472,7 @@ type WizardControlsProps = {
   isLast: boolean;
   disableNext?: boolean;
   isBusy?: boolean;
+  nextLabelOverride?: string;
 };
 
 const WizardControls: React.FC<WizardControlsProps> = ({
@@ -1490,16 +1482,19 @@ const WizardControls: React.FC<WizardControlsProps> = ({
   isLast,
   disableNext,
   isBusy,
+  nextLabelOverride,
 }) => {
   const backDisabled = isFirst || Boolean(isBusy);
   const nextDisabled = Boolean(disableNext || isBusy);
-  const label = isLast
+  const baseLabel = isLast
     ? isBusy
       ? "Saving…"
       : "Save"
     : isBusy
     ? "Working…"
     : "Next";
+  const label =
+    !isLast && !isBusy && nextLabelOverride ? nextLabelOverride : baseLabel;
 
   return (
     <div className="flex items-center justify-end gap-3">
