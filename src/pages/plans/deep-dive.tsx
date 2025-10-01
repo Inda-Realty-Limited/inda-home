@@ -728,8 +728,7 @@ const DeepDiveWizardPage: React.FC = () => {
   ]);
 
   const disableNext =
-    (isLegalDocumentStep && anyUploadsInProgress) ||
-    (isLast && isSubmitting);
+    (isLegalDocumentStep && anyUploadsInProgress) || (isLast && isSubmitting);
 
   return (
     <>
