@@ -12,14 +12,16 @@ const SignIn: React.FC = () => {
   const [password, setPassword] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchType, setSearchType] = useState("");
+  const [returnTo, setReturnTo] = useState("");
   const toast = useToast();
   const router = useRouter();
 
   useEffect(() => {
     if (router.isReady) {
-      const { q, type } = router.query;
+      const { q, type, returnTo: rt } = router.query;
       setSearchQuery((q as string) || "");
       setSearchType((type as string) || "");
+      setReturnTo((rt as string) || "");
     }
   }, [router.isReady, router.query]);
 
@@ -32,7 +34,16 @@ const SignIn: React.FC = () => {
       }
       toast.showToast("Sign in successful!", 2000, "success");
       setTimeout(() => {
-        // If there's a search query, redirect to results, otherwise go to home
+        // Prefer explicit returnTo redirect, else fallback to search or home
+        if (returnTo) {
+          try {
+            router.push(decodeURIComponent(returnTo));
+            return;
+          } catch {
+            router.push(returnTo);
+            return;
+          }
+        }
         if (searchQuery) {
           router.push(
             `/result?q=${encodeURIComponent(searchQuery)}&type=${searchType}`
@@ -126,7 +137,9 @@ const SignIn: React.FC = () => {
               <div className="flex justify-end">
                 <a
                   href={`/auth/forgot-password${
-                    searchQuery
+                    returnTo
+                      ? `?returnTo=${encodeURIComponent(returnTo)}`
+                      : searchQuery
                       ? `?q=${encodeURIComponent(
                           searchQuery
                         )}&type=${searchType}`
@@ -149,7 +162,9 @@ const SignIn: React.FC = () => {
               Don't have an account?{" "}
               <a
                 href={`/auth/signup${
-                  searchQuery
+                  returnTo
+                    ? `?returnTo=${encodeURIComponent(returnTo)}`
+                    : searchQuery
                     ? `?q=${encodeURIComponent(searchQuery)}&type=${searchType}`
                     : ""
                 }`}

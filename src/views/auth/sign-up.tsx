@@ -40,6 +40,7 @@ const Signup: React.FC = () => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchType, setSearchType] = useState("");
+  const [returnTo, setReturnTo] = useState("");
   const router = useRouter();
   // OTP state
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -52,9 +53,10 @@ const Signup: React.FC = () => {
 
   useEffect(() => {
     if (router.isReady) {
-      const { q, type } = router.query;
+      const { q, type, returnTo: rt } = router.query as Record<string, string>;
       setSearchQuery((q as string) || "");
       setSearchType((type as string) || "");
+      setReturnTo((rt as string) || "");
     }
   }, [router.isReady, router.query]);
 
@@ -439,7 +441,9 @@ const Signup: React.FC = () => {
                   Already have an account?{" "}
                   <a
                     href={`/auth/signin${
-                      searchQuery
+                      returnTo
+                        ? `?returnTo=${encodeURIComponent(returnTo)}`
+                        : searchQuery
                         ? `?q=${encodeURIComponent(
                             searchQuery
                           )}&type=${searchType}`
@@ -527,7 +531,13 @@ const Signup: React.FC = () => {
                       if (response?.token) {
                         setToken(response.token);
                         setTimeout(() => {
-                          if (searchQuery) {
+                          if (returnTo) {
+                            try {
+                              router.push(decodeURIComponent(returnTo));
+                            } catch {
+                              router.push(returnTo);
+                            }
+                          } else if (searchQuery) {
                             router.push(
                               `/result?q=${encodeURIComponent(
                                 searchQuery

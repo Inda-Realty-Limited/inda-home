@@ -641,7 +641,8 @@ const DeeperDiveWizardPage: React.FC = () => {
   const handleSubmit = useCallback(async () => {
     if (!user) {
       showToast("Please sign in to submit the questionnaire.", 4800, "warning");
-      router.push("/auth/signin");
+      const rt = encodeURIComponent(router.asPath || "/plans/deeper-dive");
+      router.push(`/auth/signin?returnTo=${rt}`);
       return;
     }
 

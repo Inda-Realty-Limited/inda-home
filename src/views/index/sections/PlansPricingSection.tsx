@@ -1,4 +1,5 @@
 import { Text } from "@/components";
+import { getUser } from "@/helpers";
 import { motion } from "framer-motion";
 import { useRouter } from "next/router";
 import React, { useCallback } from "react";
@@ -14,13 +15,24 @@ const PlansPricingSection: React.FC = () => {
           window.scrollTo({ top: 0, behavior: "smooth" });
           return;
         }
-        if (plan === "deep-dive") {
-          router.push("/plans/deep-dive");
-          return;
-        }
-        if (plan === "deeper-dive") {
-          router.push("/plans/deeper-dive");
-          return;
+        if (plan === "deep-dive" || plan === "deeper-dive") {
+          try {
+            const hasUser = !!getUser();
+            const target =
+              plan === "deep-dive" ? "/plans/deep-dive" : "/plans/deeper-dive";
+            if (!hasUser) {
+              const rt = encodeURIComponent(target);
+              router.push(`/auth/signin?returnTo=${rt}`);
+              return;
+            }
+            router.push(target);
+            return;
+          } catch {
+            router.push(
+              plan === "deep-dive" ? "/plans/deep-dive" : "/plans/deeper-dive"
+            );
+            return;
+          }
         }
         const params = new URLSearchParams();
         params.set("plan", plan);
