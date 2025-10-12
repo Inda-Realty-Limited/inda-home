@@ -1,6 +1,8 @@
 import { startPayment } from "@/api/payments";
 import PricingPlans from "@/components/inc/PricingPlans";
+import { getUser } from "@/helpers";
 import { motion } from "framer-motion";
+import { useRouter } from "next/router";
 import React, { useState } from "react";
 // Close icon removed per design; click outside to close instead
 
@@ -22,6 +24,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   freeAvailable,
   startOnPaid,
 }) => {
+  const router = useRouter();
   const [isStartingPayment, setIsStartingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [showPaidPlans, setShowPaidPlans] = useState(!!startOnPaid);
@@ -49,17 +52,34 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         return;
       }
 
+      // For Deep Dive and Deeper Dive, we no longer take payment directly.
+      // Redirect user to the questionnaire flow (auth-aware with returnTo),
+      // carrying over the listingUrl so the form can prefill context.
+      if (plan === "deepDive" || plan === "deeperDive") {
+        const target =
+          plan === "deepDive" ? "/plans/deep-dive" : "/plans/deeper-dive";
+        const withQuery = `${target}?listingUrl=${encodeURIComponent(
+          listingUrl
+        )}`;
+        const user = getUser();
+        if (!user) {
+          const rt = encodeURIComponent(withQuery);
+          router.push(`/auth/signin?returnTo=${rt}`);
+        } else {
+          router.push(withQuery);
+        }
+        return;
+      }
+
       const origin =
         typeof window !== "undefined" ? window.location.origin : "";
       const cacheBust = `cb=${Date.now()}`;
       // For Deep Dive and Deeper Dive, redirect to the order received page.
       // Instant should continue to return to the results page.
-      const isDeep = plan === "deepDive" || plan === "deeperDive";
-      const callbackPath = isDeep
-        ? `/order/received?plan=${encodeURIComponent(
-            plan
-          )}&q=${encodeURIComponent(listingUrl)}&${cacheBust}`
-        : `/result?q=${encodeURIComponent(listingUrl)}&type=link&${cacheBust}`;
+      const isDeep = false; // handled above; keep Instant/Free path here
+      const callbackPath = `/result?q=${encodeURIComponent(
+        listingUrl
+      )}&type=link&${cacheBust}`;
       const callbackUrl = origin ? `${origin}${callbackPath}` : callbackPath;
 
       // Free plan: backend will auto-complete and return success without redirect
