@@ -113,6 +113,6 @@ export const uploadQuestionnaireFiles = async (
 export const startListingPayment = async (
   payload: StartListingPaymentPayload
 ): Promise<StartListingPaymentResponse> => {
-  const res = await apiClient.post("/payments/start-listing-payment", payload);
+  const res = await apiClient.post("/payments/start", payload);
   return (res.data?.data || {}) as StartListingPaymentResponse;
 };
