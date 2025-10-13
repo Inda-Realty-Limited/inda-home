@@ -1,4 +1,4 @@
-import { startPayment } from "@/api/payments";
+import { startListingPayment } from "@/api/payments";
 import PricingPlans from "@/components/inc/PricingPlans";
 import { getUser } from "@/helpers";
 import { motion } from "framer-motion";
@@ -42,7 +42,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     onClose?.();
   };
 
-  const handleChoosePlan = async (plan: string) => {
+  type Plan = "instant" | "free" | "deepDive" | "deeperDive";
+  const handleChoosePlan = async (plan: Plan) => {
     try {
       setIsStartingPayment(true);
       setPaymentError(null);
@@ -71,41 +72,54 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         return;
       }
 
+      // Instant is unlocked by design. Navigate to result directly.
+      if (plan === "instant") {
+        const target = `/result?q=${encodeURIComponent(listingUrl)}&type=link`;
+        router.push(target);
+        return;
+      }
+
+      // For Free plan: create record via start-listing-payment; backend auto-completes
+      if (plan === "free") {
+        const data = await startListingPayment({ listingUrl, plan });
+        if (data?.status === "success") {
+          onPaid?.();
+          handleClose();
+          return;
+        }
+        if ((data as any)?.alreadyPaid) {
+          onPaid?.();
+          handleClose();
+          return;
+        }
+        setPaymentError("Free view failed. Please try a paid plan.");
+        return;
+      }
+
+      // For paid non-questionnaire flows initiated here (if ever): prepare callback and start
       const origin =
         typeof window !== "undefined" ? window.location.origin : "";
       const cacheBust = `cb=${Date.now()}`;
-      // For Deep Dive and Deeper Dive, redirect to the order received page.
-      // Instant should continue to return to the results page.
-      const isDeep = false; // handled above; keep Instant/Free path here
       const callbackPath = `/result?q=${encodeURIComponent(
         listingUrl
       )}&type=link&${cacheBust}`;
       const callbackUrl = origin ? `${origin}${callbackPath}` : callbackPath;
 
-      // Free plan: backend will auto-complete and return success without redirect
-      const payload =
-        plan === "free"
-          ? { listingUrl, plan }
-          : { listingUrl, plan, callbackUrl };
-      const data = await startPayment(payload as any);
-      const url = data?.authorizationUrl || data?.initResponse?.data?.link;
-
-      if (plan === "free") {
-        // Success path for free plan
-        if (data?.status === "success" || data?.status === "CREATED") {
-          onPaid?.();
-          handleClose();
-          return;
-        } else {
-          setPaymentError("Free view failed. Please try a paid plan.");
-        }
+      const data = await startListingPayment({ listingUrl, plan, callbackUrl });
+      const url =
+        data?.authorizationUrl ||
+        (data as any)?.payment?.authorizationUrl ||
+        (data as any)?.payment?.initResponse?.data?.link;
+      if ((data as any)?.alreadyPaid) {
+        // Treat as paid and close
+        onPaid?.();
+        handleClose();
+        return;
+      }
+      if (url) {
+        window.location.href = url;
       } else {
-        if (url) {
-          // Redirect the whole window to provider checkout; callback returns to our app.
-          window.location.href = url;
-        } else {
-          setPaymentError("Couldn't start payment. Please try again.");
-        }
+        setPaymentError("Couldn't start payment. Please try again.");
       }
     } catch (e: any) {
       setPaymentError(
@@ -337,7 +351,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                     </button>
                   </div>
                   <PricingPlans
-                    onChoosePlan={handleChoosePlan}
+                    onChoosePlan={(plan) => {
+                      void handleChoosePlan(plan as any);
+                    }}
                     showOnlyPaid={true}
                     onlyDeep={!!startOnPaid}
                   />

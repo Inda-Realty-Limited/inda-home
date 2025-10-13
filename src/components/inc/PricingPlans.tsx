@@ -345,7 +345,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
                   </ul>
                 </div>
                 <button
-                  onClick={() => freeAvailable && onChoosePlan?.("free")}
+                  onClick={() => freeAvailable && handlePlan("free")}
                   disabled={!freeAvailable}
                   className={`w-full py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium transition-all duration-300 text-sm sm:text-base outline-none focus:outline-none focus:ring-0 ${
                     freeAvailable
@@ -403,7 +403,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
                   </ul>
                 </div>
                 <button
-                  onClick={() => onChoosePlan?.("instant")}
+                  onClick={() => handlePlan("instant")}
                   className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 hover:outline-none"
                 >
                   Choose plan
@@ -456,7 +456,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
                   </ul>
                 </div>
                 <button
-                  onClick={() => onChoosePlan?.("deepDive")}
+                  onClick={() => handlePlan("deepDive")}
                   className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 hover:outline-none"
                 >
                   Choose plan
@@ -507,7 +507,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
                   </ul>
                 </div>
                 <button
-                  onClick={() => onChoosePlan?.("deeperDive")}
+                  onClick={() => handlePlan("deeperDive")}
                   className="w-full bg-[#4ea8a1] text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-full font-medium hover:bg-[#3d8a84] transition-all duration-300 text-sm sm:text-base outline-none focus:outline-none focus:ring-0 focus-visible:outline-none focus-visible:ring-0 hover:outline-none"
                 >
                   Choose plan

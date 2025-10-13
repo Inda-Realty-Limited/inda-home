@@ -2,8 +2,8 @@ import { getToken, removeToken, removeUser } from "@/helpers";
 import axios, { AxiosResponse } from "axios";
 
 // const BASE_URL = "https://api.staging.investinda.com";
-const BASE_URL = "http://192.168.0.130:9009";
-// const BASE_URL = "https://inda-core-backend-services.onrender.com";
+// const BASE_URL = "http://192.168.0.130:9009";
+const BASE_URL = "https://inda-core-backend-services.onrender.com";
 
 const apiClient = axios.create({
   baseURL: BASE_URL,

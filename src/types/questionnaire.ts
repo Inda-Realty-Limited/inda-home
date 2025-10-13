@@ -1,4 +1,5 @@
 export type QuestionnairePlan = "deepDive" | "deeperDive";
+export type PaymentPlan = "instant" | "free" | "deepDive" | "deeperDive";
 
 export type QuestionnaireStatus = "submitted" | "paid" | "cancelled";
 
@@ -63,9 +64,9 @@ export interface DueDiligenceQuestionnairePayload {
 export interface StartListingPaymentPayload {
   listingId?: string;
   listingUrl?: string;
-  plan: QuestionnairePlan;
+  plan: PaymentPlan;
   callbackUrl?: string;
-  questionnaire: DueDiligenceQuestionnairePayload;
+  questionnaire?: DueDiligenceQuestionnairePayload;
 }
 
 export interface StartListingPaymentResponse {

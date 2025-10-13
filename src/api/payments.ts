@@ -5,21 +5,6 @@ import {
 } from "@/types/questionnaire";
 import apiClient from "./index";
 
-type StartPaymentPayload = {
-  listingUrl: string;
-  plan: string; // "free" | "instant" | "deepDive" | "deeperDive"
-  callbackUrl?: string; // optional for free plan (auto-completes)
-};
-
-// Starts a payment session and returns the provider session payload
-export const startPayment = async (payload: StartPaymentPayload) => {
-  const res = await apiClient.post("/payments/start", payload);
-  // API returns { status: string, data: {...} }
-  return res.data?.data;
-};
-
-export type StartPaymentResponse = Awaited<ReturnType<typeof startPayment>>;
-
 export const hasPaid = async (listingUrl: string, plan: string) => {
   const res = await apiClient.get("/payments/has-paid", {
     params: { listingUrl, plan },
@@ -46,7 +31,7 @@ export type FreeViewStatus = {
 };
 
 export const getFreeViewStatus = async (): Promise<FreeViewStatus> => {
-  const res = await apiClient.get("/payments/free-status");
+  const res = await apiClient.get("/payments/free-view-status");
   return (res.data?.data || {
     hasUsedFreeView: false,
     freeViewAvailable: true,
@@ -112,11 +97,15 @@ export const uploadQuestionnaireFiles = async (
   const formData = new FormData();
   files.forEach((file) => formData.append("files", file));
 
-  const res = await apiClient.post("/payments/questionnaire/upload", formData, {
-    headers: {
-      "Content-Type": "multipart/form-data",
-    },
-  });
+  const res = await apiClient.post(
+    "/payments/upload-questionnaire-files",
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    }
+  );
 
   return (res.data?.data || []) as QuestionnaireFileRef[];
 };
@@ -124,6 +113,6 @@ export const uploadQuestionnaireFiles = async (
 export const startListingPayment = async (
   payload: StartListingPaymentPayload
 ): Promise<StartListingPaymentResponse> => {
-  const res = await apiClient.post("/payments/start", payload);
+  const res = await apiClient.post("/payments/start-listing-payment", payload);
   return (res.data?.data || {}) as StartListingPaymentResponse;
 };
