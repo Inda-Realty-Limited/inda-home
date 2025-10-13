@@ -160,7 +160,7 @@ const PlansPricingSection: React.FC = () => {
                     whileInView={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.5, delay: 0.4 }}
                   >
-                    ₦7,500
+                    ₦0
                   </motion.div>
                   <motion.h3
                     className="text-lg sm:text-xl font-bold text-gray-900 mb-2"
