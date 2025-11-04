@@ -1,7 +1,7 @@
 import { login } from "@/api/auth";
 import { Button, Container, Footer, Input, Navbar } from "@/components";
 import { useToast } from "@/components/ToastProvider";
-import { setToken } from "@/helpers";
+import { setToken, setUser } from "@/helpers";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
@@ -12,14 +12,16 @@ const SignIn: React.FC = () => {
   const [password, setPassword] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchType, setSearchType] = useState("");
+  const [returnTo, setReturnTo] = useState("");
   const toast = useToast();
   const router = useRouter();
 
   useEffect(() => {
     if (router.isReady) {
-      const { q, type } = router.query;
+      const { q, type, returnTo: rt } = router.query;
       setSearchQuery((q as string) || "");
       setSearchType((type as string) || "");
+      setReturnTo((rt as string) || "");
     }
   }, [router.isReady, router.query]);
 
@@ -27,9 +29,21 @@ const SignIn: React.FC = () => {
   const handleSuccess = (data: any) => {
     if (data?.token) {
       setToken(data.token);
+      if (data?.user) {
+        setUser(data.user);
+      }
       toast.showToast("Sign in successful!", 2000, "success");
       setTimeout(() => {
-        // If there's a search query, redirect to results, otherwise go to home
+        // Prefer explicit returnTo redirect, else fallback to search or home
+        if (returnTo) {
+          try {
+            router.push(decodeURIComponent(returnTo));
+            return;
+          } catch {
+            router.push(returnTo);
+            return;
+          }
+        }
         if (searchQuery) {
           router.push(
             `/result?q=${encodeURIComponent(searchQuery)}&type=${searchType}`
@@ -122,7 +136,15 @@ const SignIn: React.FC = () => {
               </div>
               <div className="flex justify-end">
                 <a
-                  href="#"
+                  href={`/auth/forgot-password${
+                    returnTo
+                      ? `?returnTo=${encodeURIComponent(returnTo)}`
+                      : searchQuery
+                      ? `?q=${encodeURIComponent(
+                          searchQuery
+                        )}&type=${searchType}`
+                      : ""
+                  }`}
                   className="text-xs sm:text-sm text-[#4EA8A1] font-semibold hover:underline transition-all duration-200"
                 >
                   Forgot password?
@@ -140,7 +162,9 @@ const SignIn: React.FC = () => {
               Don't have an account?{" "}
               <a
                 href={`/auth/signup${
-                  searchQuery
+                  returnTo
+                    ? `?returnTo=${encodeURIComponent(returnTo)}`
+                    : searchQuery
                     ? `?q=${encodeURIComponent(searchQuery)}&type=${searchType}`
                     : ""
                 }`}

@@ -1,12 +1,33 @@
 import CryptoJS from "crypto-js";
+import { env } from "@/config/env";
 
-const SECRET_KEY = "inda_super_secret_key";
 export const TOKEN_KEY = "inda_token";
+export const USER_KEY = "inda_user";
+
+const getSecretKey = () => env.security.encryptionSecret;
+
+export type StoredUser = {
+  _id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  isActive?: boolean;
+  howDidYouHearAboutUs?: string;
+  isVerified?: boolean;
+  todo?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  // Allow any extra fields from API without breaking types
+  [key: string]: any;
+};
 
 export function setToken(token: string) {
   try {
-    const encrypted = CryptoJS.AES.encrypt(token, SECRET_KEY).toString();
+    const encrypted = CryptoJS.AES.encrypt(token, getSecretKey()).toString();
     localStorage.setItem(TOKEN_KEY, encrypted);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("inda:token-changed"));
+    }
   } catch (e) {}
 }
 
@@ -14,7 +35,7 @@ export function getToken(): string | null {
   try {
     const encrypted = localStorage.getItem(TOKEN_KEY);
     if (!encrypted) return null;
-    const bytes = CryptoJS.AES.decrypt(encrypted, SECRET_KEY);
+    const bytes = CryptoJS.AES.decrypt(encrypted, getSecretKey());
     const decrypted = bytes.toString(CryptoJS.enc.Utf8);
     return decrypted || null;
   } catch (e) {
@@ -25,5 +46,47 @@ export function getToken(): string | null {
 export function removeToken() {
   try {
     localStorage.removeItem(TOKEN_KEY);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("inda:token-removed"));
+    }
+  } catch (e) {}
+}
+
+// Encrypted user helpers
+export function setUser(user: StoredUser) {
+  try {
+    const json = JSON.stringify(user);
+    const encrypted = CryptoJS.AES.encrypt(json, getSecretKey()).toString();
+    localStorage.setItem(USER_KEY, encrypted);
+  } catch (e) {}
+}
+
+export function getUser(): StoredUser | null {
+  try {
+    const encrypted = localStorage.getItem(USER_KEY);
+    if (!encrypted) return null;
+    const bytes = CryptoJS.AES.decrypt(encrypted, getSecretKey());
+    const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+    if (!decrypted) return null;
+    return JSON.parse(decrypted) as StoredUser;
+  } catch (e) {
+    return null;
+  }
+}
+
+export function updateUser(patch: Partial<StoredUser>): StoredUser | null {
+  try {
+    const current = getUser() || ({} as StoredUser);
+    const updated = { ...current, ...patch } as StoredUser;
+    setUser(updated);
+    return updated;
+  } catch (e) {
+    return null;
+  }
+}
+
+export function removeUser() {
+  try {
+    localStorage.removeItem(USER_KEY);
   } catch (e) {}
 }

@@ -22,15 +22,25 @@ export interface Comparable {
   price: string;
   pricePerSqm: string;
   yield: string;
-  hasVerifiedDocuments: boolean;
-  hasVerifiedAgent: boolean;
-  riskLevel: "Low Risk" | "Medium Risk" | "High Risk";
+  beds: number;
   developerTrustScore: number;
+  image: string;
 }
 
 export interface ROIMetric {
   label: string;
   value: string;
+}
+
+export interface ROIMetricTwo {
+  label: string;
+  value: string;
+}
+
+export interface annualApp {
+  label: string;
+  value: string;
+  index: number;
 }
 
 export interface ResultData {
@@ -95,7 +105,9 @@ export interface ResultData {
 
   // ROI Panel
   roiMetrics: ROIMetric[];
+  roiMetricsTwo: ROIMetricTwo[];
   roiSummary: string;
+  annualAppreciation: annualApp[];
 
   // Comparables
   comparables: Comparable[];
@@ -103,6 +115,10 @@ export interface ResultData {
   // Legal Disclaimer
   legalDisclaimer: string;
 }
+
+// Helper to generate a random integer between min and max inclusive
+const rand = (min: number, max: number) =>
+  Math.floor(Math.random() * (max - min + 1)) + min;
 
 export const dummyResultData: ResultData = {
   title: "Luxury 3-Bedroom Apartment in Lekki Phase 1",
@@ -116,7 +132,7 @@ export const dummyResultData: ResultData = {
 
   developer: {
     name: "ABC Properties Ltd.",
-    trustScore: 83,
+    trustScore: rand(80, 89),
     profileLink: "/developer/abc-properties",
   },
 
@@ -137,7 +153,7 @@ export const dummyResultData: ResultData = {
     warning: true,
   },
 
-  indaTrustScore: 83,
+  indaTrustScore: rand(80, 89),
   trustScoreTooltip:
     "The Inda score(0-100) is a trust rating based on verified documents, price accuracy vs market, complaint history, CAC and legal checks and responsiveness. Each score is updated regularly and weighted based on what matters most to safe investing.",
 
@@ -228,102 +244,131 @@ export const dummyResultData: ResultData = {
 
   roiMetrics: [
     {
-      label: "Estimated Annual Rent",
-      value: "₦4.8M",
+      label: "Purchase Price",
+      value: "₦130,000,000",
     },
     {
-      label: "Gross Yield",
-      value: "7.2%",
+      label: "Financing",
+      value: "4.5%",
     },
     {
-      label: "Net Yield (after tax/fees)",
-      value: "5.4%",
+      label: "Financing Tenure",
+      value: "10 years",
     },
     {
-      label: "5-Year Price Forecast",
-      value: "₦156M",
+      label: "Holding Period",
+      value: "3 years",
+    },
+  ],
+
+  roiMetricsTwo: [
+    {
+      label: "Avg. Rental Yield (Long Term)",
+      value: "5.2%",
     },
     {
-      label: "5-Year ROI (Projected)",
-      value: "30.2%",
+      label: "Avg. Rental Yield (Short Term)",
+      value: "6.8",
+    },
+    {
+      label: "Total Expense (% of Rent)",
+      value: "18.2",
     },
   ],
 
   roiSummary:
     "Summarize ROI projection using rental yield, appreciation trends, and future resale value. Highlight how it compares to micro location average and what kind of buyer it suits (e.g. rental investor, flip buyer, etc.)",
 
+  annualAppreciation: [
+    {
+      label: "Annual Appreciation (₦, Local Nominal)",
+      value: " 3.2%",
+      index: 1,
+    },
+    {
+      label: "Annual Appreciation (₦, Local Real",
+      value: "18.2",
+      index: 2,
+    },
+    {
+      label: "Annual Appreciation (USD, $FX + Inflation Adjusted)",
+      value: "18.2",
+      index: 3,
+    },
+  ],
+
   comparables: [
     {
       id: "1",
       title: "5-Bed Apartment in Ajah",
-      location: "Ajah, Lagos",
+      location: "Ajah",
+      beds: 5,
       price: "₦110M",
       pricePerSqm: "₦100k/Sqm",
       yield: "6.5% Yield",
-      hasVerifiedDocuments: true,
-      hasVerifiedAgent: true,
-      riskLevel: "Low Risk",
-      developerTrustScore: 83,
+      developerTrustScore: rand(80, 89),
+      image:
+        "https://images.unsplash.com/photo-1501183638710-841dd1904471?auto=format&fit=crop&w=1200&q=80",
     },
     {
       id: "2",
-      title: "5-Bed Apartment in Ajah",
-      location: "Ajah, Lagos",
-      price: "₦110M",
-      pricePerSqm: "₦100k/Sqm",
-      yield: "6.5% Yield",
-      hasVerifiedDocuments: true,
-      hasVerifiedAgent: true,
-      riskLevel: "Low Risk",
-      developerTrustScore: 83,
+      title: "4-Bed Apartment in Lekki",
+      location: "Lekki",
+      price: "₦125M",
+      pricePerSqm: "₦120k/Sqm",
+      yield: "7% Yield",
+      beds: 4,
+      developerTrustScore: rand(80, 89),
+      image:
+        "https://images.unsplash.com/photo-1484154218962-a197022b5858?auto=format&fit=crop&w=1200&q=80",
     },
     {
       id: "3",
-      title: "5-Bed Apartment in Ajah",
-      location: "Ajah, Lagos",
+      title: "5-Bed Apartment in VI",
+      location: "VI",
       price: "₦110M",
       pricePerSqm: "₦100k/Sqm",
       yield: "6.5% Yield",
-      hasVerifiedDocuments: true,
-      hasVerifiedAgent: true,
-      riskLevel: "Low Risk",
-      developerTrustScore: 83,
+      beds: 5,
+      developerTrustScore: rand(80, 89),
+      image:
+        "https://images.unsplash.com/photo-1531973968078-9bb02785f13d?auto=format&fit=crop&w=1200&q=80",
     },
     {
       id: "4",
       title: "5-Bed Apartment in Ajah",
-      location: "Ajah, Lagos",
+      location: "Ajah",
       price: "₦110M",
       pricePerSqm: "₦100k/Sqm",
       yield: "6.5% Yield",
-      hasVerifiedDocuments: true,
-      hasVerifiedAgent: true,
-      riskLevel: "Low Risk",
-      developerTrustScore: 83,
+      beds: 5,
+      developerTrustScore: rand(80, 89),
+      image:
+        "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?auto=format&fit=crop&w=1200&q=80",
     },
     {
       id: "5",
       title: "5-Bed Apartment in Ajah",
-      location: "Ajah, Lagos",
+      location: "Ajah",
       price: "₦110M",
       pricePerSqm: "₦100k/Sqm",
       yield: "6.5% Yield",
-      hasVerifiedDocuments: true,
-      hasVerifiedAgent: true,
-      riskLevel: "Low Risk",
-      developerTrustScore: 83,
+      beds: 5,
+      developerTrustScore: rand(80, 89),
+      image:
+        "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=1200&q=80",
     },
     {
       id: "6",
       title: "5-Bed Apartment in Ajah",
-      location: "Ajah, Lagos",
+      location: "Ajah",
       price: "₦110M",
       pricePerSqm: "₦100k/Sqm",
       yield: "6.5% Yield",
-      hasVerifiedDocuments: true,
-      hasVerifiedAgent: true,
-      riskLevel: "Low Risk",
-      developerTrustScore: 83,
+      beds: 5,
+      developerTrustScore: rand(80, 89),
+      image:
+        "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&w=1200&q=80",
     },
   ],
 

@@ -93,6 +93,10 @@ const DeveloperResult: React.FC = () => {
   const developerName = (router.query.q as string) || "ABC. Properties Ltd.";
   const [isVerificationOpen, setIsVerificationOpen] = useState(false);
   const [isAISummaryOpen, setIsAISummaryOpen] = useState(false);
+  // Stable per-mount Inda Trust Score between 80 and 89
+  const [trustScore] = useState<number>(
+    () => 80 + Math.floor(Math.random() * 10)
+  );
 
   return (
     <Container
@@ -157,9 +161,11 @@ const DeveloperResult: React.FC = () => {
                   </span>
                   <FaInfoCircle className="text-[#4EA8A1] text-sm" />
                 </div>
-                <span className="text-sm font-bold text-[#101820]">64%</span>
+                <span className="text-sm font-bold text-[#101820]">
+                  {trustScore}%
+                </span>
               </div>
-              <ProgressBar value={64} tone="ok" />
+              <ProgressBar value={trustScore} tone="ok" />
               <div className="flex items-center justify-end mt-2">
                 <div className="flex items-center gap-1 text-xs text-red-600">
                   <FaExclamationTriangle />
