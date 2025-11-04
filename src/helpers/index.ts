@@ -1,8 +1,10 @@
 import CryptoJS from "crypto-js";
+import { env } from "@/config/env";
 
-const SECRET_KEY = "inda_super_secret_key";
 export const TOKEN_KEY = "inda_token";
 export const USER_KEY = "inda_user";
+
+const getSecretKey = () => env.security.encryptionSecret;
 
 export type StoredUser = {
   _id: string;
@@ -21,7 +23,7 @@ export type StoredUser = {
 
 export function setToken(token: string) {
   try {
-    const encrypted = CryptoJS.AES.encrypt(token, SECRET_KEY).toString();
+    const encrypted = CryptoJS.AES.encrypt(token, getSecretKey()).toString();
     localStorage.setItem(TOKEN_KEY, encrypted);
     if (typeof window !== "undefined") {
       window.dispatchEvent(new Event("inda:token-changed"));
@@ -33,7 +35,7 @@ export function getToken(): string | null {
   try {
     const encrypted = localStorage.getItem(TOKEN_KEY);
     if (!encrypted) return null;
-    const bytes = CryptoJS.AES.decrypt(encrypted, SECRET_KEY);
+    const bytes = CryptoJS.AES.decrypt(encrypted, getSecretKey());
     const decrypted = bytes.toString(CryptoJS.enc.Utf8);
     return decrypted || null;
   } catch (e) {
@@ -54,7 +56,7 @@ export function removeToken() {
 export function setUser(user: StoredUser) {
   try {
     const json = JSON.stringify(user);
-    const encrypted = CryptoJS.AES.encrypt(json, SECRET_KEY).toString();
+    const encrypted = CryptoJS.AES.encrypt(json, getSecretKey()).toString();
     localStorage.setItem(USER_KEY, encrypted);
   } catch (e) {}
 }
@@ -63,7 +65,7 @@ export function getUser(): StoredUser | null {
   try {
     const encrypted = localStorage.getItem(USER_KEY);
     if (!encrypted) return null;
-    const bytes = CryptoJS.AES.decrypt(encrypted, SECRET_KEY);
+    const bytes = CryptoJS.AES.decrypt(encrypted, getSecretKey());
     const decrypted = bytes.toString(CryptoJS.enc.Utf8);
     if (!decrypted) return null;
     return JSON.parse(decrypted) as StoredUser;

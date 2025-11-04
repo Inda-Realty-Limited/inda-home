@@ -1,12 +1,9 @@
 import { getToken, removeToken, removeUser } from "@/helpers";
+import { env } from "@/config/env";
 import axios, { AxiosResponse } from "axios";
 
-// const BASE_URL = "https://api.staging.investinda.com";
-// const BASE_URL = "http://192.168.0.130:9009";
-const BASE_URL = "https://inda-core-backend-services.onrender.com";
-
 const apiClient = axios.create({
-  baseURL: BASE_URL,
+  baseURL: env.api.baseUrl,
   headers: {
     "Content-Type": "application/json",
   },
@@ -18,7 +15,7 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers["Authorization"] = `Bearer ${token}`;
     }
-    if (process.env.NODE_ENV === "development") {
+    if (env.isDevelopment) {
       console.log(
         `API Request: ${config.method?.toUpperCase() || "UNKNOWN"} ${
           config.url
@@ -32,7 +29,7 @@ apiClient.interceptors.request.use(
     return config;
   },
   (error) => {
-    if (process.env.NODE_ENV === "development") {
+    if (env.isDevelopment) {
       console.error("Request Interceptor Error:", error);
     }
     return Promise.reject(error);
@@ -41,7 +38,7 @@ apiClient.interceptors.request.use(
 
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
-    if (process.env.NODE_ENV === "development") {
+    if (env.isDevelopment) {
       console.log(`API Response: ${response.config.url}`, {
         status: response.status,
         data: response.data,
@@ -51,7 +48,7 @@ apiClient.interceptors.response.use(
   },
   (error) => {
     if (error.response) {
-      if (process.env.NODE_ENV === "development") {
+      if (env.isDevelopment) {
         console.error("API Error:", {
           url: error.config?.url,
           status: error.response?.status,
