@@ -5,7 +5,8 @@ import {
 } from "@/api/payments";
 import { Container, Footer, Navbar } from "@/components";
 import PaymentReceipt from "@/components/inc/PaymentReceipt";
-import { getToken } from "@/helpers";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import { useAuth } from "@/contexts/AuthContext";
 import Head from "next/head";
 import Image from "next/image";
 import { useRouter } from "next/router";
@@ -44,14 +45,13 @@ const OrdersPage: React.FC = () => {
     }
   };
 
+  const { isAuthenticated } = useAuth();
+
   useEffect(() => {
-    const token = getToken();
-    if (!token) {
-      router.replace("/auth");
-      return;
+    if (isAuthenticated) {
+      fetchData(1);
     }
-    fetchData(1);
-  }, [router]);
+  }, [isAuthenticated]);
 
   const totalOrders = useMemo(() => data?.summary?.totalOrders || 0, [data]);
 
@@ -135,7 +135,7 @@ const OrdersPage: React.FC = () => {
   };
 
   return (
-    <>
+    <ProtectedRoute>
       <Head>
         <title>Orders & Reports • Inda</title>
       </Head>
@@ -549,7 +549,7 @@ const OrdersPage: React.FC = () => {
           onClose={() => setSelectedPayment(null)}
         />
       )}
-    </>
+    </ProtectedRoute>
   );
 };
 

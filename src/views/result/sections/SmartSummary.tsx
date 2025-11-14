@@ -1,5 +1,9 @@
 import React from "react";
 import { FaBuilding, FaClock, FaMapMarkerAlt } from "react-icons/fa";
+import BedroomIcon from "@/components/icons/BedroomIcon";
+import SellerIcon from "@/components/icons/SellerIcon";
+import DeliveryIcon from "@/components/icons/DeliveryIcon";
+import StatusIcon from "@/components/icons/StatusIcon";
 
 type Props = {
   result: any;
@@ -29,107 +33,75 @@ const SmartSummary: React.FC<Props> = ({
     <div className="w-full px-6">
       <div className="">
         <div className="hidden md:block">
-          <div className="space-y-3">
-            <div className="pt-8 pb-6 px-8 bg-[#E5E5E566] rounded-2xl">
-              <h2 className="text-2xl md:text-3xl font-bold mb-6 text-inda-teal">
-                Smart Summary
-              </h2>
-              <div className="grid grid-cols-3 gap-12 text-lg font-semibold text-gray-700">
-                <div>Info</div>
-                <div>Details</div>
-                <div>Status</div>
+          <div className="space-y-0">
+            {/* Title */}
+            <h2 className="text-2xl font-bold mb-6 text-inda-teal">
+              Smart Summary
+            </h2>
+
+            {/* Header Row */}
+            <div className="bg-white rounded-t-2xl border-b border-gray-200">
+              <div className="grid grid-cols-3 gap-8 py-4 px-6">
+                <div className="text-base font-semibold text-gray-900">Info</div>
+                <div className="text-base font-semibold text-gray-900">Details</div>
+                <div className="text-base font-semibold text-gray-900">Status</div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 xl:grid-cols-3 gap-6 xl:gap-12 py-5 px-5 xl:py-6 xl:px-6 bg-[#E5E5E566] font-normal text-sm xl:text-base text-[#101820] rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                  <FaBuilding className="text-inda-teal text-lg" />
-                </div>
-                <span>Bedroom/Bathrooms</span>
-              </div>
-              <div>
-                {bedrooms ?? "—"} Bed./{bathrooms ?? "—"} Bath.
-              </div>
-              <div>From listing/docs.</div>
-            </div>
+            {/* Data Rows */}
 
-            <div className="grid grid-cols-2 xl:grid-cols-3 gap-6 xl:gap-12 py-5 px-5 xl:py-6 xl:px-6 bg-[#E5E5E566] font-normal text-sm xl:text-base text-[#101820] rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                  <FaBuilding className="text-inda-teal text-lg" />
+            <div className="bg-[#4EA8A114] border-b border-gray-200">
+              <div className="grid grid-cols-3 gap-8 py-5 px-6 items-center">
+                <div className="flex items-center gap-3">
+                  <SellerIcon width={24} height={24} />
+                  <span className="text-sm text-gray-900">Seller</span>
                 </div>
-                <span className="font-medium">Seller</span>
-              </div>
-              <div className="font-medium">{sellerName}</div>
-              <div className="font-medium">
-                {sellerProfileUrl ? (
+                <div className="text-sm text-gray-700">{sellerName}</div>
+                <div className="text-sm">
                   <a
-                    className="text-inda-teal hover:underline"
-                    href={sellerProfileUrl}
-                    target="_blank"
-                    rel="noreferrer"
+                    className="text-inda-teal hover:underline cursor-pointer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      document.getElementById('seller-credibility')?.scrollIntoView({ behavior: 'smooth' });
+                    }}
                   >
                     View Profile here
                   </a>
-                ) : (
-                  <span>—</span>
-                )}
+                </div>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 xl:grid-cols-3 gap-6 xl:gap-12 py-5 px-5 xl:py-6 xl:px-6 bg-[#E5E5E566] font-normal text-sm xl:text-base text-[#101820] rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                  <FaClock className="text-inda-teal text-lg" />
+            <div className="bg-[#4EA8A114] border-b border-gray-200">
+              <div className="grid grid-cols-3 gap-8 py-5 px-6 items-center">
+                <div className="flex items-center gap-3">
+                  <DeliveryIcon width={24} height={20} />
+                  <span className="text-sm text-gray-900">Delivery Date</span>
                 </div>
-                <span className="font-medium">Delivery Date</span>
+                <div className="text-sm text-gray-700">{deliveryLabel}</div>
+                <div className="text-sm text-gray-700">{deliverySource}</div>
               </div>
-              <div className="font-medium">{deliveryLabel}</div>
-              <div className="flex items-center gap-2">{deliverySource}</div>
             </div>
 
-            <div className="grid grid-cols-2 xl:grid-cols-3 gap-6 xl:gap-12 py-5 px-5 xl:py-6 xl:px-6 bg-[#E5E5E566] font-normal text-sm xl:text-base text-[#101820] rounded-lg">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                  <FaMapMarkerAlt className="text-inda-teal text-lg" />
+            <div className="bg-[#4EA8A114] rounded-b-2xl">
+              <div className="grid grid-cols-3 gap-8 py-5 px-6 items-center">
+                <div className="flex items-center gap-3">
+                  <StatusIcon width={24} height={24} />
+                  <span className="text-sm text-gray-900">Status</span>
                 </div>
-                <span className="font-medium">Status</span>
-              </div>
-              <div className="font-medium">{listingStatus || "—"}</div>
-              <div className="flex items-center gap-2">
-                {listingStatus ? "From listing/docs." : "—"}
+                <div className="text-sm text-gray-700">{listingStatus || "—"}</div>
+                <div className="text-sm text-gray-700">
+                  {listingStatus ? "Off-Plan/Completed" : "—"}
+                </div>
               </div>
             </div>
           </div>
         </div>
 
         <div className="md:hidden space-y-4">
-          <div className="bg-[#E5E5E566] rounded-lg p-5">
+          <div className="bg-white/60 border border-gray-100 rounded-lg p-5">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                <FaBuilding className="text-inda-teal text-lg" />
-              </div>
-              <h4 className="font-semibold text-lg">Bedroom/Bathrooms</h4>
-            </div>
-            <div className="space-y-3">
-              <div>
-                <span className="text-sm text-gray-500">Details: </span>
-                <span className="font-semibold text-base">
-                  {bedrooms ?? "—"} Bed./{bathrooms ?? "—"} Bath.
-                </span>
-              </div>
-              <div>
-                <span className="text-sm text-gray-500">Status: </span>
-                <span className="text-sm">From listing/docs.</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-[#E5E5E566] rounded-lg p-5">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                <FaBuilding className="text-inda-teal text-lg" />
+                <SellerIcon width={24} height={24} />
               </div>
               <h4 className="font-semibold text-lg">Seller</h4>
             </div>
@@ -140,26 +112,23 @@ const SmartSummary: React.FC<Props> = ({
               </div>
               <div>
                 <span className="text-sm text-gray-500">Status: </span>
-                {sellerProfileUrl ? (
-                  <a
-                    className="text-sm text-inda-teal cursor-pointer hover:underline"
-                    href={sellerProfileUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    View Profile here
-                  </a>
-                ) : (
-                  <span className="text-sm">—</span>
-                )}
+                <a
+                  className="text-sm text-inda-teal cursor-pointer hover:underline"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    document.getElementById('seller-credibility')?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                >
+                  View Profile here
+                </a>
               </div>
             </div>
           </div>
 
-          <div className="bg-[#E5E5E566] rounded-lg p-5">
+          <div className="bg-white/60 border border-gray-100 rounded-lg p-5">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                <FaClock className="text-inda-teal text-lg" />
+                <DeliveryIcon width={24} height={20} />
               </div>
               <h4 className="font-semibold text-lg">Delivery Date</h4>
             </div>
@@ -175,10 +144,10 @@ const SmartSummary: React.FC<Props> = ({
             </div>
           </div>
 
-          <div className="bg-[#E5E5E566] rounded-lg p-5">
+          <div className="bg-white/60 border border-gray-100 rounded-lg p-5">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-12 h-12 bg-inda-teal/10 rounded-lg flex items-center justify-center">
-                <FaMapMarkerAlt className="text-inda-teal text-lg" />
+                <StatusIcon width={24} height={24} />
               </div>
               <h4 className="font-semibold text-lg">Status</h4>
             </div>

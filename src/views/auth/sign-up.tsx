@@ -1,11 +1,13 @@
-import { register, RegisterPayload } from "@/api/auth";
+import { register, RegisterPayload, verifyOtp, requestResetPassword as requestResetApi } from "@/api/auth";
 import { Button, Container, Footer, Input, Navbar } from "@/components";
+import GoogleButton from "@/components/OAuth/GoogleButton";
 import { useToast } from "@/components/ToastProvider";
-import { setToken } from "@/helpers";
+import { useAuth } from "@/contexts/AuthContext";
+import { registerSchema, verifyOtpSchema, validateAndSanitize } from "@/utils/validation";
+import { createFormSubmitLimiter } from "@/utils/rateLimiter";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
-import { FcGoogle } from "react-icons/fc";
 import {
   FiBriefcase,
   FiChevronDown,
@@ -41,15 +43,17 @@ const Signup: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchType, setSearchType] = useState("");
   const [returnTo, setReturnTo] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const router = useRouter();
-  // OTP state
+  const { setUser } = useAuth();
+  const toast = useToast();
+  
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const otpInputs = Array.from({ length: 6 }, (_, i) =>
     React.createRef<HTMLInputElement>()
   );
   const [otpLoading, setOtpLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
-  const toast = useToast();
 
   useEffect(() => {
     if (router.isReady) {
@@ -60,40 +64,22 @@ const Signup: React.FC = () => {
     }
   }, [router.isReady, router.query]);
 
-  const useRegisterMutation = () =>
-    useMutation({
-      mutationFn: async (payload: RegisterPayload) => await register(payload),
-    });
-
-  const registerMutation = useRegisterMutation();
-  useEffect(() => {
-    if (registerMutation.isSuccess) {
+  const registerMutation = useMutation({
+    mutationFn: async (payload: RegisterPayload) => await register(payload),
+    onSuccess: () => {
       toast.showToast(
         "Sign up successful! Please verify your email.",
         2500,
         "success"
       );
       setTimeout(() => setStep(3), 800);
-    } else if (registerMutation.isError) {
-      toast.showToast(
-        registerMutation.error instanceof Error
-          ? registerMutation.error.message
-          : "Sign up failed. Please try again.",
-        3000,
-        "error"
-      );
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [registerMutation.isSuccess, registerMutation.isError]);
+    },
+    onError: (error: any) => {
+      const errorMessage = error?.response?.data?.message || error?.message || "Sign up failed. Please try again.";
+      toast.showToast(errorMessage, 3000, "error");
+    },
+  });
 
-  const [verifyOtpApi, setVerifyOtpApi] = useState<any>(null);
-  const [requestResetApi, setRequestResetApi] = useState<any>(null);
-  useEffect(() => {
-    import("@/api/auth").then((mod) => {
-      setVerifyOtpApi(() => mod.verifyOtp);
-      setRequestResetApi(() => mod.requestResetPassword);
-    });
-  }, []);
 
   const lookingToDoOptions = [
     {
@@ -178,16 +164,10 @@ const Signup: React.FC = () => {
                 See the truth behind that listing today!
               </h1>
               <p className="text-inda-dark font-medium text-center text-base sm:text-lg md:text-xl mb-8 sm:mb-10 max-w-xl px-2">
-                No noise. No spam. Just clarity where it matters most.
-              </p>
-              <div className="flex flex-col gap-4 sm:gap-6 w-full max-w-[320px] sm:max-w-[400px] md:max-w-[480px] mx-auto justify-center">
-                <button
-                  onClick={() => {}}
-                  className="bg-[#F9F9F9] text-inda-dark font-medium text-lg sm:text-xl rounded-full w-full h-[56px] sm:h-[64px] transition-all duration-200 ease-in-out hover:bg-[#F0F0F0] hover:scale-[0.98] active:scale-[0.96] flex items-center justify-center gap-2 sm:gap-3"
-                >
-                  <FcGoogle className="w-5 h-5 sm:w-6 sm:h-6" />
-                  Continue with Google
-                </button>
+                      No noise. No spam. Just clarity where it matters most.
+                    </p>
+                    <div className="flex flex-col gap-4 sm:gap-6 w-full max-w-[320px] sm:max-w-[400px] md:max-w-[480px] mx-auto justify-center">
+                      <GoogleButton returnTo={returnTo || (searchQuery ? `/result?q=${encodeURIComponent(searchQuery)}&type=${searchType}` : undefined)} />
                 <button
                   onClick={() => {
                     setStep(2);
@@ -209,7 +189,9 @@ const Signup: React.FC = () => {
                   className="w-full flex flex-col gap-4 sm:gap-6"
                   onSubmit={(e) => {
                     e.preventDefault();
-                    registerMutation.mutate({
+                    setErrors({});
+                    
+                    const validation = validateAndSanitize(registerSchema, {
                       email,
                       firstName,
                       lastName,
@@ -217,6 +199,22 @@ const Signup: React.FC = () => {
                       howDidYouHearAboutUs: hearAboutUs,
                       todo: lookingToDo,
                     });
+                    
+                    if (!validation.success) {
+                      setErrors(validation.errors);
+                      toast.showToast("Please fix the errors in the form", 2500, "error");
+                      return;
+                    }
+                    
+                    const limiter = createFormSubmitLimiter("signup");
+                    const limitCheck = limiter.checkLimit();
+                    
+                    if (!limitCheck.allowed) {
+                      toast.showToast("Please wait a moment before submitting again", 2000, "error");
+                      return;
+                    }
+                    
+                    registerMutation.mutate(validation.data);
                   }}
                 >
                   {/* Email Field */}
@@ -231,14 +229,26 @@ const Signup: React.FC = () => {
                       <span className="absolute left-3 sm:left-4 text-gray-400 text-sm sm:text-base">
                         <FiMail />
                       </span>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="Email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base"
-                      />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="Email"
+                      value={email}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        setErrors(prev => ({ ...prev, email: "" }));
+                      }}
+                      className={`w-full rounded-xl bg-[#F9F9F9] border ${
+                        errors.email ? "border-red-500" : "border-[#e0e0e0]"
+                      } focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base`}
+                    />
+                  </div>
+                  {errors.email && (
+                    <p className="text-red-500 text-xs sm:text-sm -mt-3">{errors.email}</p>
+                  )}
+                </div>
+                <div className="flex flex-col gap-1 sm:gap-2">
+                  <div className="relative flex items-center">
                     </div>
                   </div>
                   {/* First Name Field */}

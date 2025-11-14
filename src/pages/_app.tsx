@@ -1,11 +1,11 @@
 import { ToastProvider } from "@/components/ToastProvider";
+import ErrorBoundary from "@/components/ErrorBoundary";
+import { AuthProvider } from "@/contexts/AuthContext";
 import "@/styles/globals.css";
-// Mapbox GL styles (for MapboxMap component)
-// Mapbox styles no longer needed after reverting to Google Street View
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { AppProps } from "next/app";
 import Head from "next/head";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function App({ Component, pageProps }: AppProps) {
   const [queryClient] = useState(
@@ -25,15 +25,22 @@ export default function App({ Component, pageProps }: AppProps) {
         },
       })
   );
+
+  // CSRF not required for Authorization header auth; no initialization needed
+
   return (
-    <QueryClientProvider client={queryClient}>
-      <ToastProvider>
-        <Head>
-          <title>Inda</title>
-          <link rel="icon" href="/assets/images/favicon.png" />
-        </Head>
-        <Component {...pageProps} />
-      </ToastProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <QueryClientProvider client={queryClient}>
+          <ToastProvider>
+            <Head>
+              <title>Inda</title>
+              <link rel="icon" href="/assets/images/favicon.png" />
+            </Head>
+            <Component {...pageProps} />
+          </ToastProvider>
+        </QueryClientProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }

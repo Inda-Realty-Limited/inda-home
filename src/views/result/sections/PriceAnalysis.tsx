@@ -93,13 +93,13 @@ const PriceAnalysis: React.FC<Props> = ({
 
   return (
     <div className="w-full px-6">
-      <div className="bg-[#E5E5E533] rounded-2xl p-6 sm:p-8">
+      <div className="bg-white/80 border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-sm">
         <h3 className="text-2xl md:text-3xl font-bold mb-8 text-inda-teal">
           Property Price Analysis
         </h3>
 
         <div className="w-full max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-          <div className="bg-[#4EA8A114] rounded-xl p-6">
+          <div className="bg-[#4EA8A1]/5 border border-[#4EA8A1]/20 rounded-xl p-6 shadow-sm">
             <h4 className="text-base font-bold mb-2 text-[#101820]/70">
               Price
             </h4>
@@ -107,7 +107,7 @@ const PriceAnalysis: React.FC<Props> = ({
               {price ? `₦${price.toLocaleString()}` : "—"}
             </p>
           </div>
-          <div className="bg-[#4EA8A114] rounded-xl p-6">
+          <div className="bg-[#4EA8A1]/5 border border-[#4EA8A1]/20 rounded-xl p-6 shadow-sm">
             <h4 className="text-base font-bold mb-2 text-[#101820]/70">
               Fair Market Value
             </h4>
@@ -236,21 +236,45 @@ const PriceAnalysis: React.FC<Props> = ({
                         selectedBar?.series === "fmv" &&
                         selectedBar.index === i;
                       return (
-                        <rect
-                          key={`bf-${i}`}
-                          x={x}
-                          y={y}
-                          width={barW}
-                          height={h}
-                          fill={isSelected ? "#3b8f89" : "#4EA8A1"}
-                          rx={2}
-                          className="cursor-pointer"
-                          onClick={() =>
-                            setSelectedBar(
-                              isSelected ? null : { series: "fmv", index: i }
-                            )
-                          }
-                        />
+                        <g key={`bf-${i}`}>
+                          <rect
+                            x={x}
+                            y={y}
+                            width={barW}
+                            height={h}
+                            fill={isSelected ? "#3b8f89" : "#4EA8A1"}
+                            rx={2}
+                            className="cursor-pointer transition-all duration-200 hover:opacity-80"
+                            onClick={() =>
+                              setSelectedBar(
+                                isSelected ? null : { series: "fmv", index: i }
+                              )
+                            }
+                          />
+                          {isSelected && (
+                            <>
+                              <rect
+                                x={x - 4}
+                                y={y - 32}
+                                width={barW * 2 + 40}
+                                height={28}
+                                fill="#101820"
+                                rx={4}
+                                opacity={0.9}
+                              />
+                              <text
+                                x={x + barW / 2}
+                                y={y - 12}
+                                textAnchor="middle"
+                                fontSize={11}
+                                fill="#fff"
+                                fontWeight="600"
+                              >
+                                FMV: {formatCompact(v)}
+                              </text>
+                            </>
+                          )}
+                        </g>
                       );
                     })}
                     {priceSeries.map((v, i) => {
@@ -261,21 +285,45 @@ const PriceAnalysis: React.FC<Props> = ({
                         selectedBar?.series === "price" &&
                         selectedBar.index === i;
                       return (
-                        <rect
-                          key={`bp-${i}`}
-                          x={x}
-                          y={y}
-                          width={barW}
-                          height={h}
-                          fill={isSelected ? "#9aa4ae" : "#D1D5DB"}
-                          rx={2}
-                          className="cursor-pointer"
-                          onClick={() =>
-                            setSelectedBar(
-                              isSelected ? null : { series: "price", index: i }
-                            )
-                          }
-                        />
+                        <g key={`bp-${i}`}>
+                          <rect
+                            x={x}
+                            y={y}
+                            width={barW}
+                            height={h}
+                            fill={isSelected ? "#9aa4ae" : "#D1D5DB"}
+                            rx={2}
+                            className="cursor-pointer transition-all duration-200 hover:opacity-80"
+                            onClick={() =>
+                              setSelectedBar(
+                                isSelected ? null : { series: "price", index: i }
+                              )
+                            }
+                          />
+                          {isSelected && (
+                            <>
+                              <rect
+                                x={x - 4}
+                                y={y - 32}
+                                width={barW * 2 + 40}
+                                height={28}
+                                fill="#101820"
+                                rx={4}
+                                opacity={0.9}
+                              />
+                              <text
+                                x={x + barW / 2}
+                                y={y - 12}
+                                textAnchor="middle"
+                                fontSize={11}
+                                fill="#fff"
+                                fontWeight="600"
+                              >
+                                Price: {formatCompact(v)}
+                              </text>
+                            </>
+                          )}
+                        </g>
                       );
                     })}
                     {selectedBar &&

@@ -1,8 +1,8 @@
-import { login } from "@/api/auth";
 import { Button, Container, Footer, Input, Navbar } from "@/components";
 import { useToast } from "@/components/ToastProvider";
-import { setToken, setUser } from "@/helpers";
-import { useMutation } from "@tanstack/react-query";
+import { useAuth } from "@/contexts/AuthContext";
+import { createLoginLimiter } from "@/utils/rateLimiter";
+import { loginSchema, validateAndSanitize } from "@/utils/validation";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { FiLock, FiMail } from "react-icons/fi";
@@ -13,8 +13,12 @@ const SignIn: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchType, setSearchType] = useState("");
   const [returnTo, setReturnTo] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [blockTime, setBlockTime] = useState<number | null>(null);
   const toast = useToast();
   const router = useRouter();
+  const { login: authLogin } = useAuth();
 
   useEffect(() => {
     if (router.isReady) {
@@ -25,16 +29,50 @@ const SignIn: React.FC = () => {
     }
   }, [router.isReady, router.query]);
 
-  // Store token securely using setToken helper
-  const handleSuccess = (data: any) => {
-    if (data?.token) {
-      setToken(data.token);
-      if (data?.user) {
-        setUser(data.user);
-      }
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (blockTime && blockTime > 0) {
+      interval = setInterval(() => {
+        setBlockTime(prev => (prev && prev > 1000 ? prev - 1000 : null));
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [blockTime]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors({});
+
+    const validation = validateAndSanitize(loginSchema, { email, password });
+    
+    if (!validation.success) {
+      setErrors(validation.errors);
+      return;
+    }
+
+    const limiter = createLoginLimiter(email);
+    const limitCheck = limiter.checkLimit();
+
+    if (!limitCheck.allowed) {
+      const seconds = Math.ceil((limitCheck.blockedFor || limitCheck.resetIn) / 1000);
+      setBlockTime(limitCheck.blockedFor || limitCheck.resetIn);
+      toast.showToast(
+        `Too many failed attempts. Please wait ${seconds} seconds.`,
+        3000,
+        "error"
+      );
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      await authLogin(validation.data.email, validation.data.password);
+      
+      limiter.reset();
       toast.showToast("Sign in successful!", 2000, "success");
+      
       setTimeout(() => {
-        // Prefer explicit returnTo redirect, else fallback to search or home
         if (returnTo) {
           try {
             router.push(decodeURIComponent(returnTo));
@@ -52,28 +90,12 @@ const SignIn: React.FC = () => {
           router.push("/");
         }
       }, 800);
-    } else {
-      toast.showToast("Sign in failed: No token returned.", 2500, "error");
+    } catch (error: any) {
+      const errorMessage = error?.response?.data?.message || error?.message || "Sign in failed.";
+      toast.showToast(errorMessage, 2500, "error");
+    } finally {
+      setIsSubmitting(false);
     }
-  };
-
-  const handleError = (error: any) => {
-    toast.showToast(
-      error?.response?.data?.message || error?.message || "Sign in failed.",
-      2500,
-      "error"
-    );
-  };
-
-  const loginMutation = useMutation({
-    mutationFn: login,
-    onSuccess: handleSuccess,
-    onError: handleError,
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    loginMutation.mutate({ email, password });
   };
 
   return (
@@ -108,10 +130,18 @@ const SignIn: React.FC = () => {
                     type="email"
                     placeholder="Email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base"
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setErrors(prev => ({ ...prev, email: "" }));
+                    }}
+                    className={`w-full rounded-xl bg-[#F9F9F9] border ${
+                      errors.email ? "border-red-500" : "border-[#e0e0e0]"
+                    } focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base`}
                   />
                 </div>
+                {errors.email && (
+                  <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.email}</p>
+                )}
               </div>
               <div className="flex flex-col gap-1 sm:gap-2">
                 <label
@@ -129,10 +159,18 @@ const SignIn: React.FC = () => {
                     type="password"
                     placeholder="Password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base"
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setErrors(prev => ({ ...prev, password: "" }));
+                    }}
+                    className={`w-full rounded-xl bg-[#F9F9F9] border ${
+                      errors.password ? "border-red-500" : "border-[#e0e0e0]"
+                    } focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base`}
                   />
                 </div>
+                {errors.password && (
+                  <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.password}</p>
+                )}
               </div>
               <div className="flex justify-end">
                 <a
@@ -150,12 +188,17 @@ const SignIn: React.FC = () => {
                   Forgot password?
                 </a>
               </div>
+              {blockTime && blockTime > 0 && (
+                <div className="text-center text-sm text-red-600">
+                  Please wait {Math.ceil(blockTime / 1000)} seconds before trying again
+                </div>
+              )}
               <Button
-                className="w-full bg-[#4EA8A1] text-white py-2.5 sm:py-3 rounded-full font-semibold text-sm sm:text-base hover:bg-[#39948b] transition-all duration-200"
+                className="w-full bg-[#4EA8A1] text-white py-2.5 sm:py-3 rounded-full font-semibold text-sm sm:text-base hover:bg-[#39948b] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 type="submit"
-                disabled={loginMutation.isPending}
+                disabled={isSubmitting || (blockTime !== null && blockTime > 0)}
               >
-                {loginMutation.isPending ? "Signing in..." : "Continue"}
+                {isSubmitting ? "Signing in..." : "Continue"}
               </Button>
             </form>
             <span className="text-xs sm:text-sm text-gray-600 mt-4 sm:mt-6 text-center">

@@ -5,6 +5,8 @@
  * It provides type-safe access to env vars and fails fast if required variables are missing.
  */
 
+
+
 type EnvVarConfig = {
   key: string;
   required: boolean;
@@ -19,7 +21,6 @@ const envVars: Record<string, EnvVarConfig> = {
   ENCRYPTION_SECRET: {
     key: 'NEXT_PUBLIC_ENCRYPTION_SECRET',
     required: true,
-    defaultValue: 'inda_super_secret_key',
   },
   MAPBOX_TOKEN: {
     key: 'NEXT_PUBLIC_MAPBOX_TOKEN',
@@ -32,17 +33,14 @@ const envVars: Record<string, EnvVarConfig> = {
   MAP_DEFAULT_LAT: {
     key: 'NEXT_PUBLIC_MAP_DEFAULT_LAT',
     required: false,
-    defaultValue: '6.6018',
   },
   MAP_DEFAULT_LNG: {
     key: 'NEXT_PUBLIC_MAP_DEFAULT_LNG',
     required: false,
-    defaultValue: '3.3515',
   },
   MAP_DEFAULT_ZOOM: {
     key: 'NEXT_PUBLIC_MAP_DEFAULT_ZOOM',
     required: false,
-    defaultValue: '16',
   },
   RESULTS_MAP_EMBED_URL: {
     key: 'NEXT_PUBLIC_RESULTS_MAP_EMBED_URL',
@@ -51,12 +49,10 @@ const envVars: Record<string, EnvVarConfig> = {
   SV_DEMO_LAT: {
     key: 'NEXT_PUBLIC_SV_DEMO_LAT',
     required: false,
-    defaultValue: '40.758',
   },
   SV_DEMO_LNG: {
     key: 'NEXT_PUBLIC_SV_DEMO_LNG',
     required: false,
-    defaultValue: '-73.9855',
   },
   WHATSAPP_JOSHUA: {
     key: 'NEXT_PUBLIC_WHATSAPP_JOSHUA',
@@ -69,12 +65,10 @@ const envVars: Record<string, EnvVarConfig> = {
   LINK_TIKTOK: {
     key: 'NEXT_PUBLIC_LINK_TIKTOK',
     required: false,
-    defaultValue: 'https://www.tiktok.com/',
   },
   LINK_YOUTUBE: {
     key: 'NEXT_PUBLIC_LINK_YOUTUBE',
     required: false,
-    defaultValue: 'https://www.youtube.com/',
   },
   LINK_TWITTER: {
     key: 'NEXT_PUBLIC_LINK_TWITTER',
@@ -87,12 +81,10 @@ const envVars: Record<string, EnvVarConfig> = {
   LINK_INSTAGRAM: {
     key: 'NEXT_PUBLIC_LINK_INSTAGRAM',
     required: false,
-    defaultValue: 'https://instagram.com/',
   },
   LINK_LINKEDIN: {
     key: 'NEXT_PUBLIC_LINK_LINKEDIN',
     required: false,
-    defaultValue: 'https://www.linkedin.com/',
   },
   MICROSOFT_CLARITY_ID: {
     key: 'NEXT_PUBLIC_MICROSOFT_CLARITY_ID',
@@ -104,73 +96,177 @@ const envVars: Record<string, EnvVarConfig> = {
   },
 };
 
+// On the client, Next.js replaces direct property access like
+// process.env.NEXT_PUBLIC_... at build-time. Dynamic access
+// (process.env[key]) returns undefined in the browser.
+// This map ensures client-side reads work by using direct access.
+const clientEnv = {
+  NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
+  NEXT_PUBLIC_ENCRYPTION_SECRET: process.env.NEXT_PUBLIC_ENCRYPTION_SECRET,
+  NEXT_PUBLIC_MAPBOX_TOKEN: process.env.NEXT_PUBLIC_MAPBOX_TOKEN,
+  NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
+  NEXT_PUBLIC_MAP_DEFAULT_LAT: process.env.NEXT_PUBLIC_MAP_DEFAULT_LAT,
+  NEXT_PUBLIC_MAP_DEFAULT_LNG: process.env.NEXT_PUBLIC_MAP_DEFAULT_LNG,
+  NEXT_PUBLIC_MAP_DEFAULT_ZOOM: process.env.NEXT_PUBLIC_MAP_DEFAULT_ZOOM,
+  NEXT_PUBLIC_RESULTS_MAP_EMBED_URL: process.env.NEXT_PUBLIC_RESULTS_MAP_EMBED_URL,
+  NEXT_PUBLIC_SV_DEMO_LAT: process.env.NEXT_PUBLIC_SV_DEMO_LAT,
+  NEXT_PUBLIC_SV_DEMO_LNG: process.env.NEXT_PUBLIC_SV_DEMO_LNG,
+  NEXT_PUBLIC_WHATSAPP_JOSHUA: process.env.NEXT_PUBLIC_WHATSAPP_JOSHUA,
+  NEXT_PUBLIC_INDA_WHATSAPP: process.env.NEXT_PUBLIC_INDA_WHATSAPP,
+  NEXT_PUBLIC_LINK_TIKTOK: process.env.NEXT_PUBLIC_LINK_TIKTOK,
+  NEXT_PUBLIC_LINK_YOUTUBE: process.env.NEXT_PUBLIC_LINK_YOUTUBE,
+  NEXT_PUBLIC_LINK_TWITTER: process.env.NEXT_PUBLIC_LINK_TWITTER,
+  NEXT_PUBLIC_LINK_X: process.env.NEXT_PUBLIC_LINK_X,
+  NEXT_PUBLIC_LINK_INSTAGRAM: process.env.NEXT_PUBLIC_LINK_INSTAGRAM,
+  NEXT_PUBLIC_LINK_LINKEDIN: process.env.NEXT_PUBLIC_LINK_LINKEDIN,
+  NEXT_PUBLIC_MICROSOFT_CLARITY_ID: process.env.NEXT_PUBLIC_MICROSOFT_CLARITY_ID,
+  NEXT_PUBLIC_GA_MEASUREMENT_ID: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID,
+} as const;
+
 function getEnvVar(config: EnvVarConfig): string | undefined {
-  const value = process.env[config.key];
+  const value =
+    typeof window === 'undefined'
+      ? process.env[config.key]
+      : (clientEnv as Record<string, string | undefined>)[config.key];
   
-  if (!value && config.required && !config.defaultValue) {
+  // Debug logging
+  if (config.key === 'NEXT_PUBLIC_API_BASE_URL' && typeof window === 'undefined') {
+    console.log('[ENV] Getting API_BASE_URL:', {
+      key: config.key,
+      value,
+      type: typeof value,
+      processEnv: process.env.NEXT_PUBLIC_API_BASE_URL,
+    });
+  }
+  
+  // Check if value exists (not undefined or null), allow empty strings
+  if (value !== undefined && value !== null) {
+    return value;
+  }
+  
+  // If no value and it's required, throw error with helpful message
+  if (config.required && !config.defaultValue) {
     if (typeof window === 'undefined') {
-      console.error(`Missing required environment variable: ${config.key}`);
+      throw new Error(
+        `Missing required environment variable: ${config.key}\n` +
+        `Please add it to your .env.local file:\n` +
+        `${config.key}=your_value_here`
+      );
     }
     return undefined;
   }
   
-  return value || config.defaultValue;
+  return config.defaultValue;
 }
 
 function validateEnv() {
+  // Only validate on server-side at runtime (not during build)
+  if (typeof window !== 'undefined') return;
+  
   const missing: string[] = [];
   
   Object.entries(envVars).forEach(([, config]) => {
-    if (config.required && !process.env[config.key] && !config.defaultValue) {
+    if (config.required && !process.env[config.key]) {
       missing.push(config.key);
     }
   });
   
-  if (missing.length > 0 && typeof window === 'undefined') {
-    console.warn(
-      `⚠️  Missing required environment variables:\n  - ${missing.join('\n  - ')}\n` +
-      `Please check your .env.local file against .env.example`
-    );
+  if (missing.length > 0) {
+    const errorMessage = `
+
+The following required environment variables are not set:
+
+${missing.map(key => `  • ${key}`).join('\n')}
+
+Please add these to your .env.local file:
+
+${missing.map(key => `${key}=your_value_here`).join('\n')}
+
+    `.trim();
+    
+    console.error(errorMessage);
+    throw new Error('Missing required environment variables. Check console for details.');
   }
 }
 
-validateEnv();
-
 export const env = {
   api: {
-    baseUrl: getEnvVar(envVars.API_BASE_URL) || 'https://inda-core-backend-services.onrender.com',
+    get baseUrl() {
+      return getEnvVar(envVars.API_BASE_URL)!;
+    },
   },
   security: {
-    encryptionSecret: getEnvVar(envVars.ENCRYPTION_SECRET) || 'inda_super_secret_key',
+    get encryptionSecret() {
+      return getEnvVar(envVars.ENCRYPTION_SECRET)!;
+    },
   },
   maps: {
-    mapboxToken: getEnvVar(envVars.MAPBOX_TOKEN),
-    googleMapsApiKey: getEnvVar(envVars.GOOGLE_MAPS_API_KEY),
-    defaultLat: Number(getEnvVar(envVars.MAP_DEFAULT_LAT)),
-    defaultLng: Number(getEnvVar(envVars.MAP_DEFAULT_LNG)),
-    defaultZoom: Number(getEnvVar(envVars.MAP_DEFAULT_ZOOM)),
-    resultsEmbedUrl: getEnvVar(envVars.RESULTS_MAP_EMBED_URL),
-    streetViewDemoLat: Number(getEnvVar(envVars.SV_DEMO_LAT)),
-    streetViewDemoLng: Number(getEnvVar(envVars.SV_DEMO_LNG)),
+    get mapboxToken() {
+      return getEnvVar(envVars.MAPBOX_TOKEN);
+    },
+    get googleMapsApiKey() {
+      return getEnvVar(envVars.GOOGLE_MAPS_API_KEY);
+    },
+    get defaultLat() {
+      return Number(getEnvVar(envVars.MAP_DEFAULT_LAT)) || 6.6018;
+    },
+    get defaultLng() {
+      return Number(getEnvVar(envVars.MAP_DEFAULT_LNG)) || 3.3515;
+    },
+    get defaultZoom() {
+      return Number(getEnvVar(envVars.MAP_DEFAULT_ZOOM)) || 16;
+    },
+    get resultsEmbedUrl() {
+      return getEnvVar(envVars.RESULTS_MAP_EMBED_URL);
+    },
+    get streetViewDemoLat() {
+      return Number(getEnvVar(envVars.SV_DEMO_LAT)) || 40.758;
+    },
+    get streetViewDemoLng() {
+      return Number(getEnvVar(envVars.SV_DEMO_LNG)) || -73.9855;
+    },
   },
   contact: {
-    whatsappJoshua: getEnvVar(envVars.WHATSAPP_JOSHUA),
-    indaWhatsapp: getEnvVar(envVars.INDA_WHATSAPP),
+    get whatsappJoshua() {
+      return getEnvVar(envVars.WHATSAPP_JOSHUA);
+    },
+    get indaWhatsapp() {
+      return getEnvVar(envVars.INDA_WHATSAPP);
+    },
   },
   social: {
-    tiktok: getEnvVar(envVars.LINK_TIKTOK),
-    youtube: getEnvVar(envVars.LINK_YOUTUBE),
-    twitter: getEnvVar(envVars.LINK_TWITTER) || getEnvVar(envVars.LINK_X),
-    instagram: getEnvVar(envVars.LINK_INSTAGRAM),
-    linkedin: getEnvVar(envVars.LINK_LINKEDIN),
+    get tiktok() {
+      return getEnvVar(envVars.LINK_TIKTOK);
+    },
+    get youtube() {
+      return getEnvVar(envVars.LINK_YOUTUBE);
+    },
+    get twitter() {
+      return getEnvVar(envVars.LINK_TWITTER) || getEnvVar(envVars.LINK_X);
+    },
+    get instagram() {
+      return getEnvVar(envVars.LINK_INSTAGRAM);
+    },
+    get linkedin() {
+      return getEnvVar(envVars.LINK_LINKEDIN);
+    },
   },
   analytics: {
-    clarityId: getEnvVar(envVars.MICROSOFT_CLARITY_ID),
-    gaId: getEnvVar(envVars.GA_MEASUREMENT_ID),
+    get clarityId() {
+      return getEnvVar(envVars.MICROSOFT_CLARITY_ID);
+    },
+    get gaId() {
+      return getEnvVar(envVars.GA_MEASUREMENT_ID);
+    },
   },
-  isDevelopment: process.env.NODE_ENV === 'development',
-  isProduction: process.env.NODE_ENV === 'production',
-} as const;
+  get isDevelopment() {
+    return process.env.NODE_ENV === 'development';
+  },
+  get isProduction() {
+    return process.env.NODE_ENV === 'production';
+  },
+};
 
 export type Env = typeof env;
+
 

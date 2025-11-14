@@ -1,10 +1,4 @@
-import {
-  getToken,
-  getUser,
-  removeToken,
-  removeUser,
-  StoredUser,
-} from "@/helpers";
+import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import React, { useEffect, useRef, useState } from "react";
@@ -25,22 +19,12 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ variant }) => {
   const router = useRouter();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { user, isAuthenticated, logout: authLogout } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
-  const [user, setUser] = useState<StoredUser | null>(null);
   const [notificationCount, setNotificationCount] = useState(0);
   const profileRef = useRef<HTMLDivElement | null>(null);
-  useEffect(() => {
-    const token = getToken();
-    if (token) {
-      setIsLoggedIn(true);
-      const u = getUser();
-      if (u) setUser(u);
-    }
-  }, []);
-  // const isLoggedIn = typeof window !== "undefined" && !!getToken();
 
   // Close profile dropdown on outside click / ESC
   useEffect(() => {
@@ -65,19 +49,19 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
     };
   }, [profileOpen]);
 
-  const handleLogout = () => {
-    try {
-      removeToken();
-      removeUser();
-    } catch {}
-    setIsLoggedIn(false);
+  const handleLogout = async () => {
     setProfileOpen(false);
     setMobileProfileOpen(false);
     setMobileOpen(false);
-    router.push("/");
+    
+    try {
+      await authLogout();
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
-  if (isLoggedIn) {
+  if (isAuthenticated) {
     return (
       <>
         <XStack className="w-full flex items-center justify-between py-4 bg-gradient-to-r from-inda-dark/95 to-inda-dark/90 backdrop-blur-sm border-b border-white/5 h-[80px] md:h-[110px] px-4 md:pr-8">
