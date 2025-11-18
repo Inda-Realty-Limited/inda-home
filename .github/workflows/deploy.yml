@@ -20,7 +20,7 @@ jobs:
 
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no ubuntu@54.88.111.163 << 'EOF'
+          ssh -o StrictHostKeyChecking=no ubuntu@54.152.199.249 << 'EOF'
             cd inda-home
             git pull origin staging
             npm install
