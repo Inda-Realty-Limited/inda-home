@@ -1,6 +1,8 @@
 import { resetPassword as resetPasswordApi } from "@/api/auth";
 import { Button, Container, Footer, Input, Navbar } from "@/components";
 import { useToast } from "@/components/ToastProvider";
+import { resetPasswordSchema, validateAndSanitize } from "@/utils/validation";
+import { createFormSubmitLimiter } from "@/utils/rateLimiter";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
@@ -12,6 +14,7 @@ const ResetPassword: React.FC = () => {
   const [newPassword, setNewPassword] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchType, setSearchType] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const toast = useToast();
   const router = useRouter();
 
@@ -46,11 +49,29 @@ const ResetPassword: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    mutation.mutate({
-      email: email.trim().toLowerCase(),
-      code: code.trim(),
+    setErrors({});
+    
+    const validation = validateAndSanitize(resetPasswordSchema, {
+      email,
+      code,
       newPassword,
     });
+    
+    if (!validation.success) {
+      setErrors(validation.errors);
+      toast.showToast("Please fix the errors in the form", 2500, "error");
+      return;
+    }
+    
+    const limiter = createFormSubmitLimiter("reset-password");
+    const limitCheck = limiter.checkLimit();
+    
+    if (!limitCheck.allowed) {
+      toast.showToast("Please wait a moment before trying again", 2000, "error");
+      return;
+    }
+    
+    mutation.mutate(validation.data);
   };
 
   return (
@@ -88,10 +109,18 @@ const ResetPassword: React.FC = () => {
                     type="email"
                     placeholder="you@example.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base"
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setErrors(prev => ({ ...prev, email: "" }));
+                    }}
+                    className={`w-full rounded-xl bg-[#F9F9F9] border ${
+                      errors.email ? "border-red-500" : "border-[#e0e0e0]"
+                    } focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base`}
                   />
                 </div>
+                {errors.email && (
+                  <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.email}</p>
+                )}
               </div>
               <div className="flex flex-col gap-1 sm:gap-2">
                 <label
@@ -105,9 +134,17 @@ const ResetPassword: React.FC = () => {
                   type="text"
                   placeholder="6-digit code"
                   value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] focus:ring-2 focus:ring-[#4EA8A1] px-3 sm:px-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base"
+                  onChange={(e) => {
+                    setCode(e.target.value);
+                    setErrors(prev => ({ ...prev, code: "" }));
+                  }}
+                  className={`w-full rounded-xl bg-[#F9F9F9] border ${
+                    errors.code ? "border-red-500" : "border-[#e0e0e0]"
+                  } focus:ring-2 focus:ring-[#4EA8A1] px-3 sm:px-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base`}
                 />
+                {errors.code && (
+                  <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.code}</p>
+                )}
               </div>
               <div className="flex flex-col gap-1 sm:gap-2">
                 <label
@@ -125,10 +162,18 @@ const ResetPassword: React.FC = () => {
                     type="password"
                     placeholder="New password"
                     value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base"
+                    onChange={(e) => {
+                      setNewPassword(e.target.value);
+                      setErrors(prev => ({ ...prev, newPassword: "" }));
+                    }}
+                    className={`w-full rounded-xl bg-[#F9F9F9] border ${
+                      errors.newPassword ? "border-red-500" : "border-[#e0e0e0]"
+                    } focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base`}
                   />
                 </div>
+                {errors.newPassword && (
+                  <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.newPassword}</p>
+                )}
               </div>
               <Button
                 className="w-full bg-[#4EA8A1] text-white py-2.5 sm:py-3 rounded-full font-semibold text-sm sm:text-base hover:bg-[#39948b] transition-all duration-200"

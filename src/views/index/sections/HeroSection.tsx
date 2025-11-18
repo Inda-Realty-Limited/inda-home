@@ -1,5 +1,5 @@
 import { Input } from "@/components";
-import { getToken } from "@/helpers";
+import { useAuth } from "@/contexts/AuthContext";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/router";
 import React, { useEffect, useMemo, useRef, useState } from "react";
@@ -8,6 +8,7 @@ import { sampleData, searchTypes } from "../landingData";
 
 const HeroSection: React.FC = () => {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const [search, setSearch] = useState("");
   const [selectedSearchType, setSelectedSearchType] = useState(
     () => searchTypes.find((t) => t.id === "link") || searchTypes[0]
@@ -37,11 +38,10 @@ const HeroSection: React.FC = () => {
 
   const handleSearch = () => {
     if (selectedSearchType.id !== "link" || !isValidUrl(search)) return;
-    const token = getToken();
     const encoded = encodeURIComponent(search);
 
-    if (!token) {
-      router.push(`/auth?q=${encoded}&type=${selectedSearchType.id}`);
+    if (!isAuthenticated) {
+      router.push(`/auth/signup?q=${encoded}&type=${selectedSearchType.id}`);
       return;
     }
 

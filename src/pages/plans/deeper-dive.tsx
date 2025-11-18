@@ -1,7 +1,7 @@
 import { startListingPayment, uploadQuestionnaireFiles } from "@/api/payments";
 import { Container, Footer, Input, Navbar } from "@/components";
 import { useToast } from "@/components/ToastProvider";
-import { getUser, StoredUser } from "@/helpers";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   DueDiligenceQuestionnairePayload,
   QuestionnaireFileRef,
@@ -156,7 +156,7 @@ type TextInputEvent = React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>;
 const DeeperDiveWizardPage: React.FC = () => {
   const router = useRouter();
   const { showToast } = useToast();
-  const [user, setUser] = useState<StoredUser | null>(null);
+  const { user } = useAuth();
   const [stepIndex, setStepIndex] = useState(0);
   const [propertyDetails, setPropertyDetails] = useState<PropertyDetails>({
     address: "",
@@ -194,28 +194,26 @@ const DeeperDiveWizardPage: React.FC = () => {
   }>({});
 
   useEffect(() => {
-    const currentUser = getUser();
-    setUser(currentUser);
-    if (currentUser) {
+    if (user) {
       setBuyerInfo((prev) => ({
         fullName:
           prev.fullName && prev.fullName.trim().length > 0
             ? prev.fullName
-            : [currentUser.firstName, currentUser.lastName]
+            : [user.firstName, user.lastName]
                 .filter(Boolean)
                 .join(" ")
                 .trim(),
         email:
           prev.email && prev.email.trim().length > 0
             ? prev.email
-            : currentUser.email ?? "",
+            : user.email ?? "",
         phone:
           prev.phone && prev.phone.trim().length > 0
             ? prev.phone
-            : currentUser.phoneNumber ?? currentUser.phone ?? "",
+            : (user as any).phoneNumber ?? (user as any).phone ?? "",
       }));
     }
-  }, []);
+  }, [user]);
 
   const listingIdParam =
     typeof router.query?.listingId === "string"

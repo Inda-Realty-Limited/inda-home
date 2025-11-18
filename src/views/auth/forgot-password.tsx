@@ -1,6 +1,8 @@
 import { requestResetPassword } from "@/api/auth";
 import { Button, Container, Footer, Input, Navbar } from "@/components";
 import { useToast } from "@/components/ToastProvider";
+import { forgotPasswordSchema, validateAndSanitize } from "@/utils/validation";
+import { createFormSubmitLimiter } from "@/utils/rateLimiter";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
@@ -10,6 +12,7 @@ const ForgotPassword: React.FC = () => {
   const [email, setEmail] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchType, setSearchType] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const toast = useToast();
   const router = useRouter();
 
@@ -47,7 +50,24 @@ const ForgotPassword: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    mutation.mutate({ email: email.trim().toLowerCase() });
+    setErrors({});
+    
+    const validation = validateAndSanitize(forgotPasswordSchema, { email });
+    
+    if (!validation.success) {
+      setErrors(validation.errors);
+      return;
+    }
+    
+    const limiter = createFormSubmitLimiter("forgot-password");
+    const limitCheck = limiter.checkLimit();
+    
+    if (!limitCheck.allowed) {
+      toast.showToast("Please wait a moment before trying again", 2000, "error");
+      return;
+    }
+    
+    mutation.mutate({ email: validation.data.email });
   };
 
   return (
@@ -85,10 +105,18 @@ const ForgotPassword: React.FC = () => {
                     type="email"
                     placeholder="you@example.com"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base"
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                      setErrors(prev => ({ ...prev, email: "" }));
+                    }}
+                    className={`w-full rounded-xl bg-[#F9F9F9] border ${
+                      errors.email ? "border-red-500" : "border-[#e0e0e0]"
+                    } focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base`}
                   />
                 </div>
+                {errors.email && (
+                  <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.email}</p>
+                )}
               </div>
               <Button
                 className="w-full bg-[#4EA8A1] text-white py-2.5 sm:py-3 rounded-full font-semibold text-sm sm:text-base hover:bg-[#39948b] transition-all duration-200"

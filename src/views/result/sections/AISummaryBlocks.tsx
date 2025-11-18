@@ -12,22 +12,22 @@ const AISummaryBlocks: React.FC<Props> = ({ aiReport }) => {
     { key: "roi", label: "ROI" },
   ];
   return (
-    <div className="mt-8 pt-6 border-t border-gray-200 w-full px-4">
+    <div className="mt-8 pt-6 border-t border-gray-200 w-full px-6">
       <div className="flex items-center justify-between">
         <h4 className="text-lg lg:text-xl font-bold text-inda-teal">
-          AI Summary
+          Additional Insights
         </h4>
       </div>
       <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
         {items.map((it) => {
           const sec = ai?.[it.key] || {};
-          const badge = sec?.label || "—";
-          const summary = sec?.summary || "—";
+          const badge = sec?.label || "—df";
+          const summary = sec?.summary || "—df";
           const next = sec?.nextStep;
           return (
             <div
               key={it.key}
-              className="bg-[#F8F9FA] border border-gray-200 rounded-xl p-4"
+              className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow"
             >
               <div className="flex items-center justify-between mb-2">
                 <div className="font-semibold text-[#0A655E]">{it.label}</div>

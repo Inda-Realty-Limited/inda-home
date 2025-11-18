@@ -979,7 +979,7 @@ const ROICalculator: React.FC<Props> = (props) => {
           </div>
         </div>
 
-        {Array.isArray(aAny?.projections?.monthlyProjection) &&
+        {/* {Array.isArray(aAny?.projections?.monthlyProjection) &&
           aAny.projections.monthlyProjection.length > 0 && (
             <div className="mt-8">
               <h4 className="text-lg lg:text-xl font-bold text-inda-teal mb-3">
@@ -1001,7 +1001,7 @@ const ROICalculator: React.FC<Props> = (props) => {
                 ))}
               </div>
             </div>
-          )}
+          )} */}
       </motion.div>
     </div>
   );

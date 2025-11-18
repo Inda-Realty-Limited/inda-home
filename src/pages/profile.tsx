@@ -1,5 +1,7 @@
 import { Button, Container, Footer, Input, Navbar } from "@/components";
-import { getToken, getUser, StoredUser, updateUser } from "@/helpers";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import { useAuth } from "@/contexts/AuthContext";
+import { AuthUser } from "@/types/auth";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import React, { useCallback, useEffect, useState } from "react";
@@ -12,7 +14,7 @@ type FeedbackState = {
 
 type InfoTileTone = "default" | "success" | "danger";
 
-const mapUserToFormValues = (target: StoredUser): Partial<StoredUser> => ({
+const mapUserToFormValues = (target: AuthUser): Partial<AuthUser> => ({
   firstName: target.firstName ?? "",
   lastName: target.lastName ?? "",
   email: target.email ?? "",
@@ -68,32 +70,26 @@ const PreferenceHighlight: React.FC<{
 
 const ProfilePage: React.FC = () => {
   const router = useRouter();
-  const [user, setUser] = useState<StoredUser | null>(null);
+  const { user: authUser, setUser: setAuthUser, isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [formValues, setFormValues] = useState<Partial<StoredUser>>({});
+  const [formValues, setFormValues] = useState<Partial<AuthUser>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackState>(null);
 
   useEffect(() => {
-    // Client-side guard
-    const token = getToken();
-    if (!token) {
-      router.replace("/auth");
-      return;
+    if (isAuthenticated && authUser) {
+      setLoading(false);
     }
-    const u = getUser();
-    setUser(u);
-    setLoading(false);
-  }, [router]);
+  }, [isAuthenticated, authUser]);
 
   useEffect(() => {
-    if (user) {
-      setFormValues(mapUserToFormValues(user));
+    if (authUser) {
+      setFormValues(mapUserToFormValues(authUser));
     }
-  }, [user]);
+  }, [authUser]);
 
   const handleInputChange = useCallback(
-    (field: keyof StoredUser) =>
+    (field: keyof AuthUser) =>
       (
         event:
           | React.ChangeEvent<HTMLInputElement>
@@ -107,21 +103,22 @@ const ProfilePage: React.FC = () => {
   );
 
   const handleReset = useCallback(() => {
-    if (!user) return;
-    setFormValues(mapUserToFormValues(user));
+    if (!authUser) return;
+    setFormValues(mapUserToFormValues(authUser));
     setFeedback(null);
-  }, [user]);
+  }, [authUser]);
 
   const handleSave = useCallback(
     (event: React.FormEvent<HTMLFormElement>) => {
       event.preventDefault();
-      if (!user) return;
+      if (!authUser) return;
 
       setIsSaving(true);
       setFeedback(null);
 
       try {
-        const payload: Partial<StoredUser> = {
+        const updatedUser: AuthUser = {
+          ...authUser,
           firstName: (formValues.firstName ?? "").trim(),
           lastName: (formValues.lastName ?? "").trim(),
           email: (formValues.email ?? "").trim(),
@@ -129,12 +126,7 @@ const ProfilePage: React.FC = () => {
           todo: formValues.todo?.trim() ?? "",
         };
 
-        const updatedUser = updateUser(payload);
-        if (!updatedUser) {
-          throw new Error("Unable to update user");
-        }
-
-        setUser(updatedUser);
+        setAuthUser(updatedUser);
         setFormValues(mapUserToFormValues(updatedUser));
         setFeedback({
           type: "success",
@@ -149,11 +141,11 @@ const ProfilePage: React.FC = () => {
         setIsSaving(false);
       }
     },
-    [formValues, user]
+    [formValues, authUser, setAuthUser]
   );
 
   return (
-    <>
+    <ProtectedRoute>
       <Head>
         <title>My Profile • Inda</title>
       </Head>
@@ -173,7 +165,7 @@ const ProfilePage: React.FC = () => {
           </div>
           {loading ? (
             <div className="text-black/60 text-sm sm:text-base">Loading...</div>
-          ) : !user ? (
+          ) : !authUser ? (
             <div className="text-black/60 text-sm sm:text-base">
               No user data found.
             </div>
@@ -309,22 +301,22 @@ const ProfilePage: React.FC = () => {
                       icon={<FiCalendar className="text-base" />}
                       label="Joined"
                       value={
-                        user.createdAt
-                          ? new Date(user.createdAt).toLocaleDateString()
+                        authUser.createdAt
+                          ? new Date(authUser.createdAt).toLocaleDateString()
                           : "Not available"
                       }
                     />
                     <InfoTile
                       icon={
-                        user.isVerified ? (
+                        authUser.isVerified ? (
                           <FiCheckCircle className="text-base" />
                         ) : (
                           <FiXCircle className="text-base" />
                         )
                       }
                       label="Status"
-                      tone={user.isVerified ? "success" : "danger"}
-                      value={user.isVerified ? "Verified" : "Not Verified"}
+                      tone={authUser.isVerified ? "success" : "danger"}
+                      value={authUser.isVerified ? "Verified" : "Not Verified"}
                     />
                   </div>
                 </div>
@@ -366,7 +358,7 @@ const ProfilePage: React.FC = () => {
         </main>
         <Footer />
       </Container>
-    </>
+    </ProtectedRoute>
   );
 };
 

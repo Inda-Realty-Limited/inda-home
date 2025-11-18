@@ -23,8 +23,8 @@ const ProceedActions: React.FC<Props> = ({
   return (
     <div className="w-full px-6">
       <div className="rounded-lg p-6 sm:p-8">
-        <div className="rounded-xl py-8 sm:py-12 px-4 sm:px-8 bg-white/60">
-          <h3 className="text-2xl md:text-3xl font-bold mb-6 sm:mb-10 text-center">
+        <div className="rounded-xl py-8 sm:py-12 px-4 sm:px-8 bg-white/80 border border-gray-200 shadow-sm">
+          <h3 className="text-2xl md:text-3xl font-bold mb-6 sm:mb-10 text-center text-inda-teal">
             How would you like to proceed?
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 max-w-4xl mx-auto">
