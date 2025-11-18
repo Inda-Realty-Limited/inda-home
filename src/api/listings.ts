@@ -1,14 +1,15 @@
 import apiClient from ".";
+import { ComputedListingApiResponse, ComputedListing } from "@/types/listing";
 
-export interface ComputedListingByUrlResponse<T = any> {
+export interface ComputedListingByUrlResponse {
   status: string;
-  data: T;
+  data: ComputedListing;
 }
 
 export const getComputedListingByUrl = async (url: string) => {
-  const res = await apiClient.get<ComputedListingByUrlResponse>(
+  const res = await apiClient.get<ComputedListingApiResponse>(
     "/listings/computed/by-url",
     { params: { url } }
   );
-  return res.data;
+  return res.data.data;
 };

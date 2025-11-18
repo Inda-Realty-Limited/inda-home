@@ -1,6 +1,6 @@
 import { startListingPayment } from "@/api/payments";
 import PricingPlans from "@/components/inc/PricingPlans";
-import { getUser } from "@/helpers";
+import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
@@ -25,6 +25,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   startOnPaid,
 }) => {
   const router = useRouter();
+  const { user, isAuthenticated } = useAuth();
   const [isStartingPayment, setIsStartingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [showPaidPlans, setShowPaidPlans] = useState(!!startOnPaid);
@@ -62,8 +63,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         const withQuery = `${target}?listingUrl=${encodeURIComponent(
           listingUrl
         )}`;
-        const user = getUser();
-        if (!user) {
+        if (!isAuthenticated) {
           const rt = encodeURIComponent(withQuery);
           router.push(`/auth/signin?returnTo=${rt}`);
         } else {

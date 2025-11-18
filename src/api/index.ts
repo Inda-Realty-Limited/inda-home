@@ -1,24 +1,58 @@
-import { getToken, removeToken, removeUser } from "@/helpers";
+import { env } from "@/config/env";
 import axios, { AxiosResponse } from "axios";
+import CryptoJS from "crypto-js";
 
-// const BASE_URL = "https://api.staging.investinda.com";
-// const BASE_URL = "http://192.168.0.130:9009";
-const BASE_URL = "https://pcphc7xyrz.us-east-1.awsapprunner.com";
+// Debug: Log what baseURL is being used
+console.log('[API Client] Creating axios instance with baseURL:', env.api.baseUrl);
+console.log('[API Client] Raw env var:', process.env.NEXT_PUBLIC_API_BASE_URL);
 
 const apiClient = axios.create({
-  baseURL: BASE_URL,
+  baseURL: env.api.baseUrl,
+  withCredentials: false,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
+// Helper to get decrypted token from localStorage
+const getStoredToken = (): string | null => {
+  try {
+    const encrypted = localStorage.getItem("inda_token");
+    if (!encrypted) return null;
+    const bytes = CryptoJS.AES.decrypt(encrypted, env.security.encryptionSecret);
+    const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+    return decrypted || null;
+  } catch (e) {
+    return null;
+  }
+};
+
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value?: any) => void;
+  reject: (reason?: any) => void;
+}> = [];
+
+const processQueue = (error: any = null) => {
+  failedQueue.forEach(promise => {
+    if (error) {
+      promise.reject(error);
+    } else {
+      promise.resolve();
+    }
+  });
+  failedQueue = [];
+};
+
 apiClient.interceptors.request.use(
   (config) => {
-    const token = getToken();
+    // Add Authorization header with token from localStorage
+    const token = getStoredToken();
     if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token}`;
     }
-    if (process.env.NODE_ENV === "development") {
+    
+    if (env.isDevelopment) {
       console.log(
         `API Request: ${config.method?.toUpperCase() || "UNKNOWN"} ${
           config.url
@@ -32,7 +66,7 @@ apiClient.interceptors.request.use(
     return config;
   },
   (error) => {
-    if (process.env.NODE_ENV === "development") {
+    if (env.isDevelopment) {
       console.error("Request Interceptor Error:", error);
     }
     return Promise.reject(error);
@@ -41,7 +75,7 @@ apiClient.interceptors.request.use(
 
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
-    if (process.env.NODE_ENV === "development") {
+    if (env.isDevelopment) {
       console.log(`API Response: ${response.config.url}`, {
         status: response.status,
         data: response.data,
@@ -49,31 +83,70 @@ apiClient.interceptors.response.use(
     }
     return response;
   },
-  (error) => {
+  async (error) => {
+    const originalRequest = error.config;
+    
     if (error.response) {
-      if (process.env.NODE_ENV === "development") {
+      if (env.isDevelopment) {
         console.error("API Error:", {
           url: error.config?.url,
           status: error.response?.status,
           message: error.response?.data?.message || error.message,
         });
       }
+      
       const status = error.response.status;
-      if (status === 401 || status === 419) {
+      
+      if (status === 401 && !originalRequest._retry && originalRequest.url !== '/auth/refresh') {
+        if (isRefreshing) {
+          return new Promise((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+          })
+            .then(() => apiClient(originalRequest))
+            .catch(err => Promise.reject(err));
+        }
+        
+        originalRequest._retry = true;
+        isRefreshing = true;
+        
         try {
-          removeToken();
-          removeUser();
+          await axios.post(
+            `${env.api.baseUrl}/auth/refresh`,
+            {},
+            { withCredentials: true }
+          );
+          
+          isRefreshing = false;
+          processQueue();
+          return apiClient(originalRequest);
+        } catch (refreshError: any) {
+          isRefreshing = false;
+          processQueue(refreshError);
+          
           if (typeof window !== "undefined") {
-            window.dispatchEvent(new Event("inda:token-removed"));
-            // Prefer sign-in page; fallback to home
-            const redirectTo =
-              (error.response.data && error.response.data.redirectTo) ||
-              "/auth/signin";
-            if (window.location.pathname !== redirectTo) {
-              window.location.href = redirectTo;
+            window.dispatchEvent(new Event("inda:session-expired"));
+            const currentPath = window.location.pathname;
+            
+            if (!currentPath.startsWith("/auth")) {
+              const returnTo = encodeURIComponent(currentPath + window.location.search);
+              window.location.href = `/auth/signin?returnTo=${returnTo}`;
             }
           }
-        } catch {}
+          
+          return Promise.reject(refreshError);
+        }
+      }
+      
+      if (status === 401 && originalRequest.url === '/auth/refresh') {
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new Event("inda:session-expired"));
+          const currentPath = window.location.pathname;
+          
+          if (!currentPath.startsWith("/auth")) {
+            const returnTo = encodeURIComponent(currentPath + window.location.search);
+            window.location.href = `/auth/signin?returnTo=${returnTo}`;
+            }
+          }
       }
     }
     return Promise.reject(error);
