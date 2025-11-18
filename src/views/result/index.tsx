@@ -105,7 +105,7 @@ const calculateDataPoints = (data: ComputedListing): number => {
   if (snapshot?.agentName || snapshot?.agentCompanyName) points += 5;
   if (snapshot?.imageUrls && snapshot.imageUrls.length > 0) points += 10;
   if (snapshot?.description) points += 10;
-  if (snapshot?.amenities && snapshot.amenities.length > 0) points += 10;
+  if ((snapshot as any)?.amenities && (snapshot as any).amenities.length > 0) points += 10;
   
   console.log("Points after snapshot fields:", points);
   

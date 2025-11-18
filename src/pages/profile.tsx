@@ -1,7 +1,7 @@
 import { Button, Container, Footer, Input, Navbar } from "@/components";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
-import { AuthUser } from "@/types/auth";
+import { StoredUser } from "@/types/auth";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import React, { useCallback, useEffect, useState } from "react";
@@ -14,7 +14,7 @@ type FeedbackState = {
 
 type InfoTileTone = "default" | "success" | "danger";
 
-const mapUserToFormValues = (target: AuthUser): Partial<AuthUser> => ({
+const mapUserToFormValues = (target: StoredUser): Partial<StoredUser> => ({
   firstName: target.firstName ?? "",
   lastName: target.lastName ?? "",
   email: target.email ?? "",
@@ -72,7 +72,7 @@ const ProfilePage: React.FC = () => {
   const router = useRouter();
   const { user: authUser, setUser: setAuthUser, isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [formValues, setFormValues] = useState<Partial<AuthUser>>({});
+  const [formValues, setFormValues] = useState<Partial<StoredUser>>({});
   const [isSaving, setIsSaving] = useState(false);
   const [feedback, setFeedback] = useState<FeedbackState>(null);
 
@@ -89,7 +89,7 @@ const ProfilePage: React.FC = () => {
   }, [authUser]);
 
   const handleInputChange = useCallback(
-    (field: keyof AuthUser) =>
+    (field: keyof StoredUser) =>
       (
         event:
           | React.ChangeEvent<HTMLInputElement>
@@ -117,7 +117,7 @@ const ProfilePage: React.FC = () => {
       setFeedback(null);
 
       try {
-        const updatedUser: AuthUser = {
+        const updatedUser: StoredUser = {
           ...authUser,
           firstName: (formValues.firstName ?? "").trim(),
           lastName: (formValues.lastName ?? "").trim(),
