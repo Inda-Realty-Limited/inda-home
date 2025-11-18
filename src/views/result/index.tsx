@@ -679,16 +679,16 @@ const ResultPage: React.FC = () => {
       (result as any)?.status ||
       null;
 
-    const bedroomsDisplay = result?.snapshot?.bedrooms ?? "4df";
-    const bathroomsDisplay = result?.snapshot?.bathrooms ?? "5df";
-    const sizeDisplay = result?.snapshot?.sizeSqm ?? "450df";
+    const bedroomsDisplay = result?.snapshot?.bedrooms ?? "4";
+    const bathroomsDisplay = result?.snapshot?.bathrooms ?? "5";
+    const sizeDisplay = result?.snapshot?.sizeSqm ?? "450";
     const propertyTypeDisplay = result?.snapshot?.propertyTypeStd 
       ? result.snapshot.propertyTypeStd.toLowerCase() 
       : "duplexdf";
     const microlocationDisplay = result?.snapshot?.microlocationStd ?? "Lekki Phase 1df";
-    const fallbackTitleDisplay = (result as any)?.title || (result as any)?.snapshot?.title || "(no title)df";
-    const fallbackLocationDisplay = (result as any)?.location || (result as any)?.snapshot?.location || "(no location)df";
-    const fallbackListingDisplay = (result as any)?.listingUrl || (result as any)?.snapshot?.listingUrl || "N/Adf";
+    const fallbackTitleDisplay = (result as any)?.title || (result as any)?.snapshot?.title || "";
+    const fallbackLocationDisplay = (result as any)?.location || (result as any)?.snapshot?.location || "";
+    const fallbackListingDisplay = (result as any)?.listingUrl || (result as any)?.snapshot?.listingUrl || "";
 
     return (
       <Container
@@ -882,7 +882,7 @@ const ResultPage: React.FC = () => {
               clientRating={4.6}
               deliveryScore={result?.analytics?.seller?.sellerCredibilityScore || 60}
               indaScore={result?.indaScore?.finalScore || 75}
-              litigationHistory="No disputes founddf"
+              litigationHistory="No disputes found"
               registeredLocation={
                 result?.analytics?.seller?.agentRegistered ? "Registered with CAC" : "Not Registereddf"
               }
