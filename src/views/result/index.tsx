@@ -10,6 +10,7 @@ import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import {
   AISummaryBlocks,
   AmenitiesSection,
+  DataCoverageModal,
   DemandInsights,
   Disclaimer,
   ExecutiveSummary,
@@ -79,6 +80,69 @@ const getRelativeTime = (timestamp?: number | string | Date): string => {
   return `${diffYears} years ago`;
 };
 
+// Calculate data points captured from the listing
+const calculateDataPoints = (data: ComputedListing): number => {
+  console.log("=== calculateDataPoints called ===");
+  console.log("data:", data);
+  
+  let points = 0;
+  const snapshot = data?.snapshot;
+  const analytics = (data as any)?.analytics;
+  const aiReport = (data as any)?.aiReport;
+  
+  console.log("snapshot:", snapshot);
+  console.log("analytics:", analytics);
+  console.log("aiReport:", aiReport);
+  
+  // Snapshot fields (each worth 5 points)
+  if (snapshot?.title) points += 5;
+  if (snapshot?.priceNGN) points += 5;
+  if (snapshot?.bedrooms) points += 5;
+  if (snapshot?.bathrooms) points += 5;
+  if (snapshot?.sizeSqm) points += 5;
+  if (snapshot?.propertyTypeStd) points += 5;
+  if (snapshot?.microlocationStd) points += 5;
+  if (snapshot?.agentName || snapshot?.agentCompanyName) points += 5;
+  if (snapshot?.imageUrls && snapshot.imageUrls.length > 0) points += 10;
+  if (snapshot?.description) points += 10;
+  if (snapshot?.amenities && snapshot.amenities.length > 0) points += 10;
+  
+  console.log("Points after snapshot fields:", points);
+  
+  // Analytics fields (each worth 10 points)
+  if (analytics?.market?.fairValueNGN) points += 10;
+  if (analytics?.market?.historyMonthly && analytics.market.historyMonthly.length > 0) points += 15;
+  if (analytics?.price?.priceVsFmvPct) points += 10;
+  if (analytics?.seller?.sellerCredibilityScore) points += 10;
+  if (analytics?.yields?.longTermPct) points += 10;
+  if (analytics?.yields?.shortTermPct) points += 10;
+  
+  console.log("Points after analytics fields:", points);
+  
+  // AI Report fields (each worth 15 points)
+  if (aiReport?.marketValue?.summary) points += 15;
+  if (aiReport?.sellerCredibility?.summary) points += 15;
+  if (aiReport?.microlocation?.summary) points += 15;
+  if (aiReport?.roi?.summary) points += 15;
+  
+  console.log("Points after aiReport fields:", points);
+  
+  // Inda Score fields (worth 20 points)
+  if (data?.indaScore?.finalScore) points += 20;
+  if (data?.indaScore?.breakdown) points += 20;
+  
+  console.log("Points after indaScore fields:", points);
+  
+  // Reviews (worth 10 points)
+  if ((data as any)?.totalReviews) points += 10;
+  if ((data as any)?.reviews && (data as any).reviews.length > 0) points += 10;
+  
+  const finalPoints = Math.min(points, 500);
+  console.log("Final points (capped at 500):", finalPoints);
+  
+  return finalPoints;
+};
+
 const ResultPage: React.FC = () => {
   const router = useRouter();
   const user = useMemo(() => getUser(), []);
@@ -101,6 +165,10 @@ const ResultPage: React.FC = () => {
   const [isPaid, setIsPaid] = useState<boolean>(false);
   const [proceed, setProceed] = useState(false);
   const [startPaidFlow, setStartPaidFlow] = useState(false);
+
+  // Data coverage modal
+  const [showDataCoverageModal, setShowDataCoverageModal] = useState(false);
+  const [dataPoints, setDataPoints] = useState(0);
 
   // Trust score animation
   const [trustScore, setTrustScore] = useState<number | null>(null);
@@ -273,6 +341,13 @@ const ResultPage: React.FC = () => {
             } else {
               setResult(data);
               setNotFound(false);
+              // Calculate data points captured
+              const points = calculateDataPoints(data);
+              console.log("Setting dataPoints to:", points);
+              setDataPoints(points);
+              // Show data coverage modal
+              console.log("Opening data coverage modal");
+              setShowDataCoverageModal(true);
             }
           })
           .catch(() => {
@@ -298,6 +373,13 @@ const ResultPage: React.FC = () => {
                 } else {
                   setResult(data);
                   setNotFound(false);
+                  // Calculate data points captured
+                  const points = calculateDataPoints(data);
+                  console.log("Setting dataPoints to:", points);
+                  setDataPoints(points);
+                  // Show data coverage modal
+                  console.log("Opening data coverage modal");
+                  setShowDataCoverageModal(true);
                 }
               })
               .catch(() => {
@@ -597,6 +679,17 @@ const ResultPage: React.FC = () => {
       (result as any)?.status ||
       null;
 
+    const bedroomsDisplay = result?.snapshot?.bedrooms ?? "4df";
+    const bathroomsDisplay = result?.snapshot?.bathrooms ?? "5df";
+    const sizeDisplay = result?.snapshot?.sizeSqm ?? "450df";
+    const propertyTypeDisplay = result?.snapshot?.propertyTypeStd 
+      ? result.snapshot.propertyTypeStd.toLowerCase() 
+      : "duplexdf";
+    const microlocationDisplay = result?.snapshot?.microlocationStd ?? "Lekki Phase 1df";
+    const fallbackTitleDisplay = (result as any)?.title || (result as any)?.snapshot?.title || "(no title)df";
+    const fallbackLocationDisplay = (result as any)?.location || (result as any)?.snapshot?.location || "(no location)df";
+    const fallbackListingDisplay = (result as any)?.listingUrl || (result as any)?.snapshot?.listingUrl || "N/Adf";
+
     return (
       <Container
         noPadding
@@ -628,7 +721,7 @@ const ResultPage: React.FC = () => {
                   <div className="space-y-6">
                     <div>
                       <h2 className="text-4xl font-bold mb-3 text-gray-900">
-                        Hi {user?.firstName || "there"},
+                        Hi {user?.firstName || "theredf"},
                       </h2>
                       <p className="text-lg text-gray-700">
                         Here's what we found based on your search.
@@ -679,7 +772,7 @@ const ResultPage: React.FC = () => {
                               </svg>
                               <span className="text-sm font-normal text-white">Bedrooms</span>
                               <span className="bg-white px-2.5 py-0.5 rounded text-sm font-bold text-gray-900">
-                                {result?.snapshot?.bedrooms || 4}
+                                {bedroomsDisplay}
                               </span>
                             </div>
 
@@ -689,7 +782,7 @@ const ResultPage: React.FC = () => {
                               </svg>
                               <span className="text-sm font-normal text-white">Bathrooms</span>
                               <span className="bg-white px-2.5 py-0.5 rounded text-sm font-bold text-gray-900">
-                                {result?.snapshot?.bathrooms || 5}
+                                {bathroomsDisplay}
                               </span>
                             </div>
 
@@ -700,7 +793,7 @@ const ResultPage: React.FC = () => {
                               </svg>
                               <span className="text-sm font-normal text-white">Size</span>
                               <span className="bg-white px-2.5 py-0.5 rounded text-sm font-bold text-gray-900 whitespace-nowrap">
-                                {result?.snapshot?.sizeSqm || 450} m²
+                                {`${sizeDisplay} m²`}
                               </span>
                             </div>
 
@@ -736,13 +829,13 @@ const ResultPage: React.FC = () => {
 
                   <div className="space-y-3 pt-2">
                     <h3 className="text-2xl font-bold text-gray-900">
-                      {result?.snapshot?.title || result?.title || "Property Title"}
+                      {result?.snapshot?.title || result?.title || "Property Titledf"}
                     </h3>
                     <p className="text-base text-gray-700 flex items-center gap-2">
                       <svg width="18" height="18" viewBox="0 0 18 18" fill="none" className="text-inda-teal flex-shrink-0">
                         <path d="M9 9a2.5 2.5 0 100-5 2.5 2.5 0 000 5zM9 16s6.75-5.063 6.75-9a6.75 6.75 0 10-13.5 0c0 3.938 6.75 9 6.75 9z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
-                      {result?.snapshot?.microlocationStd || "Location"}
+                      {microlocationDisplay}
                     </p>
                   </div>
                 </div>
@@ -782,14 +875,17 @@ const ResultPage: React.FC = () => {
 
             {/* Seller Credibility */}
             <SellerCredibility
-              sellerName={result?.snapshot?.agentName || "Landmark Properties Ltd"}
+              sellerName={result?.snapshot?.agentName || "Landmark Properties Ltddf"}
               yearsInBusiness={5}
               completedProjects={20}
               onTimeDelivery={92}
               clientRating={4.6}
               deliveryScore={result?.analytics?.seller?.sellerCredibilityScore || 60}
-              litigationHistory="No disputes found"
-              registeredLocation={result?.analytics?.seller?.agentRegistered ? "Registered with CAC" : "Not Registered"}
+              indaScore={result?.indaScore?.finalScore || 75}
+              litigationHistory="No disputes founddf"
+              registeredLocation={
+                result?.analytics?.seller?.agentRegistered ? "Registered with CAC" : "Not Registereddf"
+              }
             />
 
             {/* Property Price Analysis with Interactive Chart */}
@@ -810,6 +906,7 @@ const ResultPage: React.FC = () => {
               marketPositionPct={marketPositionPct}
               selectedBar={selectedBar}
               setSelectedBar={setSelectedBar}
+              dataPoints={dataPoints}
             />
 
             {/* Price Analysis AI Summary */}
@@ -910,11 +1007,7 @@ const ResultPage: React.FC = () => {
 
             {/* Executive Summary */}
             <ExecutiveSummary
-              propertyDescription={`This ${result?.snapshot?.bedrooms || 4}-bedroom ${
-                result?.snapshot?.propertyTypeStd?.toLowerCase() || "duplex"
-              } in ${
-                result?.snapshot?.microlocationStd || "Lekki Phase 1"
-              } presents a`}
+              propertyDescription={`This ${bedroomsDisplay}-bedroom ${propertyTypeDisplay} in ${microlocationDisplay} presents a`}
               investmentOpportunity="solid investment opportunity"
               indaScore={result?.indaScore?.finalScore || 75}
               indaScoreMax={100}
@@ -924,7 +1017,7 @@ const ResultPage: React.FC = () => {
               priceVarianceAmount={
                 result?.analytics?.price?.priceVsFmvAmountNGN
                   ? `₦${(result.analytics.price.priceVsFmvAmountNGN / 1000000).toFixed(0)}M`
-                  : "₦135M"
+                  : "₦135Mdf"
               }
             />
 
@@ -940,34 +1033,22 @@ const ResultPage: React.FC = () => {
               onBuyWithInda={() =>
                 openWhatsApp(
                   `Hello Inda team, I'm interested in buying this property with Inda.\n\nProperty: ${
-                    (result as any)?.title ||
-                    (result as any)?.snapshot?.title ||
-                    "(no title)"
+                    fallbackTitleDisplay
                   }\nLocation: ${
-                    (result as any)?.location ||
-                    (result as any)?.snapshot?.location ||
-                    "(no location)"
+                    fallbackLocationDisplay
                   }\nListing: ${
-                    (result as any)?.listingUrl ||
-                    (result as any)?.snapshot?.listingUrl ||
-                    "N/A"
+                    fallbackListingDisplay
                   }\n\nPlease share the next steps to proceed with a purchase.`
                 )
               }
               onFinanceWithInda={() =>
                 openWhatsApp(
                   `Hello Inda team, I'd like to finance this property via Inda.\n\nProperty: ${
-                    (result as any)?.title ||
-                    (result as any)?.snapshot?.title ||
-                    "(no title)"
+                    fallbackTitleDisplay
                   }\nLocation: ${
-                    (result as any)?.location ||
-                    (result as any)?.snapshot?.location ||
-                    "(no location)"
+                    fallbackLocationDisplay
                   }\nListing: ${
-                    (result as any)?.listingUrl ||
-                    (result as any)?.snapshot?.listingUrl ||
-                    "N/A"
+                    fallbackListingDisplay
                   }\n\nPlease guide me through the next steps.`
                 )
               }
@@ -979,6 +1060,20 @@ const ResultPage: React.FC = () => {
           </div>
         </main>
         <Footer />
+        
+        {/* Data Coverage Modal */}
+        <DataCoverageModal
+          isOpen={showDataCoverageModal}
+          onClose={() => setShowDataCoverageModal(false)}
+          onUnlock={() => {
+            setShowDataCoverageModal(false);
+            // Optionally trigger payment modal or other actions
+          }}
+          dataPoints={dataPoints}
+          maxDataPoints={500}
+          listingUrl={result?.listingUrl || result?.snapshot?.listingUrl}
+        />
+        
         {proceed && (
           <PaymentModal
             isOpen={proceed}

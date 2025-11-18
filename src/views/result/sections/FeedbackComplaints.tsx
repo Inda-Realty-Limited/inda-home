@@ -172,7 +172,7 @@ const FeedbackComplaints: React.FC<Props> = ({
                   // Handle both API and legacy review formats
                   const isApiReview = 'ratings' in r && typeof r.ratings === 'object';
                   const reviewerName = isApiReview ? r.reviewer?.name : r.reviewer;
-                  const reviewerInitials = isApiReview ? r.reviewer?.initials : (reviewerName || "R").charAt(0).toUpperCase();
+                  const reviewerInitials = isApiReview ? r.reviewer?.initials : (reviewerName || "Rdf").charAt(0).toUpperCase();
                   const rating = isApiReview ? r.ratings?.averageRating : r.rating;
                   const content = isApiReview ? r.content : r.content;
                   const location = isApiReview ? undefined : r.location;
@@ -198,7 +198,7 @@ const FeedbackComplaints: React.FC<Props> = ({
                               </div>
                               <div>
                                 <h4 className="font-semibold text-[#0A1A22] text-base">
-                                  {reviewerName || "Anonymous"}
+                                  {reviewerName || "Anonymousdf"}
                                 </h4>
                                 {location && (
                                   <p className="text-xs text-gray-500 flex items-center gap-1">

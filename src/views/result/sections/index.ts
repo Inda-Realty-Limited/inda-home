@@ -4,6 +4,7 @@ export { default as AISummaryBlocks } from "./AISummaryBlocks";
 export { default as AmenitiesSection } from "./AmenitiesSection";
 export { AmenitySection } from "./AmenitySection";
 export type { AmenityItem, AmenitySectionProps } from "./AmenitySection";
+export { default as DataCoverageModal } from "./DataCoverageModal";
 export { default as DemandInsights } from "./DemandInsights";
 export { default as Disclaimer } from "./Disclaimer";
 export { default as ExecutiveSummary } from "./ExecutiveSummary";

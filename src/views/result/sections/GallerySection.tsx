@@ -134,11 +134,11 @@ const GallerySection: React.FC<Props> = ({ imageUrls, isHeaderGallery = false })
                 className="flex-shrink-0 bg-[#DDECEB] p-4 rounded-3xl"
               >
                 <div className="w-72 h-48 md:w-88 md:h-56 lg:w-96 lg:h-64 rounded-2xl overflow-hidden">
-                  <img
-                    src={url}
-                    alt={`property-${idx}`}
-                    className="w-full h-full object-cover"
-                  />
+                <img
+                  src={url}
+                  alt={`property-${idx}`}
+                  className="w-full h-full object-cover"
+                />
                 </div>
               </div>
             ))

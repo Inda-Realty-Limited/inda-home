@@ -154,15 +154,30 @@ const PropertyReviewModal: React.FC<Props> = ({
     } catch (error: any) {
       console.error("Failed to submit review:", error);
       
+      // Extract error message from various possible response formats
+      const errorMessage = 
+        error.response?.data?.message || 
+        error.response?.data?.error || 
+        error.message || 
+        "Failed to submit review. Please try again.";
+      
       // Handle specific error cases
       if (error.response?.status === 429) {
-        toast.error(error.response.data.message || "You've reached your review limit for today");
+        toast.error(errorMessage);
       } else if (error.response?.status === 401) {
         toast.error("Please log in to submit a review");
       } else if (error.response?.status === 400) {
-        toast.error(error.response.data.message || "Please check your review details");
+        // Check if it's the "one review per day" error
+        if (errorMessage.toLowerCase().includes("one review per property per day")) {
+          toast.error("You can only submit one review per property per day");
+        } else {
+          toast.error(errorMessage);
+        }
+      } else if (error.response?.status === 409) {
+        // Conflict - duplicate review
+        toast.error(errorMessage);
       } else {
-        toast.error(error.message || "Failed to submit review. Please try again.");
+        toast.error(errorMessage);
       }
     } finally {
       setIsSubmitting(false);
@@ -170,7 +185,7 @@ const PropertyReviewModal: React.FC<Props> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} maxWidth="max-w-2xl">
+    <Modal isOpen={isOpen} onClose={onClose} maxWidth="2xl">
       <div className="p-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-2">
           Leave a Property Review

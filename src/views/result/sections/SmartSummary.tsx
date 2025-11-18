@@ -19,7 +19,7 @@ const SmartSummary: React.FC<Props> = ({
   listingStatus,
 }) => {
   const sellerName =
-    result?.snapshot?.agentCompanyName || result?.snapshot?.agentName || "—";
+    result?.snapshot?.agentCompanyName || result?.snapshot?.agentName || "—df";
   const sellerProfileUrl =
     (result?.snapshot as any)?.agentCompanyUrl ||
     (result?.snapshot as any)?.agentUrl ||
@@ -53,7 +53,6 @@ const SmartSummary: React.FC<Props> = ({
             <div className="bg-[#4EA8A114] border-b border-gray-200">
               <div className="grid grid-cols-3 gap-8 py-5 px-6 items-center">
                 <div className="flex items-center gap-3">
-                  <SellerIcon width={24} height={24} />
                   <span className="text-sm text-gray-900">Seller</span>
                 </div>
                 <div className="text-sm text-gray-700">{sellerName}</div>
@@ -74,7 +73,6 @@ const SmartSummary: React.FC<Props> = ({
             <div className="bg-[#4EA8A114] border-b border-gray-200">
               <div className="grid grid-cols-3 gap-8 py-5 px-6 items-center">
                 <div className="flex items-center gap-3">
-                  <DeliveryIcon width={24} height={20} />
                   <span className="text-sm text-gray-900">Delivery Date</span>
                 </div>
                 <div className="text-sm text-gray-700">{deliveryLabel}</div>
@@ -85,12 +83,11 @@ const SmartSummary: React.FC<Props> = ({
             <div className="bg-[#4EA8A114] rounded-b-2xl">
               <div className="grid grid-cols-3 gap-8 py-5 px-6 items-center">
                 <div className="flex items-center gap-3">
-                  <StatusIcon width={24} height={24} />
                   <span className="text-sm text-gray-900">Status</span>
                 </div>
-                <div className="text-sm text-gray-700">{listingStatus || "—"}</div>
+                <div className="text-sm text-gray-700">{listingStatus || "—df"}</div>
                 <div className="text-sm text-gray-700">
-                  {listingStatus ? "Off-Plan/Completed" : "—"}
+                  {listingStatus ? "Off-Plan/Completed" : "—df"}
                 </div>
               </div>
             </div>
@@ -155,13 +152,13 @@ const SmartSummary: React.FC<Props> = ({
               <div>
                 <span className="text-sm text-gray-500">Details: </span>
                 <span className="font-semibold text-base">
-                  {listingStatus || "—"}
+                  {listingStatus || "—df"}
                 </span>
               </div>
               <div>
                 <span className="text-sm text-gray-500">Status: </span>
                 <span className="text-sm">
-                  {listingStatus ? "From listing/docs." : "—"}
+                  {listingStatus ? "From listing/docs." : "—df"}
                 </span>
               </div>
             </div>

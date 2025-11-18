@@ -145,8 +145,8 @@ apiClient.interceptors.response.use(
           if (!currentPath.startsWith("/auth")) {
             const returnTo = encodeURIComponent(currentPath + window.location.search);
             window.location.href = `/auth/signin?returnTo=${returnTo}`;
+            }
           }
-        }
       }
     }
     return Promise.reject(error);

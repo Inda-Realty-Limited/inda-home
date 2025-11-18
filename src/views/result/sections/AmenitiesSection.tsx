@@ -160,7 +160,7 @@ const AmenitiesSection: React.FC<Props> = ({ result }) => {
                   </svg>
                   {/* Amenity name */}
                   <span className="text-sm text-gray-900">{amenity}</span>
-                </div>
+                  </div>
               ))}
             </div>
           </div>

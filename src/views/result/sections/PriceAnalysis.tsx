@@ -13,6 +13,7 @@ type Props = {
   setSelectedBar: (
     v: null | { series: "fmv" | "price"; index: number }
   ) => void;
+  dataPoints?: number;
 };
 
 const formatCompact = (n: number) => {
@@ -39,6 +40,7 @@ const PriceAnalysis: React.FC<Props> = ({
   marketPositionPct,
   selectedBar,
   setSelectedBar,
+  dataPoints,
 }) => {
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const [chartWidth, setChartWidth] = useState<number>(0);
@@ -98,23 +100,32 @@ const PriceAnalysis: React.FC<Props> = ({
           Property Price Analysis
         </h3>
 
-        <div className="w-full max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
-          <div className="bg-[#4EA8A1]/5 border border-[#4EA8A1]/20 rounded-xl p-6 shadow-sm">
-            <h4 className="text-base font-bold mb-2 text-[#101820]/70">
-              Price
-            </h4>
-            <p className="text-2xl font-bold text-inda-teal">
-              {price ? `₦${price.toLocaleString()}` : "—"}
-            </p>
+        <div className="w-full max-w-4xl mx-auto mb-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="bg-[#4EA8A1]/5 border border-[#4EA8A1]/20 rounded-xl p-6 shadow-sm">
+              <h4 className="text-base font-bold mb-2 text-[#101820]/70">
+                Price
+              </h4>
+              <p className="text-2xl font-bold text-inda-teal">
+                {price ? `₦${price.toLocaleString()}` : "—"}
+              </p>
+            </div>
+            <div className="bg-[#4EA8A1]/5 border border-[#4EA8A1]/20 rounded-xl p-6 shadow-sm">
+              <h4 className="text-base font-bold mb-2 text-[#101820]/70">
+                Fair Market Value
+              </h4>
+              <p className="text-2xl font-bold text-inda-teal">
+                {fmv ? `₦${fmv.toLocaleString()}` : "—"}
+              </p>
+            </div>
           </div>
-          <div className="bg-[#4EA8A1]/5 border border-[#4EA8A1]/20 rounded-xl p-6 shadow-sm">
-            <h4 className="text-base font-bold mb-2 text-[#101820]/70">
-              Fair Market Value
-            </h4>
-            <p className="text-2xl font-bold text-inda-teal">
-              {fmv ? `₦${fmv.toLocaleString()}` : "—"}
-            </p>
-          </div>
+          {dataPoints && (
+            <div className="flex justify-end mt-3">
+              <p className="text-xs text-inda-teal">
+                Verified using {dataPoints} data points
+              </p>
+            </div>
+          )}
         </div>
 
         <div className="bg-transparent rounded-xl p-4 sm:p-6 mb-6">
@@ -126,7 +137,7 @@ const PriceAnalysis: React.FC<Props> = ({
                 1
               )}% in the last 6 months`}</p>
               <p className="text-xs text-gray-500">
-                {windowLabel || "Sales (last 12 months)"}
+                {windowLabel || "Sales (last 12 months)df"}
               </p>
             </div>
             <div className="bg-transparent border border-gray-200 rounded-lg px-4 py-3 ">

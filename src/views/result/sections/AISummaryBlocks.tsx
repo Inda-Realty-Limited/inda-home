@@ -21,8 +21,8 @@ const AISummaryBlocks: React.FC<Props> = ({ aiReport }) => {
       <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
         {items.map((it) => {
           const sec = ai?.[it.key] || {};
-          const badge = sec?.label || "—";
-          const summary = sec?.summary || "—";
+          const badge = sec?.label || "—df";
+          const summary = sec?.summary || "—df";
           const next = sec?.nextStep;
           return (
             <div

@@ -13,22 +13,22 @@ type Props = {
 };
 
 const ExecutiveSummary: React.FC<Props> = ({
-  propertyDescription = "This 4-bedroom duplex in Lekki Phase 1 presents a",
-  investmentOpportunity = "solid investment opportunity",
+  propertyDescription = "This 4-bedroom duplex in Lekki Phase 1 presents adf",
+  investmentOpportunity = "solid investment opportunitydf",
   indaScore = 75,
   indaScoreMax = 100,
   priceVariance = 11,
   priceVarianceAmount = "₦135M",
   keyStrengths = [
-    "Strong seller credibility (92% on-time delivery)",
-    "High-demand microlocation (+8% YoY growth)",
-    "Attractive rental yields (8.5% short-let, 6.2% long-let)",
-    "Area supported by strong infrastructure expansion",
+    "Strong seller credibility (92% on-time delivery)df",
+    "High-demand microlocation (+8% YoY growth)df",
+    "Attractive rental yields (8.5% short-let, 6.2% long-let)df",
+    "Area supported by strong infrastructure expansiondf",
   ],
   riskFactors = [
-    "Slight oversupply (1.2× market ratio)",
-    "Asking price exceeds fair market range",
-    "Moderate inflation exposure in microlocation zone",
+    "Slight oversupply (1.2× market ratio)df",
+    "Asking price exceeds fair market rangedf",
+    "Moderate inflation exposure in microlocation zonedf",
   ],
 }) => {
   return (

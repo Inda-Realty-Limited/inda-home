@@ -8,19 +8,21 @@ type Props = {
   onTimeDelivery?: number;
   clientRating?: number;
   deliveryScore?: number;
+  indaScore?: number;
   litigationHistory?: string;
   registeredLocation?: string;
 };
 
 const SellerCredibility: React.FC<Props> = ({
-  sellerName = "Landmark Properties Ltd",
+  sellerName = "Landmark Properties Ltddf",
   yearsInBusiness = 8,
   completedProjects = 24,
   onTimeDelivery = 92,
   clientRating = 4.6,
   deliveryScore = 60,
-  litigationHistory = "1 Minor Dispute found",
-  registeredLocation = "Redan, CAC",
+  indaScore = 75,
+  litigationHistory = "1 Minor Dispute founddf",
+  registeredLocation = "Redan, CACdf",
 }) => {
   // Get initials from seller name
   const getInitials = (name: string) => {
@@ -78,16 +80,16 @@ const SellerCredibility: React.FC<Props> = ({
 
         {/* Credibility Metrics */}
         <div className="space-y-4">
-          {/* Delivery Score */}
+          {/* Inda Score */}
           <div className="flex items-center justify-between py-4 border-b border-gray-200">
             <div className="flex items-center gap-3">
               <FaShieldAlt className="text-gray-600 text-xl" />
               <span className="text-base sm:text-lg font-semibold text-[#101820]">
-                Delivery Score
+                Inda Score
               </span>
             </div>
             <span className="px-4 py-2 bg-[#4EA8A1] text-white rounded-full text-sm font-semibold">
-              {deliveryScore}%
+              {indaScore}%
             </span>
           </div>
 
