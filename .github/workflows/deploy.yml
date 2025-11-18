@@ -21,6 +21,12 @@ jobs:
       - name: Deploy to EC2
         run: |
           ssh -o StrictHostKeyChecking=no ubuntu@54.152.199.249 << 'EOF'
+
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+          export PATH="$PATH:$HOME/.npm-global/bin"
+
             cd inda-home
             git pull origin staging
             npm install
