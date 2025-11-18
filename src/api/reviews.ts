@@ -162,9 +162,11 @@ export const submitReview = async (
     }
 
     // Media files
-    reviewData.media.forEach((file) => {
-      formData.append("media", file);
-    });
+    if (reviewData.media && reviewData.media.length > 0) {
+      reviewData.media.forEach((file) => {
+        formData.append("media", file);
+      });
+    }
 
     // Axios automatically sets correct Content-Type with boundary
     const response = await apiClient.post<SubmitReviewResponse>("/reviews", formData);
