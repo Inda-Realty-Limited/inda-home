@@ -2,10 +2,10 @@ import { getComputedListingByUrl } from "@/api/listings";
 import { getFreeViewStatus, hasPaid, verifyPayment } from "@/api/payments";
 import { Container, Footer, Navbar } from "@/components";
 import PaymentModal from "@/components/inc/PaymentModal";
-import { getUser } from "@/helpers";
+import { useAuth } from "@/contexts/AuthContext";
 import { ComputedListing } from "@/types/listing";
 import { useRouter } from "next/router";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import {
   AISummaryBlocks,
@@ -145,7 +145,7 @@ const calculateDataPoints = (data: ComputedListing): number => {
 
 const ResultPage: React.FC = () => {
   const router = useRouter();
-  const user = useMemo(() => getUser(), []);
+  const { user, isAuthenticated } = useAuth();
 
   // Query
   const [searchQuery, setSearchQuery] = useState("");
@@ -316,7 +316,7 @@ const ResultPage: React.FC = () => {
     setSearchType((type as string) || "");
 
    // Redirect unauthenticated users to signup, preserving the intended instant report
-    if (query && (type as string) === "link" && !user) {
+    if (query && (type as string) === "link" && !isAuthenticated) {
       router.replace(`/auth/signup?q=${encodeURIComponent(query)}&type=link`);
       return;
     }
@@ -330,7 +330,7 @@ const ResultPage: React.FC = () => {
         setTimeout(() => setCurrentStep(3), 3600),
       ];
       // Instant reports are free for authenticated users
-      if (user) {
+      if (isAuthenticated) {
         setIsPaid(true);
         getComputedListingByUrl(query)
           .then((res) => {

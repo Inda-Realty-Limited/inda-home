@@ -8,7 +8,7 @@ console.log('[API Client] Raw env var:', process.env.NEXT_PUBLIC_API_BASE_URL);
 
 const apiClient = axios.create({
   baseURL: env.api.baseUrl,
-  withCredentials: false,
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },
