@@ -2,19 +2,20 @@ import { Input } from "@/components";
 import { useAuth } from "@/contexts/AuthContext";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/router";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { BiSearchAlt2 } from "react-icons/bi";
 import { sampleData, searchTypes } from "../landingData";
 
 const HeroSection: React.FC = () => {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
   const [search, setSearch] = useState("");
   const [selectedSearchType, setSelectedSearchType] = useState(
     () => searchTypes.find((t) => t.id === "link") || searchTypes[0]
   );
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSearchActive, setIsSearchActive] = useState(false);
+  const [searchPending, setSearchPending] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const INSTANT_TYPES = useMemo(() => new Set(["link"]), []);
@@ -36,8 +37,14 @@ const HeroSection: React.FC = () => {
     [search]
   );
 
-  const handleSearch = () => {
+  const handleSearch = useCallback(() => {
     if (selectedSearchType.id !== "link" || !isValidUrl(search)) return;
+
+    if (isLoading) {
+      setSearchPending(true);
+      return;
+    }
+
     const encoded = encodeURIComponent(search);
 
     if (!isAuthenticated) {
@@ -46,8 +53,15 @@ const HeroSection: React.FC = () => {
     }
 
     router.push(`/result?q=${encoded}&type=${selectedSearchType.id}`);
-  };
+  }, [search, selectedSearchType.id, isLoading, isAuthenticated, router]);
 
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && searchPending) {
+      handleSearch();
+      setSearchPending(false);
+    }
+  }, [isLoading, isAuthenticated, searchPending, handleSearch]);
+  
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (!dropdownRef.current) return;
