@@ -123,7 +123,7 @@ const PropertyReviewModal: React.FC<Props> = ({
         detailedFeedback: formData.detailedFeedback,
         tags: allTags,
         transactionDate: formData.transactionDate || undefined,
-        transactionType: formData.transactionType || undefined,
+        transactionType: (formData.transactionType as "Bought" | "Visited" | "Inquired Only") || undefined,
         media: formData.uploadedFiles.length > 0 ? formData.uploadedFiles : undefined,
       });
 
@@ -268,19 +268,22 @@ const PropertyReviewModal: React.FC<Props> = ({
                 { label: "Value for Money", field: "valueForMoney" },
                 { label: "Location Accuracy", field: "locationAccuracy" },
                 { label: "Disclosed Hidden Fees", field: "disclosedHiddenFees" },
-              ].map(({ label, field }) => (
+              ].map(({ label, field }) => {
+                const value = formData[field as keyof typeof formData];
+                const displayValue = typeof value === 'number' ? value : 0;
+                return (
                 <div key={field}>
                   <div className="flex justify-between items-center mb-2">
                     <label className="text-sm font-medium text-gray-900">{label}</label>
                     <span className="text-sm font-semibold text-gray-700">
-                      {formData[field as keyof typeof formData]}
+                      {displayValue}
                     </span>
                   </div>
                   <input
                     type="range"
                     min="1"
                     max="5"
-                    value={formData[field as keyof typeof formData] as number}
+                    value={displayValue}
                     onChange={(e) => handleSliderChange(field, parseInt(e.target.value))}
                     className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb-teal"
                     style={{
@@ -292,7 +295,8 @@ const PropertyReviewModal: React.FC<Props> = ({
                     }}
                   />
                 </div>
-              ))}
+              );
+              })}
             </div>
           </div>
 

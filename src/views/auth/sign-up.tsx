@@ -527,19 +527,19 @@ const Signup: React.FC = () => {
                       setOtpLoading(false);
                       return;
                     }
-                    if (!verifyOtpApi) {
+                    if (!verifyOtp) {
                       toast.showToast("Please wait, loading...", 2000, "error");
                       setOtpLoading(false);
                       return;
                     }
                     try {
-                      const response = await verifyOtpApi({ email, code });
+                      const response = await verifyOtp({ email, code });
                       setOtpLoading(false);
                       toast.showToast("Email verified!", 2000, "success");
 
-                      // If response includes token, store it and redirect
-                      if (response?.token) {
-                        setToken(response.token);
+                      // If response includes user and token, store them and redirect
+                      if (response?.token && response?.user) {
+                        setUser(response.user, response.token);
                         setTimeout(() => {
                           if (returnTo) {
                             try {

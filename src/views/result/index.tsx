@@ -2,10 +2,10 @@ import { getComputedListingByUrl } from "@/api/listings";
 import { getFreeViewStatus, hasPaid, verifyPayment } from "@/api/payments";
 import { Container, Footer, Navbar } from "@/components";
 import PaymentModal from "@/components/inc/PaymentModal";
-import { getUser } from "@/helpers";
+import { useAuth } from "@/contexts/AuthContext";
 import { ComputedListing } from "@/types/listing";
 import { useRouter } from "next/router";
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import {
   AISummaryBlocks,
@@ -105,7 +105,7 @@ const calculateDataPoints = (data: ComputedListing): number => {
   if (snapshot?.agentName || snapshot?.agentCompanyName) points += 5;
   if (snapshot?.imageUrls && snapshot.imageUrls.length > 0) points += 10;
   if (snapshot?.description) points += 10;
-  if (snapshot?.amenities && snapshot.amenities.length > 0) points += 10;
+  if ((snapshot as any)?.amenities && (snapshot as any).amenities.length > 0) points += 10;
   
   console.log("Points after snapshot fields:", points);
   
@@ -145,7 +145,7 @@ const calculateDataPoints = (data: ComputedListing): number => {
 
 const ResultPage: React.FC = () => {
   const router = useRouter();
-  const user = useMemo(() => getUser(), []);
+  const { user, isAuthenticated } = useAuth();
 
   // Query
   const [searchQuery, setSearchQuery] = useState("");
@@ -316,7 +316,7 @@ const ResultPage: React.FC = () => {
     setSearchType((type as string) || "");
 
    // Redirect unauthenticated users to signup, preserving the intended instant report
-    if (query && (type as string) === "link" && !user) {
+    if (query && (type as string) === "link" && !isAuthenticated) {
       router.replace(`/auth/signup?q=${encodeURIComponent(query)}&type=link`);
       return;
     }
@@ -330,7 +330,7 @@ const ResultPage: React.FC = () => {
         setTimeout(() => setCurrentStep(3), 3600),
       ];
       // Instant reports are free for authenticated users
-      if (user) {
+      if (isAuthenticated) {
         setIsPaid(true);
         getComputedListingByUrl(query)
           .then((res) => {
@@ -679,16 +679,16 @@ const ResultPage: React.FC = () => {
       (result as any)?.status ||
       null;
 
-    const bedroomsDisplay = result?.snapshot?.bedrooms ?? "4df";
-    const bathroomsDisplay = result?.snapshot?.bathrooms ?? "5df";
-    const sizeDisplay = result?.snapshot?.sizeSqm ?? "450df";
+    const bedroomsDisplay = result?.snapshot?.bedrooms ?? "4";
+    const bathroomsDisplay = result?.snapshot?.bathrooms ?? "5";
+    const sizeDisplay = result?.snapshot?.sizeSqm ?? "450";
     const propertyTypeDisplay = result?.snapshot?.propertyTypeStd 
       ? result.snapshot.propertyTypeStd.toLowerCase() 
       : "duplexdf";
     const microlocationDisplay = result?.snapshot?.microlocationStd ?? "Lekki Phase 1df";
-    const fallbackTitleDisplay = (result as any)?.title || (result as any)?.snapshot?.title || "(no title)df";
-    const fallbackLocationDisplay = (result as any)?.location || (result as any)?.snapshot?.location || "(no location)df";
-    const fallbackListingDisplay = (result as any)?.listingUrl || (result as any)?.snapshot?.listingUrl || "N/Adf";
+    const fallbackTitleDisplay = (result as any)?.title || (result as any)?.snapshot?.title || "";
+    const fallbackLocationDisplay = (result as any)?.location || (result as any)?.snapshot?.location || "";
+    const fallbackListingDisplay = (result as any)?.listingUrl || (result as any)?.snapshot?.listingUrl || "";
 
     return (
       <Container
@@ -882,7 +882,7 @@ const ResultPage: React.FC = () => {
               clientRating={4.6}
               deliveryScore={result?.analytics?.seller?.sellerCredibilityScore || 60}
               indaScore={result?.indaScore?.finalScore || 75}
-              litigationHistory="No disputes founddf"
+              litigationHistory="No disputes found"
               registeredLocation={
                 result?.analytics?.seller?.agentRegistered ? "Registered with CAC" : "Not Registereddf"
               }
