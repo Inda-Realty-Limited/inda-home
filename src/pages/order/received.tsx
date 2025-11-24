@@ -1,6 +1,6 @@
 import { Container, Footer, Navbar } from "@/components";
 import { useRouter } from "next/router";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 const OrderReceived: React.FC = () => {
   const router = useRouter();
@@ -15,7 +15,15 @@ const OrderReceived: React.FC = () => {
     if (plan === "instant") return "Instant Report";
     return "Deep Dive";
   }, [plan]);
-  const orderId = reference || `IND-${Date.now().toString().slice(-5)}`;
+  const [orderId, setOrderId] = useState<string>(reference || "");
+  useEffect(() => {
+    if (reference) {
+      setOrderId(reference);
+    } else {
+      // Client-only fallback to avoid hydration mismatch
+      setOrderId(`IND-${Date.now().toString().slice(-5)}`);
+    }
+  }, [reference]);
 
   const handleGoHome = () => {
     router.push("/");
