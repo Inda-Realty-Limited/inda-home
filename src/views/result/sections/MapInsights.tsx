@@ -32,11 +32,14 @@ const MapInsights: React.FC<Props> = ({ isOpen, toggle, aiSummary }) => {
   ];
 
   const infrastructure: InfrastructureData[] = [
-    { label: "Road Access", percentage: 90 },
-    { label: "Rail/Airport", percentage: 75 },
-    { label: "Public Spend", percentage: 85 },
-    { label: "Power & Water", percentage: 88 },
-    { label: "Amenities", percentage: 82 },
+    { label: "Road & Transport Infrastructure", percentage: 90 },
+    { label: "Power & Utilities", percentage: 75 },
+    { label: "Telecommunication & Digital Access", percentage: 82 },
+    { label: "Social Infrastructure", percentage: 85 },
+    { label: "Security & Emergency Services", percentage: 79 },
+    { label: "Environmental & Sustainability Factors", percentage: 88 },
+    { label: "Economic & Employment Access", percentage: 81 },
+    { label: "Government & Development Plans", percentage: 80 },
   ];
 
   const infrastructureIndex = 84;
@@ -79,10 +82,11 @@ const MapInsights: React.FC<Props> = ({ isOpen, toggle, aiSummary }) => {
   };
 
   const RadarChart = ({ data }: { data: InfrastructureData[] }) => {
-    const size = 300;
+    const size = 280; // Reduced for better mobile fit
     const center = size / 2;
-    const maxRadius = size / 2 - 40;
+    const maxRadius = 85; // Proportionally reduced
     const levels = 5;
+    const labelOffset = 35; // Closer to the chart
 
     const angleStep = (2 * Math.PI) / data.length;
 
@@ -92,6 +96,16 @@ const MapInsights: React.FC<Props> = ({ isOpen, toggle, aiSummary }) => {
       return {
         x: center + r * Math.cos(angle),
         y: center + r * Math.sin(angle),
+      };
+    };
+
+    const getLabelPoint = (index: number) => {
+      const angle = index * angleStep - Math.PI / 2;
+      const r = maxRadius + labelOffset;
+      return {
+        x: center + r * Math.cos(angle),
+        y: center + r * Math.sin(angle),
+        angle: angle,
       };
     };
 
@@ -109,56 +123,117 @@ const MapInsights: React.FC<Props> = ({ isOpen, toggle, aiSummary }) => {
     });
 
     return (
-      <svg width={size} height={size} className="mx-auto">
-        {levelPaths.map((path, i) => (
-          <path
-            key={i}
-            d={path}
-            fill="none"
-            stroke="#E5E7EB"
-            strokeWidth="1"
-          />
-        ))}
-        
-        {data.map((_, index) => {
-          const endPoint = getPoint(100, index);
-          return (
-            <line
-              key={index}
-              x1={center}
-              y1={center}
-              x2={endPoint.x}
-              y2={endPoint.y}
-              stroke="#E5E7EB"
-              strokeWidth="1"
+      <div className="relative w-full flex justify-center">
+        <div className="relative" style={{ width: size, height: size }}>
+          <svg width={size} height={size} className="absolute inset-0">
+            {/* Grid levels */}
+            {levelPaths.map((path, i) => (
+              <path
+                key={i}
+                d={path}
+                fill="none"
+                stroke="#D1D5DB"
+                strokeWidth="1.5"
+                opacity={0.4}
+              />
+            ))}
+            
+            {/* Radial lines */}
+            {data.map((_, index) => {
+              const endPoint = getPoint(100, index);
+              return (
+                <line
+                  key={index}
+                  x1={center}
+                  y1={center}
+                  x2={endPoint.x}
+                  y2={endPoint.y}
+                  stroke="#D1D5DB"
+                  strokeWidth="1.5"
+                  opacity={0.4}
+                />
+              );
+            })}
+
+            {/* Data area */}
+            <path
+              d={pathData}
+              fill="rgba(78, 168, 161, 0.25)"
+              stroke="#4EA8A1"
+              strokeWidth="2.5"
+              strokeLinejoin="round"
             />
-          );
-        })}
 
-        <path
-          d={pathData}
-          fill="rgba(78, 168, 161, 0.3)"
-          stroke="#4EA8A1"
-          strokeWidth="3"
-          strokeLinejoin="round"
-        />
+            {/* Data points */}
+            {dataPoints.map((point, i) => (
+              <circle
+                key={i}
+                cx={point.x}
+                cy={point.y}
+                r="4"
+                fill="#4EA8A1"
+              />
+            ))}
+          </svg>
 
-        {dataPoints.map((point, i) => (
-          <circle
-            key={i}
-            cx={point.x}
-            cy={point.y}
-            r="5"
-            fill="#4EA8A1"
-          />
-        ))}
-      </svg>
+          {/* Labels as absolutely positioned divs */}
+          {data.map((item, index) => {
+            const labelPoint = getLabelPoint(index);
+            
+            // Determine text alignment and transform based on position
+            let textAlign: 'left' | 'center' | 'right' = 'center';
+            let transform = 'translate(-50%, -50%)';
+            
+            const dx = labelPoint.x - center;
+            const dy = labelPoint.y - center;
+            
+            // Calculate if more horizontal or vertical
+            if (Math.abs(dx) > Math.abs(dy)) {
+              // More horizontal than vertical
+              if (dx > 0) {
+                // Right side
+                textAlign = 'left';
+                transform = 'translate(0%, -50%)';
+              } else {
+                // Left side
+                textAlign = 'right';
+                transform = 'translate(-100%, -50%)';
+              }
+            } else {
+              // More vertical than horizontal
+              if (dy > 0) {
+                // Bottom
+                transform = 'translate(-50%, 0%)';
+              } else {
+                // Top
+                transform = 'translate(-50%, -100%)';
+              }
+            }
+            
+            return (
+              <div
+                key={index}
+                className="absolute text-[9px] sm:text-[10px] font-medium text-gray-700 leading-tight"
+                style={{
+                  left: `${labelPoint.x}px`,
+                  top: `${labelPoint.y}px`,
+                  transform: transform,
+                  textAlign: textAlign,
+                  maxWidth: '100px',
+                }}
+              >
+                {item.label}
+              </div>
+            );
+          })}
+        </div>
+      </div>
     );
   };
 
   return (
     <div className="w-full px-6">
-      <div className="bg-white/80 border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-sm">
+      <div className="bg-inda-teal/10 border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-sm">
         <h3 className="text-2xl md:text-3xl font-bold mb-8 text-inda-teal">
           Micro-location Insights
         </h3>

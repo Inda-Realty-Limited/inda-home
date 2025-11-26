@@ -41,6 +41,12 @@ const isValidUrl = (value: string) => {
   }
 };
 
+const scrollContainer = (container: HTMLElement | null, direction: 'left' | 'right') => {
+  if (!container) return;
+  const scrollAmount = direction === 'right' ? 300 : -300;
+  container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+};
+
 const formatNaira = (n: number) =>
   `₦${Math.round(n || 0).toLocaleString(undefined, {
     maximumFractionDigits: 0,
@@ -228,6 +234,7 @@ const ResultPage: React.FC = () => {
   const [resultView, setResultView] = useState<"long" | "short">("long");
   const longTabRef = useRef<HTMLButtonElement>(null);
   const shortTabRef = useRef<HTMLButtonElement>(null);
+  const badgesScrollRef = useRef<HTMLDivElement>(null);
   const [underlineStyle, setUnderlineStyle] = useState({ width: 0, left: 0 });
   const [appreciationTab, setAppreciationTab] = useState<
     "localNominal" | "localReal" | "usdAdj"
@@ -746,16 +753,22 @@ const ResultPage: React.FC = () => {
                         </div>
 
                         <div className="flex items-center justify-end">
-                          <span className="text-white text-xs font-medium flex items-center gap-1.5">
-                            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                              <path d="M4 10h12M10 4l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                          <button 
+                            onClick={() => scrollContainer(badgesScrollRef.current, 'right')}
+                            className="text-white text-xs font-medium flex items-center gap-1.5 hover:opacity-80 transition-opacity cursor-pointer"
+                          >
+                            <svg width="28" height="16" viewBox="0 0 28 16" fill="none">
+                              <path d="M2 5l5 3-5 3" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M10 5l5 3-5 3" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M18 5l5 3-5 3" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
                             </svg>
                             Swipe
-                          </span>
+                          </button>
                         </div>
 
                         <div className="relative">
                           <div 
+                            ref={badgesScrollRef}
                             className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide scroll-smooth"
                             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
                           >

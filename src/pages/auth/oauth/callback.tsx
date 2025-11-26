@@ -1,7 +1,27 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { env } from "@/config/env";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
+
+const decodeBase64Url = (value: string): string => {
+  const normalized = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padding = normalized.length % 4 === 0 ? "" : "=".repeat(4 - (normalized.length % 4));
+  if (typeof window !== "undefined" && typeof window.atob === "function") {
+    return window.atob(normalized + padding);
+  }
+  return Buffer.from(normalized + padding, "base64").toString("utf-8");
+};
+
+const getSafeReturnTo = (returnTo?: string | string[]) => {
+  if (!returnTo || Array.isArray(returnTo)) {
+    return "/";
+  }
+  try {
+    const decoded = decodeURIComponent(returnTo);
+    return decoded.startsWith("/") ? decoded : "/";
+  } catch {
+    return "/";
+  }
+};
 
 const OAuthCallback: React.FC = () => {
   const router = useRouter();
@@ -9,50 +29,35 @@ const OAuthCallback: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const handleCallback = async () => {
-      const { code, state, error: oauthError } = router.query;
+    if (!router.isReady) {
+      return;
+    }
 
-      if (oauthError) {
-        setError(typeof oauthError === "string" ? oauthError : "Authentication failed");
-        setTimeout(() => router.push("/auth/signin"), 3000);
-        return;
-      }
+    const { error: oauthError, token, user, returnTo } = router.query;
 
-      if (!code || typeof code !== "string") {
-        setError("No authorization code received");
-        setTimeout(() => router.push("/auth/signin"), 3000);
-        return;
-      }
+    if (oauthError) {
+      setError(typeof oauthError === "string" ? oauthError : "Authentication failed");
+      setTimeout(() => router.push("/auth/signin"), 3000);
+      return;
+    }
 
-      try {
-        const response = await fetch(`${env.api.baseUrl}/auth/google/callback?code=${code}`, {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+    if (typeof token !== "string" || typeof user !== "string") {
+      setError("Missing authentication payload");
+      setTimeout(() => router.push("/auth/signin"), 3000);
+      return;
+    }
 
-        if (!response.ok) {
-          throw new Error("OAuth authentication failed");
-        }
+    try {
+      const userJson = decodeBase64Url(user);
+      const parsedUser = JSON.parse(userJson);
+      setUser(parsedUser, token);
 
-        const data = await response.json();
-        
-        if (data.user) {
-          setUser(data.user);
-        }
-
-        const returnTo = state && typeof state === "string" ? decodeURIComponent(state) : "/";
-        setTimeout(() => router.push(returnTo), 500);
-      } catch (err: any) {
-        setError(err.message || "An error occurred during authentication");
-        setTimeout(() => router.push("/auth/signin"), 3000);
-      }
-    };
-
-    if (router.isReady) {
-      handleCallback();
+      const destination = getSafeReturnTo(returnTo);
+      setTimeout(() => router.push(destination), 500);
+    } catch (err: any) {
+      console.error("Failed to process OAuth payload:", err);
+      setError("An error occurred during authentication");
+      setTimeout(() => router.push("/auth/signin"), 3000);
     }
   }, [router, router.isReady, router.query, setUser]);
 

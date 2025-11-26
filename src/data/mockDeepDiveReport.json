@@ -1,0 +1,115 @@
+{
+  "reportId": "ND-2024-0947",
+  "client": "Adetuya Investment Ltd",
+  "analyst": "Oyuke Alemu",
+  "reportDate": "08 Oct 2025",
+  "confidenceLevel": "High",
+  "confidenceScore": 95,
+  "listingUrl": "https://example.com/property/sample-listing",
+  "propertyOverview": {
+    "title": "4 Bedroom Terrace Duplex in Lekki Phase 1",
+    "propertyType": "4 Bedroom Duplex",
+    "location": "Lekki Phase 1, Lagos",
+    "landSize": "2,400 sqm",
+    "yearBuilt": "2019"
+  },
+  "keyFindings": [
+    "All major legal documents verified and clean",
+    "Survey confirms accurate land measurements",
+    "Governor's Consent: pending but application submitted",
+    "Property priced 8% below Fair Market Value"
+  ],
+  "legalVerification": [
+    {
+      "id": "coo",
+      "title": "Certificate of Occupancy (C of O)",
+      "description": "Valid until 2024, clean title",
+      "status": "verified",
+      "icon": "certificate"
+    },
+    {
+      "id": "deed",
+      "title": "Deed of Assignment",
+      "description": "Properly executed, stamped",
+      "status": "verified",
+      "icon": "document"
+    },
+    {
+      "id": "consent",
+      "title": "Governor's Consent",
+      "description": "Application submitted, awaiting approval",
+      "status": "pending",
+      "icon": "warning"
+    },
+    {
+      "id": "zoning",
+      "title": "Zoning Compliance",
+      "description": "Residential zoning confirmed",
+      "status": "verified",
+      "icon": "building"
+    },
+    {
+      "id": "litigation",
+      "title": "Litigation Check",
+      "description": "No pending cases found",
+      "status": "verified",
+      "icon": "gavel"
+    }
+  ],
+  "surveyVerification": [
+    {
+      "id": "landsize",
+      "title": "Land Size Verification",
+      "description": "2,400 sqm confirmed via GPS survey",
+      "status": "verified",
+      "icon": "ruler"
+    },
+    {
+      "id": "boundary",
+      "title": "Boundary Demarcation",
+      "description": "All corners properly measured",
+      "status": "verified",
+      "icon": "compass"
+    },
+    {
+      "id": "encroachment",
+      "title": "Encroachment Risk",
+      "description": "No encroachments detected",
+      "status": "verified",
+      "icon": "shield"
+    },
+    {
+      "id": "flood",
+      "title": "Flood Risk Assessment",
+      "description": "Low risk zone, good drainage",
+      "status": "verified",
+      "icon": "water"
+    }
+  ],
+  "propertyCoordinates": {
+    "latitude": 6.453055,
+    "longitude": 3.3993997
+  },
+  "finalVerdict": {
+    "status": "proceed",
+    "message": "This property meets all criteria for a safe investment.",
+    "metrics": [
+      {
+        "label": "Legal Compliance",
+        "value": "95% Complete",
+        "icon": "check"
+      },
+      {
+        "label": "Survey Verified",
+        "value": "100% Accurate",
+        "icon": "location"
+      },
+      {
+        "label": "Market Value",
+        "value": "Below Market",
+        "icon": "trending"
+      }
+    ]
+  }
+}
+

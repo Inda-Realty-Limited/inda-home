@@ -1,5 +1,5 @@
 import { startListingPayment, uploadQuestionnaireFiles } from "@/api/payments";
-import { Container, Footer, Input, Navbar } from "@/components";
+import { Container, Footer, Input, Navbar, PropertyMap } from "@/components";
 import { useToast } from "@/components/ToastProvider";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -841,15 +841,13 @@ const PropertyBasicsStep: React.FC<PropertyBasicsStepProps> = ({
         />
       </label>
     </div>
-    <div className="overflow-hidden rounded-2xl border border-[#DCEAE8] bg-[#F7FCFB]">
-      <iframe
-        title="Property map"
-        className="h-64 w-full border-0"
-        loading="lazy"
-        src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d31512.31113673268!2d3.3993997!3d6.453055!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x103b8b267a7b0c19%3A0x9d5d7d0d7f4d7ab0!2sLekki%20Phase%201%2C%20Eti-Osa!5e0!3m2!1sen!2sng!4v1700000000000"
-        allowFullScreen
-      />
-    </div>
+    <PropertyMap
+      latitude={6.453055}
+      longitude={3.3993997}
+      zoom={13}
+      height="h-64"
+      className="border-[#DCEAE8]"
+    />
     <div className="flex w-full max-w-3xl flex-col gap-6">
       <FieldGroup
         title="Property Category"
