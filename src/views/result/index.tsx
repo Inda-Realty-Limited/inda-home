@@ -994,15 +994,15 @@ const ResultPage: React.FC = () => {
                   : "Caution"
               }
               marketValue={result?.indaScore?.breakdown?.marketValue?.score || 18}
-              marketValueMax={25}
+              marketValueMax={100}
               sellerCredibility={result?.indaScore?.breakdown?.sellerCredibility?.score || 12}
-              sellerCredibilityMax={25}
+              sellerCredibilityMax={100}
               microlocation={result?.indaScore?.breakdown?.microlocation?.score || 16}
-              microlocationMax={25}
+              microlocationMax={100}
               demand={15}
-              demandMax={25}
+              demandMax={100}
               roiPotential={result?.indaScore?.breakdown?.roi?.score || 14}
-              roiPotentialMax={25}
+              roiPotentialMax={100}
             />
 
             {/* Executive Summary */}
