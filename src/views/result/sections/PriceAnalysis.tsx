@@ -44,6 +44,8 @@ const PriceAnalysis: React.FC<Props> = ({
 }) => {
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
   const [chartWidth, setChartWidth] = useState<number>(0);
+  const [hoveredBar, setHoveredBar] = useState<null | { series: "fmv" | "price"; index: number }>(null);
+  const [isAnimating, setIsAnimating] = useState(true);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -80,6 +82,14 @@ const PriceAnalysis: React.FC<Props> = ({
     return () => {
       observer.disconnect();
     };
+  }, []);
+
+  // Animation trigger on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsAnimating(false);
+    }, 1000);
+    return () => clearTimeout(timer);
   }, []);
 
   const chartDimensions = useMemo(() => {
@@ -137,7 +147,7 @@ const PriceAnalysis: React.FC<Props> = ({
                 1
               )}% in the last 6 months`}</p>
               <p className="text-xs text-gray-500">
-                {windowLabel || "Sales (last 12 months)df"}
+                Sales from {windowLabel || "(last 12 months)df"}
               </p>
             </div>
             <div className="bg-transparent border border-gray-200 rounded-lg px-4 py-3 ">
@@ -246,45 +256,33 @@ const PriceAnalysis: React.FC<Props> = ({
                       const isSelected =
                         selectedBar?.series === "fmv" &&
                         selectedBar.index === i;
+                      const isHovered = 
+                        hoveredBar?.index === i;
+                      const animatedH = isAnimating ? 0 : h;
                       return (
                         <g key={`bf-${i}`}>
                           <rect
                             x={x}
                             y={y}
                             width={barW}
-                            height={h}
+                            height={animatedH}
                             fill={isSelected ? "#3b8f89" : "#4EA8A1"}
                             rx={2}
-                            className="cursor-pointer transition-all duration-200 hover:opacity-80"
+                            className="cursor-pointer transition-all duration-200"
+                            style={{
+                              transform: isHovered ? 'scaleY(1.02)' : 'scaleY(1)',
+                              transformOrigin: 'bottom',
+                              filter: isHovered ? 'drop-shadow(0 4px 6px rgba(78, 168, 161, 0.4))' : 'none',
+                              transition: isAnimating ? 'height 0.8s ease-out' : 'all 0.2s ease',
+                            }}
                             onClick={() =>
                               setSelectedBar(
                                 isSelected ? null : { series: "fmv", index: i }
                               )
                             }
+                            onMouseEnter={() => setHoveredBar({ series: "fmv", index: i })}
+                            onMouseLeave={() => setHoveredBar(null)}
                           />
-                          {isSelected && (
-                            <>
-                              <rect
-                                x={x - 4}
-                                y={y - 32}
-                                width={barW * 2 + 40}
-                                height={28}
-                                fill="#101820"
-                                rx={4}
-                                opacity={0.9}
-                              />
-                              <text
-                                x={x + barW / 2}
-                                y={y - 12}
-                                textAnchor="middle"
-                                fontSize={11}
-                                fill="#fff"
-                                fontWeight="600"
-                              >
-                                FMV: {formatCompact(v)}
-                              </text>
-                            </>
-                          )}
                         </g>
                       );
                     })}
@@ -295,48 +293,179 @@ const PriceAnalysis: React.FC<Props> = ({
                       const isSelected =
                         selectedBar?.series === "price" &&
                         selectedBar.index === i;
+                      const isHovered = 
+                        hoveredBar?.index === i;
+                      const animatedH = isAnimating ? 0 : h;
                       return (
                         <g key={`bp-${i}`}>
                           <rect
                             x={x}
                             y={y}
                             width={barW}
-                            height={h}
+                            height={animatedH}
                             fill={isSelected ? "#9aa4ae" : "#D1D5DB"}
                             rx={2}
-                            className="cursor-pointer transition-all duration-200 hover:opacity-80"
+                            className="cursor-pointer transition-all duration-200"
+                            style={{
+                              transform: isHovered ? 'scaleY(1.02)' : 'scaleY(1)',
+                              transformOrigin: 'bottom',
+                              filter: isHovered ? 'drop-shadow(0 4px 6px rgba(209, 213, 219, 0.5))' : 'none',
+                              transition: isAnimating ? 'height 0.8s ease-out' : 'all 0.2s ease',
+                            }}
                             onClick={() =>
                               setSelectedBar(
                                 isSelected ? null : { series: "price", index: i }
                               )
                             }
+                            onMouseEnter={() => setHoveredBar({ series: "price", index: i })}
+                            onMouseLeave={() => setHoveredBar(null)}
                           />
-                          {isSelected && (
-                            <>
-                              <rect
-                                x={x - 4}
-                                y={y - 32}
-                                width={barW * 2 + 40}
-                                height={28}
-                                fill="#101820"
-                                rx={4}
-                                opacity={0.9}
-                              />
-                              <text
-                                x={x + barW / 2}
-                                y={y - 12}
-                                textAnchor="middle"
-                                fontSize={11}
-                                fill="#fff"
-                                fontWeight="600"
-                              >
-                                Price: {formatCompact(v)}
-                              </text>
-                            </>
-                          )}
                         </g>
                       );
                     })}
+                    {hoveredBar &&
+                      (() => {
+                        const i = hoveredBar.index;
+                        const fmvVal = fmvSeries[i];
+                        const priceVal = priceSeries[i];
+                        const month = months[i];
+                        const x = xCenter(i);
+                        const maxY = Math.max(yScale(fmvVal), yScale(priceVal));
+                        
+                        // Calculate tooltip dimensions
+                        const tooltipPadding = 12;
+                        const lineHeight = 18;
+                        const tooltipWidth = 180;
+                        const tooltipHeight = 90;
+                        
+                        // Position tooltip above the bars
+                        const tooltipX = Math.max(
+                          padL + 10,
+                          Math.min(x - tooltipWidth / 2, W - padR - tooltipWidth - 10)
+                        );
+                        const tooltipY = Math.max(padT + 10, maxY - tooltipHeight - 16);
+                        
+                        return (
+                          <g key="hover-tooltip" style={{ pointerEvents: 'none' }}>
+                            {/* Tooltip background */}
+                            <rect
+                              x={tooltipX}
+                              y={tooltipY}
+                              width={tooltipWidth}
+                              height={tooltipHeight}
+                              rx={8}
+                              fill="#4EA8A1"
+                              opacity={0.95}
+                              filter="drop-shadow(0 4px 12px rgba(0,0,0,0.15))"
+                            />
+                            
+                            {/* Month label */}
+                            <text
+                              x={tooltipX + tooltipWidth / 2}
+                              y={tooltipY + tooltipPadding + 12}
+                              textAnchor="middle"
+                              fontSize={12}
+                              fill="#ffffff"
+                              fontWeight="600"
+                            >
+                              {month}
+                            </text>
+                            
+                            {/* Divider line */}
+                            <line
+                              x1={tooltipX + tooltipPadding}
+                              x2={tooltipX + tooltipWidth - tooltipPadding}
+                              y1={tooltipY + tooltipPadding + 20}
+                              y2={tooltipY + tooltipPadding + 20}
+                              stroke="#ffffff"
+                              strokeOpacity={0.2}
+                              strokeWidth={1}
+                            />
+                            
+                            {/* FMV value */}
+                            <circle
+                              cx={tooltipX + tooltipPadding + 4}
+                              cy={tooltipY + tooltipPadding + 34}
+                              r={4}
+                              fill="#4EA8A1"
+                            />
+                            <text
+                              x={tooltipX + tooltipPadding + 12}
+                              y={tooltipY + tooltipPadding + 38}
+                              fontSize={10}
+                              fill="#ffffff"
+                              opacity={0.8}
+                            >
+                              FMV:
+                            </text>
+                            <text
+                              x={tooltipX + tooltipWidth - tooltipPadding}
+                              y={tooltipY + tooltipPadding + 38}
+                              textAnchor="end"
+                              fontSize={11}
+                              fill="#ffffff"
+                              fontWeight="600"
+                            >
+                              {formatCompact(fmvVal)}
+                            </text>
+                            
+                            {/* Price value */}
+                            <circle
+                              cx={tooltipX + tooltipPadding + 4}
+                              cy={tooltipY + tooltipPadding + 54}
+                              r={4}
+                              fill="#D1D5DB"
+                            />
+                            <text
+                              x={tooltipX + tooltipPadding + 12}
+                              y={tooltipY + tooltipPadding + 58}
+                              fontSize={10}
+                              fill="#ffffff"
+                              opacity={0.8}
+                            >
+                              Price:
+                            </text>
+                            <text
+                              x={tooltipX + tooltipWidth - tooltipPadding}
+                              y={tooltipY + tooltipPadding + 58}
+                              textAnchor="end"
+                              fontSize={11}
+                              fill="#ffffff"
+                              fontWeight="600"
+                            >
+                              {formatCompact(priceVal)}
+                            </text>
+                            
+                            {/* Difference */}
+                            <text
+                              x={tooltipX + tooltipPadding}
+                              y={tooltipY + tooltipPadding + 75}
+                              fontSize={9}
+                              fill="#ffffff"
+                              opacity={0.7}
+                            >
+                              Difference:
+                            </text>
+                            <text
+                              x={tooltipX + tooltipWidth - tooltipPadding}
+                              y={tooltipY + tooltipPadding + 75}
+                              textAnchor="end"
+                              fontSize={10}
+                              fill={fmvVal > priceVal ? "#10B981" : "#EF4444"}
+                              fontWeight="600"
+                            >
+                              {formatCompact(Math.abs(fmvVal - priceVal))}
+                            </text>
+                            
+                            {/* Pointer arrow */}
+                            <path
+                              d={`M ${x - 6} ${tooltipY + tooltipHeight} L ${x + 6} ${tooltipY + tooltipHeight} L ${x} ${tooltipY + tooltipHeight + 8} Z`}
+                              fill="#4EA8A1"
+                              opacity={0.95}
+                            />
+                          </g>
+                        );
+                      })()}
                     {selectedBar &&
                       (() => {
                         const isFMV = selectedBar.series === "fmv";

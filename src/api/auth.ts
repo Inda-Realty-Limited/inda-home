@@ -26,10 +26,6 @@ export const logout = () => {
   return apiClient.post("/auth/logout").then((res) => res.data);
 };
 
-export const checkSession = () => {
-  return apiClient.get("/auth/session").then((res) => res.data);
-};
-
 export const refreshToken = () => {
   return apiClient.post("/auth/refresh").then((res) => res.data);
 };

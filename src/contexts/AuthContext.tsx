@@ -23,38 +23,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
   const router = useRouter();
 
-  // Load user and token from localStorage on mount
-  useEffect(() => {
-    const initAuth = () => {
-      try {
-        const encryptedUser = localStorage.getItem(USER_KEY);
-        const encryptedToken = localStorage.getItem(TOKEN_KEY);
-        
-        if (encryptedUser && encryptedToken) {
-          const bytes = CryptoJS.AES.decrypt(encryptedUser, getSecretKey());
-          const decryptedUser = bytes.toString(CryptoJS.enc.Utf8);
-          
-          if (decryptedUser) {
-            const userData = JSON.parse(decryptedUser) as StoredUser;
-            setState(prev => ({
-              ...prev,
-              user: userData,
-              isAuthenticated: true,
-              isLoading: false,
-            }));
-            return;
-          }
-        }
-      } catch (error) {
-        console.error("Failed to load user from storage:", error);
-      }
-      
-      setState(prev => ({ ...prev, isLoading: false }));
-    };
-
-    initAuth();
-  }, []);
-
   const setUser = useCallback((user: StoredUser | null, token?: string) => {
     try {
       if (user && token) {
@@ -71,6 +39,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ...prev,
           user,
           isAuthenticated: true,
+          isLoading: false,
           error: null,
         }));
         
@@ -86,6 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ...prev,
           user: null,
           isAuthenticated: false,
+          isLoading: false,
           error: null,
         }));
       }
@@ -133,6 +103,48 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       router.push("/");
     }
   }, [setUser, router]);
+
+  // Load user and token from localStorage on mount
+  useEffect(() => {
+    let isMounted = true;
+
+    const initAuth = () => {
+      setState((prev) => ({ ...prev, isLoading: true }));
+
+      try {
+        const encryptedUser = localStorage.getItem(USER_KEY);
+        const encryptedToken = localStorage.getItem(TOKEN_KEY);
+
+        if (encryptedUser && encryptedToken) {
+          const bytes = CryptoJS.AES.decrypt(encryptedUser, getSecretKey());
+          const decryptedUser = bytes.toString(CryptoJS.enc.Utf8);
+
+          if (decryptedUser && isMounted) {
+            const userData = JSON.parse(decryptedUser) as StoredUser;
+            setState((prev) => ({
+              ...prev,
+              user: userData,
+              isAuthenticated: true,
+              isLoading: false,
+            }));
+            return;
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load user from storage:", error);
+      }
+
+      if (isMounted) {
+        setState((prev) => ({ ...prev, isLoading: false }));
+      }
+    };
+
+    initAuth();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     const handleStorageChange = () => {
