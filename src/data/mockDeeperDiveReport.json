@@ -1,0 +1,208 @@
+{
+  "listingUrl": "https://example.com/property/sample-listing",
+  "title": "4 Bedroom Terrace Duplex in Lekki Phase 1",
+  "location": "Lekki Phase 1, Lagos",
+  "price": 85000000,
+  "propertyType": "Terrace Duplex",
+  "bedrooms": 4,
+  "bathrooms": 4,
+  "size": 250,
+  "yearBuilt": 2020,
+  "imageUrls": [
+    "/images/sample-property-1.jpg",
+    "/images/sample-property-2.jpg"
+  ],
+  "priceAnalysis": {
+    "fairMarketValue": 82000000,
+    "priceVsFMV": 3.7,
+    "marketPosition": "Slightly Overpriced",
+    "priceHistory": [
+      { "month": "Jan", "fmv": 78000000, "price": 85000000 },
+      { "month": "Feb", "fmv": 79000000, "price": 85000000 },
+      { "month": "Mar", "fmv": 80000000, "price": 85000000 },
+      { "month": "Apr", "fmv": 81000000, "price": 85000000 },
+      { "month": "May", "fmv": 82000000, "price": 85000000 }
+    ],
+    "dataPoints": 127
+  },
+  "marketInsights": {
+    "propertyMix": [
+      { "label": "Apartments", "percentage": 45, "color": "#4EA8A1" },
+      { "label": "Detached", "percentage": 22, "color": "#7BC4BE" },
+      { "label": "Semi-Detached", "percentage": 18, "color": "#E8D976" },
+      { "label": "Land/Plots", "percentage": 10, "color": "#B8D9D5" },
+      { "label": "Commercial", "percentage": 5, "color": "#97C7C2" }
+    ],
+    "infrastructure": [
+      { "label": "Road & Transport Infrastructure", "percentage": 90 },
+      { "label": "Power & Utilities", "percentage": 75 },
+      { "label": "Telecommunication & Digital Access", "percentage": 82 },
+      { "label": "Social Infrastructure", "percentage": 85 },
+      { "label": "Security & Emergency Services", "percentage": 79 },
+      { "label": "Environmental & Sustainability Factors", "percentage": 88 },
+      { "label": "Economic & Employment Access", "percentage": 81 },
+      { "label": "Government & Development Plans", "percentage": 80 }
+    ],
+    "infrastructureIndex": 84
+  },
+  "demandInsights": {
+    "customerSegments": [
+      { "label": "Buyers", "percentage": 25, "color": "#4EA8A1" },
+      { "label": "Long-Term Renters", "percentage": 45, "color": "#E8D976" },
+      { "label": "Short-Term Renters", "percentage": 15, "color": "#B8D9D5" },
+      { "label": "Land Bankers", "percentage": 15, "color": "#E6B800" }
+    ],
+    "purchasePurpose": {
+      "investment": 65,
+      "owners": 35
+    },
+    "supplyDemandRatio": 1.2
+  },
+  "roiCalculator": {
+    "purchasePrice": 85000000,
+    "financingRate": 18.5,
+    "financingTenureYears": 10,
+    "holdingPeriodYears": 5,
+    "yieldLong": 6.2,
+    "yieldShort": 8.5,
+    "expensePct": 15,
+    "appreciationLocalNominal": 12.5,
+    "appreciationLocalReal": 7.3,
+    "appreciationUsdAdj": 5.8
+  },
+  "comparables": [
+    {
+      "id": "1",
+      "title": "4 Bedroom Terrace in Lekki Phase 1",
+      "price": 80000000,
+      "location": "Lekki Phase 1",
+      "bedrooms": 4,
+      "bathrooms": 4,
+      "size": 240,
+      "similarity": 92
+    },
+    {
+      "id": "2",
+      "title": "5 Bedroom Terrace in Lekki Phase 1",
+      "price": 95000000,
+      "location": "Lekki Phase 1",
+      "bedrooms": 5,
+      "bathrooms": 5,
+      "size": 280,
+      "similarity": 85
+    }
+  ],
+  "aiSummary": {
+    "overallScore": 78,
+    "trustScore": 82,
+    "recommendation": "Good Investment Opportunity",
+    "keyInsights": [
+      "Property is slightly overpriced by 3.7% compared to fair market value",
+      "Strong infrastructure index of 84/100 indicates good location fundamentals",
+      "High demand from long-term renters (45%) provides stable rental income potential",
+      "ROI projections show 12.5% nominal appreciation over 5 years"
+    ],
+    "risks": [
+      "Oversupply in the market (1.2x ratio) may pressure prices",
+      "Power & utilities score of 75% is below average for the area"
+    ]
+  },
+  "expertAnalysis": {
+    "marketTrends": {
+      "currentTrend": "Bullish",
+      "confidence": 78,
+      "drivers": [
+        "Increasing demand from diaspora investors",
+        "New infrastructure projects in the area",
+        "Limited supply of quality properties"
+      ],
+      "forecast": "Prices expected to appreciate 8-12% annually over next 3 years"
+    },
+    "legalInsights": {
+      "titleStatus": "Clean and Verified",
+      "documentationScore": 95,
+      "risks": [
+        "Ensure Certificate of Occupancy is transferred properly",
+        "Verify all development levies are paid"
+      ],
+      "recommendations": [
+        "Conduct thorough due diligence with lawyer",
+        "Verify land use matches intended purpose",
+        "Check for any pending litigation"
+      ]
+    },
+    "investmentRiskAssessment": {
+      "overallRisk": "Medium",
+      "riskScore": 42,
+      "factors": [
+        {
+          "category": "Market Risk",
+          "level": "Medium",
+          "description": "Oversupply may affect short-term appreciation"
+        },
+        {
+          "category": "Location Risk",
+          "level": "Low",
+          "description": "Established area with strong fundamentals"
+        },
+        {
+          "category": "Liquidity Risk",
+          "level": "Low",
+          "description": "High demand area with good resale potential"
+        },
+        {
+          "category": "Structural Risk",
+          "level": "Low",
+          "description": "Newer property in good condition"
+        }
+      ]
+    },
+    "neighborhoodDevelopment": {
+      "upcomingProjects": [
+        "New shopping mall - 2km away (Completion: Q4 2024)",
+        "Road expansion project - 500m (Completion: Q2 2024)",
+        "International school - 1.5km (Opening: Q1 2025)"
+      ],
+      "impactAssessment": "Positive - Expected 5-8% value increase upon completion"
+    },
+    "exitStrategy": {
+      "recommendedHoldPeriod": "3-5 years",
+      "optimalExitTiming": "Q1-Q2 (Peak buying season)",
+      "strategies": [
+        {
+          "type": "Rental Income",
+          "description": "Hold and rent out for 3-5 years",
+          "pros": ["Steady cash flow", "Capital appreciation", "Tax benefits"],
+          "cons": ["Property management required", "Maintenance costs"],
+          "estimatedReturn": "8-10% annually"
+        },
+        {
+          "type": "Flip",
+          "description": "Sell after 12-18 months",
+          "pros": ["Quick liquidity", "Lower holding costs"],
+          "cons": ["Limited appreciation", "Transaction costs"],
+          "estimatedReturn": "5-7% total"
+        },
+        {
+          "type": "Long-term Hold",
+          "description": "Hold for 7+ years",
+          "pros": ["Maximum appreciation", "Long-term wealth building"],
+          "cons": ["Capital locked in", "Market risk"],
+          "estimatedReturn": "12-15% annually"
+        }
+      ]
+    }
+  },
+  "prioritySupport": {
+    "dedicatedAnalyst": "Kunle Adebayo",
+    "contactEmail": "support@inda.ng",
+    "responseTime": "24 hours",
+    "additionalServices": [
+      "Property inspection coordination",
+      "Lawyer referrals",
+      "Mortgage broker connections",
+      "Post-purchase support"
+    ]
+  }
+}
+
