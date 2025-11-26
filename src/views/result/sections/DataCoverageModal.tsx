@@ -153,7 +153,7 @@ const DataCoverageModal: React.FC<Props> = ({
               </div>
               
               <div className="text-sm text-gray-300 mb-2 tracking-wider font-semibold">DATA POINTS</div>
-              <div className="text-4xl font-bold text-inda-teal mb-3" style={{ fontFamily: 'system-ui, -apple-system' }}>
+              <div className="text-4xl font-bold text-white mb-3" style={{ fontFamily: 'system-ui, -apple-system' }}>
                 {dataPoints}
               </div>
             </div>

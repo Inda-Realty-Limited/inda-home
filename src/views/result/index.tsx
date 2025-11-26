@@ -2,10 +2,10 @@ import { getComputedListingByUrl } from "@/api/listings";
 import { getFreeViewStatus, hasPaid, verifyPayment } from "@/api/payments";
 import { Container, Footer, Navbar } from "@/components";
 import PaymentModal from "@/components/inc/PaymentModal";
-import { useAuth } from "@/contexts/AuthContext";
+import { getUser } from "@/helpers";
 import { ComputedListing } from "@/types/listing";
 import { useRouter } from "next/router";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import {
   AISummaryBlocks,
@@ -145,7 +145,7 @@ const calculateDataPoints = (data: ComputedListing): number => {
 
 const ResultPage: React.FC = () => {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+  const user = useMemo(() => getUser(), []);
 
   // Query
   const [searchQuery, setSearchQuery] = useState("");
@@ -316,7 +316,7 @@ const ResultPage: React.FC = () => {
     setSearchType((type as string) || "");
 
    // Redirect unauthenticated users to signup, preserving the intended instant report
-    if (query && (type as string) === "link" && !isAuthenticated) {
+    if (query && (type as string) === "link" && !user) {
       router.replace(`/auth/signup?q=${encodeURIComponent(query)}&type=link`);
       return;
     }
@@ -330,7 +330,7 @@ const ResultPage: React.FC = () => {
         setTimeout(() => setCurrentStep(3), 3600),
       ];
       // Instant reports are free for authenticated users
-      if (isAuthenticated) {
+      if (user) {
         setIsPaid(true);
         getComputedListingByUrl(query)
           .then((res) => {
@@ -994,15 +994,15 @@ const ResultPage: React.FC = () => {
                   : "Caution"
               }
               marketValue={result?.indaScore?.breakdown?.marketValue?.score || 18}
-              marketValueMax={100}
+              marketValueMax={25}
               sellerCredibility={result?.indaScore?.breakdown?.sellerCredibility?.score || 12}
-              sellerCredibilityMax={100}
+              sellerCredibilityMax={25}
               microlocation={result?.indaScore?.breakdown?.microlocation?.score || 16}
-              microlocationMax={100}
+              microlocationMax={25}
               demand={15}
-              demandMax={100}
+              demandMax={25}
               roiPotential={result?.indaScore?.breakdown?.roi?.score || 14}
-              roiPotentialMax={100}
+              roiPotentialMax={25}
             />
 
             {/* Executive Summary */}

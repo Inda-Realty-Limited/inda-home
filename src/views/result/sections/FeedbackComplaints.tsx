@@ -181,87 +181,87 @@ const FeedbackComplaints: React.FC<Props> = ({
                   const tags = isApiReview ? r.tags : [];
 
                   return (
-                    <div
-                      key={r.id}
-                      className="group relative bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
-                    >
-                      {/* Gradient accent */}
-                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#4EA8A1] via-[#6BB6B0] to-[#4EA8A1]"></div>
+                  <div
+                    key={r.id}
+                    className="group relative bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
+                  >
+                    {/* Gradient accent */}
+                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#4EA8A1] via-[#6BB6B0] to-[#4EA8A1]"></div>
 
-                      <div className="p-6">
-                        {/* Header */}
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
-                              <div className="w-10 h-10 bg-gradient-to-br from-[#4EA8A1] to-[#0A655E] rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    <div className="p-6">
+                      {/* Header */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <div className="w-10 h-10 bg-gradient-to-br from-[#4EA8A1] to-[#0A655E] rounded-full flex items-center justify-center text-white font-bold text-sm">
                                 {reviewerInitials}
-                              </div>
-                              <div>
-                                <h4 className="font-semibold text-[#0A1A22] text-base">
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-[#0A1A22] text-base">
                                   {reviewerName || "Anonymousdf"}
-                                </h4>
+                              </h4>
                                 {location && (
-                                  <p className="text-xs text-gray-500 flex items-center gap-1">
-                                    <svg
-                                      className="w-3 h-3"
-                                      fill="currentColor"
-                                      viewBox="0 0 20 20"
-                                    >
-                                      <path
-                                        fillRule="evenodd"
-                                        d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                                        clipRule="evenodd"
-                                      />
-                                    </svg>
+                                <p className="text-xs text-gray-500 flex items-center gap-1">
+                                  <svg
+                                    className="w-3 h-3"
+                                    fill="currentColor"
+                                    viewBox="0 0 20 20"
+                                  >
+                                    <path
+                                      fillRule="evenodd"
+                                      d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                                      clipRule="evenodd"
+                                    />
+                                  </svg>
                                     {location}
-                                  </p>
-                                )}
-                              </div>
+                                </p>
+                              )}
                             </div>
                           </div>
+                        </div>
                           {timeAgo && (
-                            <span className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
+                          <span className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
                               {timeAgo}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Rating */}
-                        <div className="flex items-center gap-3 mb-4">
-                          <div className="flex items-center gap-1">
-                            {Array.from({ length: 5 }).map((_, i) => (
-                              <FaStar
-                                key={i}
-                                className={`text-lg ${
-                                  (rating ?? 0) > i
-                                    ? "text-yellow-400"
-                                    : "text-gray-200"
-                                }`}
-                              />
-                            ))}
-                          </div>
-                          <span className="text-sm font-medium text-gray-600">
-                            {rating?.toFixed(1) || 0}/5
                           </span>
-                        </div>
-
-                        {/* Title */}
-                        {title && (
-                          <h5 className="font-semibold text-[#0A1A22] mb-3 text-base leading-tight">
-                            "{title}"
-                          </h5>
                         )}
+                      </div>
 
-                        {/* Content */}
-                        <div className="relative mb-4">
-                          <p className="text-gray-700 text-sm leading-relaxed">
-                            {content}
-                          </p>
-                          {/* Quote decoration */}
-                          <div className="absolute -top-2 -left-2 text-4xl text-[#4EA8A1]/20 font-serif leading-none">
-                            "
-                          </div>
+                      {/* Rating */}
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <FaStar
+                              key={i}
+                              className={`text-lg ${
+                                  (rating ?? 0) > i
+                                  ? "text-yellow-400"
+                                  : "text-gray-200"
+                              }`}
+                            />
+                          ))}
                         </div>
+                        <span className="text-sm font-medium text-gray-600">
+                            {rating?.toFixed(1) || 0}/5
+                        </span>
+                      </div>
+
+                      {/* Title */}
+                        {title && (
+                        <h5 className="font-semibold text-[#0A1A22] mb-3 text-base leading-tight">
+                            "{title}"
+                        </h5>
+                      )}
+
+                      {/* Content */}
+                        <div className="relative mb-4">
+                        <p className="text-gray-700 text-sm leading-relaxed">
+                            {content}
+                        </p>
+                        {/* Quote decoration */}
+                        <div className="absolute -top-2 -left-2 text-4xl text-[#4EA8A1]/20 font-serif leading-none">
+                          "
+                        </div>
+                      </div>
 
                         {/* Tags */}
                         {tags && tags.length > 0 && (
@@ -276,11 +276,11 @@ const FeedbackComplaints: React.FC<Props> = ({
                             ))}
                           </div>
                         )}
-                      </div>
-
-                      {/* Hover effect overlay */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#4EA8A1]/0 via-transparent to-[#4EA8A1]/0 group-hover:from-[#4EA8A1]/5 group-hover:to-[#4EA8A1]/10 transition-all duration-300 pointer-events-none rounded-2xl"></div>
                     </div>
+
+                    {/* Hover effect overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#4EA8A1]/0 via-transparent to-[#4EA8A1]/0 group-hover:from-[#4EA8A1]/5 group-hover:to-[#4EA8A1]/10 transition-all duration-300 pointer-events-none rounded-2xl"></div>
+                  </div>
                   );
                 })}
               </div>

@@ -90,7 +90,7 @@ const DemandInsights: React.FC<Props> = ({
                 Buyer Demographics
               </h4>
 
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex flex-col sm:flex-row items-center justify-between sm:justify-center gap-6 mb-6">
                 <PieChart data={buyerDemographics} />
 
                 <div className="flex flex-col gap-3">
