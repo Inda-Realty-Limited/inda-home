@@ -1,83 +1,79 @@
 import React from "react";
 
 type Props = {
-  title: string;
-  location: string;
-  price: number;
-  propertyType: string;
-  bedrooms: number;
-  bathrooms: number;
-  size: number;
-  imageUrls: string[];
-  listingUrl: string;
+  reportId: string;
+  client: string;
+  analyst: string;
+  reportDate: string;
+  confidenceLevel: string;
+  confidenceScore: number;
 };
 
 const ReportHeader: React.FC<Props> = ({
-  title,
-  location,
-  price,
-  propertyType,
-  bedrooms,
-  bathrooms,
-  size,
-  listingUrl,
+  reportId,
+  client,
+  analyst,
+  reportDate,
+  confidenceLevel,
+  confidenceScore,
 }) => {
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat("en-NG", {
-      style: "currency",
-      currency: "NGN",
-      minimumFractionDigits: 0,
-    }).format(price);
-  };
-
   return (
     <div className="w-full px-6">
-      <div className="bg-gradient-to-r from-indigo-50 via-purple-50 to-pink-50 border border-indigo-200 rounded-2xl p-6 sm:p-8 shadow-sm">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-              {title}
-            </h1>
-            <p className="text-gray-600 mb-4">{location}</p>
+        <div className="text-center mb-6">
+          <h1 className="text-3xl sm:text-4xl font-bold text-inda-teal mb-2">
+            Deeper Dive Report
+          </h1>
+          <p className="text-gray-600 font-bold">
+            Comprehensive due diligence by Inda
+          </p>
+          <p className="text-gray-600 flex items-center justify-center gap-1.5">
+            ⭐
+            Premium Analysis
+            ⭐
+          </p>
+        </div>
+
+        {/* Four Key Metrics Cards */}
+        <div className="bg-[#E5E5E5CC] border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-sm">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div className="bg-[#4EA8A1]/60 rounded-xl p-4 text-center">
+            <p className="text-xs text-white mb-1">Report ID</p>
+            <p className="text-sm font-bold text-white">{reportId}</p>
           </div>
-          <div className="bg-indigo-100 text-indigo-800 px-4 py-2 rounded-lg font-semibold whitespace-nowrap ml-4">
-            Deeper Dive
+          <div className="bg-[#4EA8A1]/60 rounded-xl p-4 text-center">
+            <p className="text-xs text-white mb-1">Client</p>
+            <p className="text-sm font-bold text-white">{client}</p>
+          </div>
+          <div className="bg-[#4EA8A1]/60 rounded-xl p-4 text-center">
+            <p className="text-xs text-white mb-1">Analyst</p>
+            <p className="text-sm font-bold text-white">{analyst}</p>
+          </div>
+          <div className="bg-[#4EA8A1]/60 rounded-xl p-4 text-center">
+            <p className="text-xs text-white mb-1">Date</p>
+            <p className="text-sm font-bold text-white">{reportDate}</p>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-          <div className="bg-white/70 rounded-xl p-4">
-            <p className="text-sm text-gray-600 mb-1">Price</p>
-            <p className="text-lg font-bold text-gray-900">{formatPrice(price)}</p>
+        {/* Confidence Level */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-gray-700">
+              Confidence Level
+            </span>
+            <span className="text-sm font-bold text-inda-teal">
+              {confidenceLevel}
+            </span>
           </div>
-          <div className="bg-white/70 rounded-xl p-4">
-            <p className="text-sm text-gray-600 mb-1">Type</p>
-            <p className="text-lg font-bold text-gray-900">{propertyType}</p>
-          </div>
-          <div className="bg-white/70 rounded-xl p-4">
-            <p className="text-sm text-gray-600 mb-1">Beds/Baths</p>
-            <p className="text-lg font-bold text-gray-900">
-              {bedrooms}/{bathrooms}
-            </p>
-          </div>
-          <div className="bg-white/70 rounded-xl p-4">
-            <p className="text-sm text-gray-600 mb-1">Size</p>
-            <p className="text-lg font-bold text-gray-900">{size}m²</p>
+          <div className="relative h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className="absolute inset-y-0 left-0 bg-inda-teal rounded-full transition-all duration-500"
+              style={{ width: `${confidenceScore}%` }}
+            />
           </div>
         </div>
-
-        <a
-          href={listingUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="text-indigo-600 hover:text-indigo-800 font-medium text-sm hover:underline"
-        >
-          View Original Listing →
-        </a>
       </div>
     </div>
   );
 };
 
 export default ReportHeader;
-

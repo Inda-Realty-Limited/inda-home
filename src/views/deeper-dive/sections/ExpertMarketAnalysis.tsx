@@ -61,3 +61,6 @@ const ExpertMarketAnalysis: React.FC<Props> = ({ marketTrends }) => {
 
 export default ExpertMarketAnalysis;
 
+
+
+
