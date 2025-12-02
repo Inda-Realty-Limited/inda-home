@@ -98,7 +98,7 @@ export const uploadQuestionnaireFiles = async (
   files.forEach((file) => formData.append("files", file));
 
   const res = await apiClient.post(
-    "/payments/upload-questionnaire-files",
+    "/payments/questionnaire/upload",
     formData,
     {
       headers: {
