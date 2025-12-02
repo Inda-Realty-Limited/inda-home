@@ -70,3 +70,6 @@ const LegalInsights: React.FC<Props> = ({ legalInsights }) => {
 
 export default LegalInsights;
 
+
+
+

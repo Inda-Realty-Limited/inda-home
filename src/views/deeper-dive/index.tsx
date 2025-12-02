@@ -1,7 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import Head from "next/head";
 import { Container, Footer, Navbar } from "@/components";
-import { ReportHeader, ExpertMarketAnalysis, LegalInsights } from "./sections";
+import {
+  ReportHeader,
+  ExecutiveSummary,
+  SellerVerification,
+  OnSiteInspection,
+  LegalVerification,
+  SurveyVerification,
+  FinalVerdict,
+} from "./sections";
 import mockData from "@/data/mockDeeperDiveReport.json";
 import {
   PriceAnalysis,
@@ -9,9 +17,22 @@ import {
   DemandInsights,
 } from "@/views/result/sections";
 
+// Types matching the component expectations
+type VerificationItem = {
+  id: string;
+  title: string;
+  description: string;
+  status: "verified" | "pending" | "failed";
+  icon: string;
+};
+
 const DeeperDiveView: React.FC = () => {
-  // For now, use mock data
+  // Cast mock data to verify types
   const data = mockData;
+  const [selectedBar, setSelectedBar] = useState<{
+    series: "fmv" | "price";
+    index: number;
+  } | null>(null);
 
   return (
     <>
@@ -20,346 +41,209 @@ const DeeperDiveView: React.FC = () => {
       </Head>
       <Container noPadding className="min-h-screen bg-[#F9F9F9]">
         <Navbar />
-        <main className="max-w-7xl mx-auto py-8">
+        <main className="max-w-7xl mx-auto py-8 space-y-8">
           {/* Report Header */}
           <ReportHeader
-            title={data.title}
-            location={data.location}
-            price={data.price}
-            propertyType={data.propertyType}
-            bedrooms={data.bedrooms}
-            bathrooms={data.bathrooms}
-            size={data.size}
-            imageUrls={data.imageUrls}
-            listingUrl={data.listingUrl}
+            reportId={data.reportId}
+            client={data.client}
+            analyst={data.analyst}
+            reportDate={data.reportDate}
+            confidenceLevel={data.confidenceLevel}
+            confidenceScore={data.confidenceScore}
           />
 
-          {/* Sections */}
-          <div className="mt-8 space-y-8">
-            {/* Executive Summary */}
-            <div className="w-full px-6">
-              <div className="bg-white/80 border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-sm">
-                <h2 className="text-2xl md:text-3xl font-bold mb-6 text-inda-teal">
-                  Executive Summary
-                </h2>
-                <div className="space-y-4">
+          {/* Executive Summary */}
+          <ExecutiveSummary
+            propertyType={data.propertyOverview.propertyType}
+            location={data.propertyOverview.location}
+            landSize={data.propertyOverview.landSize}
+            yearBuilt={data.propertyOverview.yearBuilt}
+            keyFindings={data.keyFindings}
+            siteVisitDate={data.propertyOverview.siteVisitDate}
+            inspector={data.propertyOverview.inspector}
+          />
+
+          {/* Legal Verification Details */}
+          <LegalVerification
+            items={data.legalVerification as VerificationItem[]}
+          />
+
+          {/* Survey Verification Details */}
+          <SurveyVerification
+            items={data.surveyVerification as VerificationItem[]}
+            coordinates={data.propertyCoordinates}
+            zoom={16}
+          />
+
+          {/* Seller Verification - Unique to Deeper Dive */}
+          <SellerVerification
+            developerProfile={data.sellerVerification.developerProfile}
+            riskAssessment={data.sellerVerification.riskAssessment}
+            confidenceScore={data.sellerVerification.confidenceScore}
+            confidenceLabel={data.sellerVerification.confidenceLabel}
+            recentProjects={data.sellerVerification.recentProjects}
+          />
+
+          {/* On-Site Inspection - Unique to Deeper Dive */}
+          <OnSiteInspection
+            items={data.onSiteInspection as VerificationItem[]}
+            photos={data.photoDocumentation}
+          />
+
+          {/* Environmental Assessment & Inspector Notes */}
+          <div className="w-full px-6">
+            <div className="border-2 border-inda-teal rounded-2xl p-6 sm:p-8 bg-white">
+              {/* Environmental Assessment */}
+              <div className="mb-8 bg-[#E5E5E5CC] rounded-xl p-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-4">
+                  Environmental Assessment
+                </h3>
+                <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-lg font-semibold text-gray-700">
-                      Overall Score
-                    </span>
-                    <span className="text-3xl font-bold text-inda-teal">
-                      {data.aiSummary.overallScore}/100
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-lg font-semibold text-gray-700">
-                      Recommendation
-                    </span>
-                    <span className="text-xl font-bold text-gray-900">
-                      {data.aiSummary.recommendation}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="mt-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">
-                    Key Insights
-                  </h3>
-                  <ul className="space-y-2">
-                    {data.aiSummary.keyInsights.map((insight, index) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <span className="text-inda-teal mt-1">✓</span>
-                        <span className="text-gray-700">{insight}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="mt-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">
-                    Potential Risks
-                  </h3>
-                  <ul className="space-y-2">
-                    {data.aiSummary.risks.map((risk, index) => (
-                      <li key={index} className="flex items-start gap-2">
-                        <span className="text-amber-500 mt-1">⚠</span>
-                        <span className="text-gray-700">{risk}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-
-            {/* Expert Market Analysis - Unique to Deeper Dive */}
-            <ExpertMarketAnalysis
-              marketTrends={data.expertAnalysis.marketTrends}
-            />
-
-            {/* Legal Insights - Unique to Deeper Dive */}
-            <LegalInsights legalInsights={data.expertAnalysis.legalInsights} />
-
-            {/* Investment Risk Assessment */}
-            <div className="w-full px-6">
-              <div className="bg-white/80 border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-sm">
-                <h2 className="text-2xl md:text-3xl font-bold mb-6 text-inda-teal">
-                  Investment Risk Assessment
-                </h2>
-
-                <div className="flex items-center justify-between mb-6">
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900">
-                      Overall Risk Level
-                    </h3>
-                    <p className="text-2xl font-bold text-amber-600">
-                      {data.expertAnalysis.investmentRiskAssessment.overallRisk}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm text-gray-600 mb-1">Risk Score</p>
-                    <p className="text-3xl font-bold text-gray-900">
-                      {data.expertAnalysis.investmentRiskAssessment.riskScore}/100
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  {data.expertAnalysis.investmentRiskAssessment.factors.map(
-                    (factor, index) => (
-                      <div
-                        key={index}
-                        className="border border-gray-200 rounded-xl p-4"
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-bold text-gray-900">
-                            {factor.category}
-                          </h4>
-                          <span
-                            className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                              factor.level === "Low"
-                                ? "bg-green-100 text-green-800"
-                                : factor.level === "Medium"
-                                ? "bg-amber-100 text-amber-800"
-                                : "bg-red-100 text-red-800"
-                            }`}
-                          >
-                            {factor.level}
-                          </span>
-                        </div>
-                        <p className="text-gray-700 text-sm">
-                          {factor.description}
-                        </p>
+                    <span className="text-sm text-gray-700">Air Quality</span>
+                    <div className="flex items-center gap-3 flex-1 max-w-md">
+                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-inda-teal h-2 rounded-full"
+                          style={{ width: "89%" }}
+                        ></div>
                       </div>
-                    )
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Price Analysis */}
-            <PriceAnalysis
-              price={data.price}
-              fmv={data.priceAnalysis.fairMarketValue}
-              months={data.priceAnalysis.priceHistory.map((h) => h.month)}
-              fmvSeries={data.priceAnalysis.priceHistory.map((h) => h.fmv)}
-              priceSeries={data.priceAnalysis.priceHistory.map((h) => h.price)}
-              windowLabel="Last 5 Months"
-              last6ChangePct={5.1}
-              marketPositionPct={data.priceAnalysis.priceVsFMV}
-              selectedBar={null}
-              setSelectedBar={() => {}}
-              dataPoints={data.priceAnalysis.dataPoints}
-            />
-
-            {/* Market Insights */}
-            <MapInsights isOpen={true} toggle={() => {}} aiSummary={null} />
-
-            {/* Demand Insights */}
-            <DemandInsights
-              buyers={data.demandInsights.customerSegments[0].percentage}
-              longTermRenters={data.demandInsights.customerSegments[1].percentage}
-              shortTermRenters={data.demandInsights.customerSegments[2].percentage}
-              landBankers={data.demandInsights.customerSegments[3].percentage}
-              investment={data.demandInsights.purchasePurpose.investment}
-              owners={data.demandInsights.purchasePurpose.owners}
-              supplyDemandRatio={data.demandInsights.supplyDemandRatio}
-            />
-
-            {/* Neighborhood Development Plans */}
-            <div className="w-full px-6">
-              <div className="bg-white/80 border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-sm">
-                <h2 className="text-2xl md:text-3xl font-bold mb-6 text-inda-teal">
-                  Neighborhood Development Plans
-                </h2>
-
-                <div className="mb-4">
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">
-                    Upcoming Projects
-                  </h3>
-                  <ul className="space-y-3">
-                    {data.expertAnalysis.neighborhoodDevelopment.upcomingProjects.map(
-                      (project, index) => (
-                        <li
-                          key={index}
-                          className="flex items-start gap-2 bg-indigo-50 rounded-lg p-3"
-                        >
-                          <span className="text-inda-teal mt-1">🏗️</span>
-                          <span className="text-gray-700">{project}</span>
-                        </li>
-                      )
-                    )}
-                  </ul>
-                </div>
-
-                <div className="bg-gradient-to-r from-green-50 to-teal-50 rounded-xl p-6">
-                  <h4 className="font-bold text-gray-900 mb-2">
-                    Impact Assessment
-                  </h4>
-                  <p className="text-gray-700">
-                    {data.expertAnalysis.neighborhoodDevelopment.impactAssessment}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Exit Strategy Recommendations */}
-            <div className="w-full px-6">
-              <div className="bg-white/80 border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-sm">
-                <h2 className="text-2xl md:text-3xl font-bold mb-6 text-inda-teal">
-                  Exit Strategy Recommendations
-                </h2>
-
-                <div className="mb-6 bg-indigo-50 rounded-xl p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-900">
-                        Recommended Hold Period
-                      </h3>
-                      <p className="text-2xl font-bold text-inda-teal">
-                        {data.expertAnalysis.exitStrategy.recommendedHoldPeriod}
-                      </p>
+                      <span className="text-sm font-medium text-gray-900 w-12 text-right">
+                        89%
+                      </span>
                     </div>
-                    <div className="text-right">
-                      <h3 className="text-lg font-bold text-gray-900">
-                        Optimal Exit Timing
-                      </h3>
-                      <p className="text-xl font-bold text-gray-900">
-                        {data.expertAnalysis.exitStrategy.optimalExitTiming}
-                      </p>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-700">Noise Level</span>
+                    <div className="flex items-center gap-3 flex-1 max-w-md">
+                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-inda-teal h-2 rounded-full"
+                          style={{ width: "25%" }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-medium text-gray-900 w-12 text-right">
+                        25%
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-700">Flood Risk</span>
+                    <div className="flex items-center gap-3 flex-1 max-w-md">
+                      <div className="flex-1 bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-inda-teal h-2 rounded-full"
+                          style={{ width: "15%" }}
+                        ></div>
+                      </div>
+                      <span className="text-sm font-medium text-gray-900 w-12 text-right">
+                        15%
+                      </span>
                     </div>
                   </div>
                 </div>
-
-                <div className="space-y-4">
-                  {data.expertAnalysis.exitStrategy.strategies.map(
-                    (strategy, index) => (
-                      <div
-                        key={index}
-                        className="border border-gray-200 rounded-xl p-6"
-                      >
-                        <h4 className="text-xl font-bold text-gray-900 mb-2">
-                          {strategy.type}
-                        </h4>
-                        <p className="text-gray-700 mb-4">
-                          {strategy.description}
-                        </p>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <p className="font-semibold text-gray-900 mb-2">
-                              Pros:
-                            </p>
-                            <ul className="space-y-1">
-                              {strategy.pros.map((pro, i) => (
-                                <li key={i} className="text-sm text-gray-700">
-                                  • {pro}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                          <div>
-                            <p className="font-semibold text-gray-900 mb-2">
-                              Cons:
-                            </p>
-                            <ul className="space-y-1">
-                              {strategy.cons.map((con, i) => (
-                                <li key={i} className="text-sm text-gray-700">
-                                  • {con}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        </div>
-
-                        <div className="mt-4 bg-teal-50 rounded-lg p-3">
-                          <p className="font-semibold text-gray-900">
-                            Estimated Return:{" "}
-                            <span className="text-inda-teal">
-                              {strategy.estimatedReturn}
-                            </span>
-                          </p>
-                        </div>
-                      </div>
-                    )
-                  )}
-                </div>
               </div>
-            </div>
 
-            {/* Priority Support */}
-            <div className="w-full px-6">
-              <div className="bg-gradient-to-r from-indigo-50 to-purple-50 border border-indigo-200 rounded-2xl p-6 sm:p-8 shadow-sm">
-                <h2 className="text-2xl md:text-3xl font-bold mb-6 text-inda-teal">
-                  🎯 Priority Support
-                </h2>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">
-                      Dedicated Analyst
-                    </p>
-                    <p className="text-xl font-bold text-gray-900">
-                      {data.prioritySupport.dedicatedAnalyst}
-                    </p>
+              {/* Inspector Notes */}
+              <div className="bg-[#E5E5E5CC] rounded-xl p-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-4">
+                  Inspector Notes
+                </h3>
+                <div className="space-y-2">
+                  <div className="flex items-start gap-2">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="mt-0.5 flex-shrink-0"
+                    >
+                      <path
+                        d="M13.3346 4L6.0013 11.3333L2.66797 8"
+                        stroke="#4EA8A1"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <span className="text-sm text-gray-700">
+                      Property shows excellent maintenance and modern finishes
+                    </span>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600 mb-1">Response Time</p>
-                    <p className="text-xl font-bold text-gray-900">
-                      {data.prioritySupport.responseTime}
-                    </p>
+                  <div className="flex items-start gap-2">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="mt-0.5 flex-shrink-0"
+                    >
+                      <path
+                        d="M13.3346 4L6.0013 11.3333L2.66797 8"
+                        stroke="#4EA8A1"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <span className="text-sm text-gray-700">
+                      All major systems operational and well-maintained
+                    </span>
                   </div>
-                </div>
-
-                <div className="mb-6">
-                  <p className="font-semibold text-gray-900 mb-2">
-                    Contact Email:
-                  </p>
-                  <a
-                    href={`mailto:${data.prioritySupport.contactEmail}`}
-                    className="text-indigo-600 hover:text-indigo-800 font-medium"
-                  >
-                    {data.prioritySupport.contactEmail}
-                  </a>
-                </div>
-
-                <div>
-                  <p className="font-semibold text-gray-900 mb-3">
-                    Additional Services:
-                  </p>
-                  <ul className="space-y-2">
-                    {data.prioritySupport.additionalServices.map(
-                      (service, index) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <span className="text-inda-teal mt-1">✓</span>
-                          <span className="text-gray-700">{service}</span>
-                        </li>
-                      )
-                    )}
-                  </ul>
+                  <div className="flex items-start gap-2">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="mt-0.5 flex-shrink-0"
+                    >
+                      <path
+                        d="M13.3346 4L6.0013 11.3333L2.66797 8"
+                        stroke="#4EA8A1"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <span className="text-sm text-gray-700">
+                      Neighbourhood infrastructure in excellent condition
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="mt-0.5 flex-shrink-0"
+                    >
+                      <path
+                        d="M8 1L8 15M1 8L15 8"
+                        stroke="#F59E0B"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                      />
+                      <circle cx="8" cy="8" r="7" stroke="#F59E0B" strokeWidth="2" fill="none"/>
+                    </svg>
+                    <span className="text-sm text-gray-700">
+                      Swimming pool completion expected within 4 weeks
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+
+          {/* Final Verdict */}
+          <FinalVerdict
+            confidenceScoreBreakdown={data.confidenceScoreBreakdown}
+            finalVerdict={data.finalVerdict}
+          />
         </main>
         <Footer />
       </Container>
@@ -368,4 +252,3 @@ const DeeperDiveView: React.FC = () => {
 };
 
 export default DeeperDiveView;
-
