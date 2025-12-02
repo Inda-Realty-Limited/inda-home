@@ -7,11 +7,13 @@ import {
   QuestionnaireFileRef,
 } from "@/types/questionnaire";
 import Head from "next/head";
+import Image from "next/image";
 import { useRouter } from "next/router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   FiArrowLeft,
   FiCheckCircle,
+  FiFileText,
   FiLoader,
   FiUploadCloud,
 } from "react-icons/fi";
@@ -1388,6 +1390,24 @@ const UploadCard: React.FC<UploadCardProps> = ({
   const hasFiles = files.length > 0;
   const primaryFile = files[0];
   const totalSize = files.reduce((acc, file) => acc + file.size, 0);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const isImageFile = Boolean(
+    primaryFile && primaryFile.type?.toLowerCase().startsWith("image/")
+  );
+
+  useEffect(() => {
+    if (primaryFile && isImageFile) {
+      const objectUrl = URL.createObjectURL(primaryFile);
+      setPreviewUrl(objectUrl);
+      return () => {
+        URL.revokeObjectURL(objectUrl);
+        setPreviewUrl(null);
+      };
+    }
+
+    setPreviewUrl(null);
+    return () => undefined;
+  }, [primaryFile, isImageFile]);
 
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
@@ -1395,8 +1415,8 @@ const UploadCard: React.FC<UploadCardProps> = ({
         htmlFor={inputId}
         className={`flex h-32 w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-[#DCEAE8] bg-[#4EA8A11F] transition sm:w-48 ${
           isUploading
-            ? "pointer-events-none opacity-60"
-            : "hover:border-[#4EA8A1]"
+            ? "cursor-not-allowed opacity-60"
+            : "cursor-pointer hover:border-[#4EA8A1]"
         }`}
       >
         {isUploading ? (
@@ -1404,17 +1424,42 @@ const UploadCard: React.FC<UploadCardProps> = ({
             <FiLoader className="h-7 w-7 animate-spin" />
             <span className="text-xs font-medium">Uploading…</span>
           </div>
+        ) : hasFiles ? (
+          <div className="flex flex-col items-center gap-2 text-[#0B1D27]">
+            {previewUrl ? (
+              <Image
+                src={previewUrl}
+                alt={primaryFile?.name || "Uploaded document preview"}
+                width={160}
+                height={96}
+                unoptimized
+                className="h-16 w-24 rounded-lg object-cover shadow-sm"
+              />
+            ) : (
+              <FiFileText className="h-8 w-8 text-[#4EA8A1]" />
+            )}
+            <div className="text-center">
+              <p className="text-xs font-semibold truncate max-w-[140px]">
+                {primaryFile?.name}
+              </p>
+              <p className="text-[11px] text-[#4EA8A1]">
+                {formatBytes(primaryFile?.size ?? 0)}
+              </p>
+            </div>
+          </div>
         ) : (
-          <FiUploadCloud className="h-8 w-8 text-[#4EA8A1]" />
+          <>
+            <FiUploadCloud className="h-8 w-8 text-[#4EA8A1]" />
+            <div className="text-center">
+              <p className="text-xs font-medium text-[#4EA8A1]">
+                Click to upload or drag and drop
+              </p>
+              <p className="mt-1 text-xs text-[#5E7572]">
+                PDF, JPG, PNG (max. 5MB)
+              </p>
+            </div>
+          </>
         )}
-        <div className="text-center">
-          <p className="text-xs font-medium text-[#4EA8A1]">
-            Click to upload or drag and drop
-          </p>
-          <p className="mt-1 text-xs text-[#5E7572]">
-            PDF, JPG, PNG (max. 5MB)
-          </p>
-        </div>
         <input
           id={inputId}
           type="file"
