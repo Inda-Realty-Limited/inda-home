@@ -127,54 +127,54 @@ const MapInsights: React.FC<Props> = ({ isOpen, toggle, aiSummary }) => {
         <div className="relative" style={{ width: size, height: size }}>
           <svg width={size} height={size} className="absolute inset-0">
             {/* Grid levels */}
-            {levelPaths.map((path, i) => (
-              <path
-                key={i}
-                d={path}
-                fill="none"
+        {levelPaths.map((path, i) => (
+          <path
+            key={i}
+            d={path}
+            fill="none"
                 stroke="#D1D5DB"
                 strokeWidth="1.5"
                 opacity={0.4}
-              />
-            ))}
-            
+          />
+        ))}
+        
             {/* Radial lines */}
-            {data.map((_, index) => {
-              const endPoint = getPoint(100, index);
-              return (
-                <line
-                  key={index}
-                  x1={center}
-                  y1={center}
-                  x2={endPoint.x}
-                  y2={endPoint.y}
+        {data.map((_, index) => {
+          const endPoint = getPoint(100, index);
+          return (
+            <line
+              key={index}
+              x1={center}
+              y1={center}
+              x2={endPoint.x}
+              y2={endPoint.y}
                   stroke="#D1D5DB"
                   strokeWidth="1.5"
                   opacity={0.4}
-                />
-              );
-            })}
+            />
+          );
+        })}
 
             {/* Data area */}
-            <path
-              d={pathData}
+        <path
+          d={pathData}
               fill="rgba(78, 168, 161, 0.25)"
-              stroke="#4EA8A1"
+          stroke="#4EA8A1"
               strokeWidth="2.5"
-              strokeLinejoin="round"
-            />
+          strokeLinejoin="round"
+        />
 
             {/* Data points */}
-            {dataPoints.map((point, i) => (
-              <circle
-                key={i}
-                cx={point.x}
-                cy={point.y}
+        {dataPoints.map((point, i) => (
+          <circle
+            key={i}
+            cx={point.x}
+            cy={point.y}
                 r="4"
-                fill="#4EA8A1"
-              />
-            ))}
-          </svg>
+            fill="#4EA8A1"
+          />
+        ))}
+      </svg>
 
           {/* Labels as absolutely positioned divs */}
           {data.map((item, index) => {

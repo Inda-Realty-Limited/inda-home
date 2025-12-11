@@ -1,4 +1,5 @@
 import React from "react";
+import DownloadReportButton from "@/components/inc/DownloadReportButton";
 import { FiCheck, FiDownload, FiInfo } from "react-icons/fi";
 
 type Props = {
@@ -15,9 +16,11 @@ type Props = {
     investmentGrade: string;
     stars: number;
   };
+  downloadRef?: React.RefObject<HTMLElement>;
+  filename?: string;
 };
 
-const FinalVerdict: React.FC<Props> = ({ confidenceScoreBreakdown, finalVerdict }) => {
+const FinalVerdict: React.FC<Props> = ({ confidenceScoreBreakdown, finalVerdict, downloadRef, filename }) => {
   return (
     <div className="w-full px-6">
       {/* Confidence Score Breakdown */}
@@ -232,9 +235,13 @@ const FinalVerdict: React.FC<Props> = ({ confidenceScoreBreakdown, finalVerdict 
             How would you like to proceed?
           </h3>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button className="bg-inda-teal text-white px-8 py-3 rounded-xl font-semibold hover:bg-inda-teal/90 transition-colors">
+            <DownloadReportButton
+              targetRef={downloadRef as React.RefObject<HTMLElement>}
+              filename={filename}
+              className="bg-inda-teal text-white px-8 py-3 rounded-xl font-semibold hover:bg-inda-teal/90 transition-colors"
+            >
               Download Report
-            </button>
+            </DownloadReportButton>
             <button className="bg-inda-teal text-white px-8 py-3 rounded-xl font-semibold hover:bg-inda-teal/90 transition-colors">
               Schedule Follow-Up
             </button>
@@ -246,5 +253,4 @@ const FinalVerdict: React.FC<Props> = ({ confidenceScoreBreakdown, finalVerdict 
 };
 
 export default FinalVerdict;
-
 

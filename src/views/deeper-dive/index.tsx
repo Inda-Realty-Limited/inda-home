@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import Head from "next/head";
 import { Container, Footer, Navbar } from "@/components";
 import {
@@ -29,6 +29,7 @@ type VerificationItem = {
 const DeeperDiveView: React.FC = () => {
   // Cast mock data to verify types
   const data = mockData;
+  const reportRef = useRef<HTMLDivElement>(null);
   const [selectedBar, setSelectedBar] = useState<{
     series: "fmv" | "price";
     index: number;
@@ -41,7 +42,7 @@ const DeeperDiveView: React.FC = () => {
       </Head>
       <Container noPadding className="min-h-screen bg-[#F9F9F9]">
         <Navbar />
-        <main className="max-w-7xl mx-auto py-8 space-y-8">
+        <main className="max-w-7xl mx-auto py-8 space-y-8" ref={reportRef}>
           {/* Report Header */}
           <ReportHeader
             reportId={data.reportId}
@@ -243,6 +244,8 @@ const DeeperDiveView: React.FC = () => {
           <FinalVerdict
             confidenceScoreBreakdown={data.confidenceScoreBreakdown}
             finalVerdict={data.finalVerdict}
+            downloadRef={reportRef}
+            filename={`Inda-${data.reportId}.pdf`}
           />
         </main>
         <Footer />

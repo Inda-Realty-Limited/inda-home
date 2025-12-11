@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import Head from "next/head";
 import { Container, Footer, Navbar } from "@/components";
 import {
@@ -21,6 +21,7 @@ type VerificationItem = {
 const DeepDiveView: React.FC = () => {
   // For now, use mock data
   const data = mockData;
+  const reportRef = useRef<HTMLDivElement>(null);
 
   return (
     <>
@@ -29,7 +30,7 @@ const DeepDiveView: React.FC = () => {
       </Head>
       <Container noPadding className="min-h-screen bg-[#F9F9F9]">
         <Navbar />
-        <main className="max-w-7xl mx-auto py-8">
+        <main className="max-w-7xl mx-auto py-8" ref={reportRef}>
           {/* Report Header */}
           <ReportHeader
             reportId={data.reportId}
@@ -65,6 +66,8 @@ const DeepDiveView: React.FC = () => {
               status={data.finalVerdict.status as "proceed" | "caution" | "decline"}
               message={data.finalVerdict.message}
               metrics={data.finalVerdict.metrics}
+              downloadRef={reportRef}
+              filename={`Inda-${data.reportId}.pdf`}
             />
           </div>
         </main>
@@ -75,4 +78,3 @@ const DeepDiveView: React.FC = () => {
 };
 
 export default DeepDiveView;
-
