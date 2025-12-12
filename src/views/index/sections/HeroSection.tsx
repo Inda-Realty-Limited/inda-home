@@ -1,70 +1,91 @@
-import { motion } from "framer-motion";
-import React from "react";
+import { Button } from './ui/button';
+import { ArrowRight, Sparkles } from 'lucide-react';
 
-const HeroSection: React.FC = () => {
+export function HeroSection() {
+  const openWhatsAppDemo = () => {
+    const phone = process.env.NEXT_PUBLIC_INDA_WHATSAPP;
+    if (!phone) return;
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(
+      "Hi, I'm interested in booking a demo with Inda."
+    )}`;
+    if (typeof window !== "undefined") window.open(url, "_blank");
+  };
+
   return (
-    <motion.section
-      className="relative overflow-hidden bg-white"
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      transition={{ duration: 0.8, ease: "easeOut" }}
-    >
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,#dce7ed_1px,transparent_0)] [background-size:36px_36px] opacity-60" />
-
-      <div className="relative w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-18 lg:py-24 flex flex-col items-center text-center gap-8">
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white shadow-[0_15px_50px_-25px_rgba(0,0,0,0.25)] border border-[#e3edf2]"
-        >
-          <div className="flex items-center justify-center w-8 h-8 rounded-full bg-inda-teal/10 text-inda-teal font-semibold text-sm">
-            ✓
+    <section className="relative pt-32 pb-32 px-6 overflow-hidden">
+      {/* Animated gradient background with pattern */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#4ea8a1]/5 via-purple-50/30 to-orange-50/30" />
+      
+      {/* Dot pattern overlzay */}
+      <div 
+        className="absolute inset-0 opacity-40"
+        style={{
+          backgroundImage: `radial-gradient(circle, #4ea8a1 1px, transparent 1px)`,
+          backgroundSize: '30px 30px',
+        }}
+      />
+      
+      {/* Grid pattern */}
+      <div 
+        className="absolute inset-0 opacity-20"
+        style={{
+          backgroundImage: `linear-gradient(#4ea8a1 1px, transparent 1px), linear-gradient(90deg, #4ea8a1 1px, transparent 1px)`,
+          backgroundSize: '60px 60px',
+        }}
+      />
+      
+      {/* Floating decorative elements */}
+      <div className="absolute top-20 right-10 w-72 h-72 bg-[#4ea8a1]/10 rounded-full blur-3xl animate-pulse" />
+      <div className="absolute bottom-20 left-10 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
+      
+      <div className="max-w-7xl mx-auto relative">
+        <div className="max-w-5xl mx-auto text-center">
+          {/* Badge */}
+          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/80 backdrop-blur-sm border border-[#4ea8a1]/20 rounded-full mb-8 shadow-sm animate-in fade-in slide-in-from-top-4 duration-700">
+            <Sparkles className="w-4 h-4 text-[#4ea8a1]" />
+            <span className="text-sm text-gray-700">Trusted by 2000+ real estate professionals</span>
           </div>
-          <p className="text-sm sm:text-base font-medium text-[#101820]">
-            Trusted by 2000+ real estate professionals
+          
+          {/* Main Heading */}
+          <h1 className="text-6xl md:text-7xl lg:text-8xl text-gray-900 mb-8 animate-in fade-in slide-in-from-bottom-6 duration-700" style={{ animationDelay: '100ms', animationFillMode: 'backwards' }}>
+            Built for Every Real Estate{' '}
+            <span className="bg-gradient-to-r from-[#4ea8a1] to-[#3d8680] bg-clip-text text-transparent">
+              Decision
+            </span>
+          </h1>
+          
+          {/* Subheading */}
+          <p className="text-2xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom-6 duration-700" style={{ animationDelay: '200ms', animationFillMode: 'backwards' }}>
+            Turn property insights into action - whether you're investing, developing, or financing real estate.
           </p>
-        </motion.div>
 
-        <div className="space-y-6 sm:space-y-8 max-w-5xl">
-          <motion.h1
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.15 }}
-            className="font-extrabold text-[#0f1624] text-4xl sm:text-5xl md:text-6xl lg:text-7xl leading-[1.05]"
-          >
-            Built for Every Real Estate{" "}
-            <span className="text-inda-teal">Decision</span>
-          </motion.h1>
+          {/* CTA Buttons */}
+          <div className="flex items-center justify-center gap-4 flex-wrap mb-16 animate-in fade-in slide-in-from-bottom-6 duration-700" style={{ animationDelay: '300ms', animationFillMode: 'backwards' }}>
+            <Button size="lg" className="bg-[#4ea8a1] hover:bg-[#3d8680] group shadow-lg shadow-[#4ea8a1]/25 hover:shadow-xl hover:shadow-[#4ea8a1]/40 transition-all text-lg px-8 py-6">
+              Get Started
+              <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={openWhatsAppDemo}
+              className="text-lg px-8 py-6 border-2 hover:border-[#4ea8a1] hover:text-[#4ea8a1]"
+            >
+              Book Demo
+            </Button>
+          </div>
 
-          <motion.p
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.2 }}
-            className="text-lg sm:text-xl md:text-2xl text-[#4a5568] max-w-3xl mx-auto"
-          >
-            Turn property insights into action – whether you&apos;re investing,
-            developing, or financing real estate.
-          </motion.p>
+          {/* Trust Indicators with better design */}
+          <div className="flex items-center justify-center gap-12 text-sm animate-in fade-in duration-700" style={{ animationDelay: '400ms', animationFillMode: 'backwards' }}>
+            <div className="flex items-center gap-2 text-gray-600">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              Real-time data
+            </div>
+            <div className="text-gray-600">Enterprise-grade security</div>
+            <div className="text-gray-600">99.9% uptime</div>
+          </div>
         </div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.28 }}
-          className="flex flex-col sm:flex-row items-center gap-4"
-        >
-          <button className="px-7 py-3.5 rounded-xl bg-inda-teal text-white font-semibold text-lg shadow-lg shadow-inda-teal/25 hover:shadow-xl hover:shadow-inda-teal/30 transition-transform duration-200 hover:-translate-y-0.5">
-            Get Started
-                  </button>
-          <button className="px-7 py-3.5 rounded-xl bg-white text-[#0f1624] font-semibold text-lg border border-[#d8e3ea] hover:border-inda-teal hover:text-inda-teal transition-colors duration-200">
-            Book Demo
-                        </button>
-        </motion.div>
       </div>
-    </motion.section>
+    </section>
   );
-};
-
-export default HeroSection;
+}

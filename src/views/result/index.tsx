@@ -616,10 +616,7 @@ const ResultPage: React.FC = () => {
   const isValidDateObj = (d: Date) => !Number.isNaN(d.getTime());
 
   const openWhatsApp = (text: string) => {
-    const phone =
-      process.env.NEXT_PUBLIC_WHATSAPP_JOSHUA ||
-      process.env.NEXT_PUBLIC_INDA_WHATSAPP ||
-      "2348102544302";
+    const phone = process.env.NEXT_PUBLIC_INDA_WHATSAPP;
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
     if (typeof window !== "undefined") window.open(url, "_blank");
   };
