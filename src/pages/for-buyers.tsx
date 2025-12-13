@@ -445,7 +445,7 @@ export function ForBuyers() {
               </div>
               <h3 className="text-2xl mb-2 text-white">Deep Dive</h3>
               <div className="text-4xl mb-6 text-white">
-                ₦25,000
+                ₦75,000
                 <span className="text-lg text-emerald-100">/property</span>
               </div>
               <p className="text-emerald-100 mb-8">24–48 hours turnaround</p>
@@ -482,7 +482,7 @@ export function ForBuyers() {
             <div className="bg-white rounded-3xl shadow-lg p-8 border border-gray-200 hover:shadow-2xl transition-shadow">
               <h3 className="text-2xl mb-2 text-gray-900">Deeper Dive</h3>
               <div className="text-4xl mb-6 text-gray-900">
-                ₦50,000
+                ₦100,000
                 <span className="text-lg text-gray-500">/property</span>
               </div>
               <p className="text-gray-600 mb-8">48–72 hours turnaround</p>
