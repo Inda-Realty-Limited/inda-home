@@ -1,4 +1,5 @@
 import React from "react";
+import DownloadReportButton from "@/components/inc/DownloadReportButton";
 import { FiCheckCircle, FiMapPin, FiTrendingUp, FiDownload, FiShoppingCart } from "react-icons/fi";
 import { useRouter } from "next/router";
 
@@ -12,6 +13,8 @@ type Props = {
   status: "proceed" | "caution" | "decline";
   message: string;
   metrics: Metric[];
+  downloadRef?: React.RefObject<HTMLElement>;
+  filename?: string;
 };
 
 const getIcon = (iconName: string) => {
@@ -30,7 +33,7 @@ const getIcon = (iconName: string) => {
   return iconMap[iconName] || <FiCheckCircle size={20} />;
 };
 
-const FinalVerdict: React.FC<Props> = ({ status, message, metrics }) => {
+const FinalVerdict: React.FC<Props> = ({ status, message, metrics, downloadRef, filename }) => {
   const router = useRouter();
 
   const getStatusColor = () => {
@@ -112,16 +115,14 @@ const FinalVerdict: React.FC<Props> = ({ status, message, metrics }) => {
             How would you like to proceed?
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <button
-              onClick={() => {
-                // Handle download
-                alert("Download functionality to be implemented");
-              }}
+            <DownloadReportButton
+              targetRef={downloadRef as React.RefObject<HTMLElement>}
+              filename={filename}
               className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-inda-teal text-white rounded-lg font-medium hover:bg-inda-teal/90 transition-colors"
             >
               <FiDownload size={18} />
               Download Report
-            </button>
+            </DownloadReportButton>
             <button
               onClick={() => {
                 router.push("/");
@@ -139,7 +140,6 @@ const FinalVerdict: React.FC<Props> = ({ status, message, metrics }) => {
 };
 
 export default FinalVerdict;
-
 
 
 

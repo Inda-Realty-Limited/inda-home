@@ -3,9 +3,7 @@ import React, { useCallback } from "react";
 
 const CTABanner: React.FC = () => {
   const INDA_WHATSAPP =
-    process.env.NEXT_PUBLIC_WHATSAPP_JOSHUA ||
-    process.env.NEXT_PUBLIC_INDA_WHATSAPP ||
-    "2348102544302";
+    process.env.NEXT_PUBLIC_INDA_WHATSAPP
 
   const handleCTA = useCallback(() => {
     if (typeof window !== "undefined") {
@@ -15,7 +13,7 @@ const CTABanner: React.FC = () => {
   }, []);
 
   const openWhatsApp = useCallback(
-    (text: string, phone: string = INDA_WHATSAPP) => {
+    (text: string, phone: string = INDA_WHATSAPP || "") => {
       const url = `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
       if (typeof window !== "undefined") window.open(url, "_blank");
     },
