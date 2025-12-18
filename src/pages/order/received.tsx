@@ -1,4 +1,5 @@
 import { Container, Footer, Navbar } from "@/components";
+import { verifyPayment } from "@/api/payments";
 import { useRouter } from "next/router";
 import React, { useEffect, useMemo, useState } from "react";
 
@@ -12,10 +13,10 @@ const OrderReceived: React.FC = () => {
   const product = useMemo(() => {
     if (plan === "deeperDive") return "Deeper Dive";
     if (plan === "deepDive") return "Deep Dive";
-    if (plan === "instant") return "Instant Report";
     return "Deep Dive";
   }, [plan]);
   const [orderId, setOrderId] = useState<string>(reference || "");
+  const [isVerified, setIsVerified] = useState<boolean | null>(null);
   useEffect(() => {
     if (reference) {
       setOrderId(reference);
@@ -24,6 +25,31 @@ const OrderReceived: React.FC = () => {
       setOrderId(`IND-${Date.now().toString().slice(-5)}`);
     }
   }, [reference]);
+
+  // Immediately verify payment when returning from the provider
+  useEffect(() => {
+    if (!router.isReady) return;
+    const ref = ((router.query["reference"] as string) || (router.query["ref"] as string) || "").trim();
+    if (ref) {
+      setIsVerified(null);
+      verifyPayment(ref)
+        .then((p) => {
+          const ok = String(p?.status || "").toLowerCase() === "success";
+          setIsVerified(ok);
+        })
+        .catch(() => {
+          setIsVerified(false);
+        })
+        .finally(() => {
+          const { q, plan } = router.query;
+          router.replace(
+            { pathname: router.pathname, query: { q, plan } },
+            undefined,
+            { shallow: true }
+          );
+        });
+    }
+  }, [router.isReady, router.query]);
 
   const handleGoHome = () => {
     router.push("/");
@@ -95,6 +121,22 @@ const OrderReceived: React.FC = () => {
                 </div>
                 <div className="px-4 py-3 text-[#4EA8A1] font-medium flex-1 min-w-0">
                   {product}
+                </div>
+              </div>
+
+              {/* Payment Status Row */}
+              <div className="flex bg-transparent border border-[#4EA8A1]/30 rounded-lg overflow-hidden mt-2">
+                <div className="bg-[#4EA8A1] text-white px-4 py-3 font-medium flex-shrink-0 min-w-fit">
+                  Payment Status
+                </div>
+                <div className="px-4 py-3 font-medium flex-1 min-w-0">
+                  {isVerified === null ? (
+                    <span className="text-[#4EA8A1]">Checking…</span>
+                  ) : isVerified ? (
+                    <span className="text-[#2D8A62]">Verified</span>
+                  ) : (
+                    <span className="text-[#C53030]">Not Verified</span>
+                  )}
                 </div>
               </div>
             </div>

@@ -1,18 +1,46 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import { TrendingUp } from 'lucide-react';
 
 export function PropertyTicker() {
+  const [relativeTime, setRelativeTime] = useState<{ [key: number]: string }>({});
+
+  const formatRelativeTime = (date: Date): string => {
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffInSeconds < 60) return `${diffInSeconds}s ago`;
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    return `${Math.floor(diffInSeconds / 604800)}w ago`;
+  };
+
   const properties = [
-    { location: 'Lekki Phase 1', type: '2BR', price: '₦180M', change: '↑3.4%', trend: 'up' },
-    { location: 'Oniru', type: '1BR', price: '₦120M', change: '↑1.1%', trend: 'up' },
-    { location: 'Victoria Island', type: 'Office', price: '₦85k/sqm/yr', change: '↑4.1%', trend: 'up' },
-    { location: 'Epe', type: 'Land', price: '₦18k/sqm', change: '↑4.1%', trend: 'up' },
-    { location: 'Ikoyi', type: '3BR', price: '₦250M', change: '↑2.8%', trend: 'up' },
-    { location: 'Ajah', type: '2BR', price: '₦45M', change: '↑5.2%', trend: 'up' },
-    { location: 'Yaba', type: 'Office', price: '₦55k/sqm/yr', change: '↑3.1%', trend: 'up' },
-    { location: 'Banana Island', type: '4BR', price: '₦500M', change: '↑1.9%', trend: 'up' },
+    { location: 'Lekki Phase 1', type: '2BR', price: '₦180M', change: '↑3.4%', trend: 'up', updatedAt: new Date(Date.now() - 2 * 60 * 1000) },
+    { location: 'Oniru', type: '1BR', price: '₦120M', change: '↑1.1%', trend: 'up', updatedAt: new Date(Date.now() - 5 * 60 * 1000) },
+    { location: 'Victoria Island', type: 'Office', price: '₦85k/sqm/yr', change: '↑4.1%', trend: 'up', updatedAt: new Date(Date.now() - 15 * 60 * 1000) },
+    { location: 'Epe', type: 'Land', price: '₦18k/sqm', change: '↑4.1%', trend: 'up', updatedAt: new Date(Date.now() - 2 * 3600 * 1000) },
+    { location: 'Ikoyi', type: '3BR', price: '₦250M', change: '↑2.8%', trend: 'up', updatedAt: new Date(Date.now() - 1 * 3600 * 1000) },
+    { location: 'Ajah', type: '2BR', price: '₦45M', change: '↑5.2%', trend: 'up', updatedAt: new Date(Date.now() - 30 * 1000) },
+    { location: 'Yaba', type: 'Office', price: '₦55k/sqm/yr', change: '↑3.1%', trend: 'up', updatedAt: new Date(Date.now() - 3 * 86400 * 1000) },
+    { location: 'Banana Island', type: '4BR', price: '₦500M', change: '↑1.9%', trend: 'up', updatedAt: new Date(Date.now() - 1 * 604800 * 1000) },
   ];
+
+  useEffect(() => {
+    const updateTimes = () => {
+      const newRelativeTime: { [key: number]: string } = {};
+      properties.forEach((prop, index) => {
+        newRelativeTime[index] = formatRelativeTime(prop.updatedAt);
+      });
+      setRelativeTime(newRelativeTime);
+    };
+
+    updateTimes();
+    const interval = setInterval(updateTimes, 30000); // Update every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
 
   // Duplicate the array multiple times for seamless loop
   const tickerItems = [...properties, ...properties, ...properties];
@@ -43,6 +71,9 @@ export function PropertyTicker() {
               </div>
               <div className="text-green-400 text-sm font-medium">
                 {property.change}
+              </div>
+              <div className="text-gray-500 text-xs">
+                {relativeTime[index % properties.length] || 'updating...'}
               </div>
             </div>
           ))}

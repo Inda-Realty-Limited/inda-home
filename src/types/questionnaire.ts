@@ -1,5 +1,5 @@
 export type QuestionnairePlan = "deepDive" | "deeperDive";
-export type PaymentPlan = "instant" | "free" | "deepDive" | "deeperDive";
+export type PaymentPlan = "deepDive" | "deeperDive";
 
 export type QuestionnaireStatus = "submitted" | "paid" | "cancelled";
 

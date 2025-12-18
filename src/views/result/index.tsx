@@ -1,5 +1,5 @@
 import { getComputedListingByUrl } from "@/api/listings";
-import { getFreeViewStatus, hasPaid, verifyPayment } from "@/api/payments";
+import { verifyPayment } from "@/api/payments";
 import { Container, Footer, Navbar } from "@/components";
 import PaymentModal from "@/components/inc/PaymentModal";
 import { getUser } from "@/helpers";
@@ -167,7 +167,6 @@ const ResultPage: React.FC = () => {
   const [result, setResult] = useState<ComputedListing | null>(null);
 
   // Payment gating
-  const [freeViewAvailable, setFreeViewAvailable] = useState<boolean>(false);
   const [isPaid, setIsPaid] = useState<boolean>(false);
   const [proceed, setProceed] = useState(false);
   const [startPaidFlow, setStartPaidFlow] = useState(false);
@@ -286,13 +285,7 @@ const ResultPage: React.FC = () => {
     }, 600);
   };
 
-  // Payment helpers
-  useEffect(() => {
-    if (!router.isReady) return;
-    getFreeViewStatus()
-      .then((st) => setFreeViewAvailable(!!st?.freeViewAvailable))
-      .catch(() => setFreeViewAvailable(false));
-  }, [router.isReady]);
+  
 
   // Verify payment on callback
   useEffect(() => {
@@ -336,69 +329,28 @@ const ResultPage: React.FC = () => {
         setTimeout(() => setCurrentStep(2), 2400),
         setTimeout(() => setCurrentStep(3), 3600),
       ];
-      // Instant reports are free for authenticated users
-      if (user) {
-        setIsPaid(true);
-        getComputedListingByUrl(query)
-          .then((res) => {
-            const data = res || null;
-            if (!data) {
-              setResult(null);
-              setNotFound(true);
-            } else {
-              setResult(data);
-              setNotFound(false);
-              // Calculate data points captured
-              const points = calculateDataPoints(data);
-              console.log("Setting dataPoints to:", points);
-              setDataPoints(points);
-              // Show data coverage modal
-              console.log("Opening data coverage modal");
-              setShowDataCoverageModal(true);
-            }
-          })
-          .catch(() => {
+      getComputedListingByUrl(query)
+        .then((res) => {
+          const data = res || null;
+          if (!data) {
             setResult(null);
             setNotFound(true);
-          })
-          .finally(() => {
-            setIsLoading(false);
-            timers.forEach(clearTimeout);
-          });
-      } else {
-        // Fallback: unauthenticated flow still checks payment status
-        hasPaid(query, "instant")
-          .then((p) => setIsPaid(!!p?.paid))
-          .catch(() => setIsPaid(false))
-          .finally(() => {
-            getComputedListingByUrl(query)
-              .then((res) => {
-                const data = res || null;
-                if (!data) {
-                  setResult(null);
-                  setNotFound(true);
-                } else {
-                  setResult(data);
-                  setNotFound(false);
-                  // Calculate data points captured
-                  const points = calculateDataPoints(data);
-                  console.log("Setting dataPoints to:", points);
-                  setDataPoints(points);
-                  // Show data coverage modal
-                  console.log("Opening data coverage modal");
-                  setShowDataCoverageModal(true);
-                }
-              })
-              .catch(() => {
-                setResult(null);
-                setNotFound(true);
-              })
-              .finally(() => {
-                setIsLoading(false);
-                timers.forEach(clearTimeout);
-              });
-          });
-      }
+          } else {
+            setResult(data);
+            setNotFound(false);
+            const points = calculateDataPoints(data);
+            setDataPoints(points);
+            setShowDataCoverageModal(true);
+          }
+        })
+        .catch(() => {
+          setResult(null);
+          setNotFound(true);
+        })
+        .finally(() => {
+          setIsLoading(false);
+          timers.forEach(clearTimeout);
+        });
     } else if (query) {
       setResult(null);
       setNotFound(true);
@@ -1098,7 +1050,6 @@ const ResultPage: React.FC = () => {
               (isValidUrl(searchQuery) ? (searchQuery as string) : "")
             }
             onPaid={() => setIsPaid(true)}
-            freeAvailable={freeViewAvailable}
           />
         )}
       </Container>

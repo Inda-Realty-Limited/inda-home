@@ -15,7 +15,7 @@ export function UseCaseSection() {
       icon: '🏗️',
       title: 'Developers',
       description: 'Showcase projects, analyze demand, optimize pricing, and track engagement to accelerate funding with confidence.',
-      cta: { text: 'Showcase Your Project', link: '#for-professionals' },
+      cta: { text: 'Showcase Your Project', link: '/for-professionals' },
       gradient: 'from-[#4ea8a1]/10 to-emerald-500/10',
       featured: true,
     },
@@ -78,7 +78,7 @@ export function UseCaseSection() {
             {' '}in Real Estate
           </h2>
           <p className="text-xl text-gray-600 leading-relaxed">
-            Investors, developers, agents, banks, and more—Inda gives you the insights and tools to act smarter, faster.
+            Investors, developers, agents, banks, and more. Inda verifies pricing, documents, and risk so transactions move faster. 
           </p>
         </div>
 

@@ -1,64 +1,30 @@
+import Image from 'next/image';
+
 export function PartnerShowcase() {
   const partners = [
     { 
-      name: 'Access Bank', 
-      logo: (
-        <svg viewBox="0 0 120 40" className="w-full h-10">
-          <rect x="2" y="8" width="8" height="24" fill="#FF6B00" rx="1"/>
-          <rect x="12" y="4" width="8" height="28" fill="#FF6B00" rx="1"/>
-          <rect x="22" y="10" width="8" height="22" fill="#FF6B00" rx="1"/>
-          <text x="35" y="26" className="text-lg" fill="#FF6B00" fontWeight="600">ACCESS</text>
-        </svg>
-      )
+      name: 'ARM', 
+      logo: '/images/arm.PNG'
     },
     { 
-      name: 'PWC', 
-      logo: (
-        <svg viewBox="0 0 100 40" className="w-full h-10">
-          <text x="10" y="28" className="text-2xl" fill="#D93F00" fontWeight="700">PwC</text>
-        </svg>
-      )
+      name: 'APG', 
+      logo: '/images/apg.PNG'
     },
     { 
-      name: 'AXA Mansard', 
-      logo: (
-        <svg viewBox="0 0 120 40" className="w-full h-10">
-          <rect x="5" y="8" width="20" height="24" fill="#00008F" rx="2"/>
-          <text x="30" y="26" className="text-xl" fill="#00008F" fontWeight="700">AXA</text>
-        </svg>
-      )
+      name: 'Mixta', 
+      logo: '/images/mixta.PNG'
     },
     { 
-      name: 'LandWey', 
-      logo: (
-        <svg viewBox="0 0 120 40" className="w-full h-10">
-          <circle cx="15" cy="20" r="12" fill="#0F9D58"/>
-          <path d="M 15 10 L 20 20 L 15 30 L 10 20 Z" fill="white"/>
-          <text x="30" y="26" className="text-lg" fill="#0F9D58" fontWeight="600">LandWey</text>
-        </svg>
-      )
-    },
-    { 
-      name: 'Providus', 
-      logo: (
-        <svg viewBox="0 0 120 40" className="w-full h-10">
-          <rect x="5" y="10" width="18" height="20" fill="#6B2D8F" rx="2"/>
-          <rect x="8" y="13" width="12" height="3" fill="white"/>
-          <rect x="8" y="18" width="12" height="3" fill="white"/>
-          <rect x="8" y="23" width="12" height="3" fill="white"/>
-          <text x="28" y="26" className="text-base" fill="#6B2D8F" fontWeight="600">PROVIDUS</text>
-        </svg>
-      )
+      name: 'Caviar', 
+      logo: '/images/cavier.JPG'
     },
     { 
       name: 'CW Real Estate', 
-      logo: (
-        <svg viewBox="0 0 120 40" className="w-full h-10">
-          <text x="5" y="28" className="text-3xl" fill="#4ea8a1" fontWeight="700">CW</text>
-          <text x="45" y="20" className="text-xs" fill="#4ea8a1" fontWeight="500">REAL</text>
-          <text x="45" y="30" className="text-xs" fill="#4ea8a1" fontWeight="500">ESTATE</text>
-        </svg>
-      )
+      logo: '/images/cw.PNG'
+    },
+    { 
+      name: 'PV Real Estate', 
+      logo: '/images/vp.WEBP'
     },
   ];
 
@@ -86,7 +52,7 @@ export function PartnerShowcase() {
           {partners.map((partner, index) => (
             <div
               key={partner.name}
-              className="group relative overflow-hidden bg-white rounded-2xl p-6 hover:shadow-2xl transition-all duration-500 border border-gray-100 hover:border-[#4ea8a1]/30 cursor-pointer flex items-center justify-center"
+              className="group relative overflow-hidden bg-white rounded-2xl p-6 hover:shadow-2xl transition-all duration-500 border border-gray-100 hover:border-[#4ea8a1]/30 cursor-pointer flex items-center justify-center h-32"
               style={{
                 animation: 'fadeIn 0.6s ease-out',
                 animationDelay: `${index * 100}ms`,
@@ -94,8 +60,13 @@ export function PartnerShowcase() {
               }}
             >
               {/* Logo */}
-              <div className="w-full group-hover:scale-105 transition-transform duration-300">
-                {partner.logo}
+              <div className="relative w-full h-full group-hover:scale-105 transition-transform duration-300">
+                <Image
+                  src={partner.logo}
+                  alt={partner.name}
+                  fill
+                  className="object-contain"
+                />
               </div>
             </div>
           ))}
