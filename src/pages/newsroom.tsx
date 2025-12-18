@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '../views/index/sections/ui/button';
 import { Search, ArrowRight, TrendingUp, Download, Calendar, ExternalLink, FileText } from 'lucide-react';
 import { FooterCTA } from '../views/index/sections/FooterCTA';
@@ -15,17 +15,43 @@ const priceData = [
 ];
 
 const tickerData = [
-  { location: 'Ikoyi (Banana Island)', price: '₦1.2B', change: '+8.7%' },
-  { location: 'Lekki Phase 1', price: '₦85M', change: '+12.3%' },
-  { location: 'Victoria Island (VI)', price: '₦450M', change: '+6.1%' },
-  { location: 'Ajah', price: '₦32M', change: '+15.2%' },
-  { location: 'Abuja (Maitama)', price: '₦280M', change: '+9.4%' },
-  { location: 'Port Harcourt (GRA)', price: '₦95M', change: '+11.7%' },
+  { location: 'Ikoyi (Banana Island)', price: '₦1.2B', change: '+8.7%', updatedAt: new Date(Date.now() - 3 * 60 * 1000) },
+  { location: 'Lekki Phase 1', price: '₦85M', change: '+12.3%', updatedAt: new Date(Date.now() - 7 * 60 * 1000) },
+  { location: 'Victoria Island (VI)', price: '₦450M', change: '+6.1%', updatedAt: new Date(Date.now() - 12 * 60 * 1000) },
+  { location: 'Ajah', price: '₦32M', change: '+15.2%', updatedAt: new Date(Date.now() - 45 * 1000) },
+  { location: 'Abuja (Maitama)', price: '₦280M', change: '+9.4%', updatedAt: new Date(Date.now() - 1 * 3600 * 1000) },
+  { location: 'Port Harcourt (GRA)', price: '₦95M', change: '+11.7%', updatedAt: new Date(Date.now() - 2 * 3600 * 1000) },
 ];
 
 export function Newsroom() {
   const [activeTab, setActiveTab] = useState('market-news');
   const [selectedIndicator, setSelectedIndicator] = useState('House Price Index');
+  const [relativeTime, setRelativeTime] = useState<{ [key: number]: string }>({});
+
+  const formatRelativeTime = (date: Date): string => {
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffInSeconds < 60) return `${diffInSeconds}s ago`;
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    return `${Math.floor(diffInSeconds / 604800)}w ago`;
+  };
+
+  useEffect(() => {
+    const updateTimes = () => {
+      const newRelativeTime: { [key: number]: string } = {};
+      tickerData.forEach((item, index) => {
+        newRelativeTime[index] = formatRelativeTime(item.updatedAt);
+      });
+      setRelativeTime(newRelativeTime);
+    };
+
+    updateTimes();
+    const interval = setInterval(updateTimes, 30000); // Update every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
 
   const indicators = [
     'House Price Index',
@@ -103,6 +129,9 @@ export function Newsroom() {
                   </div>
                   <div className="text-emerald-400 text-sm font-medium">
                     {item.change}
+                  </div>
+                  <div className="text-gray-500 text-xs">
+                    {relativeTime[index % tickerData.length] || 'updating...'}
                   </div>
                 </div>
               ))}

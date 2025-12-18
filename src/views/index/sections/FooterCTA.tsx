@@ -1,11 +1,36 @@
 "use client";
 
 import { Button } from './ui/button';
-import { ArrowRight, Mail, Phone, MapPin, Linkedin, Twitter } from 'lucide-react';
+import { ArrowRight, Mail, Phone, MapPin, Linkedin, Instagram } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/router';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function FooterCTA() {
   const currentYear = new Date().getFullYear();
+
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
+
+  const handleGetStarted = () => {
+    if (!isAuthenticated) {
+      router.push('/auth/signup');
+    } else {
+      const element = document.querySelector('[data-product-section]');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
+  const openWhatsAppDemo = () => {
+    const phone = process.env.NEXT_PUBLIC_INDA_WHATSAPP;
+    if (!phone) return;
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(
+      "Hi, I would like to book a demo with Inda"
+    )}`;
+    if (typeof window !== "undefined") window.open(url, "_blank");
+  };
 
   return (
     <footer className="bg-gray-900 relative overflow-hidden">
@@ -27,11 +52,11 @@ export function FooterCTA() {
             Join thousands of investors, developers, and professionals making smarter decisions with Inda.
           </p>
           <div className="flex items-center justify-center gap-4 flex-wrap">
-            <Button size="lg" className="bg-gradient-to-r from-[#4ea8a1] to-[#3d8680] hover:from-[#3d8680] hover:to-[#2d7670] group shadow-xl shadow-[#4ea8a1]/25 text-lg px-8 py-6">
+            <Button onClick={handleGetStarted} size="lg" className="bg-gradient-to-r from-[#4ea8a1] to-[#3d8680] hover:from-[#3d8680] hover:to-[#2d7670] group shadow-xl shadow-[#4ea8a1]/25 text-lg px-8 py-6">
               Get Started
               <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Button>
-            <Button size="lg" variant="outline" className="border-2 bg-transparent border-gray-600 text-white hover:bg-white/10 hover:border-white text-lg px-8 py-6">
+            <Button onClick={openWhatsAppDemo} size="lg" variant="outline" className="border-2 bg-transparent border-gray-600 text-white hover:bg-white/10 hover:border-white text-lg px-8 py-6">
               Contact Sales
             </Button>
           </div>
@@ -51,17 +76,21 @@ export function FooterCTA() {
                 <span className="text-2xl text-white">Inda</span>
               </div>
               <p className="text-gray-400 mb-6 leading-relaxed">
-                Empowering every real estate decision with data-driven insights, powerful tools, and seamless integrations.
+              Inda verifies pricing, documents, and risk before listings go live, giving buyers, banks, and developers decision-ready deals.
               </p>
               <div className="flex gap-4">
                 <a
-                  href="#"
+                  href="https://www.instagram.com/inda_insights/"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-[#4ea8a1] transition-colors group"
                 >
-                  <Twitter className="w-5 h-5 text-gray-400 group-hover:text-white" />
+                  <Instagram className="w-5 h-5 text-gray-400 group-hover:text-white" />
                 </a>
                 <a
-                  href="#"
+                  href="https://ng.linkedin.com/company/investinda"
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="w-10 h-10 bg-gray-800 rounded-lg flex items-center justify-center hover:bg-[#4ea8a1] transition-colors group"
                 >
                   <Linkedin className="w-5 h-5 text-gray-400 group-hover:text-white" />
@@ -87,7 +116,7 @@ export function FooterCTA() {
                 <li><a href="#" className="text-gray-400 hover:text-[#4ea8a1] transition-colors">About Us</a></li>
                 <li><Link href="/newsroom" className="text-gray-400 hover:text-[#4ea8a1] transition-colors">Newsroom</Link></li>
                 <li><a href="#" className="text-gray-400 hover:text-[#4ea8a1] transition-colors">Careers</a></li>
-                <li><a href="#" className="text-gray-400 hover:text-[#4ea8a1] transition-colors">Contact</a></li>
+                <li><button onClick={openWhatsAppDemo} className="text-gray-400 hover:text-[#4ea8a1] transition-colors cursor-pointer">Contact</button></li>
               </ul>
             </div>
 
@@ -112,11 +141,11 @@ export function FooterCTA() {
               </div>
               <div className="flex items-center gap-3 text-gray-400 hover:text-[#4ea8a1] transition-colors">
                 <Phone className="w-5 h-5" />
-                <span>+234 (0) 800 000 0000</span>
+                <span>+2347084960775</span>
               </div>
               <div className="flex items-center gap-3 text-gray-400 hover:text-[#4ea8a1] transition-colors">
                 <MapPin className="w-5 h-5" />
-                <span>Lagos, Nigeria</span>
+                <span>Nigeria</span>
               </div>
             </div>
           </div>

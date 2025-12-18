@@ -1,18 +1,20 @@
 "use client";
 
 import { useState } from 'react';
+import { useRouter } from 'next/router';
 import { Button } from './ui/button';
 import { Search, BarChart3, Users, Building2, TrendingUp, Zap, ArrowRight, Layers, FileText, Bell } from 'lucide-react';
 
 export function ProductSection() {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState<'buyer' | 'professional'>('buyer');
 
   const buyerProducts = [
     {
       icon: Search,
-      title: 'Property Discovery',
-      description: 'Find your perfect property with advanced search filters and AI-powered recommendations.',
-      link: '#',
+      title: 'Pre-Verified Properties Only',
+      description: 'Every property on Inda is screened for pricing accuracy, documentation, and risk before buyers see it.',
+      link: '/for-buyers',
       cta: 'Explore Properties',
       illustration: (
         <div className="absolute -top-6 -right-6 w-32 h-32 opacity-10">
@@ -25,7 +27,7 @@ export function ProductSection() {
       icon: BarChart3,
       title: 'Market Insights',
       description: 'Track property values, neighborhood trends, and market forecasts in real-time.',
-      link: '#',
+      link: '/for-buyers',
       cta: 'View Insights',
       illustration: (
         <div className="absolute -top-6 -right-6 w-32 h-32 opacity-10">
@@ -38,7 +40,7 @@ export function ProductSection() {
       icon: TrendingUp,
       title: 'ROI Calculator',
       description: 'Simulate returns, calculate mortgage payments, and project cash flow before you buy.',
-      link: '#',
+      link: '/for-buyers',
       cta: 'Calculate ROI',
       illustration: (
         <div className="absolute -top-6 -right-6 w-32 h-32 opacity-10">
@@ -54,7 +56,7 @@ export function ProductSection() {
       icon: Building2,
       title: 'Developer Dashboard',
       description: 'Manage projects, track buyer interest, and optimize pricing with data-driven insights.',
-      link: '#',
+      link: '/for-professionals',
       cta: 'Launch Dashboard',
       illustration: (
         <div className="absolute -top-6 -right-6 w-32 h-32 opacity-10">
@@ -67,7 +69,7 @@ export function ProductSection() {
       icon: Layers,
       title: 'API & Integrations',
       description: 'Embed property data, market analytics, and ROI tools directly into your platform.',
-      link: '#',
+      link: '#/for-professionals',
       cta: 'View API Docs',
       illustration: (
         <div className="absolute -top-6 -right-6 w-32 h-32 opacity-10">
@@ -80,7 +82,7 @@ export function ProductSection() {
       icon: Bell,
       title: 'Lead Management',
       description: 'Capture, qualify, and nurture leads with intelligent CRM and automated follow-ups.',
-      link: '#',
+      link: '/for-professionals',
       cta: 'Manage Leads',
       illustration: (
         <div className="absolute -top-6 -right-6 w-32 h-32 opacity-10">
@@ -94,7 +96,7 @@ export function ProductSection() {
   const currentProducts = activeTab === 'buyer' ? buyerProducts : professionalProducts;
 
   return (
-    <section className="py-32 px-6 bg-gradient-to-b from-gray-50 to-white relative overflow-hidden">
+    <section data-product-section className="py-32 px-6 bg-gradient-to-b from-gray-50 to-white relative overflow-hidden">
       {/* Decorative background */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-gradient-to-br from-[#4ea8a1]/10 via-purple-100/20 to-transparent rounded-full blur-3xl" />
       
@@ -189,7 +191,7 @@ export function ProductSection() {
 
         {/* Optional Tools */}
         <div className="mt-16 text-center">
-          <Button variant="outline" size="lg" className="group border-2 hover:border-[#4ea8a1] hover:text-[#4ea8a1] text-base px-8 py-6">
+          <Button onClick={() => router.push('/for-professionals')} variant="outline" size="lg" className="group border-2 hover:border-[#4ea8a1] hover:text-[#4ea8a1] text-base px-8 py-6">
             Discover Advanced Tools
             <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </Button>

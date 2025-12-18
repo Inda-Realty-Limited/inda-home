@@ -90,7 +90,7 @@ export function ForBuyers() {
                 </span>
               </h1>
               <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-                Verified pricing, documents, risk score & ROI — instantly.
+                Verified pricing, documents, risk score & ROI - instantly.
               </p>
               
               {/* Search Bar */}
@@ -101,7 +101,7 @@ export function ForBuyers() {
                     onClick={() => setSearchMode("link")}
                     className={`px-4 py-2 text-sm ${searchMode === "link" ? "bg-[#4ea8a1] text-white hover:bg-[#3d8680]" : "border border-gray-300 text-gray-700"}`}
                   >
-                    Link Scan
+                    Scan Link
                   </Button>
                   <Button
                     variant={searchMode === "ai" ? "default" : "outline"}
@@ -251,7 +251,7 @@ export function ForBuyers() {
           <div className="text-center mb-16">
             <h2 className="text-4xl mb-4 text-gray-900">How it works?</h2>
             <p className="text-xl text-gray-600">
-              It's like ChatGPT — for property decisions.
+              It's like ChatGPT - for property decisions.
             </p>
           </div>
 

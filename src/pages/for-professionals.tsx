@@ -1,3 +1,5 @@
+import { useRouter } from 'next/router';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '../views/index/sections/ui/button';
 import { ArrowRight, Clock, FileCheck, TrendingUp, CheckCircle2, Award, Zap, Shield } from 'lucide-react';
 import { FooterCTA } from '../views/index/sections/FooterCTA';
@@ -5,6 +7,29 @@ import { motion } from 'framer-motion';
 import { Navbar } from '@/components';
 
 export function ForProfessionals() {
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
+
+  const handleGetVerified = () => {
+    if (!isAuthenticated) {
+      router.push('/auth/signup');
+    } else {
+      const element = document.querySelector('[data-verification-section]');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
+  const openWhatsAppDemo = () => {
+    const phone = process.env.NEXT_PUBLIC_INDA_WHATSAPP;
+    if (!phone) return;
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(
+      "Hi, I would like to book a demo with Inda"
+    )}`;
+    if (typeof window !== "undefined") window.open(url, "_blank");
+  };
+
   return (
     <>
       <Navbar />
@@ -21,7 +46,7 @@ export function ForProfessionals() {
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-5xl lg:text-6xl mb-6 leading-tight text-white"
+              className="text-5xl lg:text-6xl mb-6 leading-tight text-white lg:whitespace-nowrap"
             >
               Unverified Listings Cost You{' '}
               <span className="bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent">
@@ -34,7 +59,7 @@ export function ForProfessionals() {
               transition={{ delay: 0.1 }}
               className="text-2xl text-gray-300 mb-12 max-w-3xl mx-auto"
             >
-              Turn skeptical buyers into confident closers — in half the time.
+              Turn skeptical buyers into confident closers in half the time.
             </motion.p>
             
             <motion.div 
@@ -43,11 +68,11 @@ export function ForProfessionals() {
               transition={{ delay: 0.2 }}
               className="flex items-center justify-center gap-4 flex-wrap"
             >
-              <Button size="lg" className="bg-gradient-to-r from-[#4ea8a1] to-[#3d8680] hover:from-[#3d8680] hover:to-[#2d7670] group shadow-xl text-lg px-8 py-6">
+              <Button onClick={handleGetVerified} size="lg" className="bg-gradient-to-r from-[#4ea8a1] to-[#3d8680] hover:from-[#3d8680] hover:to-[#2d7670] group shadow-xl text-lg px-8 py-6">
                 Get Verified
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
-              <Button size="lg" variant="outline" className="border-2 bg-transparent border-gray-500 text-white hover:bg-white/10 hover:border-white text-lg px-8 py-6">
+              <Button onClick={openWhatsAppDemo} size="lg" variant="outline" className="border-2 bg-transparent border-gray-500 text-white hover:bg-white/10 hover:border-white text-lg px-8 py-6">
                 Book Demo
               </Button>
             </motion.div>
@@ -196,15 +221,15 @@ export function ForProfessionals() {
                   <div className="text-sm mb-1">Active Listings</div>
                   <div className="text-3xl">24</div>
                 </div>
-                <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-white">
+                <div className="bg-gradient-to-br from-[#4ea8a1] to-[#3d8680] rounded-xl p-4 text-white">
                   <div className="text-sm mb-1">Verified</div>
                   <div className="text-3xl">18</div>
                 </div>
-                <div className="bg-gradient-to-br from-amber-500 to-amber-600 rounded-xl p-4 text-white">
+                <div className="bg-gradient-to-br from-[#4ea8a1] to-[#3d8680] rounded-xl p-4 text-white">
                   <div className="text-sm mb-1">Avg. Close Time</div>
                   <div className="text-3xl">9d</div>
                 </div>
-                <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-4 text-white">
+                <div className="bg-gradient-to-br from-[#4ea8a1] to-[#3d8680] rounded-xl p-4 text-white">
                   <div className="text-sm mb-1">This Month</div>
                   <div className="text-3xl">₦2.1B</div>
                 </div>
@@ -222,7 +247,7 @@ export function ForProfessionals() {
       </section>
 
       {/* Pricing Section */}
-      <section className="py-20 px-6 bg-gray-50">
+      <section data-verification-section className="py-20 px-6 bg-gray-50">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-4xl mb-4 text-gray-900">Choose Your Level of Verification</h2>
@@ -267,7 +292,7 @@ export function ForProfessionals() {
 
               <div className="text-sm text-gray-600 mb-4 italic">Perfect for solo agents & first-time users</div>
 
-              <Button variant="outline" className="w-full border-2 border-[#4ea8a1] text-[#4ea8a1] hover:bg-[#4ea8a1] hover:text-white">
+              <Button onClick={handleGetVerified} variant="outline" className="w-full border-2 border-[#4ea8a1] text-[#4ea8a1] hover:bg-[#4ea8a1] hover:text-white">
                 Get Started
               </Button>
             </div>
@@ -316,7 +341,7 @@ export function ForProfessionals() {
 
               <div className="text-sm text-emerald-100 mb-4 italic">Perfect for active agents & small agencies</div>
 
-              <Button className="w-full bg-white text-[#4ea8a1] hover:bg-emerald-50">
+              <Button onClick={handleGetVerified} className="w-full bg-white text-[#4ea8a1] hover:bg-emerald-50">
                 Get Started
               </Button>
             </div>
@@ -362,8 +387,8 @@ export function ForProfessionals() {
 
               <div className="text-sm text-gray-600 mb-4 italic">Perfect for agencies & developers</div>
 
-              <Button variant="outline" className="w-full border-2 border-gray-300 hover:border-[#4ea8a1] hover:text-[#4ea8a1]">
-                Contact Sales
+              <Button onClick={handleGetVerified} variant="outline" className="w-full border-2 border-gray-300 hover:border-[#4ea8a1] hover:text-[#4ea8a1]">
+                Get Started
               </Button>
             </div>
           </div>
@@ -390,7 +415,7 @@ export function ForProfessionals() {
                   </div>
                 </div>
 
-                <Button className="bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white">
+                <Button onClick={openWhatsAppDemo}className="bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white">
                   Become a Founding Partner
                   <Award className="ml-2 w-4 h-4" />
                 </Button>
@@ -401,7 +426,7 @@ export function ForProfessionals() {
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 px-6 bg-gradient-to-br from-gray-900 via-[#4ea8a1]/20 to-gray-900">
+      <section className="py-20 px-6 bg-gradient-to-br from-gray-900 via-[#4ea8a1]/50 to-gray-900">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-5xl mb-6 text-white leading-tight">
             Become a <span className="text-[#4ea8a1]">Verified Professional</span>.{' '}
@@ -412,7 +437,7 @@ export function ForProfessionals() {
             Join the growing network of trusted real estate professionals using Inda to build credibility and close deals in record time.
           </p>
           <div className="flex items-center justify-center gap-4 flex-wrap">
-            <Button size="lg" className="bg-gradient-to-r from-[#4ea8a1] to-[#3d8680] hover:from-[#3d8680] hover:to-[#2d7670] group shadow-xl text-lg px-8 py-6">
+            <Button onClick={handleGetVerified} size="lg" className="bg-gradient-to-r from-[#4ea8a1] to-[#3d8680] hover:from-[#3d8680] hover:to-[#2d7670] group shadow-xl text-lg px-8 py-6">
               Onboard to Inda → Start Verifying Today
               <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Button>
