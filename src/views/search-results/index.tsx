@@ -21,7 +21,7 @@ const mockProperties = [
     priceValue: 45000000,
     fmv: 'Below FMV',
     verified: true,
-    whatsapp: '2348012345678'
+    whatsapp: '2347084960775'
   },
   {
     id: '2',
@@ -36,7 +36,7 @@ const mockProperties = [
     priceValue: 85000000,
     fmv: 'At FMV',
     verified: true,
-    whatsapp: '2348023456789'
+    whatsapp: '2347084960775'
   },
   {
     id: '3',
@@ -51,7 +51,7 @@ const mockProperties = [
     priceValue: 120000000,
     fmv: 'Below FMV',
     verified: true,
-    whatsapp: '2348034567890'
+    whatsapp: '2347084960775'
   },
   {
     id: '4',
@@ -66,7 +66,7 @@ const mockProperties = [
     priceValue: 38000000,
     fmv: 'Below FMV',
     verified: true,
-    whatsapp: '2348045678901'
+    whatsapp: '2347084960775'
   },
   {
     id: '5',
@@ -79,7 +79,7 @@ const mockProperties = [
     priceValue: 32000000,
     fmv: 'At FMV',
     verified: true,
-    whatsapp: '2348056789012'
+    whatsapp: '2347084960775'
   },
   {
     id: '6',
@@ -104,7 +104,7 @@ const mockProperties = [
     price: '₦28M',
     priceValue: 28000000,
     fmv: 'At FMV',
-    whatsapp: '2348078901234',
+    whatsapp: '2347084960775',
     verified: false
   },
   {
@@ -118,7 +118,7 @@ const mockProperties = [
     priceValue: 52000000,
     fmv: 'Below FMV',
     verified: true,
-    whatsapp: '2348089012345'
+    whatsapp: '2347084960775'
   },
   {
     id: '10',
@@ -131,7 +131,7 @@ const mockProperties = [
     priceValue: 48000000,
     fmv: 'Below FMV',
     verified: true,
-    whatsapp: '2348090123456'
+    whatsapp: '2347084960775'
   },
   {
     id: '11',
@@ -144,7 +144,7 @@ const mockProperties = [
     priceValue: 35000000,
     fmv: 'At FMV',
     verified: true,
-    whatsapp: '2348091234567'
+    whatsapp: '2347084960775'
   },
   {
     id: '12',
@@ -157,7 +157,7 @@ const mockProperties = [
     priceValue: 70000000,
     fmv: 'Below FMV',
     verified: true,
-    whatsapp: '2348092345678'
+    whatsapp: '2347084960775'
   },
   {
     id: '13',
@@ -170,7 +170,7 @@ const mockProperties = [
     priceValue: 55000000,
     fmv: 'At FMV',
     verified: true,
-    whatsapp: '2348093456789'
+    whatsapp: '2347084960775'
   },
   {
     id: '14',
@@ -183,7 +183,7 @@ const mockProperties = [
     priceValue: 95000000,
     fmv: 'Below FMV',
     verified: true,
-    whatsapp: '2348094567890'
+    whatsapp: '2347084960775'
   },
   {
     id: '15',
@@ -196,7 +196,7 @@ const mockProperties = [
     priceValue: 180000000,
     fmv: 'Below FMV',
     verified: true,
-    whatsapp: '2348095678901'
+    whatsapp: '2347084960775'
   },
   {
     id: '16',
@@ -209,7 +209,7 @@ const mockProperties = [
     priceValue: 42000000,
     fmv: 'At FMV',
     verified: true,
-    whatsapp: '2348096789012'
+    whatsapp: '2347084960775'
   },
   {
     id: '17',
@@ -222,7 +222,7 @@ const mockProperties = [
     priceValue: 25000000,
     fmv: 'Below FMV',
     verified: false,
-    whatsapp: '2348097890123'
+    whatsapp: '2347084960775'
   },
   {
     id: '18',
@@ -235,7 +235,7 @@ const mockProperties = [
     priceValue: 140000000,
     fmv: 'At FMV',
     verified: true,
-    whatsapp: '2348098901234'
+    whatsapp: '2347084960775'
   }
 ];
 
