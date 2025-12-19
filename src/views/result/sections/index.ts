@@ -17,6 +17,7 @@ export { default as LoadingScreen } from "./LoadingScreen";
 export { default as LockedOverlay } from "./LockedOverlay";
 export { default as MapInsights } from "./MapInsights";
 export { default as NotFoundScreen } from "./NotFoundScreen";
+export { default as ReactiveSearchScreen } from "./ReactiveSearchScreen";
 export { default as PriceAnalysis } from "./PriceAnalysis";
 export { default as ProceedActions } from "./ProceedActions";
 export { RatingsReviews } from "./RatingsReviews";
