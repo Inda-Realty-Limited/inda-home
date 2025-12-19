@@ -3,7 +3,7 @@ import React, { useCallback } from "react";
 
 const CTABanner: React.FC = () => {
   const INDA_WHATSAPP =
-    process.env.NEXT_PUBLIC_INDA_WHATSAPP
+    process.env.NEXT_PUBLIC_INDA_WHATSAPP || "2347084960775"
 
   const handleCTA = useCallback(() => {
     if (typeof window !== "undefined") {

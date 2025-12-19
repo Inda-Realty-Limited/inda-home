@@ -22,7 +22,7 @@ export function ForProfessionals() {
   };
 
   const openWhatsAppDemo = (text?: string) => {
-    const phone = process.env.NEXT_PUBLIC_INDA_WHATSAPP;
+    const phone = process.env.NEXT_PUBLIC_INDA_WHATSAPP || "2347084960775";
     const message = text || "Hi, I would like to book a demo with Inda";
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     if (typeof window !== "undefined") window.open(url, "_blank");
