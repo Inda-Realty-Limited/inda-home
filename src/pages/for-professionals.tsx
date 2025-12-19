@@ -21,12 +21,10 @@ export function ForProfessionals() {
     }
   };
 
-  const openWhatsAppDemo = () => {
+  const openWhatsAppDemo = (text?: string) => {
     const phone = process.env.NEXT_PUBLIC_INDA_WHATSAPP;
-    if (!phone) return;
-    const url = `https://wa.me/${phone}?text=${encodeURIComponent(
-      "Hi, I would like to book a demo with Inda"
-    )}`;
+    const message = text || "Hi, I would like to book a demo with Inda";
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
     if (typeof window !== "undefined") window.open(url, "_blank");
   };
 
@@ -34,7 +32,7 @@ export function ForProfessionals() {
     <>
       <Navbar />
       {/* Hero Section */}
-      <section className="relative pt-32 pb-20 px-6 overflow-hidden bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+      <section className="relative pt-32 pb-20 px-6 overflow-hidden bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
         {/* Decorative elements */}
         <div className="absolute inset-0">
           <div className="absolute top-20 right-10 w-96 h-96 bg-red-500/20 rounded-full blur-3xl" />
@@ -46,7 +44,7 @@ export function ForProfessionals() {
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-5xl lg:text-6xl mb-6 leading-tight text-white lg:whitespace-nowrap"
+              className="text-5xl lg:text-6xl mb-6 leading-tight text-black lg:whitespace-nowrap"
             >
               Unverified Listings Cost You{' '}
               <span className="bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent">
@@ -57,7 +55,7 @@ export function ForProfessionals() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-2xl text-gray-300 mb-12 max-w-3xl mx-auto"
+              className="text-2xl text-black mb-12 max-w-3xl mx-auto"
             >
               Turn skeptical buyers into confident closers in half the time.
             </motion.p>
@@ -72,7 +70,7 @@ export function ForProfessionals() {
                 Get Verified
                 <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Button>
-              <Button onClick={openWhatsAppDemo} size="lg" variant="outline" className="border-2 bg-transparent border-gray-500 text-white hover:bg-white/10 hover:border-white text-lg px-8 py-6">
+              <Button onClick={() => openWhatsAppDemo()} size="lg" variant="outline" className="border-2 bg-transparent border-teal-500 text-black hover:bg-black/10 hover:border-black/10 text-lg px-8 py-6">
                 Book Demo
               </Button>
             </motion.div>
@@ -86,16 +84,16 @@ export function ForProfessionals() {
                 <span className="text-red-400">Unverified</span>
               </div>
               <div className="text-4xl text-white mb-2">60–140 days</div>
-              <p className="text-gray-400 text-sm">Average time to close</p>
+              <p className="text-white text-sm">Average time to close</p>
             </div>
 
             <div className="bg-emerald-900/20 border-2 border-emerald-500/50 rounded-2xl p-6 backdrop-blur-sm">
               <div className="flex items-center gap-3 mb-4">
-                <CheckCircle2 className="w-6 h-6 text-emerald-400" />
-                <span className="text-emerald-400">Verified by Inda</span>
+                <CheckCircle2 className="w-6 h-6 text-emerald-900" />
+                <span className="text-emerald-900">Verified by Inda</span>
               </div>
               <div className="text-4xl text-white mb-2">7–14 days</div>
-              <p className="text-gray-400 text-sm">Average time to close</p>
+              <p className="text-white text-sm">Average time to close</p>
             </div>
           </div>
         </div>
@@ -394,28 +392,28 @@ export function ForProfessionals() {
           </div>
 
           {/* Early Partner Incentive */}
-          <div className="bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-amber-300 rounded-3xl p-8 max-w-4xl mx-auto shadow-xl">
+          <div className="bg-inda-teal  border-2 border-teal-500 rounded-3xl p-8 max-w-4xl mx-auto shadow-xl">
             <div className="flex items-start gap-6">
               <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-amber-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
                 <Award className="w-8 h-8 text-white" />
               </div>
               <div className="flex-1">
                 <h3 className="text-2xl mb-2 text-gray-900">Founding Partner Program</h3>
-                <p className="text-gray-700 mb-4">
+                <p className="text-gray-900 mb-4">
                   Join the first 100 verified professionals and get priority verification, faster closings, and exclusive partner benefits.
                 </p>
                 
                 <div className="mb-4">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-600">Slots Remaining</span>
-                    <span className="text-sm text-amber-700">37/100</span>
+                    <span className="text-sm text-white">Slots Remaining</span>
+                    <span className="text-sm text-white">37/100</span>
                   </div>
                   <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-                    <div className="w-[63%] h-full bg-gradient-to-r from-amber-400 to-amber-500" />
+                    <div className="w-[63%] h-full bg-gradient-to-r from-teal-400 to-teal-500" />
                   </div>
                 </div>
 
-                <Button onClick={openWhatsAppDemo}className="bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-white">
+                <Button onClick={() => openWhatsAppDemo("Hi, I would like to become a founding partner")} className="bg-white hover:from-teal-500 hover:to-teal-600 text-inda-teal">
                   Become a Founding Partner
                   <Award className="ml-2 w-4 h-4" />
                 </Button>

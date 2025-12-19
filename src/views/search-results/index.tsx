@@ -20,7 +20,8 @@ const mockProperties = [
     price: '₦45M',
     priceValue: 45000000,
     fmv: 'Below FMV',
-    verified: true
+    verified: true,
+    whatsapp: '2348012345678'
   },
   {
     id: '2',
@@ -34,7 +35,8 @@ const mockProperties = [
     price: '₦85M',
     priceValue: 85000000,
     fmv: 'At FMV',
-    verified: true
+    verified: true,
+    whatsapp: '2348023456789'
   },
   {
     id: '3',
@@ -48,7 +50,8 @@ const mockProperties = [
     price: '₦120M',
     priceValue: 120000000,
     fmv: 'Below FMV',
-    verified: true
+    verified: true,
+    whatsapp: '2348034567890'
   },
   {
     id: '4',
@@ -62,7 +65,8 @@ const mockProperties = [
     price: '₦38M',
     priceValue: 38000000,
     fmv: 'Below FMV',
-    verified: true
+    verified: true,
+    whatsapp: '2348045678901'
   },
   {
     id: '5',
@@ -74,7 +78,8 @@ const mockProperties = [
     price: '₦32M',
     priceValue: 32000000,
     fmv: 'At FMV',
-    verified: true
+    verified: true,
+    whatsapp: '2348056789012'
   },
   {
     id: '6',
@@ -86,7 +91,8 @@ const mockProperties = [
     price: '₦65M',
     priceValue: 65000000,
     fmv: 'Below FMV',
-    verified: true
+    verified: true,
+    whatsapp: '2348171851665'
   },
   {
     id: '7',
@@ -98,6 +104,7 @@ const mockProperties = [
     price: '₦28M',
     priceValue: 28000000,
     fmv: 'At FMV',
+    whatsapp: '2348078901234',
     verified: false
   },
   {
@@ -110,7 +117,8 @@ const mockProperties = [
     price: '₦52M',
     priceValue: 52000000,
     fmv: 'Below FMV',
-    verified: true
+    verified: true,
+    whatsapp: '2348089012345'
   },
   {
     id: '10',
@@ -122,7 +130,8 @@ const mockProperties = [
     price: '₦48M',
     priceValue: 48000000,
     fmv: 'Below FMV',
-    verified: true
+    verified: true,
+    whatsapp: '2348090123456'
   },
   {
     id: '11',
@@ -134,7 +143,8 @@ const mockProperties = [
     price: '₦35M',
     priceValue: 35000000,
     fmv: 'At FMV',
-    verified: true
+    verified: true,
+    whatsapp: '2348091234567'
   },
   {
     id: '12',
@@ -146,7 +156,8 @@ const mockProperties = [
     price: '₦70M',
     priceValue: 70000000,
     fmv: 'Below FMV',
-    verified: true
+    verified: true,
+    whatsapp: '2348092345678'
   },
   {
     id: '13',
@@ -158,7 +169,8 @@ const mockProperties = [
     price: '₦55M',
     priceValue: 55000000,
     fmv: 'At FMV',
-    verified: true
+    verified: true,
+    whatsapp: '2348093456789'
   },
   {
     id: '14',
@@ -170,7 +182,8 @@ const mockProperties = [
     price: '₦95M',
     priceValue: 95000000,
     fmv: 'Below FMV',
-    verified: true
+    verified: true,
+    whatsapp: '2348094567890'
   },
   {
     id: '15',
@@ -182,7 +195,8 @@ const mockProperties = [
     price: '₦180M',
     priceValue: 180000000,
     fmv: 'Below FMV',
-    verified: true
+    verified: true,
+    whatsapp: '2348095678901'
   },
   {
     id: '16',
@@ -194,7 +208,8 @@ const mockProperties = [
     price: '₦42M',
     priceValue: 42000000,
     fmv: 'At FMV',
-    verified: true
+    verified: true,
+    whatsapp: '2348096789012'
   },
   {
     id: '17',
@@ -206,7 +221,8 @@ const mockProperties = [
     price: '₦25M',
     priceValue: 25000000,
     fmv: 'Below FMV',
-    verified: false
+    verified: false,
+    whatsapp: '2348097890123'
   },
   {
     id: '18',
@@ -218,7 +234,8 @@ const mockProperties = [
     price: '₦140M',
     priceValue: 140000000,
     fmv: 'At FMV',
-    verified: true
+    verified: true,
+    whatsapp: '2348098901234'
   }
 ];
 
@@ -250,12 +267,15 @@ export function ResultsView() {
   const [sortBy, setSortBy] = useState('Highest Inda Score');
   const [showSidebar, setShowSidebar] = useState(true);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 300000000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000000000]);
   const [selectedBedrooms, setSelectedBedrooms] = useState<string[]>([]);
   const [selectedPropertyTypes, setSelectedPropertyTypes] = useState<string[]>([]);
   const [locationSearch, setLocationSearch] = useState('');
   const [showMakeOfferModal, setShowMakeOfferModal] = useState(false);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
+  const [selectedPropertyTitle, setSelectedPropertyTitle] = useState<string>('');
+  const [selectedPropertyPrice, setSelectedPropertyPrice] = useState<string>('');
+  const [selectedPropertyWhatsapp, setSelectedPropertyWhatsapp] = useState<string>('');
 
   const handleViewProperty = (propertyId: string) => {
     console.log('Viewing property:', propertyId);
@@ -266,6 +286,11 @@ export function ResultsView() {
   const handleMakeOffer = (propertyId: string) => {
     const property = mockProperties.find(p => p.id === propertyId);
     setSelectedPropertyId(propertyId);
+    if (property) {
+      setSelectedPropertyTitle(property.title);
+      setSelectedPropertyPrice(property.price);
+      setSelectedPropertyWhatsapp(property.whatsapp || '');
+    }
     setShowMakeOfferModal(true);
     console.log('Making offer for property:', propertyId);
   };
@@ -279,6 +304,9 @@ export function ResultsView() {
   };
 
   const formatPrice = (value: number) => {
+    if (value >= 1000000000) {
+      return `₦${(value / 1000000000).toFixed(1)}B`;
+    }
     if (value >= 1000000) {
       return `₦${(value / 1000000).toFixed(0)}M`;
     }
@@ -297,13 +325,13 @@ export function ResultsView() {
             <input
               type="range"
               min="0"
-              max="300000000"
+              max="5000000000"
               step="5000000"
               value={priceRange[0]}
               onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb"
               style={{
-                background: `linear-gradient(to right, #4ea8a1 0%, #4ea8a1 ${(priceRange[0] / 300000000) * 100}%, #e5e7eb ${(priceRange[0] / 300000000) * 100}%, #e5e7eb 100%)`
+                background: `linear-gradient(to right, #4ea8a1 0%, #4ea8a1 ${(priceRange[0] / 5000000000) * 100}%, #e5e7eb ${(priceRange[0] / 5000000000) * 100}%, #e5e7eb 100%)`
               }}
             />
             
@@ -314,13 +342,13 @@ export function ResultsView() {
             <input
               type="range"
               min="0"
-              max="300000000"
+              max="5000000000"
               step="5000000"
               value={priceRange[1]}
               onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb"
               style={{
-                background: `linear-gradient(to right, #4ea8a1 0%, #4ea8a1 ${(priceRange[1] / 300000000) * 100}%, #e5e7eb ${(priceRange[1] / 300000000) * 100}%, #e5e7eb 100%)`
+                background: `linear-gradient(to right, #4ea8a1 0%, #4ea8a1 ${(priceRange[1] / 5000000000) * 100}%, #e5e7eb ${(priceRange[1] / 5000000000) * 100}%, #e5e7eb 100%)`
               }}
             />
 
@@ -639,8 +667,9 @@ export function ResultsView() {
         isOpen={showMakeOfferModal}
         onClose={() => setShowMakeOfferModal(false)}
         propertyId={selectedPropertyId}
-        propertyTitle={selectedProperty?.title}
-        propertyPrice={selectedProperty?.price}
+        propertyTitle={selectedPropertyTitle}
+        propertyPrice={selectedPropertyPrice}
+        propertyWhatsapp={selectedPropertyWhatsapp}
       />
     </div>
   );

@@ -77,10 +77,10 @@ export function HeroSection() {
 
           {/* CTA Buttons */}
           <div className="flex items-center justify-center gap-4 flex-wrap mb-16 animate-in fade-in slide-in-from-bottom-6 duration-700" style={{ animationDelay: '300ms', animationFillMode: 'backwards' }}>
-            <Button onClick={handleGetStarted} size="lg" className="bg-[#4ea8a1] hover:bg-[#3d8680] group shadow-lg shadow-[#4ea8a1]/25 hover:shadow-xl hover:shadow-[#4ea8a1]/40 transition-all text-lg px-8 py-6">
+            {/* <Button onClick={handleGetStarted} size="lg" className="bg-[#4ea8a1] hover:bg-[#3d8680] group shadow-lg shadow-[#4ea8a1]/25 hover:shadow-xl hover:shadow-[#4ea8a1]/40 transition-all text-lg px-8 py-6">
               Get Started
               <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Button>
+            </Button> */}
             <Button
               size="lg"
               variant="outline"

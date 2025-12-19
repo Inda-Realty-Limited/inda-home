@@ -1,5 +1,5 @@
 import { Button } from '../views/index/sections/ui/button';
-import { ArrowRight, Shield, TrendingUp, FileCheck, Search, CheckCircle2, AlertCircle, XCircle } from 'lucide-react';
+import { ArrowRight, Shield, TrendingUp, FileCheck, Search, CheckCircle2, AlertCircle} from 'lucide-react';
 import { FooterCTA } from '../views/index/sections/FooterCTA';
 import { Navbar } from '@/components';
 import Link from 'next/link';

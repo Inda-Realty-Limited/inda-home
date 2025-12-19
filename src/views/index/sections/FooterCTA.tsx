@@ -52,10 +52,10 @@ export function FooterCTA() {
             Join thousands of investors, developers, and professionals making smarter decisions with Inda.
           </p>
           <div className="flex items-center justify-center gap-4 flex-wrap">
-            <Button onClick={handleGetStarted} size="lg" className="bg-gradient-to-r from-[#4ea8a1] to-[#3d8680] hover:from-[#3d8680] hover:to-[#2d7670] group shadow-xl shadow-[#4ea8a1]/25 text-lg px-8 py-6">
+            {/* <Button onClick={handleGetStarted} size="lg" className="bg-gradient-to-r from-[#4ea8a1] to-[#3d8680] hover:from-[#3d8680] hover:to-[#2d7670] group shadow-xl shadow-[#4ea8a1]/25 text-lg px-8 py-6">
               Get Started
               <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Button>
+            </Button> */}
             <Button onClick={openWhatsAppDemo} size="lg" variant="outline" className="border-2 bg-transparent border-gray-600 text-white hover:bg-white/10 hover:border-white text-lg px-8 py-6">
               Contact Sales
             </Button>
