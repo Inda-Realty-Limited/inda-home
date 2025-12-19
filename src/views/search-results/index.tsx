@@ -1,8 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import { useRouter } from 'next/router';
-import { ArrowLeft, SlidersHorizontal, ChevronDown, MapPin, TrendingUp, Shield, Home, Check, Search } from 'lucide-react';
+import { ArrowLeft, SlidersHorizontal, ChevronDown, MapPin, TrendingUp, Home, Check, Search } from 'lucide-react';
 import { PropertyCard } from './sections/PropertyCard';
 import { MakeOfferModal } from './sections/MakeOfferModal';
+import PropertyMap from '@/components/PropertyMap';
+import { Navbar } from '@/components';
 
 // Mock property data
 const mockProperties = [
@@ -11,6 +13,8 @@ const mockProperties = [
     image: 'https://images.unsplash.com/photo-1662454419736-de132ff75638?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBhcGFydG1lbnQlMjBiZWRyb29tfGVufDF8fHx8MTc2MzkwMjc2OXww&ixlib=rb-4.1.0&q=80&w=1080',
     title: '2-Bed Apartment in Lekki',
     location: 'Lekki Phase 1',
+    latitude: 6.4522,
+    longitude: 3.5819,
     beds: 2,
     trustScore: 87,
     price: '₦45M',
@@ -23,6 +27,8 @@ const mockProperties = [
     image: 'https://images.unsplash.com/photo-1738168279272-c08d6dd22002?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBhcGFydG1lbnQlMjBsaXZpbmclMjByb29tfGVufDF8fHx8MTc2MzkwMjk5NXww&ixlib=rb-4.1.0&q=80&w=1080',
     title: '3-Bed Luxury Apartment',
     location: 'Victoria Island',
+    latitude: 6.4301,
+    longitude: 3.4289,
     beds: 3,
     trustScore: 92,
     price: '₦85M',
@@ -35,6 +41,8 @@ const mockProperties = [
     image: 'https://images.unsplash.com/photo-1756016865217-bac7c13c3238?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkdXBsZXglMjBob3VzZSUyMGV4dGVyaW9yfGVufDF8fHx8MTc2Mzk5NDkxOXww&ixlib=rb-4.1.0&q=80&w=1080',
     title: '4-Bed Duplex',
     location: 'Ikoyi',
+    latitude: 6.4608,
+    longitude: 3.4295,
     beds: 4,
     trustScore: 95,
     price: '₦120M',
@@ -47,6 +55,8 @@ const mockProperties = [
     image: 'https://images.unsplash.com/photo-1703783028657-5905a1662aa8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjB0ZXJyYWNlJTIwaG91c2V8ZW58MXx8fHwxNzYzOTk0OTIwfDA&ixlib=rb-4.1.0&q=80&w=1080',
     title: '3-Bed Terrace',
     location: 'Ajah',
+    latitude: 6.4968,
+    longitude: 3.5623,
     beds: 3,
     trustScore: 78,
     price: '₦38M',
@@ -444,17 +454,11 @@ export function ResultsView() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+          <Navbar/>
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-[1400px] mx-auto px-6 py-4">
           <div className="flex items-center justify-between mb-4">
-            {/* Logo */}
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-[#4ea8a1] to-[#3d8882] rounded-full flex items-center justify-center">
-                <span className="text-white text-[18px]">I</span>
-              </div>
-              <span className="text-[#4ea8a1]">Inda</span>
-            </div>
 
             {/* Sort & Filter */}
             <div className="flex items-center gap-3">
@@ -558,17 +562,14 @@ export function ResultsView() {
                   <MapPin className="w-5 h-5 text-[#4ea8a1]" />
                   Location Map
                 </h3>
-                <div className="aspect-square bg-gradient-to-br from-teal-50 to-blue-50 rounded-lg flex items-center justify-center relative overflow-hidden">
-                  <div className="absolute inset-0 opacity-20">
-                    <div className="absolute top-1/4 left-1/3 w-3 h-3 bg-[#4ea8a1] rounded-full animate-pulse"></div>
-                    <div className="absolute top-1/2 left-1/2 w-3 h-3 bg-[#4ea8a1] rounded-full animate-pulse" style={{ animationDelay: '0.5s' }}></div>
-                    <div className="absolute top-2/3 left-2/3 w-3 h-3 bg-[#4ea8a1] rounded-full animate-pulse" style={{ animationDelay: '1s' }}></div>
-                  </div>
-                  <div className="text-center z-10">
-                    <MapPin className="w-12 h-12 text-[#4ea8a1] mx-auto mb-2 opacity-60" />
-                    <span className="text-[13px] text-muted-foreground">Interactive Map</span>
-                  </div>
-                </div>
+                <PropertyMap
+                  latitude={6.4600}
+                  longitude={3.4829}
+                  zoom={12}
+                  height="aspect-square"
+                  className="rounded-lg"
+                  title="Properties in Lagos"
+                />
               </div>
 
               {/* Quick Stats */}

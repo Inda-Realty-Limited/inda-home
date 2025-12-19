@@ -51,8 +51,19 @@ export function ForBuyers() {
     const query = search.trim();
     if (!query) return;
     const encoded = encodeURIComponent(query);
+
+    if (isLoading) {
+      setSearchPending(true);
+      return;
+    }
+
+    if (!isAuthenticated) {
+      router.push(`/auth/signup?q=${encoded}&type=ai`);
+      return;
+    }
+
     router.push(`/search-results?q=${encoded}&type=ai`);
-  }, [router, search, searchMode]);
+  }, [isAuthenticated, isLoading, router, search, searchMode]);
 
   useEffect(() => {
     if (!isLoading && isAuthenticated && searchPending) {

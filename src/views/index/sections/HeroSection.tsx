@@ -63,7 +63,7 @@ export function HeroSection() {
           </div>
           
           {/* Main Heading */}
-          <h1 className="text-4xl md:text-5xl lg:text-6xl text-gray-900 mb-8 animate-in fade-in slide-in-from-bottom-6 duration-700" style={{ animationDelay: '100ms', animationFillMode: 'backwards' }}>
+          <h1 className="text-5xl md:text-5xl lg:text-6xl text-gray-900 mb-8 animate-in fade-in slide-in-from-bottom-6 duration-700" style={{ animationDelay: '100ms', animationFillMode: 'backwards' }}>
             Verified Real Estate Intelligence - {' '}
             <span className="bg-gradient-to-r from-[#4ea8a1] to-[#3d8680] bg-clip-text text-transparent">
                So Deals Close Faster
