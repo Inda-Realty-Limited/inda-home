@@ -24,7 +24,7 @@ export function FooterCTA() {
   };
 
   const openWhatsAppDemo = () => {
-    const phone = process.env.NEXT_PUBLIC_INDA_WHATSAPP;
+    const phone = process.env.NEXT_PUBLIC_INDA_WHATSAPP || "2347084960775";
     if (!phone) return;
     const url = `https://wa.me/${phone}?text=${encodeURIComponent(
       "Hi, I would like to book a demo with Inda"
