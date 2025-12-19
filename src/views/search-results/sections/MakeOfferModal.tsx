@@ -7,9 +7,10 @@ interface MakeOfferModalProps {
   propertyId: string | null;
   propertyTitle?: string;
   propertyPrice?: string;
+  propertyWhatsapp?: string;
 }
 
-export function MakeOfferModal({ isOpen, onClose, propertyId, propertyTitle, propertyPrice }: MakeOfferModalProps) {
+export function MakeOfferModal({ isOpen, onClose, propertyId, propertyTitle, propertyPrice, propertyWhatsapp }: MakeOfferModalProps) {
   const [offerAmount, setOfferAmount] = useState('');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -23,17 +24,24 @@ export function MakeOfferModal({ isOpen, onClose, propertyId, propertyTitle, pro
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    console.log('Offer submitted:', {
-      propertyId,
-      offerAmount,
-      fullName,
-      email,
-      phone,
-      message
-    });
+    // Prepare WhatsApp message
+    const whatsappMessage = `Property Offer Details:
+Property: ${propertyTitle}
+Asking Price: ${propertyPrice}
+
+Offer Amount: ₦${offerAmount}
+Name: ${fullName}
+Email: ${email}
+Phone: ${phone}
+Message: ${message}`;
+
+    // Send to WhatsApp
+    if (propertyWhatsapp) {
+      const whatsappUrl = `https://wa.me/${propertyWhatsapp}?text=${encodeURIComponent(whatsappMessage)}`;
+      if (typeof window !== 'undefined') {
+        window.open(whatsappUrl, '_blank');
+      }
+    }
     
     setIsSubmitting(false);
     onClose();
@@ -92,7 +100,7 @@ export function MakeOfferModal({ isOpen, onClose, propertyId, propertyTitle, pro
                 Your Offer Amount *
               </label>
               <div className="relative">
-                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg">₦</span>
                 <input
                   type="text"
                   id="offerAmount"
