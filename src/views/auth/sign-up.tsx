@@ -167,7 +167,7 @@ const Signup: React.FC = () => {
                       No noise. No spam. Just clarity where it matters most.
                     </p>
                     <div className="flex flex-col gap-4 sm:gap-6 w-full max-w-[320px] sm:max-w-[400px] md:max-w-[480px] mx-auto justify-center">
-                      <GoogleButton returnTo={returnTo || (searchQuery ? `/result?q=${encodeURIComponent(searchQuery)}&type=${searchType}` : undefined)} />
+                      <GoogleButton returnTo={returnTo || (searchQuery ? `/${searchType === "ai" ? "search-results" : "result"}?q=${encodeURIComponent(searchQuery)}&type=${searchType}` : undefined)} />
                 <button
                   onClick={() => {
                     setStep(2);
@@ -548,8 +548,9 @@ const Signup: React.FC = () => {
                               router.push(returnTo);
                             }
                           } else if (searchQuery) {
+                            const page = searchType === "ai" ? "search-results" : "result";
                             router.push(
-                              `/result?q=${encodeURIComponent(
+                              `/${page}?q=${encodeURIComponent(
                                 searchQuery
                               )}&type=${searchType}`
                             );
