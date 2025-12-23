@@ -23,7 +23,6 @@ export interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<any>;
   logout: () => Promise<void>;
   setUser: (user: StoredUser | null, token?: string) => void;
-  checkSession: () => Promise<void>;
 }
 
 

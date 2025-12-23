@@ -1,0 +1,324 @@
+{
+  "reportId": "DD-2024-0947",
+  "client": "Adetuya Investment Ltd",
+  "analyst": "Oyuke Alemu",
+  "reportDate": "08 Oct 2025",
+  "confidenceLevel": "Very High",
+  "confidenceScore": 88,
+  "listingUrl": "https://example.com/property/sample-listing",
+  "propertyOverview": {
+    "title": "4 Bedroom Terrace Duplex in Lekki Phase 1",
+    "propertyType": "4 Bedroom Duplex",
+    "location": "Lekki Phase 1, Lagos",
+    "landSize": "2,400 sqm",
+    "yearBuilt": "2019",
+    "siteVisitDate": "09/10/2025",
+    "inspector": "Joshua Onoh"
+  },
+  "keyFindings": [
+    "All major legal documents verified and clean",
+    "Survey confirms accurate land measurements",
+    "Governor's Consent: pending but application submitted",
+    "Property priced 8% below Fair Market Value",
+    "Structural integrity tests passed with flying colors",
+    "Developer has excellent track record with 12 completed projects"
+  ],
+  "propertyCoordinates": {
+    "latitude": 6.453055,
+    "longitude": 3.3993997
+  },
+  "legalVerification": [
+    {
+      "id": "coo",
+      "title": "Certificate of Occupancy (C of O)",
+      "description": "Valid until 2054, clean title",
+      "status": "verified",
+      "icon": "certificate"
+    },
+    {
+      "id": "deed",
+      "title": "Deed of Assignment",
+      "description": "Properly executed, stamped",
+      "status": "verified",
+      "icon": "document"
+    },
+    {
+      "id": "consent",
+      "title": "Governor's Consent",
+      "description": "Application submitted, awaiting approval",
+      "status": "pending",
+      "icon": "warning"
+    },
+    {
+      "id": "zoning",
+      "title": "Zoning Compliance",
+      "description": "Residential zoning confirmed",
+      "status": "verified",
+      "icon": "building"
+    },
+    {
+      "id": "litigation",
+      "title": "Litigation Check",
+      "description": "No pending cases found",
+      "status": "verified",
+      "icon": "gavel"
+    }
+  ],
+  "surveyVerification": [
+    {
+      "id": "landsize",
+      "title": "Land Size Verification",
+      "description": "2,400 sqm confirmed via GPS survey",
+      "status": "verified",
+      "icon": "ruler"
+    },
+    {
+      "id": "boundary",
+      "title": "Boundary Demarcation",
+      "description": "All corners properly beaconed",
+      "status": "verified",
+      "icon": "compass"
+    },
+    {
+      "id": "encroachment",
+      "title": "Encroachment Risk",
+      "description": "No encroachments detected",
+      "status": "verified",
+      "icon": "shield"
+    },
+    {
+      "id": "flood",
+      "title": "Flood Risk Assessment",
+      "description": "Low risk zone, good drainage",
+      "status": "verified",
+      "icon": "water"
+    }
+  ],
+  "sellerVerification": {
+    "developerProfile": {
+      "company": "Luxury Homes Nigeria Ltd",
+      "yearsInBusiness": "12 years",
+      "cacRegistration": "verified",
+      "redanMembership": "active"
+    },
+    "riskAssessment": {
+      "financialStability": 90,
+      "deliveryTrackRecord": 95,
+      "customerSatisfaction": 88
+    },
+    "confidenceScore": 83,
+    "confidenceLabel": "Highly Reliable Developer",
+    "recentProjects": [
+      {
+        "title": "Marina Heights",
+        "deliveryDate": "2019 • 24 units",
+        "feedback": "Delivered on time",
+        "rating": 4.8
+      },
+      {
+        "title": "Lekki Gardens Phase 3",
+        "deliveryDate": "2021 • 18 units",
+        "feedback": "Delivered early",
+        "rating": 4.9
+      },
+      {
+        "title": "Victoria Bay Homes",
+        "deliveryDate": "2022 • 36 units",
+        "feedback": "Delivered on time",
+        "rating": 4.7
+      }
+    ]
+  },
+  "onSiteInspection": [
+    {
+      "id": "structure",
+      "title": "Structure",
+      "description": "Solid foundation, no cracks detected",
+      "status": "verified",
+      "icon": "structure"
+    },
+    {
+      "id": "electrical",
+      "title": "Electrical Systems",
+      "description": "New wiring, proper grounding observed",
+      "status": "verified",
+      "icon": "electrical"
+    },
+    {
+      "id": "plumbing",
+      "title": "Plumbing",
+      "description": "High quality pipes, good pressure",
+      "status": "verified",
+      "icon": "plumbing"
+    },
+    {
+      "id": "finishes",
+      "title": "Finishes",
+      "description": "Excellent attention to detail on floors/walls",
+      "status": "verified",
+      "icon": "finishes"
+    },
+    {
+      "id": "security",
+      "title": "Security",
+      "description": "CCTV installed, electric fencing active",
+      "status": "verified",
+      "icon": "security"
+    },
+    {
+      "id": "amenities",
+      "title": "Amenities",
+      "description": "Swimming pool needs minor repairs",
+      "status": "pending",
+      "icon": "amenities"
+    }
+  ],
+  "photoDocumentation": {
+    "exterior": [
+      "/images/placeholder-1.jpg",
+      "/images/placeholder-2.jpg",
+      "/images/placeholder-3.jpg",
+      "/images/placeholder-4.jpg",
+      "/images/placeholder-5.jpg",
+      "/images/placeholder-6.jpg"
+    ],
+    "interior": [
+      "/images/placeholder-1.jpg",
+      "/images/placeholder-2.jpg",
+      "/images/placeholder-3.jpg",
+      "/images/placeholder-4.jpg",
+      "/images/placeholder-5.jpg",
+      "/images/placeholder-6.jpg"
+    ],
+    "electrical": [
+      "/images/placeholder-1.jpg",
+      "/images/placeholder-2.jpg",
+      "/images/placeholder-3.jpg",
+      "/images/placeholder-4.jpg",
+      "/images/placeholder-5.jpg"
+    ],
+    "neighbourhood": [
+      "/images/placeholder-1.jpg",
+      "/images/placeholder-2.jpg",
+      "/images/placeholder-3.jpg",
+      "/images/placeholder-4.jpg"
+    ]
+  },
+  "confidenceScoreBreakdown": {
+    "overallScore": 88,
+    "sections": [
+      { 
+        "label": "Legal Verification", 
+        "score": 95,
+        "note": "All documents verified except pending Governor's Consent"
+      },
+      { 
+        "label": "Survey Verification", 
+        "score": 100,
+        "note": "GPS survey confirms 100% accuracy of measurements"
+      },
+      { 
+        "label": "Seller Verification", 
+        "score": 82,
+        "note": "All documents verified except pending Governor's Consent"
+      },
+      { 
+        "label": "Site Verification", 
+        "score": 85,
+        "note": "Excellent condition with minor construction in progress"
+      }
+    ],
+    "weightedCalculation": [
+      { "label": "Legal", "weight": "(30%)", "calculation": "95 × 0.30 = 28.5" },
+      { "label": "Survey", "weight": "(25%)", "calculation": "100 × 0.25 = 25.0" },
+      { "label": "Seller", "weight": "(25%)", "calculation": "82 × 0.25 = 20.5" },
+      { "label": "Site", "weight": "(20%)", "calculation": "85 × 0.20 = 17.0" }
+    ],
+    "analystNote": "This property represents a very safe investment opportunity with minimal risk factors identified."
+  },
+  "finalVerdict": {
+    "status": "proceed",
+    "statusLabel": "Strong Buy",
+    "message": "This property exceeds all criteria for a safe and profitable investment.",
+    "investmentGrade": "Premium Investment Opportunity",
+    "stars": 4
+  },
+  "expertAnalysis": {
+    "marketTrends": {
+      "trend": "Upward",
+      "confidence": "High",
+      "drivers": ["Infrastructure", "Demand"],
+      "forecast": "15% Growth"
+    },
+    "legalInsights": {
+      "titleStatus": "Clear",
+      "documentationScore": 95,
+      "risks": [
+        "Minor delay in Governor's Consent approval process",
+        "Pending registration of Deed of Assignment"
+      ],
+      "recommendations": [
+        "Proceed with purchase",
+        "Expedite Governor's Consent processing",
+        "Verify final stamp duties payment"
+      ]
+    },
+    "investmentRiskAssessment": {
+      "overallRisk": "Low",
+      "riskScore": 12,
+      "factors": [
+        { "category": "Market Risk", "level": "Low", "description": "High demand area" },
+        { "category": "Legal Risk", "level": "Low", "description": "Clear title" },
+        { "category": "Physical Risk", "level": "Low", "description": "Good condition" }
+      ]
+    },
+    "neighborhoodDevelopment": {
+      "upcomingProjects": ["New Mall", "Road Expansion"],
+      "impactAssessment": "Positive impact on property value"
+    },
+    "exitStrategy": {
+      "recommendedHoldPeriod": "5 Years",
+      "optimalExitTiming": "2030",
+      "strategies": [
+        {
+          "type": "Hold & Rent",
+          "description": "Generate rental income while value appreciates",
+          "pros": ["Steady Income", "Appreciation"],
+          "cons": ["Maintenance", "Tenant Management"],
+          "estimatedReturn": "12% p.a."
+        }
+      ]
+    }
+  },
+  "priceAnalysis": {
+    "fairMarketValue": 150000000,
+    "priceVsFMV": -8,
+    "priceHistory": [
+      { "month": "Jan", "fmv": 140000000, "price": 135000000 },
+      { "month": "Feb", "fmv": 142000000, "price": 138000000 },
+      { "month": "Mar", "fmv": 145000000, "price": 140000000 },
+      { "month": "Apr", "fmv": 148000000, "price": 142000000 },
+      { "month": "May", "fmv": 150000000, "price": 138000000 }
+    ],
+    "dataPoints": 12
+  },
+  "demandInsights": {
+    "customerSegments": [
+      { "label": "Buyers", "percentage": 45, "color": "#4EA8A1" },
+      { "label": "Long Term Renters", "percentage": 30, "color": "#FBBF24" },
+      { "label": "Short Term Renters", "percentage": 15, "color": "#F87171" },
+      { "label": "Land Bankers", "percentage": 10, "color": "#60A5FA" }
+    ],
+    "purchasePurpose": {
+      "investment": 65,
+      "owners": 35
+    },
+    "supplyDemandRatio": "1:4"
+  },
+  "prioritySupport": {
+    "dedicatedAnalyst": "Oyuke Alemu",
+    "responseTime": "< 4 Hours",
+    "contactEmail": "oyuke@inda.ng",
+    "additionalServices": ["Legal Support", "Negotiation", "Documentation"]
+  }
+}

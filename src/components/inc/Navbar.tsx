@@ -1,6 +1,8 @@
 import { useAuth } from "@/contexts/AuthContext";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/router";
+import { ChevronDown } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import {
   FiBell,
@@ -23,8 +25,10 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
+  const [productsOpen, setProductsOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const profileRef = useRef<HTMLDivElement | null>(null);
+  const productsRef = useRef<HTMLDivElement | null>(null);
 
   // Close profile dropdown on outside click / ESC
   useEffect(() => {
@@ -49,6 +53,29 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
     };
   }, [profileOpen]);
 
+  // Close products dropdown on outside click / ESC
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      if (!productsRef.current) return;
+      if (!productsRef.current.contains(e.target as Node)) {
+        setProductsOpen(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setProductsOpen(false);
+      }
+    }
+    if (productsOpen) {
+      document.addEventListener("mousedown", onDocClick);
+      document.addEventListener("keydown", onKey);
+    }
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [productsOpen]);
+
   const handleLogout = async () => {
     setProfileOpen(false);
     setMobileProfileOpen(false);
@@ -64,7 +91,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
   if (isAuthenticated) {
     return (
       <>
-        <XStack className="w-full flex items-center justify-between py-4 bg-gradient-to-r from-inda-dark/95 to-inda-dark/90 backdrop-blur-sm border-b border-white/5 h-[80px] md:h-[110px] px-4 md:pr-8">
+        <XStack className="relative z-[3000] w-full flex items-center justify-between py-4 bg-gradient-to-r from-inda-dark/95 to-inda-dark/90 backdrop-blur-sm border-b border-white/5 h-[80px] md:h-[110px] px-4 md:pr-8 overflow-visible">
           <div
             className="flex items-center gap-2 h-full overflow-hidden cursor-pointer group transition-transform duration-200 hover:scale-105"
             onClick={() => router.push("/")}
@@ -79,9 +106,65 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
           </div>
 
           <XStack
-            gap={40}
-            className="hidden lg:flex items-center justify-center space-x-10"
+            gap={24}
+            className="hidden lg:flex items-center justify-center space-x-6"
           >
+            <div
+              ref={productsRef}
+              className="relative"
+              onMouseEnter={() => setProductsOpen(true)}
+              onMouseLeave={() => setProductsOpen(false)}
+            >
+              <button
+                className="flex items-center gap-1 text-white/90 hover:text-white text-sm font-medium transition-colors duration-200"
+              >
+                Products
+                <ChevronDown className="w-4 h-4" />
+              </button>
+              
+              {productsOpen && (
+                <div
+                  className="absolute top-full left-0 pt-2 w-56 z-[2000]"
+                  onMouseEnter={() => setProductsOpen(true)}
+                  onMouseLeave={() => setProductsOpen(false)}
+                >
+                  <div className="bg-white rounded-xl shadow-lg border border-gray-200 py-2">
+                  <Link
+                    href="/for-buyers"
+                    className="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                  >
+                    <div>For Buyers</div>
+                    <div className="text-sm text-gray-500">Invest smarter</div>
+                  </Link>
+                  <Link
+                    href="/for-professionals"
+                    className="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                  >
+                    <div>For Professionals</div>
+                    <div className="text-sm text-gray-500">Grow your business</div>
+                  </Link>
+                  </div>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => router.push("/#usecases")}
+              className="text-white/90 hover:text-white text-sm font-medium transition-colors duration-200"
+            >
+              Use Cases
+            </button>
+            <button
+              disabled
+              className="text-white/60 cursor-not-allowed text-sm font-medium opacity-60"
+            >
+              APIs <span className="text-xs ml-1">Coming Soon</span>
+            </button>
+            <button
+              onClick={() => router.push("/newsroom")}
+              className="text-white/90 hover:text-white text-sm font-medium transition-colors duration-200"
+            >
+              Newsroom
+            </button>
             <div className="relative flex items-center justify-center cursor-pointer select-none group bg-[#F9F9F90A] hover:bg-white/10 rounded-full w-12 h-12 transition-all duration-200">
               <FiBell
                 size={22}
@@ -189,11 +272,79 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
                 <button
                   aria-label="Close menu"
                   className="inline-flex items-center justify-center p-2 rounded-full text-white/90 hover:text-white bg-white/10 hover:bg-white/20"
-                  onClick={() => setMobileOpen(false)}
+                  onClick={() => {
+                    setMobileOpen(false);
+                    setProductsOpen(false);
+                  }}
                 >
                   <FiX size={20} />
                 </button>
               </div>
+              <div className="w-full">
+                <button
+                  className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white text-base"
+                  onClick={() => setProductsOpen((v) => !v)}
+                >
+                  <span>Products</span>
+                  <span
+                    className={`transition-transform ${
+                      productsOpen ? "rotate-180" : "rotate-0"
+                    }`}
+                  >
+                    <ChevronDown className="w-4 h-4" />
+                  </span>
+                </button>
+                {productsOpen && (
+                  <div className="mt-2 mx-2 rounded-xl border border-white/10 bg-inda-dark/90">
+                    <Link
+                      href="/for-buyers"
+                      className="block px-4 py-3 text-white/90 hover:bg-white/10 transition-colors"
+                      onClick={() => {
+                        setMobileOpen(false);
+                        setProductsOpen(false);
+                      }}
+                    >
+                      <div className="font-medium">For Buyers</div>
+                      <div className="text-sm text-white/60">Invest smarter</div>
+                    </Link>
+                    <Link
+                      href="/for-professionals"
+                      className="block px-4 py-3 text-white/90 hover:bg-white/10 transition-colors"
+                      onClick={() => {
+                        setMobileOpen(false);
+                        setProductsOpen(false);
+                      }}
+                    >
+                      <div className="font-medium">For Professionals</div>
+                      <div className="text-sm text-white/60">Grow your business</div>
+                    </Link>
+                  </div>
+                )}
+              </div>
+              <button
+                className="w-full text-left px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white text-base"
+                onClick={() => {
+                  setMobileOpen(false);
+                  router.push("/#usecases");
+                }}
+              >
+                Use Cases
+              </button>
+              <button
+                disabled
+                className="w-full text-left px-4 py-3 rounded-xl bg-white/5 text-white/60 text-base cursor-not-allowed opacity-60"
+              >
+                APIs <span className="text-xs ml-1">Coming Soon</span>
+              </button>
+              <button
+                className="w-full text-left px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white text-base"
+                onClick={() => {
+                  setMobileOpen(false);
+                  router.push("/newsroom");
+                }}
+              >
+                Newsroom
+              </button>
               <button
                 className="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white text-base"
                 onClick={() => setMobileOpen(false)}
@@ -277,7 +428,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
   // NOT LOGGED IN NAVBAR (original)
   return (
     <>
-      <XStack className="w-full flex items-center justify-between py-4 bg-gradient-to-r from-inda-dark/95 to-inda-dark/90 backdrop-blur-sm border-b border-white/5 h-[80px] md:h-[110px] px-4 md:pr-8">
+      <XStack className="relative z-[3000] w-full flex items-center justify-between py-4 bg-gradient-to-r from-inda-dark/95 to-inda-dark/90 backdrop-blur-sm border-b border-white/5 h-[80px] md:h-[110px] px-4 md:pr-8 overflow-visible">
         <div
           className="flex items-center gap-2 h-full overflow-hidden cursor-pointer group transition-transform duration-200 hover:scale-105"
           onClick={() => router.push("/")}
@@ -291,13 +442,63 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
           />
         </div>
 
-        <XStack gap={24} className="hidden lg:flex items-center space-x-3">
-          <Button
-            variant="raw"
-            className="rounded-full bg-[#F9F9F90A] hover:bg-white/10   px-6 py-2.5 text-sm text-white font-medium transition-all duration-200 hover:scale-105"
+        <XStack gap={24} className="hidden lg:flex items-center space-x-6">
+          <div
+            ref={productsRef}
+            className="relative"
+            onMouseEnter={() => setProductsOpen(true)}
+            onMouseLeave={() => setProductsOpen(false)}
           >
-            Inda Blog
-          </Button>
+            <button
+              className="flex items-center gap-1 text-white/90 hover:text-white text-sm font-medium transition-colors duration-200"
+            >
+              Products
+              <ChevronDown className="w-4 h-4" />
+            </button>
+            
+            {productsOpen && (
+              <div
+                className="absolute top-full left-0 pt-2 w-56 z-[2000]"
+                onMouseEnter={() => setProductsOpen(true)}
+                onMouseLeave={() => setProductsOpen(false)}
+              >
+                <div className="bg-white rounded-xl shadow-lg border border-gray-200 py-2">
+                <Link
+                  href="/for-buyers"
+                  className="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                >
+                  <div>For Buyers</div>
+                  <div className="text-sm text-gray-500">Invest smarter</div>
+                </Link>
+                <Link
+                  href="/for-professionals"
+                  className="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                >
+                  <div>For Professionals</div>
+                  <div className="text-sm text-gray-500">Grow your business</div>
+                </Link>
+                </div>
+              </div>
+            )}
+          </div>
+          <button
+            onClick={() => router.push("/#usecases")}
+            className="text-white/90 hover:text-white text-sm font-medium transition-colors duration-200"
+          >
+            Use Cases
+          </button>
+          <button
+            disabled
+            className="text-white/60 cursor-not-allowed text-sm font-medium opacity-60"
+          >
+            APIs <span className="text-xs ml-1">Coming Soon</span>
+          </button>
+          <button
+            onClick={() => router.push("/newsroom")}
+            className="text-white/90 hover:text-white text-sm font-medium transition-colors duration-200"
+          >
+            Newsroom
+          </button>
           {variant === "signUp" && (
             <Button
               onClick={() => {
@@ -369,14 +570,70 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
                 <FiX size={20} />
               </button>
             </div>
+            <div className="w-full">
+              <button
+                className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white text-base"
+                onClick={() => setProductsOpen((v) => !v)}
+              >
+                <span>Products</span>
+                <span
+                  className={`transition-transform ${
+                    productsOpen ? "rotate-180" : "rotate-0"
+                  }`}
+                >
+                  <ChevronDown className="w-4 h-4" />
+                </span>
+              </button>
+              {productsOpen && (
+                <div className="mt-2 mx-2 rounded-xl border border-white/10 bg-inda-dark/90">
+                  <Link
+                    href="/for-buyers"
+                    className="block px-4 py-3 text-white/90 hover:bg-white/10 transition-colors"
+                    onClick={() => {
+                      setMobileOpen(false);
+                      setProductsOpen(false);
+                    }}
+                  >
+                    <div className="font-medium">For Buyers</div>
+                    <div className="text-sm text-white/60">Invest smarter</div>
+                  </Link>
+                  <Link
+                    href="/for-professionals"
+                    className="block px-4 py-3 text-white/90 hover:bg-white/10 transition-colors"
+                    onClick={() => {
+                      setMobileOpen(false);
+                      setProductsOpen(false);
+                    }}
+                  >
+                    <div className="font-medium">For Professionals</div>
+                    <div className="text-sm text-white/60">Grow your business</div>
+                  </Link>
+                </div>
+              )}
+            </div>
             <button
               className="w-full text-left px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white text-base"
               onClick={() => {
                 setMobileOpen(false);
-                router.push("/blog");
+                router.push("/#usecases");
               }}
             >
-              Inda Blog
+              Use Cases
+            </button>
+            <button
+              disabled
+              className="w-full text-left px-4 py-3 rounded-xl bg-white/5 text-white/60 text-base cursor-not-allowed opacity-60"
+            >
+              APIs <span className="text-xs ml-1">Coming Soon</span>
+            </button>
+            <button
+              className="w-full text-left px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white text-base"
+              onClick={() => {
+                setMobileOpen(false);
+                router.push("/newsroom");
+              }}
+            >
+              Newsroom
             </button>
             {variant === "signUp" && (
               <button

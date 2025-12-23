@@ -8,3 +8,4 @@ export { default as Container } from "./inc/Container";
 export { default as Footer } from "./inc/Footer";
 export { default as Navbar } from "./inc/Navbar";
 export { default as Modal } from "./inc/Modal";
+export { default as PropertyMap } from "./PropertyMap";

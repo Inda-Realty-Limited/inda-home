@@ -58,13 +58,24 @@ const OrdersPage: React.FC = () => {
   // Paginate orders locally (since we're fetching 20 but showing 5 per page)
   const paginatedOrders = useMemo(() => {
     if (!data?.orders) return [];
+    
+    // Filter to only show deepdive and deeperdive orders
+    const paidOrders = data.orders.filter(order => {
+      const planNames = order.plans.map(p => p.plan.toLowerCase());
+      return planNames.some(p => p === 'deepdive' || p === 'deeperdive');
+    });
+    
     const start = (currentPage - 1) * itemsPerPage;
-    return data.orders.slice(start, start + itemsPerPage);
+    return paidOrders.slice(start, start + itemsPerPage);
   }, [data?.orders, currentPage]);
 
   const totalOrderPages = useMemo(() => {
     if (!data?.orders) return 0;
-    return Math.ceil(data.orders.length / itemsPerPage);
+    const paidOrders = data.orders.filter(order => {
+      const planNames = order.plans.map(p => p.plan.toLowerCase());
+      return planNames.some(p => p === 'deepdive' || p === 'deeperdive');
+    });
+    return Math.ceil(paidOrders.length / itemsPerPage);
   }, [data?.orders]);
 
   // Paginate payments similarly
@@ -89,12 +100,21 @@ const OrdersPage: React.FC = () => {
   };
 
   const navigateToResult = (order: OrdersByListingItem) => {
-    if (order.listing.listingUrl) {
-      // Route to result page with correct query parameters that the page expects
+    if (!order.listing.listingUrl) return;
+    
+    // Get the highest tier plan for this order
+    const plan = order.plans[0]?.plan.toLowerCase();
+    
+    if (plan === 'deepdive') {
       router.push(
-        `/result?q=${encodeURIComponent(order.listing.listingUrl)}&type=link`
+        `/deep-dive-report?q=${encodeURIComponent(order.listing.listingUrl)}&type=link`
+      );
+    } else if (plan === 'deeperdive') {
+      router.push(
+        `/deeper-dive-report?q=${encodeURIComponent(order.listing.listingUrl)}&type=link`
       );
     }
+    // No action for free/instant plans since they're accessed directly
   };
 
   const formatPrice = (price?: number) => {

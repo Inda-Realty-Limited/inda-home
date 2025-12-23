@@ -3,18 +3,20 @@ import Modal from "@/components/inc/Modal";
 import MarketAbsorptionModal from "./MarketAbsorptionModal";
 
 type Props = {
-  diaspora?: number;
-  localHNIS?: number;
-  institutional?: number;
+  buyers?: number;
+  longTermRenters?: number;
+  shortTermRenters?: number;
+  landBankers?: number;
   investment?: number;
   owners?: number;
   supplyDemandRatio?: number;
 };
 
 const DemandInsights: React.FC<Props> = ({
-  diaspora = 60,
-  localHNIS = 25,
-  institutional = 15,
+  buyers = 25,
+  longTermRenters = 45,
+  shortTermRenters = 15,
+  landBankers = 15,
   investment = 65,
   owners = 35,
   supplyDemandRatio = 1.2,
@@ -27,7 +29,7 @@ const DemandInsights: React.FC<Props> = ({
     data: { label: string; percentage: number; color: string }[];
   }) => {
     const size = 200;
-    const strokeWidth = 40;
+    const strokeWidth = 70;
     const radius = (size - strokeWidth) / 2;
     const circumference = 2 * Math.PI * radius;
     const center = size / 2;
@@ -63,9 +65,10 @@ const DemandInsights: React.FC<Props> = ({
   };
 
   const buyerDemographics = [
-    { label: "Diaspora", percentage: diaspora, color: "#4EA8A1" },
-    { label: "Local HNIS", percentage: localHNIS, color: "#E8D976" },
-    { label: "Institutional", percentage: institutional, color: "#B8D9D5" },
+    { label: "Buyers", percentage: buyers, color: "#4EA8A1" },
+    { label: "Long-Term Renters", percentage: longTermRenters, color: "#E8D976" },
+    { label: "Short-Term Renters", percentage: shortTermRenters, color: "#B8D9D5" },
+    { label: "Land Bankers", percentage: landBankers, color: "#E6B800" },
   ];
 
   const getSupplyStatus = (ratio: number) => {
@@ -87,10 +90,10 @@ const DemandInsights: React.FC<Props> = ({
           <div className="space-y-8">
             <div>
               <h4 className="text-xl font-bold text-gray-900 mb-6">
-                Buyer Demographics
+                Customer Segments
               </h4>
 
-              <div className="flex items-center justify-between mb-6">
+              <div className="flex flex-col sm:flex-row items-center justify-between sm:justify-center gap-6 mb-6">
                 <PieChart data={buyerDemographics} />
 
                 <div className="flex flex-col gap-3">
