@@ -39,14 +39,14 @@ const MOCK_USER: UserData = {
     email: '',
     phone: '',
     location: '',
-    profileType: 'Personal',
+    profileType: 'Buyer',
     bio: '',
     investmentFocus: '',
     experienceLevel: ''
 };
 
 const DROPDOWN_OPTIONS = {
-    profileTypes: ['Agent', 'Developer', 'Investor', 'Personal', 'Company'],
+    profileTypes: ['Agent', 'Developer', 'Investor', 'Buyer', 'Company'],
     locations: [
         'Lagos, Nigeria',
         'Abuja, Nigeria',
