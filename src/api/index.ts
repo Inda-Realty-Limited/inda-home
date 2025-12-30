@@ -97,7 +97,7 @@ apiClient.interceptors.response.use(
       
       const status = error.response.status;
       
-      if (status === 401 && !originalRequest._retry && originalRequest.url !== '/auth/refresh') {
+      if (status === 401 && !originalRequest._retry && originalRequest.url !== '/auth/refresh' && originalRequest.url !== '/auth/login') {
         if (isRefreshing) {
           return new Promise((resolve, reject) => {
             failedQueue.push({ resolve, reject });

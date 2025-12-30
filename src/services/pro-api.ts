@@ -2,7 +2,7 @@ import axios, { AxiosError, InternalAxiosRequestConfig, AxiosResponse } from 'ax
 
 // 1. API CONFIGURATION
 // ----------------------------------------------------------------------------
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://inda-pro-backend.onrender.com';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 const api = axios.create({
     baseURL: API_URL,

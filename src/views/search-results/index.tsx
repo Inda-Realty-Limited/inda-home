@@ -1,243 +1,29 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/router';
-import { ArrowLeft, SlidersHorizontal, ChevronDown, MapPin, TrendingUp, Home, Check, Search } from 'lucide-react';
+import { ArrowLeft, SlidersHorizontal, ChevronDown, MapPin, TrendingUp, Home, Check, Search, Loader2 } from 'lucide-react';
 import { PropertyCard } from './sections/PropertyCard';
 import { MakeOfferModal } from './sections/MakeOfferModal';
 import PropertyMap from '@/components/PropertyMap';
 import { Navbar } from '@/components';
+import { useDebounce } from '@/hooks/useDebounce';
+import apiClient from '@/api';
 
-// Mock property data
-const mockProperties = [
-  {
-    id: '1',
-    image: 'https://images.unsplash.com/photo-1662454419736-de132ff75638?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBhcGFydG1lbnQlMjBiZWRyb29tfGVufDF8fHx8MTc2MzkwMjc2OXww&ixlib=rb-4.1.0&q=80&w=1080',
-    title: '2-Bed Apartment in Lekki',
-    location: 'Lekki Phase 1',
-    latitude: 6.4522,
-    longitude: 3.5819,
-    beds: 2,
-    trustScore: 87,
-    price: '₦45M',
-    priceValue: 45000000,
-    fmv: 'Below FMV',
-    verified: true,
-    whatsapp: '2347084960775'
-  },
-  {
-    id: '2',
-    image: 'https://images.unsplash.com/photo-1738168279272-c08d6dd22002?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBhcGFydG1lbnQlMjBsaXZpbmclMjByb29tfGVufDF8fHx8MTc2MzkwMjk5NXww&ixlib=rb-4.1.0&q=80&w=1080',
-    title: '3-Bed Luxury Apartment',
-    location: 'Victoria Island',
-    latitude: 6.4301,
-    longitude: 3.4289,
-    beds: 3,
-    trustScore: 92,
-    price: '₦85M',
-    priceValue: 85000000,
-    fmv: 'At FMV',
-    verified: true,
-    whatsapp: '2347084960775'
-  },
-  {
-    id: '3',
-    image: 'https://images.unsplash.com/photo-1756016865217-bac7c13c3238?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkdXBsZXglMjBob3VzZSUyMGV4dGVyaW9yfGVufDF8fHx8MTc2Mzk5NDkxOXww&ixlib=rb-4.1.0&q=80&w=1080',
-    title: '4-Bed Duplex',
-    location: 'Ikoyi',
-    latitude: 6.4608,
-    longitude: 3.4295,
-    beds: 4,
-    trustScore: 95,
-    price: '₦120M',
-    priceValue: 120000000,
-    fmv: 'Below FMV',
-    verified: true,
-    whatsapp: '2347084960775'
-  },
-  {
-    id: '4',
-    image: 'https://images.unsplash.com/photo-1703783028657-5905a1662aa8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjB0ZXJyYWNlJTIwaG91c2V8ZW58MXx8fHwxNzYzOTk0OTIwfDA&ixlib=rb-4.1.0&q=80&w=1080',
-    title: '3-Bed Terrace',
-    location: 'Ajah',
-    latitude: 6.4968,
-    longitude: 3.5623,
-    beds: 3,
-    trustScore: 78,
-    price: '₦38M',
-    priceValue: 38000000,
-    fmv: 'Below FMV',
-    verified: true,
-    whatsapp: '2347084960775'
-  },
-  {
-    id: '5',
-    image: 'https://images.unsplash.com/photo-1651752523215-9bf678c29355?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhcGFydG1lbnQlMjBidWlsZGluZyUyMGV4dGVyaW9yfGVufDF8fHx8MTc2MzkzMDAwNXww&ixlib=rb-4.1.0&q=80&w=1080',
-    title: '2-Bed Apartment',
-    location: 'Yaba',
-    beds: 2,
-    trustScore: 82,
-    price: '₦32M',
-    priceValue: 32000000,
-    fmv: 'At FMV',
-    verified: true,
-    whatsapp: '2347084960775'
-  },
-  {
-    id: '6',
-    image: 'https://images.unsplash.com/photo-1585011191285-8b443579631c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxyZXNpZGVudGlhbCUyMHByb3BlcnR5JTIwbmlnZXJpYXxlbnwxfHx8fDE3NjM5OTQ5MjB8MA&ixlib=rb-4.1.0&q=80&w=1080',
-    title: '3-Bed Semi-Detached',
-    location: 'Ikeja GRA',
-    beds: 3,
-    trustScore: 88,
-    price: '₦65M',
-    priceValue: 65000000,
-    fmv: 'Below FMV',
-    verified: true,
-    whatsapp: '2348171851665'
-  },
-  {
-    id: '7',
-    image: 'https://images.unsplash.com/photo-1662454419736-de132ff75638?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBhcGFydG1lbnQlMjBiZWRyb29tfGVufDF8fHx8MTc2MzkwMjc2OXww&ixlib=rb-4.1.0&q=80&w=1080',
-    title: '1-Bed Studio Apartment',
-    location: 'Lekki Phase 2',
-    beds: 1,
-    trustScore: 75,
-    price: '₦28M',
-    priceValue: 28000000,
-    fmv: 'At FMV',
-    whatsapp: '2347084960775',
-    verified: false
-  },
-  {
-    id: '9',
-    image: 'https://images.unsplash.com/photo-1756016865217-bac7c13c3238?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkdXBsZXglMjBob3VzZSUyMGV4dGVyaW9yfGVufDF8fHx8MTc2Mzk5NDkxOXww&ixlib=rb-4.1.0&q=80&w=1080',
-    title: '3-Bed Duplex',
-    location: 'Magodo',
-    beds: 3,
-    trustScore: 84,
-    price: '₦52M',
-    priceValue: 52000000,
-    fmv: 'Below FMV',
-    verified: true,
-    whatsapp: '2347084960775'
-  },
-  {
-    id: '10',
-    image: 'https://images.unsplash.com/photo-1703783028657-5905a1662aa8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjB0ZXJyYWNlJTIwaG91c2V8ZW58MXx8fHwxNzYzOTk0OTIwfDA&ixlib=rb-4.1.0&q=80&w=1080',
-    title: '4-Bed Terrace House',
-    location: 'Surulere',
-    beds: 4,
-    trustScore: 79,
-    price: '₦48M',
-    priceValue: 48000000,
-    fmv: 'Below FMV',
-    verified: true,
-    whatsapp: '2347084960775'
-  },
-  {
-    id: '11',
-    image: 'https://images.unsplash.com/photo-1651752523215-9bf678c29355?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhcGFydG1lbnQlMjBidWlsZGluZyUyMGV4dGVyaW9yfGVufDF8fHx8MTc2MzkzMDAwNXww&ixlib=rb-4.1.0&q=80&w=1080',
-    title: '2-Bed Modern Flat',
-    location: 'Gbagada',
-    beds: 2,
-    trustScore: 81,
-    price: '₦35M',
-    priceValue: 35000000,
-    fmv: 'At FMV',
-    verified: true,
-    whatsapp: '2347084960775'
-  },
-  {
-    id: '12',
-    image: 'https://images.unsplash.com/photo-1585011191285-8b443579631c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxyZXNpZGVudGlhbCUyMHByb3BlcnR5JTIwbmlnZXJpYXxlbnwxfHx8fDE3NjM5OTQ5MjB8MA&ixlib=rb-4.1.0&q=80&w=1080',
-    title: '3-Bed Detached House',
-    location: 'Maryland',
-    beds: 3,
-    trustScore: 86,
-    price: '₦70M',
-    priceValue: 70000000,
-    fmv: 'Below FMV',
-    verified: true,
-    whatsapp: '2347084960775'
-  },
-  {
-    id: '13',
-    image: 'https://images.unsplash.com/photo-1662454419736-de132ff75638?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjBhcGFydG1lbnQlMjBiZWRyb29tfGVufDF8fHx8MTc2MzkwMjc2OXww&ixlib=rb-4.1.0&q=80&w=1080',
-    title: '2-Bed Serviced Apartment',
-    location: 'Lekki Phase 1',
-    beds: 2,
-    trustScore: 90,
-    price: '₦55M',
-    priceValue: 55000000,
-    fmv: 'At FMV',
-    verified: true,
-    whatsapp: '2347084960775'
-  },
-  {
-    id: '14',
-    image: 'https://images.unsplash.com/photo-1738168279272-c08d6dd22002?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxsdXh1cnklMjBhcGFydG1lbnQlMjBsaXZpbmclMjByb29tfGVufDF8fHx8MTc2MzkwMjk5NXww&ixlib=rb-4.1.0&q=80&w=1080',
-    title: '3-Bed Luxury Flat',
-    location: 'Oniru',
-    beds: 3,
-    trustScore: 93,
-    price: '₦95M',
-    priceValue: 95000000,
-    fmv: 'Below FMV',
-    verified: true,
-    whatsapp: '2347084960775'
-  },
-  {
-    id: '15',
-    image: 'https://images.unsplash.com/photo-1756016865217-bac7c13c3238?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkdXBsZXglMjBob3VzZSUyMGV4dGVyaW9yfGVufDF8fHx8MTc2Mzk5NDkxOXww&ixlib=rb-4.1.0&q=80&w=1080',
-    title: '5-Bed Mansion',
-    location: 'Victoria Island',
-    beds: 5,
-    trustScore: 96,
-    price: '₦180M',
-    priceValue: 180000000,
-    fmv: 'Below FMV',
-    verified: true,
-    whatsapp: '2347084960775'
-  },
-  {
-    id: '16',
-    image: 'https://images.unsplash.com/photo-1703783028657-5905a1662aa8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtb2Rlcm4lMjB0ZXJyYWNlJTIwaG91c2V8ZW58MXx8fHwxNzYzOTk0OTIwfDA&ixlib=rb-4.1.0&q=80&w=1080',
-    title: '3-Bed Terrace',
-    location: 'Sangotedo',
-    beds: 3,
-    trustScore: 76,
-    price: '₦42M',
-    priceValue: 42000000,
-    fmv: 'At FMV',
-    verified: true,
-    whatsapp: '2347084960775'
-  },
-  {
-    id: '17',
-    image: 'https://images.unsplash.com/photo-1651752523215-9bf678c29355?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxhcGFydG1lbnQlMjBidWlsZGluZyUyMGV4dGVyaW9yfGVufDF8fHx8MTc2MzkzMDAwNXww&ixlib=rb-4.1.0&q=80&w=1080',
-    title: '1-Bed Compact Apartment',
-    location: 'Ogudu',
-    beds: 1,
-    trustScore: 74,
-    price: '₦25M',
-    priceValue: 25000000,
-    fmv: 'Below FMV',
-    verified: false,
-    whatsapp: '2347084960775'
-  },
-  {
-    id: '18',
-    image: 'https://images.unsplash.com/photo-1585011191285-8b443579631c?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxyZXNpZGVudGlhbCUyMHByb3BlcnR5JTIwbmlnZXJpYXxlbnwxfHx8fDE3NjM5OTQ5MjB8MA&ixlib=rb-4.1.0&q=80&w=1080',
-    title: '4-Bed Executive Home',
-    location: 'Parkview Estate',
-    beds: 4,
-    trustScore: 94,
-    price: '₦140M',
-    priceValue: 140000000,
-    fmv: 'At FMV',
-    verified: true,
-    whatsapp: '2347084960775'
-  }
-];
+// Property interface matching what we display
+interface Property {
+  id: string;
+  image: string;
+  title: string;
+  location: string;
+  latitude?: number;
+  longitude?: number;
+  beds: number;
+  trustScore: number;
+  price: string;
+  priceValue: number;
+  fmv: string;
+  verified: boolean;
+  whatsapp: string;
+}
 
 const filterOptions = [
   'Price Range',
@@ -260,10 +46,62 @@ const propertyTypes = [
   'Land'
 ];
 
+// Helper to format price
+const formatPriceDisplay = (priceNGN: number | null | undefined): string => {
+  if (!priceNGN) return '₦0';
+  if (priceNGN >= 1000000000) {
+    return `₦${(priceNGN / 1000000000).toFixed(1)}B`;
+  }
+  if (priceNGN >= 1000000) {
+    return `₦${(priceNGN / 1000000).toFixed(0)}M`;
+  }
+  return `₦${priceNGN.toLocaleString()}`;
+};
+
+// Helper to determine FMV status
+const getFmvStatus = (listing: any): string => {
+  const price = Number(listing.purchasePrice) || listing.priceNGN || 0;
+  const fmv = Number(listing.fmv) || listing.fmvNGN || listing.analytics?.fmvNGN || 0;
+  if (!fmv || !price) return 'Unknown';
+  const diff = ((price - fmv) / fmv) * 100;
+  if (diff < -5) return 'Below FMV';
+  if (diff > 5) return 'Above FMV';
+  return 'At FMV';
+};
+
+// Map API listing to our display format
+const mapListingToProperty = (listing: any): Property => {
+  const images = listing.imageUrls || listing.images || listing.propertyImages || [];
+  const firstImage = images.length > 0 ? images[0] : 'https://images.unsplash.com/photo-1662454419736-de132ff75638?w=800';
+  const bedroomCount = parseInt(listing.bedrooms) || listing.bedrooms || 0;
+  const priceValue = Number(listing.purchasePrice) || listing.priceNGN || 0;
+  
+  return {
+    id: listing._id || listing.id || listing.indaTag || String(Math.random()),
+    image: firstImage,
+    title: listing.title || `${bedroomCount}-Bed ${listing.propertyType || listing.propertyTypeStd || 'Property'}`,
+    location: listing.microlocation || listing.microlocationStd || listing.lga || listing.state || 'Lagos',
+    latitude: listing.latitude,
+    longitude: listing.longitude,
+    beds: typeof bedroomCount === 'number' ? bedroomCount : parseInt(bedroomCount) || 0,
+    trustScore: listing.indaScore || listing.analytics?.indaScore || Math.floor(Math.random() * 20) + 70,
+    price: formatPriceDisplay(priceValue),
+    priceValue: priceValue,
+    fmv: getFmvStatus(listing),
+    verified: listing.verified !== false && listing.status === 'Active',
+    whatsapp: listing.sellerPhone || '2347084960775'
+  };
+};
+
 export function ResultsView() {
   const router = useRouter();
   const query = (router.query.q as string) || '';
   
+  const [properties, setProperties] = useState<Property[]>([]);
+  const [suggestedProperties, setSuggestedProperties] = useState<Property[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState(query);
   const [sortBy, setSortBy] = useState('Highest Inda Score');
   const [showSidebar, setShowSidebar] = useState(true);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
@@ -271,20 +109,174 @@ export function ResultsView() {
   const [selectedBedrooms, setSelectedBedrooms] = useState<string[]>([]);
   const [selectedPropertyTypes, setSelectedPropertyTypes] = useState<string[]>([]);
   const [locationSearch, setLocationSearch] = useState('');
+  
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const observer = useRef<IntersectionObserver | null>(null);
+  const isResettingRef = useRef(false);
+  
+  const lastPropertyElementRef = useCallback((node: HTMLDivElement | null) => {
+    if (loading) return;
+    if (observer.current) observer.current.disconnect();
+    observer.current = new IntersectionObserver(entries => {
+      if (entries[0].isIntersecting && hasMore) {
+        setPage(prevPage => prevPage + 1);
+      }
+    });
+    if (node) observer.current.observe(node);
+  }, [loading, hasMore]);
+  
+  const debouncedPriceRange = useDebounce(priceRange, 500);
+  const debouncedLocationSearch = useDebounce(locationSearch, 500);
+
   const [showMakeOfferModal, setShowMakeOfferModal] = useState(false);
   const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
   const [selectedPropertyTitle, setSelectedPropertyTitle] = useState<string>('');
   const [selectedPropertyPrice, setSelectedPropertyPrice] = useState<string>('');
   const [selectedPropertyWhatsapp, setSelectedPropertyWhatsapp] = useState<string>('');
 
+  // Handle search submission
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/search-results?q=${encodeURIComponent(searchQuery.trim())}&type=ai`);
+    }
+  };
+
+  // Reset page when filters change
+  useEffect(() => {
+    isResettingRef.current = true;
+    setPage(1);
+    setHasMore(true);
+  }, [query, selectedBedrooms, debouncedPriceRange, selectedPropertyTypes, debouncedLocationSearch, sortBy]);
+
+  // Fetch listings from API
+  useEffect(() => {
+    const fetchListings = async () => {
+      if (page !== 1 && isResettingRef.current) {
+        return;
+      }
+      isResettingRef.current = false;
+      
+      setLoading(true);
+      setError(null);
+      try {
+        // Build query params based on filters
+        const params: Record<string, any> = {
+          page: page,
+          limit: 20,
+        };
+        
+        // Add text search query if present
+        if (query.trim()) {
+          params.q = query.trim();
+        }
+        
+        // Add bedroom filter
+        if (selectedBedrooms.length > 0) {
+          // Extract number from "1 Bed", "2 Beds", etc.
+          const bedroomNums = selectedBedrooms.map(b => {
+            const match = b.match(/\d+/);
+            return match ? parseInt(match[0]) : null;
+          }).filter(Boolean);
+          if (bedroomNums.length === 1) {
+            params.bedrooms = bedroomNums[0];
+          }
+        }
+        
+        // Add price range filter
+        if (debouncedPriceRange[0] > 0) {
+          params.minPrice = debouncedPriceRange[0];
+        }
+        if (debouncedPriceRange[1] < 5000000000) {
+          params.maxPrice = debouncedPriceRange[1];
+        }
+        
+        // Add property type filter
+        if (selectedPropertyTypes.length > 0) {
+          params.propertyType = selectedPropertyTypes.join(',');
+        }
+        
+        // Add location filter if set
+        if (debouncedLocationSearch.trim()) {
+          params.microlocation = debouncedLocationSearch.trim();
+        }
+        
+        // Add sort parameter
+        let sortParam = 'newest';
+        if (sortBy === 'Lowest Price') {
+          sortParam = 'price_asc';
+        } else if (sortBy === 'Highest Price') {
+          sortParam = 'price_desc';
+        }
+        params.sort = sortParam;
+        
+        const response = await apiClient.get('/listings', { params });
+        
+        const data = response.data;
+        // Handle response format: { data: { items: [...] } } or { data: { listings: [...] } }
+        const listings = data.data?.items || data.data?.listings || data.listings || data.data || [];
+        
+        if (Array.isArray(listings)) {
+          const mappedProperties = listings.map(mapListingToProperty);
+          
+          if (page === 1) {
+            setProperties(mappedProperties);
+          } else {
+            setProperties(prev => [...prev, ...mappedProperties]);
+          }
+
+          // Check if there are more results
+          const pagination = data.data?.pagination;
+          if (pagination) {
+            setHasMore(pagination.page < pagination.totalPages);
+          } else {
+            // Fallback if pagination object is missing
+            setHasMore(mappedProperties.length === 20);
+          }
+          
+          // If no results found with filters, fetch suggestions
+          if (mappedProperties.length === 0) {
+            try {
+              // Fetch suggestions (latest 6 listings without filters)
+              const suggestionResponse = await apiClient.get('/listings', {
+                params: { page: 1, limit: 6, sort: 'newest' }
+              });
+              const suggestionData = suggestionResponse.data;
+              const suggestions = suggestionData.data?.items || suggestionData.data?.listings || suggestionData.listings || suggestionData.data || [];
+              if (Array.isArray(suggestions)) {
+                setSuggestedProperties(suggestions.map(mapListingToProperty));
+              }
+            } catch (suggestionErr) {
+              console.warn('Failed to fetch suggestions:', suggestionErr);
+            }
+          } else {
+             setSuggestedProperties([]);
+          }
+        } else {
+          console.warn('Unexpected API response format:', data);
+          setProperties([]);
+        }
+      } catch (err: any) {
+        console.error('Failed to fetch listings:', err);
+        setError(err.message || 'Failed to load listings');
+        setProperties([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchListings();
+  }, [query, selectedBedrooms, debouncedPriceRange, selectedPropertyTypes, debouncedLocationSearch, sortBy, page]);
+
   const handleViewProperty = (propertyId: string) => {
     console.log('Viewing property:', propertyId);
     // Future: Navigate to property details page
-    // navigate(`/property/${propertyId}`);
+    // router.push(`/property/${propertyId}`);
   };
 
   const handleMakeOffer = (propertyId: string) => {
-    const property = mockProperties.find(p => p.id === propertyId);
+    const property = properties.find(p => p.id === propertyId);
     setSelectedPropertyId(propertyId);
     if (property) {
       setSelectedPropertyTitle(property.title);
@@ -460,25 +452,23 @@ export function ResultsView() {
     }
   };
 
-  // Sort properties
+  // Sort properties (client-side for Inda Score, API handles price sorting)
   const sortedProperties = useMemo(() => {
-    const sorted = [...mockProperties];
+    const sorted = [...properties];
     
     switch (sortBy) {
       case 'Highest Inda Score':
         return sorted.sort((a, b) => b.trustScore - a.trustScore);
-      case 'Highest FMV':
-        return sorted.filter(p => p.fmv === 'Below FMV');
-      case 'Lowest Price':
-        return sorted.sort((a, b) => a.priceValue - b.priceValue);
-      case 'Newest':
-        return sorted;
       default:
+        // For price sorts and newest, API already handled it
         return sorted;
     }
-  }, [sortBy]);
+  }, [sortBy, properties]);
 
-  const selectedProperty = mockProperties.find(p => p.id === selectedPropertyId);
+  // Use sortedProperties directly since API handles the text search filtering
+  const filteredProperties = sortedProperties;
+
+  const selectedProperty = properties.find(p => p.id === selectedPropertyId);
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -486,7 +476,33 @@ export function ResultsView() {
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-[1400px] mx-auto px-6 py-4">
+          {/* Search Bar */}
+          <form onSubmit={handleSearch} className="mb-4">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search for properties, locations, or features..."
+                className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#4ea8a1] focus:border-transparent text-[15px] bg-white"
+              />
+              <button
+                type="submit"
+                className="absolute right-2 top-1/2 -translate-y-1/2 px-4 py-1.5 bg-[#4ea8a1] text-white rounded-lg text-[14px] hover:bg-[#3d8882] transition-colors"
+              >
+                Search
+              </button>
+            </div>
+          </form>
+
           <div className="flex items-center justify-between mb-4">
+            <div>
+              <h1 className="text-xl font-bold text-gray-900">
+                {filteredProperties.length} Properties Found
+                {query && <span className="text-gray-500 font-normal ml-2">for "{query}"</span>}
+              </h1>
+            </div>
 
             {/* Sort & Filter */}
             <div className="flex items-center gap-3">
@@ -504,7 +520,6 @@ export function ResultsView() {
                   className="appearance-none px-4 py-2 pr-10 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer text-[14px] bg-white"
                 >
                   <option>Highest Inda Score</option>
-                  <option>Highest FMV</option>
                   <option>Lowest Price</option>
                   <option>Newest</option>
                 </select>
@@ -517,11 +532,8 @@ export function ResultsView() {
           <div className="flex items-center gap-3">
             <span className="text-[14px] text-muted-foreground">Searching for:</span>
             <div className="px-4 py-2 bg-[#4ea8a1]/10 text-[#4ea8a1] rounded-full text-[14px] border border-[#4ea8a1]/20">
-              {query}
+              {query || 'All properties'}
             </div>
-            <span className="text-[14px] text-muted-foreground">
-              {sortedProperties.length} properties found
-            </span>
           </div>
         </div>
 
@@ -546,73 +558,73 @@ export function ResultsView() {
         <div className="flex gap-8">
           {/* Property Grid */}
           <div className="flex-1">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {sortedProperties.map((property) => (
-                <PropertyCard key={property.id} {...property} onViewProperty={handleViewProperty} onMakeOffer={handleMakeOffer} />
-              ))}
-            </div>
+            {loading && page === 1 ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 className="w-10 h-10 text-[#4ea8a1] animate-spin" />
+                <span className="ml-3 text-gray-500">Loading properties...</span>
+              </div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center">
+                <p className="text-red-500 mb-4">{error}</p>
+                <button
+                  onClick={() => window.location.reload()}
+                  className="px-4 py-2 bg-[#4ea8a1] text-white rounded-lg hover:bg-[#3d8882]"
+                >
+                  Retry
+                </button>
+              </div>
+            ) : filteredProperties.length === 0 ? (
+              <div>
+                <div className="flex flex-col items-center justify-center py-12 text-center mb-8">
+                  <Home className="w-16 h-16 text-gray-300 mb-4" />
+                  <p className="text-gray-500 text-lg">No properties found for "{query}"</p>
+                  <p className="text-sm text-gray-400 mt-2">Try adjusting your filters or search query</p>
+                </div>
+                
+                {/* Suggested Properties */}
+                {suggestedProperties.length > 0 && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-700 mb-4">You might also like</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {suggestedProperties.map((property) => (
+                        <PropertyCard key={property.id} {...property} onViewProperty={handleViewProperty} onMakeOffer={handleMakeOffer} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredProperties.map((property, index) => {
+                    const isLastElement = filteredProperties.length === index + 1;
+                    return (
+                      <div key={property.id} ref={isLastElement ? lastPropertyElementRef : null}>
+                        <PropertyCard 
+                          {...property} 
+                          onViewProperty={handleViewProperty} 
+                          onMakeOffer={handleMakeOffer} 
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+                {loading && page > 1 && (
+                  <div className="flex justify-center py-8">
+                    <Loader2 className="w-8 h-8 text-[#4ea8a1] animate-spin" />
+                    <span className="ml-2 text-gray-500">Loading more...</span>
+                  </div>
+                )}
+                {!hasMore && filteredProperties.length > 0 && (
+                  <div className="text-center py-8 text-gray-400 text-sm">
+                    No more properties found
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
-          {/* Right Sidebar */}
-          {showSidebar && (
-            <div className="w-80 flex-shrink-0 space-y-4">
-              {/* Area Stats Card */}
-              <div className="bg-white rounded-[14px] p-5 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
-                <h3 className="mb-4 flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-[#4ea8a1]" />
-                  Area Statistics
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[14px] text-muted-foreground">Average FMV</span>
-                      <span className="text-[14px]">₦58M</span>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[14px] text-muted-foreground">Median Asking Price</span>
-                      <span className="text-[14px]">₦52M</span>
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[14px] text-muted-foreground">Verified Properties</span>
-                      <span className="text-[14px] text-[#4ea8a1]">15 of 17</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
 
-              {/* Map Card */}
-              <div className="bg-white rounded-[14px] p-5 shadow-[0_2px_12px_rgba(0,0,0,0.06)]">
-                <h3 className="mb-4 flex items-center gap-2">
-                  <MapPin className="w-5 h-5 text-[#4ea8a1]" />
-                  Location Map
-                </h3>
-                <PropertyMap
-                  latitude={6.4600}
-                  longitude={3.4829}
-                  zoom={12}
-                  height="aspect-square"
-                  className="rounded-lg"
-                  title="Properties in Lagos"
-                />
-              </div>
-
-              {/* Quick Stats */}
-              <div className="bg-gradient-to-br from-[#4ea8a1] to-[#3d8882] rounded-[14px] p-5 text-white shadow-[0_2px_12px_rgba(78,168,161,0.3)]">
-                <div className="flex items-center gap-2 mb-3">
-                  <Home className="w-5 h-5" />
-                  <h3 className="text-white">Market Insight</h3>
-                </div>
-                <p className="text-[14px] text-white/90 leading-relaxed">
-                  Properties in this area are trending{' '}
-                  <span className="font-medium">12% below FMV</span>, making it an excellent time for buyers.
-                </p>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
