@@ -3,16 +3,16 @@ import Image from 'next/image';
 export function PartnerShowcase() {
   const partners = [
     { 
-      name: 'ARM', 
-      logo: '/images/arm.PNG'
+      name: 'Nedcomoaks', 
+      logo: '/images/nedcomoaks.PNG'
     },
     { 
       name: 'APG', 
       logo: '/images/apg.PNG'
     },
     { 
-      name: 'Mixta', 
-      logo: '/images/mixta.PNG'
+      name: 'AlbertandWand', 
+      logo: '/images/albert.JPG'
     },
     { 
       name: 'Caviar', 
