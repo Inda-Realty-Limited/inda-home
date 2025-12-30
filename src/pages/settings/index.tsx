@@ -15,7 +15,7 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import DashboardButton from '@/components/dashboard/DashboardButton';
 import { BillingService } from '@/services/pro-api';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://inda-pro-backend.onrender.com/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export type TabType = 'Profile' | 'Subscription' | 'Billing' | 'Contributions' | 'Preferences';
 

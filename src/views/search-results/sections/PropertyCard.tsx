@@ -60,22 +60,6 @@ export function PropertyCard({
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
         />
         
-        {/* Favorite Button */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsFavorite(!isFavorite);
-          }}
-          className="absolute top-3 right-3 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center transition-all hover:bg-white hover:scale-110 shadow-lg"
-        >
-          <Heart 
-            className={`w-5 h-5 transition-all ${
-              isFavorite 
-                ? 'fill-red-500 text-red-500' 
-                : 'text-gray-700'
-            }`}
-          />
-        </button>
 
 
         {/* FMV Badge */}
