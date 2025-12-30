@@ -154,6 +154,12 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
               Use Cases
             </button>
             <button
+              onClick={() => router.push("/dashboard")}
+              className="text-white/90 hover:text-white text-sm font-medium transition-colors duration-200"
+            >
+              Dashboard
+            </button>
+            <button
               disabled
               className="text-white/60 cursor-not-allowed text-sm font-medium opacity-60"
             >
@@ -221,6 +227,13 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
                     >
                       <FiUser className="opacity-90" />
                       View Profile
+                    </button>
+                    <button
+                      className="w-full text-left px-4 py-2 text-sm text-white/90 hover:bg-white/10 inline-flex items-center gap-2"
+                      onClick={() => router.push("/dashboard")}
+                    >
+                      <FiFileText className="opacity-90" />
+                      Dashboard
                     </button>
                     <button
                       className="w-full text-left px-4 py-2 text-sm text-white/90 hover:bg-white/10 inline-flex items-center gap-2"
@@ -329,6 +342,15 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
                 }}
               >
                 Use Cases
+              </button>
+              <button
+                className="w-full text-left px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white text-base"
+                onClick={() => {
+                  setMobileOpen(false);
+                  router.push("/dashboard");
+                }}
+              >
+                Dashboard
               </button>
               <button
                 disabled
