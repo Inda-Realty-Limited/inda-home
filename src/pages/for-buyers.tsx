@@ -119,7 +119,7 @@ export function ForBuyers() {
                     onClick={() => setSearchMode("ai")}
                     className={`px-4 py-2 text-sm ${searchMode === "ai" ? "bg-[#4ea8a1] text-white hover:bg-[#3d8680]" : "border border-gray-300 text-gray-700"}`}
                   >
-                    AI Search
+                    Search Listings
                   </Button>
                 </div>
 
