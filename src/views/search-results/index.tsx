@@ -1,9 +1,8 @@
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/router';
-import { ArrowLeft, SlidersHorizontal, ChevronDown, MapPin, TrendingUp, Home, Check, Search, Loader2 } from 'lucide-react';
+import { ArrowLeft, SlidersHorizontal, ChevronDown, MapPin, Home, Check, Search, Loader2 } from 'lucide-react';
 import { PropertyCard } from './sections/PropertyCard';
 import { MakeOfferModal } from './sections/MakeOfferModal';
-import PropertyMap from '@/components/PropertyMap';
 import { Navbar } from '@/components';
 import { useDebounce } from '@/hooks/useDebounce';
 import apiClient from '@/api';
