@@ -15,7 +15,7 @@ type Props = {
   comparables?: ComparableProperty[];
 };
 
-const VerifiedComparables: React.FC<Props> = ({ comparables }) => {
+const ComparableProperties: React.FC<Props> = ({ comparables }) => {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [showLeftArrow, setShowLeftArrow] = useState(false);
   const [showRightArrow, setShowRightArrow] = useState(true);
@@ -200,5 +200,5 @@ const VerifiedComparables: React.FC<Props> = ({ comparables }) => {
   );
 };
 
-export default VerifiedComparables;
+export default ComparableProperties;
 

@@ -1,5 +1,5 @@
 import { Button } from '../views/index/sections/ui/button';
-import { Search, SlidersHorizontal, ChevronDown, MapPin, Home, Check, Loader2, ArrowLeft } from 'lucide-react';
+import { Search, SlidersHorizontal, ChevronDown, MapPin, Home, Check, Loader2, ArrowLeft, FileText, Brain, TrendingUp, ClipboardCheck, Lightbulb, ExternalLink } from 'lucide-react';
 import { Navbar } from '@/components';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
@@ -95,7 +95,7 @@ const mapListingToProperty = (listing: any): Property => {
 
 export function ForBuyers() {
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isLoading } = useAuth();
   const [search, setSearch] = useState("");
   const [searchMode, setSearchMode] = useState<"link" | "ai">("ai");
   const [searchPending, setSearchPending] = useState(false);
@@ -143,19 +143,8 @@ export function ForBuyers() {
     if (!isValidUrl(search)) return;
 
     const encoded = encodeURIComponent(search.trim());
-
-    if (isLoading) {
-      setSearchPending(true);
-      return;
-    }
-
-    if (!isAuthenticated) {
-      router.push(`/auth/signup?q=${encoded}&type=link`);
-      return;
-    }
-
     router.push(`/result?q=${encoded}&type=link`);
-  }, [isAuthenticated, isLoading, router, search, isValidUrl, searchMode]);
+  }, [router, search, isValidUrl, searchMode]);
 
   const handleAiSearch = useCallback(() => {
     if (searchMode !== "ai") return;
@@ -171,11 +160,11 @@ export function ForBuyers() {
   }, [searchMode, search]);
 
   useEffect(() => {
-    if (!isLoading && isAuthenticated && searchPending) {
+    if (!isLoading && searchPending) {
       handleSearch();
       setSearchPending(false);
     }
-  }, [handleSearch, isAuthenticated, isLoading, searchPending]);
+  }, [handleSearch, isLoading, searchPending]);
 
   const lastPropertyElementRef = useCallback((node: HTMLDivElement | null) => {
     if (loading) return;
@@ -306,7 +295,7 @@ export function ForBuyers() {
   }, [searchMode, search, selectedBedrooms, debouncedPriceRange, selectedPropertyTypes, debouncedLocationSearch, sortBy, page]);
 
   const handleViewProperty = (propertyId: string) => {
-    console.log('Viewing property:', propertyId);
+    router.push(`/property/${propertyId}`);
   };
 
   const handleMakeOffer = (propertyId: string) => {
@@ -525,40 +514,197 @@ export function ForBuyers() {
                   value="ai"
                   className="flex-1 data-[state=active]:bg-[#4ea8a1] data-[state=active]:text-white"
                 >
-                  Search Listings
+                  Search Our Listings
                 </TabsTrigger>
                 <TabsTrigger 
                   value="link" 
                   className="flex-1 data-[state=active]:bg-[#4ea8a1] data-[state=active]:text-white"
                 >
-                  Scan Link
+                  Scan External Listing
                 </TabsTrigger>
               </TabsList>
 
               <TabsContent value="link" className="mt-0">
-                <div className="bg-white rounded-2xl shadow-xl p-6 max-w-2xl mx-auto">
-                  <div className="flex items-center gap-3">
-                    <Search className="w-5 h-5 text-gray-400" />
-                    <input 
-                      id="buyer-search-input"
-                      type="text" 
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          handleSearch();
-                        }
-                      }}
-                      placeholder="Paste property link..."
-                      className="flex-1 outline-none text-gray-900"
-                    />
-                    <Button
-                      onClick={handleSearch}
-                      disabled={!isValidUrl(search)}
-                      className={`bg-[#4ea8a1] hover:bg-[#3d8680] px-6 ${!isValidUrl(search) ? "opacity-60 cursor-not-allowed hover:bg-[#4ea8a1]" : ""}`}
-                    >
-                      Scan
-                    </Button>
+                <div className="max-w-4xl mx-auto">
+                  <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
+                    <div className="flex items-center gap-3">
+                      <Search className="w-5 h-5 text-gray-400" />
+                      <input 
+                        id="buyer-search-input"
+                        type="text" 
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            handleSearch();
+                          }
+                        }}
+                        placeholder="Paste property link..."
+                        className="flex-1 outline-none text-gray-900"
+                      />
+                      <Button
+                        onClick={handleSearch}
+                        disabled={!isValidUrl(search)}
+                        className={`bg-[#4ea8a1] hover:bg-[#3d8680] px-6 ${!isValidUrl(search) ? "opacity-60 cursor-not-allowed hover:bg-[#4ea8a1]" : ""}`}
+                      >
+                        Scan
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-6">How External Scanning Works</h2>
+                    <div className="space-y-6">
+                      <div className="flex gap-4">
+                        <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-[#4ea8a1] to-[#3d8680] rounded-xl flex items-center justify-center text-white font-bold">
+                          1
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <FileText className="w-5 h-5 text-[#4ea8a1]" />
+                            <h3 className="text-lg font-semibold text-gray-900">Extract</h3>
+                          </div>
+                          <p className="text-gray-600">
+                            We scan basic details (price, location, bedrooms, features) from the external listing
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-4">
+                        <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-[#4ea8a1] to-[#3d8680] rounded-xl flex items-center justify-center text-white font-bold">
+                          2
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Brain className="w-5 h-5 text-[#4ea8a1]" />
+                            <h3 className="text-lg font-semibold text-gray-900">Analyze</h3>
+                          </div>
+                          <p className="text-gray-600">
+                            Our AI computes Fair Market Value, risk scores, and liquidity using our database of similar properties
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-4">
+                        <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-[#4ea8a1] to-[#3d8680] rounded-xl flex items-center justify-center text-white font-bold">
+                          3
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <TrendingUp className="w-5 h-5 text-[#4ea8a1]" />
+                            <h3 className="text-lg font-semibold text-gray-900">Enrich</h3>
+                          </div>
+                          <p className="text-gray-600">
+                            We provide location insights, financial projections, and market comparisons based on the area
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-4">
+                        <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-[#4ea8a1] to-[#3d8680] rounded-xl flex items-center justify-center text-white font-bold">
+                          4
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <ClipboardCheck className="w-5 h-5 text-[#4ea8a1]" />
+                            <h3 className="text-lg font-semibold text-gray-900">Guide</h3>
+                          </div>
+                          <p className="text-gray-600">
+                            Clear checklist of what to verify (title, developer, etc.) before making an offer
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-8 p-6 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-200">
+                      <div className="flex items-start gap-3">
+                        <Lightbulb className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <h4 className="font-semibold text-gray-900 mb-2">What You Get:</h4>
+                          <ul className="space-y-1 text-gray-700 text-sm">
+                            <li>• FMV analysis</li>
+                            <li>• Location & infrastructure insights</li>
+                            <li>• Financial performance projections</li>
+                            <li>• Risk assessment</li>
+                            <li>• Exit & liquidity analysis</li>
+                            <li>• Portfolio fit scoring</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-6">Supported Property Sites</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+                      <div className="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                        <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-lg mb-2">
+                          NPC
+                        </div>
+                        <span className="text-sm font-medium text-gray-700 text-center">Nigeria Property Center</span>
+                      </div>
+                      <div className="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg mb-2">
+                          PP
+                        </div>
+                        <span className="text-sm font-medium text-gray-700 text-center">PropertyPro</span>
+                      </div>
+                      <div className="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                        <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center text-white font-bold text-lg mb-2">
+                          PF
+                        </div>
+                        <span className="text-sm font-medium text-gray-700 text-center">Private Property</span>
+                      </div>
+                      <div className="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                        <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center text-white font-bold text-lg mb-2">
+                          TO
+                        </div>
+                        <span className="text-sm font-medium text-gray-700 text-center">Tolet.com.ng</span>
+                      </div>
+                      <div className="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                        <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center text-white font-bold text-lg mb-2">
+                          JJ
+                        </div>
+                        <span className="text-sm font-medium text-gray-700 text-center">Jiji.ng</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <span className="text-lg font-bold text-[#4ea8a1]">+</span>
+                      <span>More coming soon</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-white rounded-2xl shadow-xl p-8">
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Example URLs to try:</h2>
+                    <div className="space-y-3">
+                      <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <ExternalLink className="w-5 h-5 text-[#4ea8a1] flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm text-gray-600 mb-1">Nigeria Property Centre</p>
+                          <code className="text-xs text-gray-800 break-all">
+                            https://www.nigeriapropertycentre.com/for-sale/...
+                          </code>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <ExternalLink className="w-5 h-5 text-[#4ea8a1] flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm text-gray-600 mb-1">PropertyPro</p>
+                          <code className="text-xs text-gray-800 break-all">
+                            https://www.propertypro.ng/property/...
+                          </code>
+                        </div>
+                      </div>
+                      <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                        <ExternalLink className="w-5 h-5 text-[#4ea8a1] flex-shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-sm text-gray-600 mb-1">Tolet.com.ng</p>
+                          <code className="text-xs text-gray-800 break-all">
+                            https://www.tolet.com.ng/ads/...
+                          </code>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </TabsContent>
