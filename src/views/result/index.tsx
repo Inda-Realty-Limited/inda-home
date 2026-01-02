@@ -1,18 +1,16 @@
 import { getComputedListingByUrl, getReactiveSearchResult, ReactiveSearchResult } from "@/api/listings";
 import { verifyPayment } from "@/api/payments";
-import { Container, Footer, Navbar } from "@/components";
-import PaymentModal from "@/components/inc/PaymentModal";
-import { getUser } from "@/helpers";
+import { Container } from "@/components";
 import { ComputedListing } from "@/types/listing";
 import { useRouter } from "next/router";
-import React, { useEffect, useMemo, useRef, useState } from "react";
-import { FaChevronDown, FaChevronUp } from "react-icons/fa";
+import React, { useEffect, useRef, useState } from "react";
 import {
     LoadingScreen,
     NotFoundScreen,
     ReactiveSearchScreen,
 } from "./sections";
-import { PropertyDetailsView } from "../shared/PropertyDetailsView";
+import { PropertyDetail } from "../property-details/PropertyDetail";
+import { mapListingToPropertyDetail } from "../property-details/utils";
 
 type SelectedBar = null | { series: "fmv" | "price"; index: number };
 
@@ -73,7 +71,6 @@ const getRelativeTime = (timestamp?: number | string | Date): string => {
 
 const ResultPage: React.FC = () => {
     const router = useRouter();
-    const user = useMemo(() => getUser(), []);
 
     // Query
     const [searchQuery, setSearchQuery] = useState("");
@@ -588,82 +585,24 @@ const ResultPage: React.FC = () => {
             if (typeof window !== "undefined") window.open(url, "_blank");
         };
 
+        // Map the result to PropertyDetail format
+        const property = mapListingToPropertyDetail(result);
+
         return (
             <Container
                 noPadding
-                className="min-h-screen bg-[#F9F9F9] text-inda-dark"
+                className="min-h-screen bg-gray-50"
             >
-                <Navbar />
-                <main className="flex-1 py-8">
-                    <PropertyDetailsView
-                        result={result}
-                        price={typeof price === "number" ? price : null}
-                        fairValue={
-                            typeof fairValue === "number"
-                                ? fairValue
-                                : chartFMV.length > 0
-                                    ? chartFMV[chartFMV.length - 1]
-                                    : null
-                        }
-                        chartMonths={chartMonths}
-                        chartFMV={chartFMV}
-                        chartPriceSeries={chartPriceSeries}
-                        chartWindowLabel={chartWindowLabel}
-                        last6ChangePct={last6ChangePct}
-                        marketPositionPct={marketPositionPct}
-                        selectedBar={selectedBar}
-                        setSelectedBar={setSelectedBar}
-                        deliveryLabel={deliveryLabel}
-                        deliverySource={deliverySource}
-                        listingStatus={listingStatus}
-                        bedroomsDisplay={bedroomsDisplay}
-                        bathroomsDisplay={bathroomsDisplay}
-                        sizeDisplay={sizeDisplay}
-                        propertyTypeDisplay={propertyTypeDisplay}
-                        microlocationDisplay={microlocationDisplay}
-                        fallbackTitleDisplay={fallbackTitleDisplay}
-                        fallbackLocationDisplay={fallbackLocationDisplay}
-                        fallbackListingDisplay={fallbackListingDisplay}
-                        onDeeperVerification={() => {
-                            setStartPaidFlow(true);
-                            setProceed(true);
-                        }}
-                        onBuyWithInda={() =>
-                            openWhatsApp(
-                                `Hello Inda team, I'm interested in buying this property with Inda.\n\nProperty: ${fallbackTitleDisplay
-                                }\nLocation: ${fallbackLocationDisplay
-                                }\nListing: ${fallbackListingDisplay
-                                }\n\nPlease share the next steps to proceed with a purchase.`
-                            )
-                        }
-                        onFinanceWithInda={() =>
-                            openWhatsApp(
-                                `Hello Inda team, I'd like to finance this property via Inda.\n\nProperty: ${fallbackTitleDisplay
-                                }\nLocation: ${fallbackLocationDisplay
-                                }\nListing: ${fallbackListingDisplay
-                                }\n\nPlease guide me through the next steps.`
-                            )
-                        }
-                    />
-                </main>
-                <Footer />
+                <PropertyDetail 
+                    property={property}
+                    onBack={() => router.back()}
+                    onReserve={() => {
+                        openWhatsApp(
+                            `Hello Inda team, I'm interested in reserving this property.\n\nProperty: ${fallbackTitleDisplay}\nLocation: ${fallbackLocationDisplay}\nListing: ${fallbackListingDisplay}\n\nPlease share the next steps.`
+                        );
+                    }}
+                />
 
-                {proceed && (
-                    <PaymentModal
-                        isOpen={proceed}
-                        onClose={() => {
-                            setProceed(false);
-                            setStartPaidFlow(false);
-                        }}
-                        startOnPaid={startPaidFlow}
-                        listingUrl={
-                            (result?.listingUrl as string) ||
-                            (result?.snapshot?.listingUrl as string) ||
-                            (isValidUrl(searchQuery) ? (searchQuery as string) : "")
-                        }
-                        onPaid={() => setIsPaid(true)}
-                    />
-                )}
             </Container>
         );
     }

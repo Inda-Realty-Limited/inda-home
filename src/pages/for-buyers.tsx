@@ -492,7 +492,7 @@ export function ForBuyers() {
       <Navbar />
       <div className="min-h-screen bg-slate-50">
         <section className="relative pt-32 pb-8 px-6 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
-          <div className="max-w-7xl mx-auto relative">
+        <div className="max-w-7xl mx-auto relative">
             <div className="mb-8 text-center">
               <h1 className="text-4xl lg:text-5xl mb-4 leading-tight text-gray-900">
                 Buy with certainty. Get the truth about{' '}
@@ -528,27 +528,27 @@ export function ForBuyers() {
                 <div className="max-w-4xl mx-auto">
                   <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
                     <div className="flex items-center gap-3">
-                      <Search className="w-5 h-5 text-gray-400" />
-                      <input 
-                        id="buyer-search-input"
-                        type="text" 
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
+                  <Search className="w-5 h-5 text-gray-400" />
+                  <input 
+                    id="buyer-search-input"
+                    type="text" 
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
                             handleSearch();
                           }
                         }}
                         placeholder="Paste property link..."
                         className="flex-1 outline-none text-gray-900"
                       />
-                      <Button
-                        onClick={handleSearch}
-                        disabled={!isValidUrl(search)}
-                        className={`bg-[#4ea8a1] hover:bg-[#3d8680] px-6 ${!isValidUrl(search) ? "opacity-60 cursor-not-allowed hover:bg-[#4ea8a1]" : ""}`}
-                      >
-                        Scan
-                      </Button>
+                    <Button
+                      onClick={handleSearch}
+                      disabled={!isValidUrl(search)}
+                      className={`bg-[#4ea8a1] hover:bg-[#3d8680] px-6 ${!isValidUrl(search) ? "opacity-60 cursor-not-allowed hover:bg-[#4ea8a1]" : ""}`}
+                    >
+                      Scan
+                    </Button>
                     </div>
                   </div>
 
@@ -737,7 +737,7 @@ export function ForBuyers() {
                 </div>
 
                 {searchMode === "ai" && (
-                  <div className="max-w-7xl mx-auto">
+        <div className="max-w-7xl mx-auto">
                     <div className="bg-white border-b border-gray-200 sticky top-0 z-10 mb-6">
                       <div className="px-6 py-4">
                         <div className="flex items-center justify-between mb-4">
@@ -745,8 +745,8 @@ export function ForBuyers() {
                             <h2 className="text-xl font-bold text-gray-900">
                               {filteredProperties.length} Properties Found
                               {search && <span className="text-gray-500 font-normal ml-2">for &quot;{search}&quot;</span>}
-                            </h2>
-                          </div>
+          </h2>
+            </div>
 
                           <div className="flex items-center gap-3">
                             <button
@@ -768,17 +768,17 @@ export function ForBuyers() {
                                 <option>Newest</option>
                               </select>
                               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-muted-foreground" />
-                            </div>
-                          </div>
-                        </div>
+            </div>
+          </div>
+        </div>
 
                         <div className="flex items-center gap-3">
                           <span className="text-[14px] text-muted-foreground">Searching for:</span>
                           <div className="px-4 py-2 bg-[#4ea8a1]/10 text-[#4ea8a1] rounded-full text-[14px] border border-[#4ea8a1]/20">
                             {search || 'All properties'}
-                          </div>
-                        </div>
-                      </div>
+            </div>
+          </div>
+        </div>
 
                       <div className="border-t border-gray-200 px-6 py-3 overflow-x-auto">
                         <div className="flex gap-2 min-w-max">
@@ -791,16 +791,16 @@ export function ForBuyers() {
                               {filter}
                             </button>
                           ))}
-                        </div>
-                      </div>
-                    </div>
+                </div>
+              </div>
+            </div>
 
                     <div className="px-6 pb-8">
                       {loading && page === 1 ? (
                         <div className="flex items-center justify-center py-20">
                           <Loader2 className="w-10 h-10 text-[#4ea8a1] animate-spin" />
                           <span className="ml-3 text-gray-500">Loading properties...</span>
-                        </div>
+                </div>
                       ) : error ? (
                         <div className="flex flex-col items-center justify-center py-20 text-center">
                           <p className="text-red-500 mb-4">{error}</p>
@@ -810,15 +810,15 @@ export function ForBuyers() {
                           >
                             Retry
                           </button>
-                        </div>
+              </div>
                       ) : filteredProperties.length === 0 ? (
                         <div>
                           <div className="flex flex-col items-center justify-center py-12 text-center mb-8">
                             <Home className="w-16 h-16 text-gray-300 mb-4" />
                             <p className="text-gray-500 text-lg">No properties found {search && `for "${search}"`}</p>
                             <p className="text-sm text-gray-400 mt-2">Try adjusting your filters or search query</p>
-                          </div>
-                          
+            </div>
+
                           {suggestedProperties.length > 0 && (
                             <div>
                               <h3 className="text-lg font-semibold text-gray-700 mb-4">You might also like</h3>
@@ -826,8 +826,8 @@ export function ForBuyers() {
                                 {suggestedProperties.map((property) => (
                                   <PropertyCard key={property.id} {...property} onViewProperty={handleViewProperty} onMakeOffer={handleMakeOffer} />
                                 ))}
-                              </div>
-                            </div>
+                </div>
+              </div>
                           )}
                         </div>
                       ) : (
@@ -842,31 +842,31 @@ export function ForBuyers() {
                                     onViewProperty={handleViewProperty} 
                                     onMakeOffer={handleMakeOffer} 
                                   />
-                                </div>
+              </div>
                               );
                             })}
-                          </div>
+              </div>
                           {loading && page > 1 && (
                             <div className="flex justify-center py-8">
                               <Loader2 className="w-8 h-8 text-[#4ea8a1] animate-spin" />
                               <span className="ml-2 text-gray-500">Loading more...</span>
-                            </div>
+                </div>
                           )}
                           {!hasMore && filteredProperties.length > 0 && (
                             <div className="text-center py-8 text-gray-400 text-sm">
                               No more properties found
-                            </div>
+              </div>
                           )}
                         </>
                       )}
-                    </div>
-                  </div>
+            </div>
+          </div>
                 )}
               </TabsContent>
             </Tabs>
           </div>
         </section>
-      </div>
+        </div>
 
       {activeFilter && searchMode === "ai" && (
         <>
