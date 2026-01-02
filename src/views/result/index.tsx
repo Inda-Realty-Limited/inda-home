@@ -318,12 +318,6 @@ const ResultPage: React.FC = () => {
         setSearchQuery(query);
         setSearchType((type as string) || "");
 
-        // Redirect unauthenticated users to signup, preserving the intended instant report
-        if (query && (type as string) === "link" && !user) {
-            router.replace(`/auth/signup?q=${encodeURIComponent(query)}&type=link`);
-            return;
-        }
-
         if (query && (type as string) === "link" && isValidUrl(query)) {
             setIsLoading(true);
             setHasAttemptedFetch(true);
