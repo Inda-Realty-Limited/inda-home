@@ -350,7 +350,7 @@ export function PropertyDetail({ property, onBack, onReserve }: PropertyDetailPr
             </button>
             
             <button
-              onClick={() => alert('Virtual tour booking coming soon! WhatsApp +234 801 234 5678 to book.')}
+              onClick={() => setShowSiteVisit(true)}
               className="flex flex-col items-center gap-2 p-4 bg-white border-2 border-[#f59e0b] rounded-lg hover:bg-[#f59e0b] hover:text-white transition-all group"
             >
               <MessageCircle className="w-6 h-6 text-[#f59e0b] group-hover:text-white transition-colors" />

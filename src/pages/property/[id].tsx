@@ -23,11 +23,44 @@ const PropertyDetailsPage: React.FC = () => {
         setLoading(true);
         setError(null);
         
-        const response = await apiClient.get('/listings', {
-          params: { _id: id, limit: 1 }
-        });
-        const listings = response.data?.data?.items || response.data?.data?.listings || response.data?.listings || response.data?.data || [];
-        const data = Array.isArray(listings) && listings.length > 0 ? listings[0] : null;
+        let data = null;
+        
+        // Try to get listing from the listings endpoint with _id filter
+        // The backend now supports _id filtering
+        try {
+          const response = await apiClient.get('/listings', {
+            params: { 
+              _id: id, 
+              limit: 1,
+              page: 1
+            }
+          });
+          
+          // Handle different response formats
+          const responseData = response.data?.data || response.data;
+          const listings = responseData?.items || responseData?.listings || responseData?.data || [];
+          
+          if (Array.isArray(listings) && listings.length > 0) {
+            // Find the exact match by _id in case multiple are returned
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            data = listings.find((l: any) => (l._id || l.id) === id) || listings[0];
+          } else if (responseData && !Array.isArray(responseData) && (responseData._id || responseData.id)) {
+            // If the response is a single object, use it directly
+            data = responseData;
+          }
+        } catch (searchErr) {
+          console.log('Failed to fetch listing with _id filter:', searchErr);
+        }
+        
+        // If still no data, try computed listing endpoint (for scanned listings)
+        if (!data) {
+          try {
+            const computedResponse = await apiClient.get(`/listings/computed/${id}`);
+            data = computedResponse.data?.data || computedResponse.data;
+          } catch {
+            console.log('Computed listing also not found');
+          }
+        }
         
         if (!data) {
           setError('Listing not found');

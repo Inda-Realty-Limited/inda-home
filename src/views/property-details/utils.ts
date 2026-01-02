@@ -1,8 +1,10 @@
 // Utility function to map API listing data to PropertyDetail format
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const mapListingToPropertyDetail = (listing: any) => {
-  const images = listing.imageUrls || listing.images || listing.propertyImages || [];
-  const priceValue = Number(listing.purchasePrice) || listing.priceNGN || 0;
+  const snapshot = listing.snapshot || {};
+  const analytics = listing.analytics || {};
+  const images = snapshot.imageUrls || listing.imageUrls || listing.images || listing.propertyImages || [];
+  const priceValue = Number(snapshot.priceNGN || listing.purchasePrice || listing.priceNGN || 0);
   
   const formatPrice = (price: number) => {
     if (price >= 1000000000) {
@@ -14,42 +16,132 @@ export const mapListingToPropertyDetail = (listing: any) => {
     return `₦${price.toLocaleString()}`;
   };
 
+  // Extract amenities/features
+  const amenities = snapshot.amenities || listing.amenities || [];
+  const features = Array.isArray(amenities) ? amenities : (amenities ? [amenities] : []);
+
+  // Check if it's a scanned listing (has listingUrl but might not have _id)
+  const isScanned = !!(listing.listingUrl || snapshot.listingUrl) && !listing._id;
+
+  // Extract property type
+  const propertyType = snapshot.propertyTypeStd || listing.propertyTypeStd || snapshot.propertyType || listing.propertyType || null;
+
+  // Extract size information
+  const sizeSqm = snapshot.sizeSqm || listing.sizeSqm || null;
+  const landSize = snapshot.landSize || listing.landSize || null;
+  const sizeDisplay = sizeSqm ? `${sizeSqm} m²` : (landSize ? `${landSize} m²` : null);
+
+  // Extract date information
+  const listedDate = snapshot.addedOnDate || listing.addedOnDate || snapshot.createdAt || listing.createdAt;
+  const listedDateDisplay = listedDate ? new Date(listedDate).toLocaleDateString() : null;
+
+  // Extract agent/developer information
+  const agentName = snapshot.agentName || listing.agentName || null;
+  const agentCompany = snapshot.agentCompanyName || listing.agentCompanyName || null;
+
+  // Check if off-plan
+  const isOffPlan = snapshot.propertyStatus === 'Off-Plan' || listing.propertyStatus === 'Off-Plan' || 
+                     snapshot.status === 'Off-Plan' || listing.status === 'Off-Plan';
+
+  // Developer rating from indaScore
+  const indaScore = listing.indaScore?.finalScore || analytics.indaScore?.finalScore || null;
+  const developerRating = indaScore ? `${Math.round(indaScore)}/100` : 'N/A';
+
+  // Data quality completeness (use analytics presence as indicator)
+  const hasAnalytics = !!(listing.analytics || analytics);
+  const completeness = hasAnalytics ? 85 : 60;
+  const missingFields = hasAnalytics ? [] : ['Title verification', 'Developer credentials'];
+
+  // Social proof (dummy data for now)
+  const socialProof = {
+    views: Math.floor(Math.random() * 500) + 100,
+    interestedBuyers: Math.floor(Math.random() * 50) + 10,
+    lastUpdated: new Date(listing.updatedAt || listing.createdAt || snapshot.updatedAt || Date.now()).toLocaleDateString()
+  };
+
+  // Off-plan data (dummy for now, will be supplied later)
+  const offPlanData = isOffPlan ? {
+    developerClaimedCompletion: 85, // Dummy - will come from backend
+    indaVerifiedCompletion: 82, // Dummy - will come from backend
+    lastVerificationDate: new Date().toLocaleDateString(), // Dummy
+    expectedHandoverDate: 'Q2 2025', // Dummy - will come from backend
+    milestones: [
+      {
+        number: 1,
+        name: "Foundation Complete",
+        status: "Complete" as const,
+        developerClaimed: 100,
+        indaVerified: 100,
+        paymentPercentage: 20,
+        paymentReleased: true,
+        verificationDate: new Date().toLocaleDateString()
+      },
+      {
+        number: 2,
+        name: "Superstructure 50%",
+        status: "Complete" as const,
+        developerClaimed: 100,
+        indaVerified: 100,
+        paymentPercentage: 30,
+        paymentReleased: true,
+        verificationDate: new Date().toLocaleDateString()
+      },
+      {
+        number: 3,
+        name: "Superstructure 100%",
+        status: "In Progress" as const,
+        developerClaimed: 90,
+        indaVerified: 85,
+        paymentPercentage: 30,
+        paymentReleased: false,
+        discrepancy: true
+      },
+      {
+        number: 4,
+        name: "Finishing & Handover",
+        status: "Not Started" as const,
+        developerClaimed: 0,
+        indaVerified: 0,
+        paymentPercentage: 20,
+        paymentReleased: false
+      }
+    ]
+  } : undefined;
+
   return {
     id: listing._id || listing.id || String(Math.random()),
-    name: listing.title || `${listing.bedrooms || 0}-Bed ${listing.propertyType || listing.propertyTypeStd || 'Property'}`,
-    location: listing.microlocation || listing.microlocationStd || listing.lga || listing.state || 'Lagos',
+    name: snapshot.title || listing.title || `${snapshot.bedrooms || listing.bedrooms || 0}-Bed ${propertyType || 'Property'}`,
+    location: snapshot.microlocationStd || listing.microlocationStd || snapshot.microlocation || listing.microlocation || 
+              snapshot.lga || listing.lga || snapshot.state || listing.state || 'Lagos',
     price: formatPrice(priceValue),
     images: images.length > 0 ? images : ['https://images.unsplash.com/photo-1662454419736-de132ff75638?w=800'],
-    bedrooms: listing.bedrooms || 0,
-    developerRating: listing.indaScore?.finalScore ? `${listing.indaScore.finalScore}/100` : 'N/A',
-    isScanned: !!listing.listingUrl && !listing._id,
-    scannedFrom: listing.listingUrl || null,
+    bedrooms: snapshot.bedrooms || listing.bedrooms || 0,
+    developerRating,
+    isScanned,
+    scannedFrom: listing.listingUrl || snapshot.listingUrl || null,
     dataQuality: {
-      completeness: listing.analytics ? 85 : 60,
-      lastVerified: new Date(listing.updatedAt || listing.createdAt || Date.now()).toLocaleDateString(),
-      missingFields: listing.analytics ? [] : ['Title verification', 'Developer credentials']
+      completeness,
+      lastVerified: new Date(listing.updatedAt || listing.createdAt || snapshot.updatedAt || Date.now()).toLocaleDateString(),
+      missingFields
     },
-    socialProof: {
-      views: Math.floor(Math.random() * 500) + 100,
-      interestedBuyers: Math.floor(Math.random() * 50) + 10,
-      lastUpdated: new Date(listing.updatedAt || listing.createdAt || Date.now()).toLocaleDateString()
-    },
+    socialProof,
     scannedData: {
-      bathrooms: listing.bathrooms || null,
-      parkingSpaces: listing.parkingSpaces || null,
-      propertyType: listing.propertyType || listing.propertyTypeStd || null,
-      description: listing.description || null,
-      features: listing.amenities ? (Array.isArray(listing.amenities) ? listing.amenities : [listing.amenities]) : [],
-      landSize: listing.landSize || listing.sizeSqm ? `${listing.sizeSqm || listing.landSize} m²` : null,
-      builtUpArea: listing.builtUpArea || null,
-      listedDate: listing.addedOnDate ? new Date(listing.addedOnDate).toLocaleDateString() : null
+      bathrooms: snapshot.bathrooms || listing.bathrooms || null,
+      parkingSpaces: snapshot.parkingSpaces || listing.parkingSpaces || null,
+      propertyType,
+      description: snapshot.description || listing.description || null,
+      features,
+      landSize: sizeDisplay,
+      builtUpArea: snapshot.builtUpArea || listing.builtUpArea || null,
+      listedDate: listedDateDisplay
     },
-    listedBy: listing.agentName || listing.agentCompanyName ? {
-      name: listing.agentName || listing.agentCompanyName || 'Agent',
-      company: listing.agentCompanyName || listing.agentName || 'Real Estate',
-      verified: listing.verified || false
+    listedBy: (agentName || agentCompany) ? {
+      name: agentName || agentCompany || 'Agent',
+      company: agentCompany || agentName || 'Real Estate',
+      verified: listing.verified || snapshot.verified || false
     } : null,
-    isOffPlan: listing.propertyStatus === 'Off-Plan' || listing.status === 'Off-Plan'
+    isOffPlan,
+    offPlanData
   };
 };
 

@@ -35,6 +35,23 @@ export interface Property {
     verified: boolean;
   } | null;
   isOffPlan?: boolean;
+  offPlanData?: {
+    developerClaimedCompletion: number;
+    indaVerifiedCompletion: number;
+    lastVerificationDate: string;
+    expectedHandoverDate: string;
+    milestones: Array<{
+      number: number;
+      name: string;
+      status: "Complete" | "In Progress" | "Not Started" | "Disputed";
+      developerClaimed: number;
+      indaVerified: number;
+      paymentPercentage: number;
+      paymentReleased: boolean;
+      verificationDate?: string;
+      discrepancy?: boolean;
+    }>;
+  };
 }
 
 export interface QASection {
