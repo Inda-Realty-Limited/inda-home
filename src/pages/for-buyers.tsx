@@ -295,7 +295,7 @@ export function ForBuyers() {
   }, [searchMode, search, selectedBedrooms, debouncedPriceRange, selectedPropertyTypes, debouncedLocationSearch, sortBy, page]);
 
   const handleViewProperty = (propertyId: string) => {
-    console.log('Viewing property:', propertyId);
+    router.push(`/property/${propertyId}`);
   };
 
   const handleMakeOffer = (propertyId: string) => {
