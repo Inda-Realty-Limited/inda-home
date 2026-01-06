@@ -1,4 +1,4 @@
-import { X, Calendar, Clock, User, Phone, Mail, MapPin, AlertCircle } from "lucide-react";
+import { X, Calendar, Clock, User, Phone, Mail, AlertCircle } from "lucide-react";
 import { useState } from "react";
 
 interface ScheduleSiteVisitModalProps {

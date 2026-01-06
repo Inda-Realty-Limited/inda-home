@@ -1,451 +1,597 @@
-import { useRouter } from 'next/router';
-import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '../views/index/sections/ui/button';
-import { ArrowRight, Clock, FileCheck, TrendingUp, CheckCircle2, Award, Zap, Shield } from 'lucide-react';
-import { FooterCTA } from '../views/index/sections/FooterCTA';
-import { motion } from 'framer-motion';
-import { Navbar } from '@/components';
+import { Container, Footer, Navbar } from "@/components";
+import { useRouter } from "next/router";
+import { useAuth } from "@/contexts/AuthContext";
+import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import {
+  ArrowRight,
+  Shield,
+  Clock,
+  TrendingUp,
+  FileCheck,
+  Link2,
+  CheckCircle2,
+  AlertCircle,
+} from "lucide-react";
 
-export function ForProfessionals() {
+
+function VerificationPreview() {
+  const [verificationStage, setVerificationStage] = useState(0);
+  const stages = [
+    { label: "Title verified", icon: Shield, status: "complete", time: "2 days" },
+    { label: "Survey complete", icon: FileCheck, status: "complete", time: "3 days" },
+    { label: "Legal review", icon: CheckCircle2, status: "in-progress", time: "1 day left" },
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setVerificationStage((prev) => (prev + 1) % 3);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="w-full">
+      {/* Property header */}
+      <div className="mb-6 pb-4 border-b border-gray-200">
+        <div className="flex items-start justify-between">
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 mb-1">4BR Duplex, Lekki Phase 1</h3>
+            <p className="text-sm text-gray-500">₦85,000,000 • 450 sqm</p>
+          </div>
+          <div className="flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1 rounded-full text-sm">
+            <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+            Verified
+          </div>
+        </div>
+      </div>
+
+      {/* Verification stages */}
+      <div className="space-y-3">
+        {stages.map((stage, idx) => {
+          const Icon = stage.icon;
+          const isActive = idx === verificationStage;
+          
+          return (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0.6 }}
+              animate={{ 
+                opacity: isActive ? 1 : 0.6,
+                scale: isActive ? 1.02 : 1 
+              }}
+              className={`flex items-center justify-between p-4 rounded-xl border ${
+                stage.status === 'complete' 
+                  ? 'bg-green-50 border-green-200' 
+                  : 'bg-gray-50 border-gray-200'
+              }`}
+            >
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                  stage.status === 'complete' ? 'bg-green-100' : 'bg-gray-200'
+                }`}>
+                  <Icon className={`w-5 h-5 ${
+                    stage.status === 'complete' ? 'text-green-600' : 'text-gray-600'
+                  }`} />
+                </div>
+                <div>
+                  <div className="font-medium text-gray-900">{stage.label}</div>
+                  <div className="text-sm text-gray-500">{stage.time}</div>
+                </div>
+              </div>
+              {stage.status === 'complete' && (
+                <CheckCircle2 className="w-5 h-5 text-green-600" />
+              )}
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* Deal velocity metric */}
+      <div className="mt-6 pt-4 border-t border-gray-200">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-gray-600">Average closing time</span>
+          <div className="flex items-center gap-2">
+            <span className="text-2xl font-semibold text-[#4ea8a1]">11 days</span>
+            <span className="text-sm text-green-600">↓ 61% faster</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const ForProfessionals: React.FC = () => {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { user } = useAuth();
 
-  const handleGetVerified = () => {
-    if (!isAuthenticated) {
-      router.push('/auth/signup');
+  const onGetStarted = () => {
+    if (user) {
+      router.push("/profile");
     } else {
-      const element = document.querySelector('[data-verification-section]');
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
-      }
+      const rt = encodeURIComponent("/for-professionals");
+      router.push(`/auth/signup?returnTo=${rt}`);
     }
   };
-
-  const openWhatsAppDemo = (text?: string) => {
-    const phone = process.env.NEXT_PUBLIC_INDA_WHATSAPP || "2347084960775";
-    const message = text || "Hi, I would like to book a demo with Inda";
-    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-    if (typeof window !== "undefined") window.open(url, "_blank");
+  const onViewVerificationReport = () => {
+    router.push("/reports/IND-8827");
   };
 
   return (
-    <>
+    <Container noPadding className="min-h-screen bg-white">
       <Navbar />
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-20 px-6 overflow-hidden bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
-        {/* Decorative elements */}
-        <div className="absolute inset-0">
-          <div className="absolute top-20 right-10 w-96 h-96 bg-red-500/20 rounded-full blur-3xl" />
-          <div className="absolute bottom-20 left-10 w-96 h-96 bg-[#4ea8a1]/20 rounded-full blur-3xl" />
-        </div>
-        
-        <div className="max-w-7xl mx-auto relative">
+
+      <section className="pt-24 pb-20 px-6">
+        <div className="max-w-7xl mx-auto">
           <div className="max-w-4xl mx-auto text-center mb-16">
-            <motion.h1 
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="text-5xl lg:text-6xl mb-6 leading-tight text-black lg:whitespace-nowrap"
+              transition={{ duration: 0.5 }}
+              className="inline-flex items-center gap-2 bg-[#50b8b1]/10 rounded-full px-3 py-1.5 mb-6"
             >
-              Unverified Listings Cost You{' '}
-              <span className="bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent">
-                60–140 Days
-              </span>
+              <Shield className="w-3.5 h-3.5 text-[#50b8b1]" />
+              <span className="text-xs text-gray-700">Verified Property Infrastructure</span>
+            </motion.div>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="text-6xl md:text-7xl lg:text-8xl tracking-tight mb-6 text-gray-900"
+            >
+              Answer questions
+              <br />
+              <span className="text-[#50b8b1]">you don't even know.</span>
             </motion.h1>
-            <motion.p 
+
+            <motion.p
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-2xl text-black mb-12 max-w-3xl mx-auto"
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed"
             >
-              Turn skeptical buyers into confident closers in half the time.
+              Buyers ask about flood risk, neighborhood growth, and legal history you don't have. 
+              Deals die in 52 days of back-and-forth. We verify everything upfront.
             </motion.p>
-            
-            <motion.div 
+
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="flex items-center justify-center gap-4 flex-wrap"
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className="flex flex-col sm:flex-row gap-3 justify-center items-center"
             >
-              <Button onClick={handleGetVerified} size="lg" className="bg-gradient-to-r from-[#4ea8a1] to-[#3d8680] hover:from-[#3d8680] hover:to-[#2d7670] group shadow-xl text-lg px-8 py-6">
-                Get Verified
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-              <Button onClick={() => openWhatsAppDemo()} size="lg" variant="outline" className="border-2 bg-transparent border-teal-500 text-black hover:bg-black/10 hover:border-black/10 text-lg px-8 py-6">
-                Book Demo
-              </Button>
+              <button
+                onClick={onGetStarted}
+                className="group px-6 py-3 bg-[#50b8b1] text-white rounded-lg font-medium hover:bg-[#3a9892] transition-all flex items-center gap-2 shadow-sm"
+              >
+                Start free trial
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+              <button
+                onClick={onViewVerificationReport}
+                className="px-6 py-3 text-gray-700 hover:text-gray-900 transition-colors font-medium"
+              >
+                See verified report
+              </button>
+            </motion.div>
+
+            {/* Trust indicators */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+              className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-gray-500"
+            >
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-[#50b8b1]" />
+                <span>11 day avg close</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Shield className="w-4 h-4 text-[#50b8b1]" />
+                <span>847 verified properties</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-[#50b8b1]" />
+                <span>₦12B in deals</span>
+              </div>
             </motion.div>
           </div>
 
-          {/* Visual: Chaos visualization */}
-          <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-            <div className="bg-red-900/20 border-2 border-red-500/50 rounded-2xl p-6 backdrop-blur-sm">
-              <div className="flex items-center gap-3 mb-4">
-                <Clock className="w-6 h-6 text-red-400" />
-                <span className="text-red-400">Unverified</span>
-              </div>
-              <div className="text-4xl text-white mb-2">60–140 days</div>
-              <p className="text-white text-sm">Average time to close</p>
+          {/* Verification Preview */}
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.5 }}
+            className="max-w-5xl mx-auto"
+          >
+            <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl border border-gray-200 p-6 md:p-10 shadow-2xl">
+              <VerificationPreview />
             </div>
-
-            <div className="bg-emerald-900/20 border-2 border-emerald-500/50 rounded-2xl p-6 backdrop-blur-sm">
-              <div className="flex items-center gap-3 mb-4">
-                <CheckCircle2 className="w-6 h-6 text-emerald-900" />
-                <span className="text-emerald-900">Verified by Inda</span>
-              </div>
-              <div className="text-4xl text-white mb-2">7–14 days</div>
-              <p className="text-white text-sm">Average time to close</p>
-            </div>
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* Dashboard Demo Section */}
-      <section className="py-20 px-6 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl mb-4 text-gray-900">
-              From <span className="text-red-500">Chaos</span> → <span className="text-[#4ea8a1]">Clarity</span> in Days
-            </h2>
-            <p className="text-xl text-gray-600">
-              Transform unverified listings into bank-ready, buyer-trusted properties
-            </p>
-          </div>
-
-          {/* Before/After Split */}
-          <div className="grid lg:grid-cols-2 gap-8 mb-12">
-            {/* Before: Messy Listing */}
-            <div className="relative">
-              <div className="absolute -top-4 left-4 bg-red-500 text-white px-4 py-2 rounded-full text-sm z-10">
-                Unverified Listing
-              </div>
-              <div className="bg-gray-50 border-2 border-red-200 rounded-2xl p-6 pt-10">
-                <div className="bg-white rounded-xl p-6 mb-4 border border-gray-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-gray-900">Property Listing</h3>
-                    <span className="text-red-500 text-sm">⚠ Conflicting Data</span>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Price (Platform A)</span>
-                      <span className="text-gray-900">₦45M</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Price (Platform B)</span>
-                      <span className="text-gray-900 line-through">₦52M</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Documents</span>
-                      <span className="text-red-500">3 missing</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Verification Status</span>
-                      <span className="text-red-500">Pending</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Bank Approval</span>
-                      <span className="text-gray-500">Not started</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-sm text-gray-600 text-center">
-                  <Clock className="w-4 h-4 inline mr-2" />
-                  Average time to close: <span className="text-red-600">40–120 days</span>
-                </div>
-              </div>
-            </div>
-
-            {/* After: Verified Listing */}
-            <div className="relative">
-              <div className="absolute -top-4 left-4 bg-[#4ea8a1] text-white px-4 py-2 rounded-full text-sm z-10 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4" />
-                Verified by Inda
-              </div>
-              <div className="bg-gradient-to-br from-emerald-50 to-white border-2 border-emerald-300 rounded-2xl p-6 pt-10 shadow-xl">
-                <div className="bg-white rounded-xl p-6 mb-4 border border-emerald-200">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-gray-900">Verified Property</h3>
-                    <span className="text-emerald-600 text-sm flex items-center gap-1">
-                      <CheckCircle2 className="w-4 h-4" />
-                      All Clear
-                    </span>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Fair Market Value</span>
-                      <span className="text-[#4ea8a1]">₦45.2M</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Confidence Score</span>
-                      <span className="text-emerald-600">96%</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Documents</span>
-                      <span className="text-emerald-600 flex items-center gap-1">
-                        <CheckCircle2 className="w-4 h-4" />
-                        Verified
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">ROI Projection</span>
-                      <span className="text-blue-600">11.5%</span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600">Bank Ready</span>
-                      <span className="text-emerald-600 flex items-center gap-1">
-                        <CheckCircle2 className="w-4 h-4" />
-                        Yes
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-sm text-gray-600 text-center">
-                  <Zap className="w-4 h-4 inline mr-2 text-[#4ea8a1]" />
-                  Average time to close: <span className="text-[#4ea8a1]">7–14 days</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Dashboard Preview */}
-          <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-8 shadow-2xl">
-            <div className="text-center mb-8">
-              <h3 className="text-2xl text-white mb-2">Your Professional Dashboard</h3>
-              <p className="text-gray-400">Manage all your verified listings in one place</p>
-            </div>
-            
-            <div className="bg-white rounded-2xl p-6">
-              <div className="grid grid-cols-4 gap-4 mb-6">
-                <div className="bg-gradient-to-br from-[#4ea8a1] to-[#3d8680] rounded-xl p-4 text-white">
-                  <div className="text-sm mb-1">Active Listings</div>
-                  <div className="text-3xl">24</div>
-                </div>
-                <div className="bg-gradient-to-br from-[#4ea8a1] to-[#3d8680] rounded-xl p-4 text-white">
-                  <div className="text-sm mb-1">Verified</div>
-                  <div className="text-3xl">18</div>
-                </div>
-                <div className="bg-gradient-to-br from-[#4ea8a1] to-[#3d8680] rounded-xl p-4 text-white">
-                  <div className="text-sm mb-1">Avg. Close Time</div>
-                  <div className="text-3xl">9d</div>
-                </div>
-                <div className="bg-gradient-to-br from-[#4ea8a1] to-[#3d8680] rounded-xl p-4 text-white">
-                  <div className="text-sm mb-1">This Month</div>
-                  <div className="text-3xl">₦2.1B</div>
-                </div>
-              </div>
-
-              <div className="text-center">
-                <Button className="bg-[#4ea8a1] hover:bg-[#3d8680]">
-                  View Live Dashboard Demo
-                  <ArrowRight className="ml-2 w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Pricing Section */}
-      <section data-verification-section className="py-20 px-6 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl mb-4 text-gray-900">Choose Your Level of Verification</h2>
-            <p className="text-xl text-gray-600">Scale your business with verified listings that close faster</p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 mb-12">
-            {/* Starter */}
-            <div className="bg-white rounded-3xl shadow-lg p-8 border border-gray-200 hover:shadow-2xl transition-shadow">
-              <h3 className="text-2xl mb-2 text-gray-900">Starter</h3>
-              <div className="text-4xl mb-6 text-gray-900">
-                ₦15,000
-                <span className="text-lg text-gray-500">/month</span>
-              </div>
-              
-              <div className="mb-6 pb-6 border-b border-gray-200">
-                <div className="text-sm text-gray-600 mb-2">Included:</div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-700">Up to 10 listings</span>
-                  <span className="text-[#4ea8a1]">50 credits</span>
-                </div>
-              </div>
-              
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-[#4ea8a1] mt-1 flex-shrink-0" />
-                  <span className="text-gray-700">FMV verification for all listings</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-[#4ea8a1] mt-1 flex-shrink-0" />
-                  <span className="text-gray-700">Basic document checks</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-[#4ea8a1] mt-1 flex-shrink-0" />
-                  <span className="text-gray-700">Shareable verification badges</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-[#4ea8a1] mt-1 flex-shrink-0" />
-                  <span className="text-gray-700">Email support</span>
-                </li>
-              </ul>
-
-              <div className="text-sm text-gray-600 mb-4 italic">Perfect for solo agents & first-time users</div>
-
-              <Button onClick={handleGetVerified} variant="outline" className="w-full border-2 border-[#4ea8a1] text-[#4ea8a1] hover:bg-[#4ea8a1] hover:text-white">
-                Get Started
-              </Button>
-            </div>
-
-            {/* Pro - Most Popular */}
-            <div className="bg-gradient-to-br from-[#4ea8a1] to-[#3d8680] rounded-3xl shadow-2xl p-8 border-2 border-[#4ea8a1] relative transform scale-105">
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-400 to-amber-500 text-white px-6 py-2 rounded-full text-sm shadow-lg">
-                Most Recommended
-              </div>
-              <h3 className="text-2xl mb-2 text-white">Pro</h3>
-              <div className="text-4xl mb-6 text-white">
-                ₦50,000
-                <span className="text-lg text-emerald-100">/month</span>
-              </div>
-              
-              <div className="mb-6 pb-6 border-b border-white/20">
-                <div className="text-sm text-emerald-100 mb-2">Included:</div>
-                <div className="flex items-center justify-between">
-                  <span className="text-white">Up to 50 listings</span>
-                  <span className="text-white">300 credits</span>
-                </div>
-              </div>
-              
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-white mt-1 flex-shrink-0" />
-                  <span className="text-white">Everything in Starter, plus:</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-white mt-1 flex-shrink-0" />
-                  <span className="text-white">Advanced document verification</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-white mt-1 flex-shrink-0" />
-                  <span className="text-white">Priority verification queue</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-white mt-1 flex-shrink-0" />
-                  <span className="text-white">Analytics dashboard</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-white mt-1 flex-shrink-0" />
-                  <span className="text-white">Phone & email support</span>
-                </li>
-              </ul>
-
-              <div className="text-sm text-emerald-100 mb-4 italic">Perfect for active agents & small agencies</div>
-
-              <Button onClick={handleGetVerified} className="w-full bg-white text-[#4ea8a1] hover:bg-emerald-50">
-                Get Started
-              </Button>
-            </div>
-
-            {/* Agency */}
-            <div className="bg-white rounded-3xl shadow-lg p-8 border border-gray-200 hover:shadow-2xl transition-shadow">
-              <h3 className="text-2xl mb-2 text-gray-900">Agency</h3>
-              <div className="text-4xl mb-6 text-gray-900">
-                ₦100,000
-                <span className="text-lg text-gray-500">/month</span>
-              </div>
-              
-              <div className="mb-6 pb-6 border-b border-gray-200">
-                <div className="text-sm text-gray-600 mb-2">Included:</div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-700">Unlimited listings</span>
-                  <span className="text-[#4ea8a1]">Unlimited credits</span>
-                </div>
-              </div>
-              
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-[#4ea8a1] mt-1 flex-shrink-0" />
-                  <span className="text-gray-700">Everything in Pro, plus:</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-[#4ea8a1] mt-1 flex-shrink-0" />
-                  <span className="text-gray-700">White-label verification reports</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-[#4ea8a1] mt-1 flex-shrink-0" />
-                  <span className="text-gray-700">API access</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-[#4ea8a1] mt-1 flex-shrink-0" />
-                  <span className="text-gray-700">Dedicated account manager</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-[#4ea8a1] mt-1 flex-shrink-0" />
-                  <span className="text-gray-700">24/7 priority support</span>
-                </li>
-              </ul>
-
-              <div className="text-sm text-gray-600 mb-4 italic">Perfect for agencies & developers</div>
-
-              <Button onClick={handleGetVerified} variant="outline" className="w-full border-2 border-gray-300 hover:border-[#4ea8a1] hover:text-[#4ea8a1]">
-                Get Started
-              </Button>
-            </div>
-          </div>
-
-          {/* Early Partner Incentive */}
-          <div className="bg-inda-teal  border-2 border-teal-500 rounded-3xl p-8 max-w-4xl mx-auto shadow-xl">
-            <div className="flex items-start gap-6">
-              <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-amber-500 rounded-2xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                <Award className="w-8 h-8 text-white" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-2xl mb-2 text-gray-900">Founding Partner Program</h3>
-                <p className="text-gray-900 mb-4">
-                  Join the first 100 verified professionals and get priority verification, faster closings, and exclusive partner benefits.
+      {/* Problem/Solution */}
+      <section className="py-32 px-6 bg-gray-900">
+        <div className="max-w-6xl mx-auto">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6 }}
+              >
+                <h2 className="text-4xl md:text-5xl lg:text-6xl text-white mb-6 tracking-tight">
+                  Questions you
+                  <br />
+                  <span className="text-red-400">can't answer.</span>
+                </h2>
+                <p className="text-lg text-gray-400 leading-relaxed mb-6">
+                  "What's the flood risk?" "How's the area growing?" "Any legal disputes?" 
+                  You don't know. Buyers spend weeks researching. Finding nothing. Getting frustrated.
                 </p>
-                
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-white">Slots Remaining</span>
-                    <span className="text-sm text-white">37/100</span>
+                <p className="text-lg text-gray-400 leading-relaxed mb-8">
+                  Meanwhile, you're scrambling for answers you don't have access to. 
+                  52 days wasted. Deals collapse.
+                </p>
+                <p className="text-lg text-white leading-relaxed">
+                  Inda verifies everything—title, legal, microlocation insights, environmental 
+                  risks. Questions you can't answer become certainties buyers trust. 
+                  Both sides get complete transparency. Deals close in 11 days.
+                </p>
+              </motion.div>
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="space-y-4"
+            >
+              {/* Before */}
+              <div className="bg-red-500/10 backdrop-blur-sm border border-red-500/20 rounded-xl p-6">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-10 h-10 bg-red-500/20 rounded-lg flex items-center justify-center shrink-0">
+                    <AlertCircle className="w-5 h-5 text-red-400" />
                   </div>
-                  <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-                    <div className="w-[63%] h-full bg-gradient-to-r from-teal-400 to-teal-500" />
+                  <div>
+                    <div className="text-white font-medium mb-1">Before Inda</div>
+                    <div className="text-sm text-gray-400">Information gap kills deals</div>
                   </div>
                 </div>
+                <div className="space-y-2 text-sm text-gray-400">
+                  <div className="flex justify-between">
+                    <span>Researching answers you don't have</span>
+                    <span className="text-red-400">21 days</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Buyer doing their own research</span>
+                    <span className="text-red-400">18 days</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Back-and-forth on uncertainties</span>
+                    <span className="text-red-400">13 days</span>
+                  </div>
+                  <div className="pt-2 border-t border-red-500/20 flex justify-between font-medium">
+                    <span className="text-white">Total</span>
+                    <span className="text-red-400">52 days</span>
+                  </div>
+                </div>
+              </div>
 
-                <Button onClick={() => openWhatsAppDemo("Hi, I would like to become a founding partner")} className="bg-white hover:from-teal-500 hover:to-teal-600 text-inda-teal">
-                  Become a Founding Partner
-                  <Award className="ml-2 w-4 h-4" />
-                </Button>
+              {/* After */}
+              <div className="bg-[#50b8b1]/10 backdrop-blur-sm border border-[#50b8b1]/20 rounded-xl p-6">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-10 h-10 bg-[#50b8b1]/20 rounded-lg flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="w-5 h-5 text-[#50b8b1]" />
+                  </div>
+                  <div>
+                    <div className="text-white font-medium mb-1">With Inda</div>
+                    <div className="text-sm text-gray-400">Average deal timeline</div>
+                  </div>
+                </div>
+                <div className="space-y-2 text-sm text-gray-400">
+                  <div className="flex justify-between">
+                    <span>Questions answered</span>
+                    <span className="text-[#50b8b1]">0 days (in report)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Document sharing</span>
+                    <span className="text-[#50b8b1]">0 days (one link)</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Due diligence</span>
+                    <span className="text-[#50b8b1]">11 days</span>
+                  </div>
+                  <div className="pt-2 border-t border-[#50b8b1]/20 flex justify-between font-medium">
+                    <span className="text-white">Total</span>
+                    <span className="text-[#50b8b1]">11 days</span>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* How it Works */}
+      <section className="py-32 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-4xl md:text-5xl lg:text-6xl text-gray-900 mb-4 tracking-tight"
+            >
+              Verify once. Share everywhere.
+            </motion.h2>
+            <p className="text-lg text-gray-600">Three steps to faster closings</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0 }}
+              className="text-center"
+            >
+              <div className="w-16 h-16 bg-[#50b8b1]/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Shield className="w-8 h-8 text-[#50b8b1]" />
+              </div>
+              <div className="text-5xl font-bold text-gray-200 mb-4">01</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Enter 8-12 Details</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Fill out basic listing info—location, price, features. 
+                Our AI instantly compiles <span className="font-semibold text-gray-900">70+ verified answers</span> buyers need.
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="text-center"
+            >
+              <div className="w-16 h-16 bg-[#50b8b1]/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Link2 className="w-8 h-8 text-[#50b8b1]" />
+              </div>
+              <div className="text-5xl font-bold text-gray-200 mb-4">02</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Share Your Link</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Every property gets a shareable URL. Instagram, WhatsApp, email—
+                one link answers everything.
+              </p>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="text-center"
+            >
+              <div className="w-16 h-16 bg-[#50b8b1]/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <TrendingUp className="w-8 h-8 text-[#50b8b1]" />
+              </div>
+              <div className="text-5xl font-bold text-gray-200 mb-4">03</div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-3">Track & Close</h3>
+              <p className="text-gray-600 leading-relaxed">
+                See who viewed, which channels convert. Know which leads are serious. 
+                Close faster.
+              </p>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Social Proof */}
+      <section className="py-32 px-6 bg-gray-50">
+        <div className="max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center"
+          >
+            <div className="mb-8">
+              <div className="text-6xl mb-6">"</div>
+              <p className="text-2xl md:text-3xl lg:text-4xl text-gray-900 leading-snug mb-8">
+                We closed ₦340M in properties{" "}
+                <span className="text-[#50b8b1]">17 days faster</span> than our usual timeline. 
+                Buyers trust the verified reports.
+              </p>
+            </div>
+            <div className="flex items-center justify-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#50b8b1] to-[#3a9892] rounded-full" />
+              <div className="text-left">
+                <div className="font-medium text-gray-900">Development Director</div>
+                <div className="text-sm text-gray-500">Developer, Ajah</div>
               </div>
             </div>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Pricing */}
+      <section className="py-32 px-6">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <motion.h2
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-4xl md:text-5xl lg:text-6xl text-gray-900 mb-4 tracking-tight"
+            >
+              Start free. Scale when ready.
+            </motion.h2>
+            <p className="text-lg text-gray-600">No credit card required</p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {/* Starter */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0 }}
+              className="bg-white rounded-2xl border border-gray-200 p-8 hover:shadow-lg transition-shadow"
+            >
+              <div className="mb-6">
+                <div className="text-sm text-gray-500 mb-2">Starter</div>
+                <div className="text-5xl font-semibold text-gray-900 mb-1">Free</div>
+                <div className="text-sm text-gray-500">Forever</div>
+              </div>
+              <ul className="space-y-3 mb-8 text-sm text-gray-600">
+                <li className="flex items-start gap-2">
+                  <span className="text-[#50b8b1] mt-1">✓</span>
+                  <span>1 property</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#50b8b1] mt-1">✓</span>
+                  <span>Shareable property link</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#50b8b1] mt-1">✓</span>
+                  <span>Basic analytics</span>
+                </li>
+              </ul>
+              <button
+                onClick={onGetStarted}
+                className="w-full py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:border-gray-400 transition-colors text-sm font-medium"
+              >
+                Get started
+              </button>
+            </motion.div>
+
+            {/* Pro */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="bg-gray-900 rounded-2xl border-2 border-[#50b8b1] p-8 relative hover:shadow-2xl transition-shadow"
+            >
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#50b8b1] text-white px-3 py-1 rounded-full text-xs font-medium">
+                Most popular
+              </div>
+              <div className="mb-6">
+                <div className="text-sm text-gray-400 mb-2">Pro</div>
+                <div className="text-5xl font-semibold text-white mb-1">
+                  ₦35K
+                </div>
+                <div className="text-sm text-gray-400">per month</div>
+              </div>
+              <ul className="space-y-3 mb-8 text-sm text-gray-300">
+                <li className="flex items-start gap-2">
+                  <span className="text-[#50b8b1] mt-1">✓</span>
+                  <span>10 properties</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#50b8b1] mt-1">✓</span>
+                  <span>WhatsApp integration</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#50b8b1] mt-1">✓</span>
+                  <span>Full lead tracking</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#50b8b1] mt-1">✓</span>
+                  <span>Channel analytics</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#50b8b1] mt-1">✓</span>
+                  <span>Verification discounts</span>
+                </li>
+              </ul>
+              <button
+                onClick={onGetStarted}
+                className="w-full py-2.5 bg-[#50b8b1] rounded-lg text-white hover:bg-[#3a9892] transition-colors text-sm font-medium"
+              >
+                Start free trial
+              </button>
+            </motion.div>
+
+            {/* Enterprise */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.2 }}
+              className="bg-white rounded-2xl border border-gray-200 p-8 hover:shadow-lg transition-shadow"
+            >
+              <div className="mb-6">
+                <div className="text-sm text-gray-500 mb-2">Enterprise</div>
+                <div className="text-5xl font-semibold text-gray-900 mb-1">₦75K</div>
+                <div className="text-sm text-gray-500">per month</div>
+              </div>
+              <ul className="space-y-3 mb-8 text-sm text-gray-600">
+                <li className="flex items-start gap-2">
+                  <span className="text-[#50b8b1] mt-1">✓</span>
+                  <span>Unlimited properties</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#50b8b1] mt-1">✓</span>
+                  <span>API access</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#50b8b1] mt-1">✓</span>
+                  <span>White-label reports</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#50b8b1] mt-1">✓</span>
+                  <span>Priority verification</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#50b8b1] mt-1">✓</span>
+                  <span>Dedicated support</span>
+                </li>
+              </ul>
+              <button
+                onClick={onGetStarted}
+                className="w-full py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:border-gray-400 transition-colors text-sm font-medium"
+              >
+                Contact sales
+              </button>
+            </motion.div>
           </div>
         </div>
       </section>
 
       {/* Final CTA */}
-      <section className="py-20 px-6 bg-gradient-to-br from-gray-900 via-[#4ea8a1]/50 to-gray-900">
+      <section className="py-32 px-6 bg-gray-900">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-5xl mb-6 text-white leading-tight">
-            Become a <span className="text-[#4ea8a1]">Verified Professional</span>.{' '}
-            <br />
-            Close Deals Faster.
-          </h2>
-          <p className="text-xl text-gray-300 mb-8">
-            Join the growing network of trusted real estate professionals using Inda to build credibility and close deals in record time.
-          </p>
-          <div className="flex items-center justify-center gap-4 flex-wrap">
-            <Button onClick={handleGetVerified} size="lg" className="bg-gradient-to-r from-[#4ea8a1] to-[#3d8680] hover:from-[#3d8680] hover:to-[#2d7670] group shadow-xl text-lg px-8 py-6">
-              Onboard to Inda → Start Verifying Today
-              <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
-            </Button>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <h2 className="text-5xl md:text-6xl lg:text-7xl text-white mb-6 tracking-tight">
+              Transparency sells.
+            </h2>
+            <p className="text-xl text-gray-400 mb-10 max-w-2xl mx-auto">
+              When buyers know more, deals close faster. Start verifying today.
+            </p>
+            <button
+              onClick={onGetStarted}
+              className="group px-8 py-4 bg-[#50b8b1] text-white rounded-lg font-medium hover:bg-[#3a9892] transition-all inline-flex items-center gap-2 shadow-lg text-lg"
+            >
+              Start free trial
+              <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          </motion.div>
         </div>
       </section>
 
-      <FooterCTA />
-    </>
+      <Footer />
+    </Container>
   );
-}
+};
 
 export default ForProfessionals;

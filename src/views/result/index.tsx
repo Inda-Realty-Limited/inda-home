@@ -516,23 +516,9 @@ const ResultPage: React.FC = () => {
 
     // Main render when result exists
     if (result) {
-        const price =
-            result?.snapshot?.priceNGN ?? result?.analytics?.market?.purchasePrice;
-        const fairValue =
-            (result as any)?.analytics?.market?.fairValueNGN ??
-            (result as any)?.aiReport?.marketValue?.fairValueNGN ??
-            (result as any)?.aiReport?.marketValue?.fairValue ??
-            null;
 
-        const deliveryLabel = (() => {
-            const rawDelivery: any =
-                (result?.snapshot as any)?.deliveryDate ||
-                (result?.snapshot as any)?.expectedDeliveryDate ||
-                (result as any)?.deliveryDate ||
-                (result as any)?.expectedDeliveryDate ||
-                (result as any)?.aiReport?.delivery?.expectedDate ||
-                (result as any)?.aiReport?.timeline?.deliveryDate ||
-                null;
+
+
             let label = "—";
             if (rawDelivery) {
                 if (typeof rawDelivery === "string") {
@@ -552,29 +538,9 @@ const ResultPage: React.FC = () => {
             }
             return label;
         })();
-        const deliverySource = (() => {
-            const has =
-                (result?.snapshot as any)?.deliveryDate ||
-                (result?.snapshot as any)?.expectedDeliveryDate ||
-                (result as any)?.deliveryDate ||
-                (result as any)?.expectedDeliveryDate;
-            return has ? "From listing/docs." : "Estimated";
-        })();
-        const listingStatus =
-            (result?.snapshot as any)?.listingStatus ||
-            (result?.snapshot as any)?.status ||
-            (result as any)?.listingStatus ||
-            (result as any)?.marketStatus ||
-            (result as any)?.status ||
-            null;
 
-        const bedroomsDisplay = result?.snapshot?.bedrooms ?? "4";
-        const bathroomsDisplay = result?.snapshot?.bathrooms ?? "5";
-        const sizeDisplay = result?.snapshot?.sizeSqm ?? "450";
-        const propertyTypeDisplay = result?.snapshot?.propertyTypeStd
-            ? result.snapshot.propertyTypeStd.toLowerCase()
-            : "duplexdf";
-        const microlocationDisplay = result?.snapshot?.microlocationStd ?? "Lekki Phase 1df";
+
+
         const fallbackTitleDisplay = (result as any)?.title || (result as any)?.snapshot?.title || "";
         const fallbackLocationDisplay = (result as any)?.location || (result as any)?.snapshot?.location || "";
         const fallbackListingDisplay = (result as any)?.listingUrl || (result as any)?.snapshot?.listingUrl || "";

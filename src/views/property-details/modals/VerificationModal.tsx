@@ -9,7 +9,7 @@ interface VerificationModalProps {
   onVerificationPaid: (paid: boolean) => void;
 }
 
-export function VerificationModal({ isOpen, onClose, propertyName, propertyPrice, verificationPaid, onVerificationPaid }: VerificationModalProps) {
+export function VerificationModal({ isOpen, onClose, propertyName, propertyPrice,  onVerificationPaid }: VerificationModalProps) {
   if (!isOpen) return null;
 
   const handleConfirm = () => {

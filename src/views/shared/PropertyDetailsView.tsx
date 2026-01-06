@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef} from 'react';
 import GallerySection from '../result/sections/GallerySection';
 import SmartSummary from '../result/sections/SmartSummary';
 import AmenitiesSection from '../result/sections/AmenitiesSection';
@@ -58,9 +58,6 @@ export const PropertyDetailsView: React.FC<PropertyDetailsViewProps> = ({
   sizeDisplay,
   propertyTypeDisplay,
   microlocationDisplay,
-  fallbackTitleDisplay,
-  fallbackLocationDisplay,
-  fallbackListingDisplay,
   onDeeperVerification,
   onBuyWithInda,
   onFinanceWithInda,

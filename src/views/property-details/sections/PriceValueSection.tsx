@@ -1,4 +1,4 @@
-import { TrendingUp, DollarSign, PieChart, BarChart3, Info } from "lucide-react";
+import { TrendingUp, PieChart, Info } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart as RePieChart, Pie, Cell } from "recharts";
 
 const costBreakdown = [

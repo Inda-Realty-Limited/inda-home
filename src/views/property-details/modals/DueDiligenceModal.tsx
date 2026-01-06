@@ -1,4 +1,4 @@
-import { X, Shield, FileText, CheckCircle2 } from "lucide-react";
+import { X, Shield, CheckCircle2 } from "lucide-react";
 
 interface DueDiligenceModalProps {
   isOpen: boolean;
