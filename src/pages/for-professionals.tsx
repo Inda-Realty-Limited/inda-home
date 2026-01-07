@@ -484,7 +484,7 @@ const ForProfessionals: React.FC = () => {
               <div className="mb-6">
                 <div className="text-sm text-gray-400 mb-2">Pro</div>
                 <div className="text-5xl font-semibold text-white mb-1">
-                  ₦35K
+                  ₦50
                 </div>
                 <div className="text-sm text-gray-400">per month</div>
               </div>

@@ -4,6 +4,7 @@ import {
     FaArrowUp, FaArrowDown, FaStar, FaChartBar,
     FaLightbulb, FaChartLine, FaBolt, FaInbox
 } from 'react-icons/fa';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
 // ==========================================
 // 1. TYPES
@@ -99,7 +100,8 @@ export default function DashboardPage() {
     };
 
     return (
-        <DashboardLayout title="Inda Pro">
+        <ProtectedRoute allowedRoles={['Agent', 'Investor', 'Developer']}>
+            <DashboardLayout title="Inda Pro">
 
             {/* KPI Section */}
             <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -291,7 +293,8 @@ export default function DashboardPage() {
                 )}
             </section>
 
-        </DashboardLayout>
+            </DashboardLayout>
+        </ProtectedRoute>
     );
 }
 
