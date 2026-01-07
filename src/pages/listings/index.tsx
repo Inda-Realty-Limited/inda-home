@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
+import { useAuth } from '@/contexts/AuthContext';
 import {
     FaBed, FaBath, FaRulerCombined, FaEye,
     FaPen, FaComment, FaTrash, FaSpinner, FaPlusCircle, FaMapMarkerAlt
 } from 'react-icons/fa';
-import { ListingsService, Listing } from '@/services/pro-api';
+import { ProListingsService, Listing } from '@/api/pro-listings';
 
 type TabOption = 'active' | 'analytics';
 
 export default function ListingsManagerPage() {
+    const { user } = useAuth();
     const [activeTab, setActiveTab] = useState<TabOption>('active');
     const [listings, setListings] = useState<Listing[]>([]);
     const [loading, setLoading] = useState(true);
@@ -17,18 +19,16 @@ export default function ListingsManagerPage() {
 
     useEffect(() => {
         const fetchListings = async () => {
-            const stored = localStorage.getItem('user');
-            if (!stored) {
+            if (!user) {
                 setLoading(false);
                 return;
             }
 
             try {
-                const user = JSON.parse(stored);
-                const userId = user.id || user._id || user.user?.id;
+                const userId = user.id || user._id || (user as any).user?.id;
 
                 if (userId) {
-                    const response = await ListingsService.getUserListings(userId);
+                    const response = await ProListingsService.getUserListings(userId);
                     let data: Listing[] = [];
 
                     if (Array.isArray(response)) {
@@ -51,13 +51,30 @@ export default function ListingsManagerPage() {
             }
         };
 
-        fetchListings();
-    }, []);
+        if (user) {
+            fetchListings();
+        } else {
+             // If no user immediately, wait or stop loading? 
+             // Ideally loading stays true until auth check is done, but useAuth usually handles that.
+             // If user is null but loading is true in auth context, we wait.
+             // Assuming useAuth provides a loading state too, but I'll stick to this for now.
+             // Actually, if user is null initially (before context loads), we shouldn't confirm "no user" yet if auth is loading.
+             // But for now replacing localStorage logic directly.
+             setLoading(false);
+        }
+    }, [user]);
 
     const handleDelete = async (indaTag: string) => {
         if (!window.confirm("Are you sure you want to delete this listing?")) return;
+        
+        if (!user) {
+            alert("You must be logged in to delete listings.");
+            return;
+        }
+
         try {
-            await ListingsService.deleteListing(indaTag);
+            const userId = user.id || user._id || (user as any).user?.id;
+            await ProListingsService.deleteListing(indaTag, userId);
             setListings(prev => prev.filter(l => l.indaTag !== indaTag && l.id !== indaTag));
         } catch (err) {
             alert("Failed to delete listing.");

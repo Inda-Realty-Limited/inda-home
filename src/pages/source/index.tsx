@@ -4,7 +4,7 @@ import {
     FaSearch, FaCheck, FaBed, FaBath, FaRulerCombined,
     FaMapMarkerAlt, FaEye, FaFilter, FaSpinner, FaSync
 } from 'react-icons/fa';
-import { ListingsService, Listing } from '@/services/pro-api';
+import { ProListingsService, Listing } from '@/api/pro-listings';
 
 const FILTERS = [
     "Fastest Moving Price Range",
@@ -32,7 +32,7 @@ export default function SourceExplorerPage() {
             if (activeFilters.length > 0) apiFilters.tags = activeFilters.join(',');
             if (searchQuery) apiFilters.search = searchQuery;
 
-            const response = await ListingsService.getAllListings(currentPage, 9, apiFilters);
+            const response = await ProListingsService.getAllListings(currentPage, 9, apiFilters);
             const newData = response.data || (Array.isArray(response) ? response : []);
             const total = response.meta?.total || response.count || 0;
 
@@ -62,7 +62,7 @@ export default function SourceExplorerPage() {
     const handleLoadMore = () => {
         setPage(prev => prev + 1);
         const nextPage = page + 1;
-        ListingsService.getAllListings(nextPage, 9, {
+        ProListingsService.getAllListings(nextPage, 9, {
             tags: activeFilters.join(','),
             search: searchQuery
         }).then(response => {

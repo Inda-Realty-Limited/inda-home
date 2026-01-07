@@ -18,7 +18,7 @@ export default function DashboardHeader() {
                     Inda Blog
                 </button>
 
-                <Link href="/auth/pro-login">
+                <Link href="/auth/signin">
                     <DashboardButton variant="primary" className="ml-2 text-xs uppercase tracking-wider px-6 py-2.5">
                         Sign In
                     </DashboardButton>

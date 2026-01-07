@@ -1,20 +1,6 @@
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
+import { useAuth } from '@/contexts/AuthContext';
 import AppSidebar from './AppSidebar';
 import { FaBell } from 'react-icons/fa';
-
-interface UserProfile {
-    _id?: string;
-    id?: string;
-    name?: string;
-    email?: string;
-    role?: string;
-    firstName?: string;
-    lastName?: string;
-    photo?: string;
-    token?: string;
-    [key: string]: any;
-}
 
 interface DashboardLayoutProps {
     children: React.ReactNode;
@@ -22,55 +8,19 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children, title = 'Inda Pro' }: DashboardLayoutProps) {
-    const router = useRouter();
-    const [user, setUser] = useState<UserProfile | null>(null);
-    const [isAuthorized, setIsAuthorized] = useState(false);
-
-    useEffect(() => {
-        const loadUser = () => {
-            const stored = localStorage.getItem('user');
-
-            if (!stored) {
-                console.warn('Unauthorized access attempt. Redirecting to login.');
-            }
-
-            try {
-                if (stored) {
-                    const parsedUser = JSON.parse(stored);
-                    if (!parsedUser.firstName && parsedUser.name) {
-                        parsedUser.firstName = parsedUser.name.split(' ')[0];
-                    }
-                    setUser(parsedUser);
-                }
-                setIsAuthorized(true);
-            } catch (error) {
-                console.error('Failed to parse user session:', error);
-                localStorage.removeItem('user');
-                setIsAuthorized(true);
-            }
-        };
-
-        loadUser();
-
-        const handleUserUpdate = () => {
-            loadUser();
-        };
-
-        window.addEventListener('user-updated', handleUserUpdate);
-        return () => window.removeEventListener('user-updated', handleUserUpdate);
-    }, [router]);
-
-    if (!isAuthorized) {
-        return (
-            <div className="flex h-screen items-center justify-center bg-inda-light">
-                <div className="w-8 h-8 border-2 border-inda-teal border-t-transparent rounded-full animate-spin" />
-            </div>
-        );
-    }
+    const { user } = useAuth();
+    
+    // Safety check for user loaded
+    // Note: Dashboard pages should be wrapped in ProtectedRoute, so user should exist here.
+    // If not, we handle gracefully.
 
     const getInitials = () => {
         if (!user) return 'U';
-        if (user.firstName) return user.firstName[0].toUpperCase();
+        if (user.firstName) {
+            const first = user.firstName[0];
+            const last = user.lastName ? user.lastName[0] : '';
+            return (first + last).toUpperCase();
+        }
         if (user.name) return user.name[0].toUpperCase();
         if (user.email) return user.email[0].toUpperCase();
         return 'U';
@@ -99,7 +49,7 @@ export default function DashboardLayout({ children, title = 'Inda Pro' }: Dashbo
                         >
                             <FaBell size={20} />
                             <span className="absolute -top-1 -right-1 bg-red-500 w-4 h-4 rounded-full text-[10px] flex items-center justify-center text-white font-bold">
-                                3
+                                0
                             </span>
                         </button>
 

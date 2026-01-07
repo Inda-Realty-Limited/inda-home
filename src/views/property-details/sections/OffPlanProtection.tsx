@@ -1,4 +1,4 @@
-import { CheckCircle2, AlertTriangle, Clock, Shield, TrendingUp, AlertCircle } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Clock, Shield, AlertCircle } from "lucide-react";
 import { Property } from "../data/propertyData";
 
 interface OffPlanProtectionProps {

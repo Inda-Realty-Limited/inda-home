@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { ChevronLeft, Bookmark, Share2, ChevronDown, ChevronUp, MapPin, Bed, Bath, Car, Home, MessageSquare, Eye, Users, AlertTriangle, CheckCircle2, Link2, Star, TrendingUp, Shield, Building2, MessageCircle, BadgeCheck, FileText, Sparkles, Clock, DollarSign, Award, Zap, Activity } from "lucide-react";
+import { useState, useRef } from "react";
+import { ChevronLeft, Bookmark, Share2, ChevronDown, ChevronUp, MapPin, Bed, Bath, Car, Home, Eye, Users, AlertTriangle, CheckCircle2, Link2, Star, TrendingUp, Shield, Building2, MessageCircle, BadgeCheck, FileText, Sparkles } from "lucide-react";
 import { Property, QASection } from "../property-details/data/propertyData";
 import { qaData } from "../property-details/data/propertyData";
 import { scannedQAData } from "../property-details/data/scannedQAData";
@@ -23,14 +23,13 @@ interface PropertyDetailProps {
   onReserve: () => void;
 }
 
-export function PropertyDetail({ property, onBack, onReserve }: PropertyDetailProps) {
+export function PropertyDetail({ property, onBack }: PropertyDetailProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showAskAI, setShowAskAI] = useState(false);
   const [showMakeOffer, setShowMakeOffer] = useState(false);
   const [showDueDiligence, setShowDueDiligence] = useState(false);
   const [dueDiligenceTier, setDueDiligenceTier] = useState<'deep' | 'deeper'>('deep');
   const [isBookmarked, setIsBookmarked] = useState(false);
-  const [activeSection, setActiveSection] = useState<string | null>(null);
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const [verificationPaid, setVerificationPaid] = useState(false);
   const [showSiteVisit, setShowSiteVisit] = useState(false);

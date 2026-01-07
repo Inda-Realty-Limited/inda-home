@@ -1,4 +1,4 @@
-import { AlertTriangle, Shield, TrendingDown, Clock } from "lucide-react";
+import {  Shield, TrendingDown, Clock } from "lucide-react";
 
 interface RiskItem {
   category: string;

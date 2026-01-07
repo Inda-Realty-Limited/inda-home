@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, User, Mail, Phone as PhoneIcon, MessageSquare, DollarSign } from "lucide-react";
+import { X, User, Mail, Phone as PhoneIcon, MessageSquare } from "lucide-react";
 
 interface MakeOfferModalProps {
   isOpen: boolean;

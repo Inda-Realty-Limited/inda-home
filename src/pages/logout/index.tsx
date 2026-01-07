@@ -2,24 +2,23 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { FaSignOutAlt } from 'react-icons/fa';
 import DashboardButton from '@/components/dashboard/DashboardButton';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function LogoutPage() {
     const router = useRouter();
+    const { user, logout } = useAuth();
     const [showModal, setShowModal] = useState(false);
 
     useEffect(() => {
-        const user = localStorage.getItem('user');
         if (!user) {
-            router.replace('/auth/login');
+            router.replace('/auth/signin');
         } else {
             setShowModal(true);
         }
-    }, [router]);
+    }, [router, user]);
 
-    const handleLogout = () => {
-        localStorage.removeItem('user');
-        window.dispatchEvent(new Event('storage'));
-        router.replace('/auth/login');
+    const handleLogout = async () => {
+        await logout();
     };
 
     const handleCancel = () => {

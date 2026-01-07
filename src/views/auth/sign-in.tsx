@@ -6,6 +6,7 @@ import { loginSchema, validateAndSanitize } from "@/utils/validation";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { FiLock, FiMail } from "react-icons/fi";
+import CryptoJS from "crypto-js";
 
 const SignIn: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -67,12 +68,36 @@ const SignIn: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      await authLogin(validation.data.email, validation.data.password);
+      const response = await authLogin(validation.data.email, validation.data.password);
       
       limiter.reset();
       toast.showToast("Sign in successful!", 2000, "success");
       
       setTimeout(() => {
+        // Get user from localStorage to check role
+        const storedUser = localStorage.getItem('inda_user');
+        let userRole = null;
+        
+        if (storedUser) {
+          try {
+            const decrypted = CryptoJS.AES.decrypt(storedUser, process.env.NEXT_PUBLIC_ENCRYPTION_SECRET || '').toString(CryptoJS.enc.Utf8);
+            const user = JSON.parse(decrypted);
+            userRole = user.role;
+          } catch (e) {
+            console.error('Failed to decrypt user data:', e);
+          }
+        }
+        
+        // Role-based redirect
+        const isProRole = userRole === 'Agent' || userRole === 'Investor' || userRole === 'Developer';
+        
+        if (isProRole) {
+          // Pro users go to dashboard
+          router.push('/dashboard');
+          return;
+        }
+        
+        // Buyers follow normal redirect logic
         if (returnTo) {
           try {
             router.push(decodeURIComponent(returnTo));

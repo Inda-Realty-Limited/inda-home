@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef} from 'react';
 import GallerySection from '../result/sections/GallerySection';
 import SmartSummary from '../result/sections/SmartSummary';
 import AmenitiesSection from '../result/sections/AmenitiesSection';
@@ -8,7 +8,7 @@ import ExecutiveSummary from '../result/sections/ExecutiveSummary';
 import ComparableProperties from '../result/sections/ComparableProperties';
 import ProceedActions from '../result/sections/ProceedActions';
 import Disclaimer from '../result/sections/Disclaimer';
-import { getUser } from '@/helpers';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface PropertyDetailsViewProps {
   result: any;
@@ -58,15 +58,12 @@ export const PropertyDetailsView: React.FC<PropertyDetailsViewProps> = ({
   sizeDisplay,
   propertyTypeDisplay,
   microlocationDisplay,
-  fallbackTitleDisplay,
-  fallbackLocationDisplay,
-  fallbackListingDisplay,
   onDeeperVerification,
   onBuyWithInda,
   onFinanceWithInda,
 }) => {
   const badgesScrollRef = useRef<HTMLDivElement>(null);
-  const user = getUser();
+  const { user } = useAuth();
 
   const scrollContainer = (container: HTMLDivElement | null, direction: 'left' | 'right') => {
     if (!container) return;
@@ -299,9 +296,9 @@ export const PropertyDetailsView: React.FC<PropertyDetailsViewProps> = ({
 
       {/* Call to Action Buttons */}
       <ProceedActions
-        onDeeperVerification={onDeeperVerification}
-        onBuyWithInda={onBuyWithInda}
-        onFinanceWithInda={onFinanceWithInda}
+        onDeeperVerification={onDeeperVerification || (() => {})}
+        onBuyWithInda={onBuyWithInda || (() => {})}
+        onFinanceWithInda={onFinanceWithInda || (() => {})}
         legalDisclaimer={(result as any)?.legalDisclaimer}
       />
 

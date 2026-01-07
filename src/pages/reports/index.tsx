@@ -5,7 +5,7 @@ import {
     FaCheck, FaChevronDown,
     FaExclamationCircle, FaSpinner, FaFileAlt
 } from 'react-icons/fa';
-import { ReportsService } from '@/services/pro-api';
+import { ProReportsService } from '@/api/pro-reports';
 
 type TabOption = 'library' | 'generate';
 
@@ -51,7 +51,10 @@ const REPORT_TYPES = [
     }
 ];
 
+import { useAuth } from '@/contexts/AuthContext';
+
 export default function ReportsHubPage() {
+    const { user } = useAuth();
     const [activeTab, setActiveTab] = useState<TabOption>('library');
     const [generateStep, setGenerateStep] = useState(1);
     const [reports, setReports] = useState<Report[]>([]);
@@ -61,16 +64,14 @@ export default function ReportsHubPage() {
     const [generating, setGenerating] = useState<string | null>(null);
 
     const fetchReports = async () => {
-        const stored = localStorage.getItem('user');
-        if (!stored) return;
+        if (!user) return;
 
         try {
             setLoadingReports(true);
-            const user = JSON.parse(stored);
-            const userId = user.id || user._id || user.user?.id;
+            const userId = user.id || user._id || (user as any).user?.id;
 
             if (userId) {
-                const data = await ReportsService.getUserReports(userId);
+                const data = await ProReportsService.getUserReports(userId);
                 setReports(Array.isArray(data) ? data : (data.data || []));
             }
         } catch (err) {
@@ -81,10 +82,10 @@ export default function ReportsHubPage() {
     };
 
     useEffect(() => {
-        if (activeTab === 'library') {
+        if (activeTab === 'library' && user) {
             fetchReports();
         }
-    }, [activeTab]);
+    }, [activeTab, user]);
 
     const handleContinue = () => {
         if (!propertyInput.address.trim()) {
@@ -100,16 +101,14 @@ export default function ReportsHubPage() {
     };
 
     const handleGenerateReport = async (reportTitle: string) => {
-        const stored = localStorage.getItem('user');
-        if (!stored) {
+        if (!user) {
             alert("You must be logged in.");
             return;
         }
 
         try {
             setGenerating(reportTitle);
-            const user = JSON.parse(stored);
-            const userId = user.id || user._id || user.user?.id;
+            const userId = user.id || user._id || (user as any).user?.id;
 
             const payload = {
                 userId,
@@ -118,7 +117,7 @@ export default function ReportsHubPage() {
                 reportType: reportTitle
             };
 
-            const response = await ReportsService.generateReport(payload);
+            const response = await ProReportsService.generateReport(payload);
 
             if (response.success || response.reportId) {
                 alert(`Report started! Credits deducted: ${response.creditsDeducted || 'N/A'}`);

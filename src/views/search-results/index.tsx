@@ -465,8 +465,6 @@ export function ResultsView() {
   // Use sortedProperties directly since API handles the text search filtering
   const filteredProperties = sortedProperties;
 
-  const selectedProperty = properties.find(p => p.id === selectedPropertyId);
-
   return (
     <div className="min-h-screen bg-slate-50">
           <Navbar/>

@@ -1,4 +1,4 @@
-import { TrendingUp, Clock, Users, BarChart } from "lucide-react";
+import { TrendingUp, Clock, Users } from "lucide-react";
 
 const timelineData = [
   { period: "0-3 months", percentage: 45, label: "Fast Exit" },

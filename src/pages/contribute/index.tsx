@@ -4,7 +4,7 @@ import {
 } from 'react-icons/fa';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import DashboardButton from '@/components/dashboard/DashboardButton';
-import { ContributionService } from '@/services/pro-api';
+import { ProContributionService } from '@/api/pro-contributions';
 
 interface ContributionStat {
     label: string;
@@ -13,7 +13,10 @@ interface ContributionStat {
     isPrimary?: boolean;
 }
 
+import { useAuth } from '@/contexts/AuthContext';
+
 export default function DataContributionPage() {
+    const { user } = useAuth();
     const [isContributing, setIsContributing] = useState(false);
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState<ContributionStat[]>([]);
@@ -21,15 +24,13 @@ export default function DataContributionPage() {
 
     useEffect(() => {
         const loadDashboard = async () => {
-            const stored = localStorage.getItem('user');
-            if (!stored) return;
+            if (!user) return;
             try {
-                const user = JSON.parse(stored);
-                const userId = user.id || user._id;
+                const userId = user.id || user._id || (user as any).user?.id;
 
                 if (userId) {
                     try {
-                        const data = await ContributionService.getDashboard(userId);
+                        const data = await ProContributionService.getDashboard(userId);
                         const dashboard = data.data || data;
 
                         setStats([
@@ -54,8 +55,13 @@ export default function DataContributionPage() {
                 setLoading(false);
             }
         };
-        loadDashboard();
-    }, []);
+        
+        if (user) {
+            loadDashboard();
+        } else {
+            setLoading(false);
+        }
+    }, [user]);
 
     return (
         <DashboardLayout title="Data Contribution">
@@ -130,6 +136,7 @@ const DashboardView = ({ loading, stats, history, onContribute }: any) => {
 };
 
 const ContributionForm = ({ onCancel }: { onCancel: () => void }) => {
+    const { user } = useAuth();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         transactionType: '', propertyType: '', address: '', amount: '', date: '', size: '', bedrooms: '', details: ''
@@ -141,12 +148,11 @@ const ContributionForm = ({ onCancel }: { onCancel: () => void }) => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            const stored = localStorage.getItem('user');
-            if (!stored) throw new Error("User not found");
-            const user = JSON.parse(stored);
+            if (!user) throw new Error("User not found");
+            const userId = user.id || user._id || (user as any).user?.id;
 
-            await ContributionService.submit({
-                userId: user.id || user._id,
+            await ProContributionService.submit({
+                userId: userId,
                 ...formData,
                 amount: Number(formData.amount),
                 documents: files
