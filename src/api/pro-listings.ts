@@ -36,35 +36,22 @@ export const ProListingsService = {
     return response.data;
   },
 
-  deleteListing: async (indaTag: string) => {
-    let storedId = '';
-    if (typeof window !== 'undefined') {
-      try {
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        storedId = user.id || user._id || '';
-      } catch (e) {}
-    }
+  deleteListing: async (indaTag: string, userId?: string) => {
     const response = await apiClient.delete(`/api/listings/${indaTag}`, {
-      data: { userId: storedId }
+      data: { userId }
     });
     return response.data;
   },
 
-  create: async (data: any) => {
+  create: async (data: any, userId?: string) => {
     if (data instanceof FormData) {
+      if (userId) data.append('userId', userId);
       const response = await apiClient.post('/api/listings', data);
       return response.data;
     }
 
     const formData = new FormData();
-    let storedId = '';
-    if (typeof window !== 'undefined') {
-      try {
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        storedId = user.id || user._id || '';
-      } catch (e) {}
-    }
-    if (storedId) formData.append('userId', storedId);
+    if (userId) formData.append('userId', userId);
 
     Object.keys(data).forEach(key => {
       if (key === 'images' && Array.isArray(data.images)) {

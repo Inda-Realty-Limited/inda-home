@@ -8,7 +8,7 @@ import ExecutiveSummary from '../result/sections/ExecutiveSummary';
 import ComparableProperties from '../result/sections/ComparableProperties';
 import ProceedActions from '../result/sections/ProceedActions';
 import Disclaimer from '../result/sections/Disclaimer';
-import { getUser } from '@/helpers';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface PropertyDetailsViewProps {
   result: any;
@@ -63,7 +63,7 @@ export const PropertyDetailsView: React.FC<PropertyDetailsViewProps> = ({
   onFinanceWithInda,
 }) => {
   const badgesScrollRef = useRef<HTMLDivElement>(null);
-  const user = getUser();
+  const { user } = useAuth();
 
   const scrollContainer = (container: HTMLDivElement | null, direction: 'left' | 'right') => {
     if (!container) return;
@@ -296,9 +296,9 @@ export const PropertyDetailsView: React.FC<PropertyDetailsViewProps> = ({
 
       {/* Call to Action Buttons */}
       <ProceedActions
-        onDeeperVerification={onDeeperVerification}
-        onBuyWithInda={onBuyWithInda}
-        onFinanceWithInda={onFinanceWithInda}
+        onDeeperVerification={onDeeperVerification || (() => {})}
+        onBuyWithInda={onBuyWithInda || (() => {})}
+        onFinanceWithInda={onFinanceWithInda || (() => {})}
         legalDisclaimer={(result as any)?.legalDisclaimer}
       />
 

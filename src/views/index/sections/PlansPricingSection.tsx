@@ -1,11 +1,12 @@
 import { Text } from "@/components";
-import { getUser } from "@/helpers";
+import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
 import { useRouter } from "next/router";
 import React, { useCallback } from "react";
 
 const PlansPricingSection: React.FC = () => {
   const router = useRouter();
+  const { user } = useAuth();
 
   const handlePlanSelect = useCallback(
     (plan: "free" | "instant" | "deep-dive" | "deeper-dive") => {
@@ -17,7 +18,7 @@ const PlansPricingSection: React.FC = () => {
         }
         if (plan === "deep-dive" || plan === "deeper-dive") {
           try {
-            const hasUser = !!getUser();
+            const hasUser = !!user;
             const target =
               plan === "deep-dive" ? "/plans/deep-dive" : "/plans/deeper-dive";
             if (!hasUser) {
@@ -39,7 +40,7 @@ const PlansPricingSection: React.FC = () => {
         router.push(`/auth?${params.toString()}`);
       }
     },
-    [router]
+    [router, user]
   );
 
   return (

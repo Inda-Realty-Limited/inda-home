@@ -13,7 +13,10 @@ interface ContributionStat {
     isPrimary?: boolean;
 }
 
+import { useAuth } from '@/contexts/AuthContext';
+
 export default function DataContributionPage() {
+    const { user } = useAuth();
     const [isContributing, setIsContributing] = useState(false);
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState<ContributionStat[]>([]);
@@ -21,11 +24,9 @@ export default function DataContributionPage() {
 
     useEffect(() => {
         const loadDashboard = async () => {
-            const stored = localStorage.getItem('user');
-            if (!stored) return;
+            if (!user) return;
             try {
-                const user = JSON.parse(stored);
-                const userId = user.id || user._id;
+                const userId = user.id || user._id || (user as any).user?.id;
 
                 if (userId) {
                     try {
@@ -54,8 +55,13 @@ export default function DataContributionPage() {
                 setLoading(false);
             }
         };
-        loadDashboard();
-    }, []);
+        
+        if (user) {
+            loadDashboard();
+        } else {
+            setLoading(false);
+        }
+    }, [user]);
 
     return (
         <DashboardLayout title="Data Contribution">
@@ -130,6 +136,7 @@ const DashboardView = ({ loading, stats, history, onContribute }: any) => {
 };
 
 const ContributionForm = ({ onCancel }: { onCancel: () => void }) => {
+    const { user } = useAuth();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         transactionType: '', propertyType: '', address: '', amount: '', date: '', size: '', bedrooms: '', details: ''
@@ -141,12 +148,11 @@ const ContributionForm = ({ onCancel }: { onCancel: () => void }) => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            const stored = localStorage.getItem('user');
-            if (!stored) throw new Error("User not found");
-            const user = JSON.parse(stored);
+            if (!user) throw new Error("User not found");
+            const userId = user.id || user._id || (user as any).user?.id;
 
             await ProContributionService.submit({
-                userId: user.id || user._id,
+                userId: userId,
                 ...formData,
                 amount: Number(formData.amount),
                 documents: files

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
+import { useAuth } from '@/contexts/AuthContext';
 import { FaCloudUploadAlt, FaChevronDown, FaTimes, FaFileContract } from 'react-icons/fa';
 import { ProListingsService, ListingPayload } from '@/api/pro-listings';
 
@@ -37,6 +38,7 @@ const INITIAL_STATE: ListingFormData = {
 
 export default function AddListingPage() {
     const router = useRouter();
+    const { user } = useAuth();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const docInputRef = useRef<HTMLInputElement>(null);
 
@@ -116,7 +118,8 @@ export default function AddListingPage() {
                 images: formData.images
             };
 
-            await ProListingsService.create(payload);
+            const userId = user?.id || user?._id || (user as any)?.user?.id;
+            await ProListingsService.create(payload, userId);
             router.push('/listings');
         } catch (error) {
             console.error('Failed to create listing:', error);

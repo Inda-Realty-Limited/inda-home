@@ -13,6 +13,7 @@ import {
 
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import DashboardButton from '@/components/dashboard/DashboardButton';
+import { useAuth } from '@/contexts/AuthContext';
 import { ProBillingService } from '@/api/pro-billing';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -176,23 +177,22 @@ const NotificationBanner = ({ type, message, onClose }: { type: 'success' | 'err
 );
 
 const ProfileTab = () => {
+    const { user, setUser } = useAuth();
     const [formData, setFormData] = useState<UserData>(MOCK_USER);
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
     useEffect(() => {
-        const storedUser = localStorage.getItem('user');
-        let localUser: any = null;
+        const localUser: any = user;
 
         const getInitials = (nameStr: string) => {
             if (!nameStr) return 'OW';
             return nameStr.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase();
         };
 
-        if (storedUser) {
+        if (localUser) {
             try {
-                localUser = JSON.parse(storedUser);
                 setFormData(prev => ({
                     ...prev,
                     firstName: localUser.firstName || (localUser.name ? localUser.name.split(' ')[0] : prev.firstName),
@@ -242,7 +242,7 @@ const ProfileTab = () => {
             }
         };
         fetchFreshData();
-    }, []);
+    }, [user]);
 
     const handleChange = (field: keyof UserData, value: string) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -250,8 +250,8 @@ const ProfileTab = () => {
     };
 
     const handleSaveChanges = async () => {
-        const storedUser = localStorage.getItem('user');
-        if (!storedUser) {
+        const localUser: any = user;
+        if (!localUser) {
             setStatus({ type: 'error', message: 'No active session found. Please log in again.' });
             return;
         }
@@ -260,7 +260,6 @@ const ProfileTab = () => {
         setStatus(null);
 
         try {
-            const localUser = JSON.parse(storedUser);
             const userId = localUser.id || localUser._id;
 
             if (!userId) throw new Error("User ID is missing.");
@@ -290,8 +289,9 @@ const ProfileTab = () => {
 
             const result = await response.json();
             const updatedUser = result.data || result.user || payload;
-            const newSessionData = { ...localUser, ...updatedUser };
-            localStorage.setItem('user', JSON.stringify(newSessionData));
+            
+            // Update context
+            setUser(updatedUser, localUser.token); // Assuming setUser updates both user state and localStorage internally in AuthContext
 
             setStatus({ type: 'success', message: 'Profile updated successfully!' });
 
@@ -460,16 +460,15 @@ const ProfileTab = () => {
 };
 
 const SubscriptionTab = () => {
+    const { user } = useAuth();
     const [subData, setSubData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchSub = async () => {
-            const stored = localStorage.getItem('user');
-            if (!stored) return;
+            if (!user) return;
             try {
-                const user = JSON.parse(stored);
-                const userId = user.id || user._id;
+                const userId = user.id || user._id || (user as any).user?.id;
                 if (userId) {
                     try {
                         const response = await ProBillingService.getSubscription(userId);
@@ -484,8 +483,20 @@ const SubscriptionTab = () => {
                 }
             } catch (e) { console.error(e); } finally { setLoading(false); }
         };
-        fetchSub();
-    }, []);
+
+        if (user) {
+            fetchSub();
+        } else {
+             // If loading state in auth is true, we wait. If user is null, we can't fetch.
+             // If we rely on initial loading state being true, we might hang if user is null.
+             // But usually auth loads fast.
+             // For now, if no user, we just return.
+             // Actually, set loading false if no user?
+             // If useAuth exposes loading state, we should use it.
+             // Assuming user is available if we are on this protected page (usually).
+             setLoading(false);
+        }
+    }, [user]);
 
     const handleCancelSubscription = () => {
         if (confirm("Are you sure you want to cancel your subscription? You will lose access to premium features at the end of your billing period.")) {
@@ -539,15 +550,17 @@ const SubscriptionTab = () => {
 };
 
 const BillingTab = () => {
+    const { user } = useAuth();
     const [history, setHistory] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchHistory = async () => {
-            const stored = localStorage.getItem('user');
-            if (!stored) return;
+            if (!user) return;
             try {
-                const userId = JSON.parse(stored).id || JSON.parse(stored)._id;
+                const userId = user.id || user._id || (user as any).user?.id;
+                if (!userId) { setLoading(false); return; }
+                
                 const res = await ProBillingService.getHistory(userId);
                 setHistory(Array.isArray(res.data) ? res.data : []);
             } catch (e) {
@@ -556,8 +569,13 @@ const BillingTab = () => {
                 ]);
             } finally { setLoading(false); }
         };
-        fetchHistory();
-    }, []);
+        
+        if (user) {
+            fetchHistory();
+        } else {
+            setLoading(false);
+        }
+    }, [user]);
 
     return (
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">

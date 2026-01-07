@@ -1,5 +1,14 @@
 import { Text } from "@/components";
-import { getUser } from "@/helpers";
+
+type PricingPlansProps = {
+  onChoosePlan?: (plan: string) => void;
+  freeAvailable?: boolean;
+  showOnlyPaid?: boolean;
+  // When true, render only Deep and Deeper plans (no Instant, no Free)
+  onlyDeep?: boolean;
+};
+
+import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/router";
 import React from "react";
 
@@ -18,6 +27,7 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
   onlyDeep = false,
 }) => {
   const router = useRouter();
+  const { user } = useAuth();
 
   const handlePlan = (plan: string) => {
     if (onChoosePlan) return onChoosePlan(plan);
@@ -25,7 +35,6 @@ const PricingPlans: React.FC<PricingPlansProps> = ({
     if (plan === "instant") return router.push("/result");
     if (plan === "free") return router.push("/result");
     if (plan === "deepDive" || plan === "deeperDive") {
-      const user = getUser();
       const target =
         plan === "deepDive" ? "/plans/deep-dive" : "/plans/deeper-dive";
       if (!user) {
