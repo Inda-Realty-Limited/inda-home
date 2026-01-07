@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { IconType } from 'react-icons';
@@ -36,6 +37,7 @@ const MENU_ITEMS: MenuItem[] = [
 
 export default function AppSidebar() {
     const router = useRouter();
+    const { logout } = useAuth();
     const [isMobileOpen, setIsMobileOpen] = useState(false);
 
     // Auto-close sidebar on mobile when route changes
@@ -98,6 +100,9 @@ export default function AppSidebar() {
                 {/* Navigation Menu */}
                 <nav className="flex-1 px-4 space-y-1 pb-4">
                     {MENU_ITEMS.map((item) => {
+                        // Skip Logout in the map (handled separately or removed from const)
+                        if (item.name === 'Logout') return null;
+                        
                         const isActive = router.asPath === item.href || router.asPath.startsWith(`${item.href}/`);
 
                         return (
@@ -115,6 +120,14 @@ export default function AppSidebar() {
                             </Link>
                         );
                     })}
+
+                    <button
+                        onClick={logout}
+                        className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-500 transition-all duration-200 mt-2"
+                    >
+                        <FaDoorOpen className="text-lg text-gray-400 group-hover:text-red-500" />
+                        Logout
+                    </button>
                 </nav>
             </aside>
         </>
