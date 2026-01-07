@@ -4,7 +4,7 @@ import {
 } from 'react-icons/fa';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import DashboardButton from '@/components/dashboard/DashboardButton';
-import { ContributionService } from '@/services/pro-api';
+import { ProContributionService } from '@/api/pro-contributions';
 
 interface ContributionStat {
     label: string;
@@ -29,7 +29,7 @@ export default function DataContributionPage() {
 
                 if (userId) {
                     try {
-                        const data = await ContributionService.getDashboard(userId);
+                        const data = await ProContributionService.getDashboard(userId);
                         const dashboard = data.data || data;
 
                         setStats([
@@ -145,7 +145,7 @@ const ContributionForm = ({ onCancel }: { onCancel: () => void }) => {
             if (!stored) throw new Error("User not found");
             const user = JSON.parse(stored);
 
-            await ContributionService.submit({
+            await ProContributionService.submit({
                 userId: user.id || user._id,
                 ...formData,
                 amount: Number(formData.amount),

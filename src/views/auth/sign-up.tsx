@@ -44,6 +44,13 @@ const Signup: React.FC = () => {
   const [searchType, setSearchType] = useState("");
   const [returnTo, setReturnTo] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  // Role selection and Pro fields
+  const [selectedRole, setSelectedRole] = useState<'Buyer' | 'Agent' | 'Investor' | 'Developer'>('Buyer');
+  const [companyName, setCompanyName] = useState("");
+  const [companyType, setCompanyType] = useState("");
+  const [registrationNumber, setRegistrationNumber] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const router = useRouter();
   const { setUser } = useAuth();
   const toast = useToast();
@@ -72,7 +79,7 @@ const Signup: React.FC = () => {
         2500,
         "success"
       );
-      setTimeout(() => setStep(3), 800);
+      setTimeout(() => setStep(4), 800);
     },
     onError: (error: any) => {
       const errorMessage = error?.response?.data?.message || error?.message || "Sign up failed. Please try again.";
@@ -179,7 +186,60 @@ const Signup: React.FC = () => {
               </div>
             </>
           )}
+          
+          {/* NEW STEP 2: Role Selection */}
           {step === 2 && (
+            <>
+              <h1 className="text-center font-bold text-2xl sm:text-3xl mb-4">
+                Choose Your Account Type
+              </h1>
+              <p className="text-center text-gray-600 mb-8 text-sm sm:text-base px-4">
+                Select the option that best describes you
+              </p>
+              
+              <div className="grid grid-cols-2 gap-4 w-full max-w-[500px] mx-auto mb-8">
+                {[
+                  { role: 'Buyer' as const, icon: '🏠', title: 'Buyer', desc: 'I want to buy a home' },
+                  { role: 'Agent' as const, icon: '👔', title: 'Agent', desc: 'I sell & list homes' },
+                  { role: 'Investor' as const, icon: '💼', title: 'Investor', desc: 'I invest in real estate' },
+                  { role: 'Developer' as const, icon: '🏗️', title: 'Developer', desc: 'I build properties' },
+                ].map((option) => (
+                  <button
+                    key={option.role}
+                    type="button"
+                    onClick={() => setSelectedRole(option.role)}
+                    className={`p-6 rounded-2xl border-2 transition-all duration-200 text-center ${
+                      selectedRole === option.role
+                        ? 'border-[#4EA8A1] bg-[#4EA8A1]/10 shadow-md scale-105'
+                        : 'border-gray-200 hover:border-[#4EA8A1]/50 hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="text-4xl mb-2">{option.icon}</div>
+                    <div className="font-bold text-base mb-1">{option.title}</div>
+                    <div className="text-xs text-gray-600">{option.desc}</div>
+                  </button>
+                ))}
+              </div>
+              
+              <div className="flex gap-4 w-full max-w-[400px] mx-auto">
+                <button
+                  onClick={() => setStep(1)}
+                  className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-full font-semibold hover:bg-gray-300 transition-all"
+                >
+                  Back
+                </button>
+                <button
+                  onClick={() => setStep(3)}
+                  className="flex-1 bg-[#4EA8A1] text-white py-3 rounded-full font-semibold hover:bg-[#45968f] transition-all"
+                >
+                  Continue
+                </button>
+              </div>
+            </>
+          )}
+          
+          {/* STEP 3: Email Form (previously step 2) */}
+          {step === 3 && (
             <>
               <div className="flex flex-col items-center w-full max-w-[320px] sm:max-w-[400px] py-8 sm:py-12 md:max-w-[480px] mx-auto">
                 <h1 className="text-center font-bold text-xl sm:text-2xl mb-6 sm:mb-8">
@@ -191,14 +251,26 @@ const Signup: React.FC = () => {
                     e.preventDefault();
                     setErrors({});
                     
-                    const validation = validateAndSanitize(registerSchema, {
+                    // Build payload with role and conditional Pro fields
+                    const payload: any = {
                       email,
                       firstName,
                       lastName,
                       password,
                       howDidYouHearAboutUs: hearAboutUs,
                       todo: lookingToDo,
-                    });
+                      role: selectedRole,
+                    };
+                    
+                    // Add Pro fields if not a Buyer
+                    if (selectedRole !== 'Buyer') {
+                      payload.companyName = companyName;
+                      payload.companyType = companyType;
+                      payload.registrationNumber = registrationNumber;
+                      payload.phoneNumber = phoneNumber;
+                    }
+                    
+                    const validation = validateAndSanitize(registerSchema, payload);
                     
                     if (!validation.success) {
                       setErrors(validation.errors);
@@ -439,6 +511,84 @@ const Signup: React.FC = () => {
                       )}
                     </div>
                   </div>
+                  
+                  {/* CONDITIONAL PRO FIELDS - Only for Agent, Investor, Developer */}
+                  {selectedRole !== 'Buyer' && (
+                    <>
+                      <div className="border-t border-gray-200 pt-4 mt-4">
+                        <h3 className="font-semibold text-gray-700 mb-4 text-sm sm:text-base">
+                          Company Information
+                        </h3>
+                        
+                        {/* Company Name */}
+                        <div className="flex flex-col gap-1 sm:gap-2 mb-4">
+                          <label htmlFor="companyName" className="text-gray-700 font-medium text-sm sm:text-base">
+                            Company Name *
+                          </label>
+                          <Input
+                            id="companyName"
+                            type="text"
+                            placeholder="Your Company Name"
+                            value={companyName}
+                            onChange={(e) => setCompanyName(e.target.value)}
+                            className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] focus:ring-2 focus:ring-[#4EA8A1] px-3 sm:px-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base"
+                          />
+                        </div>
+                        
+                        {/* Company Type */}
+                        <div className="flex flex-col gap-1 sm:gap-2 mb-4">
+                          <label htmlFor="companyType" className="text-gray-700 font-medium text-sm sm:text-base">
+                            Company Type *
+                          </label>
+                          <div className="relative">
+                            <select
+                              id="companyType"
+                              value={companyType}
+                              onChange={(e) => setCompanyType(e.target.value)}
+                              className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] focus:ring-2 focus:ring-[#4EA8A1] px-3 sm:px-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base appearance-none"
+                            >
+                              <option value="">Select Company Type</option>
+                              <option value="Real Estate Agency">Real Estate Agency</option>
+                              <option value="Property Developer">Property Developer</option>
+                              <option value="Investment Firm">Investment Firm</option>
+                            </select>
+                            <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" />
+                          </div>
+                        </div>
+                        
+                        {/* Registration Number */}
+                        <div className="flex flex-col gap-1 sm:gap-2 mb-4">
+                          <label htmlFor="registrationNumber" className="text-gray-700 font-medium text-sm sm:text-base">
+                            Registration Number *
+                          </label>
+                          <Input
+                            id="registrationNumber"
+                            type="text"
+                            placeholder="RC Number"
+                            value={registrationNumber}
+                            onChange={(e) => setRegistrationNumber(e.target.value)}
+                            className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] focus:ring-2 focus:ring-[#4EA8A1] px-3 sm:px-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base"
+                          />
+                        </div>
+                        
+                        {/* Phone Number */}
+                        <div className="flex flex-col gap-1 sm:gap-2">
+                          <label htmlFor="phoneNumber" className="text-gray-700 font-medium text-sm sm:text-base">
+                            Phone Number *
+                          </label>
+                          <Input
+                            id="phoneNumber"
+                            type="tel"
+                            placeholder="+234..."
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value)}
+                            className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] focus:ring-2 focus:ring-[#4EA8A1] px-3 sm:px-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  
                   <Button
                     className="w-full bg-[#4EA8A1] text-white py-2.5 sm:py-3 rounded-full font-semibold mt-3 sm:mt-4 text-sm sm:text-base hover:bg-[#39948b] transition-all duration-200"
                     type="submit"
@@ -468,7 +618,7 @@ const Signup: React.FC = () => {
             </>
           )}
 
-          {step === 3 && (
+          {step === 4 && (
             <div className="flex flex-col items-center w-full max-w-[95%] sm:max-w-[85%] md:max-w-[75%] lg:max-w-[480px] mx-auto animate-fade-in">
               <div className="w-full rounded-3xl px-0 py-0 flex flex-col items-center">
                 <h1 className="text-center font-bold text-2xl sm:text-3xl md:text-4xl mb-3 text-inda-dark tracking-tight">
@@ -541,13 +691,22 @@ const Signup: React.FC = () => {
                       if (response?.token && response?.user) {
                         setUser(response.user, response.token);
                         setTimeout(() => {
-                          if (returnTo) {
+                          // Role-based redirect
+                          const userRole = response.user.role || selectedRole;
+                          const isProRole = userRole === 'Agent' || userRole === 'Investor' || userRole === 'Developer';
+                          
+                          if (isProRole) {
+                            // Pro users go to dashboard
+                            router.push('/dashboard');
+                          } else if (returnTo) {
+                            // Buyers with returnTo
                             try {
                               router.push(decodeURIComponent(returnTo));
                             } catch {
                               router.push(returnTo);
                             }
                           } else if (searchQuery) {
+                            // Buyers with search query
                             const page = searchType === "ai" ? "search-results" : "result";
                             router.push(
                               `/${page}?q=${encodeURIComponent(
@@ -555,6 +714,7 @@ const Signup: React.FC = () => {
                               )}&type=${searchType}`
                             );
                           } else {
+                            // Default: Buyers go to home
                             router.push("/");
                           }
                         }, 800);

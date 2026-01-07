@@ -16,7 +16,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowe
     if (!isLoading) {
       if (!isAuthenticated) {
         // Not logged in -> redirect to login
-        router.push("/auth/pro-login?redirect=" + encodeURIComponent(router.asPath));
+        router.push("/auth/signin?redirect=" + encodeURIComponent(router.asPath));
       } else if (allowedRoles && user && !allowedRoles.includes(user.role as string)) {
         // Logged in but wrong role -> redirect to home
         router.push("/");

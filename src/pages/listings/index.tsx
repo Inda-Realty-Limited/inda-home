@@ -5,7 +5,7 @@ import {
     FaBed, FaBath, FaRulerCombined, FaEye,
     FaPen, FaComment, FaTrash, FaSpinner, FaPlusCircle, FaMapMarkerAlt
 } from 'react-icons/fa';
-import { ListingsService, Listing } from '@/services/pro-api';
+import { ProListingsService, Listing } from '@/api/pro-listings';
 
 type TabOption = 'active' | 'analytics';
 
@@ -28,7 +28,7 @@ export default function ListingsManagerPage() {
                 const userId = user.id || user._id || user.user?.id;
 
                 if (userId) {
-                    const response = await ListingsService.getUserListings(userId);
+                    const response = await ProListingsService.getUserListings(userId);
                     let data: Listing[] = [];
 
                     if (Array.isArray(response)) {
@@ -57,7 +57,7 @@ export default function ListingsManagerPage() {
     const handleDelete = async (indaTag: string) => {
         if (!window.confirm("Are you sure you want to delete this listing?")) return;
         try {
-            await ListingsService.deleteListing(indaTag);
+            await ProListingsService.deleteListing(indaTag);
             setListings(prev => prev.filter(l => l.indaTag !== indaTag && l.id !== indaTag));
         } catch (err) {
             alert("Failed to delete listing.");

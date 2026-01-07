@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { FaCloudUploadAlt, FaChevronDown, FaTimes, FaFileContract } from 'react-icons/fa';
-import { ListingsService, ListingPayload } from '@/services/pro-api';
+import { ProListingsService, ListingPayload } from '@/api/pro-listings';
 
 interface ListingFormData {
     title: string;
@@ -116,7 +116,7 @@ export default function AddListingPage() {
                 images: formData.images
             };
 
-            await ListingsService.create(payload);
+            await ProListingsService.create(payload);
             router.push('/listings');
         } catch (error) {
             console.error('Failed to create listing:', error);

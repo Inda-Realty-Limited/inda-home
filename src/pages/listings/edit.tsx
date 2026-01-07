@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { FaArrowLeft, FaChevronDown, FaFileContract, FaCheck, FaTimes } from 'react-icons/fa';
-import { ListingsService } from '@/services/pro-api';
+import { ProListingsService } from '@/api/pro-listings';
 
 interface ListingFormData {
     title: string;
@@ -47,7 +47,7 @@ export default function EditListingPage() {
         const fetchListingData = async () => {
             try {
                 setIsLoading(true);
-                const response = await ListingsService.getListing(id as string);
+                const response = await ProListingsService.getListing(id as string);
                 const listing = response.data || response;
 
                 if (listing) {
@@ -100,7 +100,7 @@ export default function EditListingPage() {
             payload.append('constructionStatus', formData.constructionStatus);
             payload.append('features', formData.features);
 
-            await ListingsService.updateListing(id as string, payload);
+            await ProListingsService.updateListing(id as string, payload);
             router.push('/listings');
         } catch (error) {
             alert("Failed to update listing.");

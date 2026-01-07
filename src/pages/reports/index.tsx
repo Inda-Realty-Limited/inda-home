@@ -5,7 +5,7 @@ import {
     FaCheck, FaChevronDown,
     FaExclamationCircle, FaSpinner, FaFileAlt
 } from 'react-icons/fa';
-import { ReportsService } from '@/services/pro-api';
+import { ProReportsService } from '@/api/pro-reports';
 
 type TabOption = 'library' | 'generate';
 
@@ -70,7 +70,7 @@ export default function ReportsHubPage() {
             const userId = user.id || user._id || user.user?.id;
 
             if (userId) {
-                const data = await ReportsService.getUserReports(userId);
+                const data = await ProReportsService.getUserReports(userId);
                 setReports(Array.isArray(data) ? data : (data.data || []));
             }
         } catch (err) {
@@ -118,7 +118,7 @@ export default function ReportsHubPage() {
                 reportType: reportTitle
             };
 
-            const response = await ReportsService.generateReport(payload);
+            const response = await ProReportsService.generateReport(payload);
 
             if (response.success || response.reportId) {
                 alert(`Report started! Credits deducted: ${response.creditsDeducted || 'N/A'}`);

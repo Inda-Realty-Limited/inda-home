@@ -13,7 +13,7 @@ import {
 
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import DashboardButton from '@/components/dashboard/DashboardButton';
-import { BillingService } from '@/services/pro-api';
+import { ProBillingService } from '@/api/pro-billing';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -472,7 +472,7 @@ const SubscriptionTab = () => {
                 const userId = user.id || user._id;
                 if (userId) {
                     try {
-                        const response = await BillingService.getSubscription(userId);
+                        const response = await ProBillingService.getSubscription(userId);
                         const data = response.data || response;
                         setSubData(data);
                     } catch (e) {
@@ -548,7 +548,7 @@ const BillingTab = () => {
             if (!stored) return;
             try {
                 const userId = JSON.parse(stored).id || JSON.parse(stored)._id;
-                const res = await BillingService.getHistory(userId);
+                const res = await ProBillingService.getHistory(userId);
                 setHistory(Array.isArray(res.data) ? res.data : []);
             } catch (e) {
                 setHistory([
