@@ -1,6 +1,8 @@
 import { useAuth } from '@/contexts/AuthContext';
 import AppSidebar from './AppSidebar';
 import { FaBell } from 'react-icons/fa';
+import Link from 'next/link';
+import Image from 'next/image';
 
 interface DashboardLayoutProps {
     children: React.ReactNode;
@@ -9,7 +11,7 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children, title = 'Inda Pro' }: DashboardLayoutProps) {
     const { user } = useAuth();
-    
+
     // Safety check for user loaded
     // Note: Dashboard pages should be wrapped in ProtectedRoute, so user should exist here.
     // If not, we handle gracefully.
