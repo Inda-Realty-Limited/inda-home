@@ -5,9 +5,7 @@ import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { IconType } from 'react-icons';
 import {
-    FaHome, FaListAlt, FaLightbulb, FaBullhorn, FaBriefcase,
-    FaFileAlt, FaSearch, FaChartBar, FaUsers, FaSuitcase, FaDoorOpen,
-    FaGift, FaCog, FaBars, FaTimes, FaLink, FaComment
+    FaHome, FaUsers, FaGift, FaCog, FaBars, FaTimes, FaComment, FaDoorOpen, FaListAlt, FaFileAlt
 } from 'react-icons/fa';
 
 // --- Types & Interfaces ---
@@ -32,7 +30,6 @@ const MENU_ITEMS: MenuItem[] = [
     { name: 'Data Contribution', icon: FaUsers, href: '/contribute' },
     { name: 'Perks Hub', icon: FaGift, href: '/perks' },
     { name: 'Profile & Settings', icon: FaCog, href: '/settings' },
-    { name: 'Logout', icon: FaDoorOpen, href: '/logout' },
 ];
 
 // --- Component ---
@@ -78,7 +75,7 @@ export default function AppSidebar() {
             <aside
                 className={`
           fixed md:static inset-y-0 left-0 z-50
-          w-64 h-screen bg-[#F8F9FA] border-r border-gray-200 
+          w-64 h-screen bg-white border-r border-gray-100 
           flex flex-col overflow-y-auto
           transform transition-transform duration-300 ease-in-out
           ${isMobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0 md:shadow-none'}
@@ -119,13 +116,13 @@ export default function AppSidebar() {
                             <Link
                                 href={item.href}
                                 key={item.name}
-                                className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200
+                                className={`flex items-center gap-3 px-4 py-3 text-sm font-bold rounded-xl transition-all duration-200 group
                   ${isActive
-                                        ? 'bg-white text-inda-teal border border-gray-200 shadow-sm'
-                                        : 'text-gray-500 hover:bg-gray-100 hover:text-inda-dark'
+                                        ? 'bg-[#E9F3F6] text-[#2D5A54]'
+                                        : 'text-gray-400 hover:bg-gray-50 hover:text-gray-700'
                                     }`}
                             >
-                                <item.icon className={`text-lg ${isActive ? "text-inda-teal" : "text-gray-400"}`} />
+                                <item.icon className={`text-lg transition-colors ${isActive ? "text-[#2D5A54]" : "text-gray-300 group-hover:text-gray-500"}`} />
                                 {item.name}
                             </Link>
                         );
