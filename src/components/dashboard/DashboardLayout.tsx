@@ -45,36 +45,38 @@ export default function DashboardLayout({ children, title = 'Inda Pro' }: Dashbo
 
             <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
 
-                <header className="bg-inda-dark text-white h-16 flex items-center justify-between shadow-md z-20 flex-shrink-0 
-          px-4 pl-14 md:px-8"
+                <header className="bg-[#12181F] text-white h-16 flex items-center justify-between shadow-lg z-20 flex-shrink-0 
+          px-4 pl-14 md:px-8 border-b border-white/5"
                 >
 
-                    <div className="font-bold text-xl flex items-center gap-2">
-                        <span className="bg-inda-teal w-1 h-6 block rounded-full"></span>
-                        <span className="truncate max-w-[150px] md:max-w-none">{title}</span>
+                    <div className="font-bold text-xl flex items-center gap-3 group cursor-pointer">
+                        <div className="bg-inda-teal/20 p-1.5 rounded-lg group-hover:bg-inda-teal/30 transition-colors">
+                            <div className="bg-inda-teal w-1.5 h-5 block rounded-full"></div>
+                        </div>
+                        <span className="truncate max-w-[150px] md:max-w-none tracking-tight font-black text-white/90">{title}</span>
                     </div>
 
-                    <div className="flex items-center gap-4 md:gap-6">
+                    <div className="flex items-center gap-4 md:gap-8">
                         <button
-                            className="relative text-gray-400 hover:text-white transition-colors"
+                            className="relative text-gray-400 hover:text-inda-teal transition-all hover:scale-110 active:scale-90"
                             aria-label="Notifications"
                         >
-                            <FaBell size={20} />
-                            <span className="absolute -top-1 -right-1 bg-red-500 w-4 h-4 rounded-full text-[10px] flex items-center justify-center text-white font-bold">
-                                0
+                            <FaBell size={18} />
+                            <span className="absolute -top-1.5 -right-1.5 bg-inda-teal w-4 h-4 rounded-full text-[9px] flex items-center justify-center text-inda-dark font-black shadow-lg">
+                                5
                             </span>
                         </button>
 
-                        <div className="flex items-center gap-3">
-                            <div className="text-right hidden md:block leading-tight">
-                                <p className="text-sm font-bold text-gray-200">
+                        <div className="flex items-center gap-4 pl-4 border-l border-white/10">
+                            <div className="text-right hidden lg:block leading-tight">
+                                <p className="text-sm font-black text-white/90">
                                     {user?.firstName || user?.name || user?.email || 'User'}
                                 </p>
-                                <p className="text-[10px] text-inda-teal uppercase tracking-wider font-bold">
+                                <p className="text-[9px] text-inda-teal uppercase tracking-[0.1em] font-black opacity-80">
                                     {user?.role || 'Member'}
                                 </p>
                             </div>
-                            <div className="h-8 w-8 bg-gray-600 rounded-full border-2 border-gray-500 flex items-center justify-center text-xs font-bold overflow-hidden cursor-pointer hover:border-inda-teal transition-colors">
+                            <div className="h-9 w-9 bg-gradient-to-br from-gray-700 to-gray-800 rounded-full border-2 border-white/10 flex items-center justify-center text-xs font-black overflow-hidden cursor-pointer hover:border-inda-teal transition-all hover:scale-105 shadow-inner">
                                 {getInitials()}
                             </div>
                         </div>

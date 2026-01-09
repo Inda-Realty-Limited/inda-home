@@ -1,332 +1,338 @@
 import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import {
-    FaArrowUp, FaArrowDown, FaStar, FaChartBar,
-    FaLightbulb, FaChartLine, FaBolt, FaInbox
+    FaPlus, FaUsers, FaBriefcase, FaRocket, FaWhatsapp,
+    FaChartLine, FaClock, FaStar, FaEye, FaShareAlt, FaExternalLinkAlt,
+    FaArrowUp, FaArrowDown, FaCheckCircle, FaExclamationCircle, FaRobot
 } from 'react-icons/fa';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { useAuth } from '@/contexts/AuthContext';
+import Link from 'next/link';
 
-// ==========================================
-// 1. TYPES
-// ==========================================
+// --- Mock Data / Constants ---
 
-export interface DashboardData {
-    metrics: {
-        fmv: { value: string; trend: string; isPositive: boolean };
-        credits: { used: number; total: number; percentage: number };
-        marketTrend: { region: string; growth: string; tag: string };
-        reports: { count: number; growth: string; isPositive: boolean };
-    };
-    trends: Array<{
-        id: number;
-        region: string;
-        propertyType: string;
-        price: string;
-        growth: string;
-        isPositive: boolean;
-    }>;
-    activities: Array<{
-        id: number;
-        title: string;
-        description: string;
-        timestamp: string;
-        type: 'report' | 'watchlist' | 'system' | 'alert';
-    }>;
-    watchlist: Array<{
-        id: number;
-        title: string;
-        location: string;
-        price: string;
-        fmv: string;
-        dealBadge: { label: string; colorVariant: 'gray' | 'yellow' | 'teal' };
-    }>;
-}
+const QUICK_ACTIONS = [
+    { name: 'Add Property', icon: FaPlus, href: '/listings/add', color: 'bg-white/10' },
+    { name: 'All Leads', icon: FaUsers, href: '/leads', color: 'bg-white/10' },
+    { name: 'Portfolio Page', icon: FaExternalLinkAlt, href: '/portfolio', color: 'bg-white/10' },
+    { name: 'Upgrade Plan', icon: FaRocket, href: '/upgrade', color: 'bg-[#E2E689] text-gray-900', isSpecial: true },
+];
 
-// ==========================================
-// 2. INITIAL ZERO STATE (No Mock Data)
-// ==========================================
+const PERFORMANCE_STATS = [
+    { label: 'Revenue This Month', value: '₦48M', trend: '+₦12M vs last month', icon: FaChartLine, color: 'bg-[#67B148]', trendIcon: FaArrowUp },
+    { label: 'WhatsApp Leads', value: '127', trend: '+34% this week', icon: FaWhatsapp, color: 'bg-white', trendIcon: FaArrowUp, textColor: 'text-gray-900', iconColor: 'text-[#67B148]' },
+    { label: 'Avg. Close Time', value: '11d', trend: '-40% vs industry avg', icon: FaClock, color: 'bg-white', trendIcon: FaArrowDown, textColor: 'text-gray-900', iconColor: 'text-orange-500' },
+    { label: 'Top Performing Channel', value: 'Instagram', trend: '2,103 clicks', icon: FaStar, color: 'bg-[#A374FF]', trendIcon: null },
+];
 
-const INITIAL_DATA: DashboardData = {
-    metrics: {
-        fmv: { value: '₦0', trend: '—', isPositive: true },
-        credits: { used: 0, total: 0, percentage: 0 },
-        marketTrend: { region: '—', growth: '—', tag: 'No Data' },
-        reports: { count: 0, growth: '—', isPositive: true }
-    },
-    trends: [],
-    activities: [],
-    watchlist: []
-};
+const CHANNEL_PERFORMANCE = [
+    { channel: 'WhatsApp Groups', leads: 127, trend: 'Improving', trendColor: 'text-green-500', action: 'Keep using', actionColor: 'text-green-600' },
+    { channel: 'Instagram', leads: 89, trend: 'Improving', trendColor: 'text-green-500', action: 'Keep using', actionColor: 'text-green-600' },
+    { channel: 'Jiji.ng', leads: 34, trend: 'Declining', trendColor: 'text-red-500', action: 'Consider pausing', actionColor: 'text-red-600' },
+    { channel: 'Property Pro', leads: 12, trend: 'Declining', trendColor: 'text-red-500', action: 'Consider pausing', actionColor: 'text-red-600' },
+];
 
-// ==========================================
-// 3. MAIN VIEW COMPONENT
-// ==========================================
+const PROPERTIES_DATA = [
+    { title: '4-Bedroom Duplex', location: 'Lekki, Lagos', price: '₦78,500,000', views: 918, viewsTrend: '+28% this week', leads: 27, hotLeads: 8, status: 'Active' },
+    { title: '3-Bedroom Apartment', location: 'Victoria Island, Lagos', price: '₦52,000,000', views: 906, viewsTrend: '+31% this week', leads: 27, hotLeads: 8, status: 'Active' },
+    { title: '5-Bedroom Penthouse', location: 'Ikoyi, Lagos', price: '₦125,000,000', views: 1224, viewsTrend: '+17% this week', leads: 36, hotLeads: 10, status: 'Active' },
+    { title: 'Contemporary Villa', location: 'Banana Island, Lagos', price: '₦195,000,000', views: 700, viewsTrend: '+35% this week', leads: 21, hotLeads: 6, status: 'Active' },
+    { title: '2-Bedroom Flat', location: 'Ajah, Lagos', price: '₦32,000,000', views: 1604, viewsTrend: '+10% this week', leads: 48, hotLeads: 14, status: 'Active', isHot: true },
+];
+
+const TOP_LISTINGS = [
+    { rank: 1, title: '4-Bedroom Duplex', location: 'Lekki, Lagos', views: 234, trend: '+18%' },
+    { rank: 2, title: '3-Bedroom Apartment', location: 'Victoria Island, Lagos', views: 184, trend: '+16%' },
+    { rank: 3, title: '5-Bedroom Penthouse', location: 'Ikoyi, Lagos', views: 134, trend: '+14%' },
+];
+
+const AI_RECOMMENDATIONS = [
+    { text: 'Reduce Lekki property price by 8%', subtext: 'Similar properties sell at ₦262M avg. You\'re priced 8% above market.', icon: FaCheckCircle },
+    { text: 'Stop advertising on Property Pro', subtext: '₦1,667 per lead vs ₦39 on WhatsApp. Save ₦20K/month.', icon: FaCheckCircle },
+    { text: 'Follow up with 12 hot leads', subtext: 'These buyers viewed properties 3+ times. They\'re ready.', icon: FaCheckCircle },
+];
 
 export default function DashboardPage() {
-    const [data, setData] = useState<DashboardData>(INITIAL_DATA);
-    const [loading, setLoading] = useState(false);
+    const { user } = useAuth();
 
-    // TODO: Connect to API
-    /*
-    useEffect(() => {
-      const fetchData = async () => {
-        setLoading(true);
-        try {
-          const result = await DashboardService.getOverview();
-          setData(result);
-        } catch (e) { console.error(e); }
-        finally { setLoading(false); }
-      };
-      fetchData();
-    }, []);
-    */
-
-    // Map activity types to UI colors
-    const getActivityColor = (type: string) => {
-        switch (type) {
-            case 'report': return 'bg-teal-700';
-            case 'alert': return 'bg-teal-700';
-            default: return 'bg-teal-500';
+    // Construct dynamic actions list inside component to use user ID
+    const actions = QUICK_ACTIONS.map(action => {
+        if (action.name === 'Portfolio Page' && user?._id) {
+            return { ...action, href: `/portfolio/${user._id}` };
         }
-    };
-
-    // Map badge variants to Tailwind classes
-    const getBadgeStyles = (variant: string) => {
-        switch (variant) {
-            case 'yellow': return 'bg-[#F3F1A0] text-yellow-800';
-            case 'teal': return 'bg-inda-teal text-white';
-            default: return 'bg-gray-200 text-gray-700';
-        }
-    };
+        return action;
+    });
 
     return (
-        <ProtectedRoute allowedRoles={['Agent', 'Investor', 'Developer']}>
-            <DashboardLayout title="Inda Pro">
+        <ProtectedRoute>
+            <DashboardLayout title="Home">
+                <div className="space-y-8 animate-in fade-in duration-500">
 
-            {/* KPI Section */}
-            <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <MetricCard title="Portfolio FMV">
-                    <div className="mt-4">
-                        <h3 className="text-3xl font-bold text-inda-dark">{data.metrics.fmv.value}</h3>
-                        <TrendIndicator value={data.metrics.fmv.trend} isPositive={data.metrics.fmv.isPositive} />
-                    </div>
-                </MetricCard>
-
-                {/* Custom Credit Widget */}
-                <div className="bg-inda-teal text-white p-6 rounded-xl shadow-sm flex flex-col justify-between min-h-[140px]">
-                    <h4 className="text-xs font-medium opacity-90 uppercase tracking-wide">Credits Remaining</h4>
-                    <div className="mt-4">
-                        <div className="flex justify-between text-xs mb-1 font-bold opacity-90">
-                            <span>{data.metrics.credits.used}/{data.metrics.credits.total} used</span>
+                    {/* Quick Actions Bar */}
+                    <div className="bg-[#2D5A54] rounded-3xl p-8 text-white relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform">
+                            <FaRocket size={120} />
                         </div>
-                        <div className="w-full bg-teal-800/30 rounded-full h-2">
-                            <div className="bg-white h-2 rounded-full transition-all duration-1000" style={{ width: `${data.metrics.credits.percentage}%` }} />
-                        </div>
-                        <p className="text-xs mt-2 opacity-80 font-medium">{data.metrics.credits.percentage}%</p>
-                    </div>
-                </div>
+                        <div className="relative z-10">
+                            <h2 className="text-xl font-bold mb-1">Quick Actions</h2>
+                            <p className="text-white/60 text-sm mb-6">Everything you need in one click</p>
 
-                <MetricCard title="Market Trend Alerts">
-                    <div className="mt-4">
-                        <h3 className="text-2xl font-bold text-inda-dark">
-                            {data.metrics.marketTrend.region} {data.metrics.marketTrend.growth}
-                        </h3>
-                        <p className="text-gray-500 text-sm mt-1">{data.metrics.marketTrend.tag}</p>
-                    </div>
-                </MetricCard>
-
-                <MetricCard title="Reports Run (MTD)">
-                    <div className="mt-4">
-                        <h3 className="text-3xl font-bold text-inda-dark">{data.metrics.reports.count}</h3>
-                        <TrendIndicator value={data.metrics.reports.growth !== '—' ? `↑ ${data.metrics.reports.growth}` : '—'} isPositive={data.metrics.reports.isPositive} />
-                    </div>
-                </MetricCard>
-            </section>
-
-            {/* Analytics & Actions */}
-            <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-                <div className="lg:col-span-2 bg-[#EAF4F4] p-6 rounded-xl border border-transparent">
-                    <div className="flex items-center gap-2 mb-1">
-                        <FaChartBar className="text-inda-dark" />
-                        <h4 className="font-bold text-inda-dark text-sm">Buyer Demand Heatline</h4>
-                    </div>
-                    <p className="text-xs text-gray-500 mb-8">Buyer activity across your listings — 7-day trend</p>
-
-                    {/* Chart Visualization (Zero State) */}
-                    <div className="h-32 flex items-end justify-between gap-4 px-2 border-b border-gray-300/30 pb-2">
-                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day) => (
-                            <div key={day} className="flex flex-col items-center gap-2 w-full group">
-                                {/* Flat bars for zero state */}
-                                <div
-                                    className="w-full rounded-sm bg-[#CBD5E1] opacity-50"
-                                    style={{ height: '4px' }}
-                                />
-                                <span className="text-[10px] text-gray-400 font-medium">{day}</span>
+                            <div className="flex flex-wrap gap-4">
+                                {actions.map((action, idx) => (
+                                    <Link
+                                        key={idx}
+                                        href={action.href}
+                                        className={`flex items-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all hover:scale-105 active:scale-95 ${action.color} ${action.isSpecial ? '' : 'hover:bg-white/20'}`}
+                                    >
+                                        <div className={`p-2 rounded-lg ${action.isSpecial ? 'bg-black/10' : 'bg-white/10'}`}>
+                                            <action.icon />
+                                        </div>
+                                        {action.name}
+                                    </Link>
+                                ))}
                             </div>
-                        ))}
-                    </div>
-                    <div className="mt-6 bg-[#CBD5E1] text-gray-600 text-xs py-2 px-4 rounded text-center font-medium shadow-sm">
-                        No activity data available for this week.
-                    </div>
-                </div>
-
-                <div className="space-y-6">
-                    <div className="bg-[#EAF4F4] border border-inda-teal/20 p-6 rounded-xl flex flex-col justify-center h-full">
-                        <div className="flex items-center gap-2 mb-3 text-inda-dark font-bold text-xs uppercase tracking-wide">
-                            <FaLightbulb /> Action Suggestion
                         </div>
-                        {/* Empty State Suggestion */}
-                        <h4 className="font-bold text-sm text-inda-dark mb-2">No actions needed</h4>
-                        <p className="text-xs text-gray-500 mb-4 leading-relaxed">
-                            We need more portfolio data to generate insights for you.
-                        </p>
-                        <button disabled className="bg-gray-300 text-white text-xs font-bold px-4 py-2 rounded cursor-not-allowed w-full sm:w-auto">
-                            View Insights
-                        </button>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <StatCard value="0%" label="ROI Searches" />
-                        <StatCard value="0" label="Buyer Views" />
-                    </div>
-                </div>
-            </section>
+                    {/* Performance Metrics */}
+                    <div>
+                        <h2 className="text-xl font-bold mb-1">This Week's Performance</h2>
+                        <p className="text-gray-500 text-sm mb-6">Track what matters: leads and revenue</p>
 
-            {/* Trends & Activities Feed */}
-            <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                <div className="bg-[#EAF4F4] p-8 rounded-xl flex flex-col">
-                    <div className="flex items-center gap-2 mb-6">
-                        <FaChartLine className="text-inda-teal" />
-                        <h4 className="font-bold text-inda-dark text-lg">Market Trend Alerts</h4>
-                    </div>
-
-                    <div className="space-y-3 flex-1">
-                        {data.trends.length > 0 ? (
-                            data.trends.map((item) => (
-                                <div key={item.id} className="bg-white p-4 rounded-lg shadow-sm flex justify-between items-center border border-transparent hover:border-inda-teal/20 transition-colors">
-                                    <div>
-                                        <h5 className="font-bold text-sm text-inda-dark">{item.region}</h5>
-                                        <p className="text-[10px] text-gray-500 font-bold mt-0.5">
-                                            <span className="text-gray-400 font-medium uppercase tracking-wider mr-1">{item.propertyType}</span>
-                                            <span className="text-inda-teal">{item.price}</span>
-                                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {PERFORMANCE_STATS.map((stat, idx) => (
+                                <div key={idx} className={`${stat.color} rounded-3xl p-6 shadow-sm flex flex-col justify-between min-h-[160px] relative overflow-hidden`}>
+                                    <div className={`flex justify-between items-start ${stat.textColor || 'text-white'}`}>
+                                        <div>
+                                            <div className="text-3xl font-black mb-1">{stat.value}</div>
+                                            <div className="text-xs font-bold opacity-80 uppercase tracking-wider">{stat.label}</div>
+                                        </div>
+                                        <div className={`p-3 rounded-2xl ${stat.textColor ? 'bg-gray-100' : 'bg-black/10'}`}>
+                                            <stat.icon className={stat.iconColor || 'text-white'} size={20} />
+                                        </div>
                                     </div>
-                                    <span className={`text-xs font-bold px-3 py-1 rounded-full border ${item.isPositive ? 'bg-green-50 text-green-600 border-green-100' : 'bg-red-50 text-red-500 border-red-100'}`}>
-                                        {item.growth}
-                                    </span>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="flex flex-col items-center justify-center h-full text-gray-400 py-8">
-                                <FaInbox className="text-2xl mb-2 opacity-50" />
-                                <span className="text-xs">No market trends detected yet.</span>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                <div className="bg-[#EAF4F4] p-8 rounded-xl flex flex-col">
-                    <div className="flex items-center gap-2 mb-6">
-                        <FaBolt className="text-inda-teal" />
-                        <h4 className="font-bold text-inda-dark text-lg">Recent Activities</h4>
-                    </div>
-
-                    <div className="space-y-8 relative pl-2 flex-1">
-                        <div className="absolute left-[15px] top-2 bottom-4 w-0.5 bg-gray-200"></div>
-                        {data.activities.length > 0 ? (
-                            data.activities.map((item) => (
-                                <div key={item.id} className="relative pl-8">
-                                    <div className={`absolute left-[9px] top-1.5 w-3.5 h-3.5 rounded-full ${getActivityColor(item.type)} border-2 border-[#EAF4F4] z-10 shadow-sm`}></div>
-                                    <h5 className="font-bold text-sm text-inda-dark leading-none">{item.title}</h5>
-                                    <p className="text-xs text-gray-500 mt-1">{item.description}</p>
-                                    <span className="text-[10px] text-gray-400 mt-1 block font-medium">{item.timestamp}</span>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="flex flex-col items-center justify-center h-full text-gray-400 py-8 relative z-10 bg-[#EAF4F4]">
-                                <span className="text-xs">No recent activity.</span>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            </section>
-
-            {/* Watchlist Properties */}
-            <section>
-                <h4 className="font-bold text-inda-dark mb-4 flex items-center gap-2 text-lg">
-                    <FaStar className="text-inda-teal" /> Watchlist Properties
-                </h4>
-
-                {data.watchlist.length > 0 ? (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {data.watchlist.map((item) => (
-                            <div key={item.id} className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-all cursor-pointer group">
-                                <div className="flex justify-between items-start mb-6">
-                                    <div>
-                                        <h5 className="font-bold text-sm text-inda-dark group-hover:text-inda-teal transition-colors">{item.title}</h5>
-                                        <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">{item.location}</p>
+                                    <div className={`mt-4 flex items-center gap-1 text-[11px] font-bold ${stat.textColor || 'text-white opacity-90'}`}>
+                                        {stat.trendIcon && <stat.trendIcon size={12} />}
+                                        {stat.trend}
                                     </div>
-                                    <FaStar className="text-[#F3F1A0] text-lg drop-shadow-sm" />
+                                    <div className="absolute bottom-0 right-0 p-4 opacity-5">
+                                        <stat.icon size={60} />
+                                    </div>
                                 </div>
-                                <div className="flex justify-between text-xs mb-2">
-                                    <span className="text-gray-500">Asking Price</span>
-                                    <span className="font-bold text-inda-dark">{item.price}</span>
-                                </div>
-                                <div className="flex justify-between text-xs mb-5">
-                                    <span className="text-gray-500">FMV</span>
-                                    <span className="font-bold text-inda-dark">{item.fmv}</span>
-                                </div>
-                                <span className={`text-[10px] font-bold px-3 py-1.5 rounded-md ${getBadgeStyles(item.dealBadge.colorVariant)}`}>
-                                    {item.dealBadge.label}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="bg-gray-5 border border-gray-200 border-dashed rounded-xl p-12 text-center text-gray-500">
-                        <div className="bg-white p-3 rounded-full inline-block shadow-sm mb-3">
-                            <FaStar className="text-gray-300 text-xl" />
+                            ))}
                         </div>
-                        <p className="text-sm font-medium">Your watchlist is empty.</p>
-                        <p className="text-xs text-gray-400 mt-1">Star properties to track their price movements here.</p>
                     </div>
-                )}
-            </section>
 
+                    {/* Channel Performance Table */}
+                    <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+                        <h2 className="text-xl font-bold mb-1">Channel Performance</h2>
+                        <p className="text-gray-500 text-sm mb-8">See exactly where your leads come from</p>
+
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead>
+                                    <tr className="text-gray-400 text-[10px] uppercase font-bold tracking-widest border-b border-gray-50">
+                                        <th className="pb-4">Channel</th>
+                                        <th className="pb-4">Leads</th>
+                                        <th className="pb-4">Trend</th>
+                                        <th className="pb-4">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="text-sm">
+                                    {CHANNEL_PERFORMANCE.map((item, idx) => (
+                                        <tr key={idx} className="border-b border-gray-50 group hover:bg-gray-50/50 transition-colors">
+                                            <td className="py-5 font-bold text-gray-800">{item.channel}</td>
+                                            <td className="py-5 font-black text-lg">{item.leads}</td>
+                                            <td className={`py-5 font-bold ${item.trendColor} flex items-center gap-2 italic`}>
+                                                <FaChartLine size={12} /> {item.trend}
+                                            </td>
+                                            <td className={`py-5 font-bold ${item.actionColor}`}>
+                                                {item.action === 'Keep using' ? '✓ ' : '✕ '}{item.action}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Performance Summary Box */}
+                        <div className="mt-8 bg-[#E9F3F6] rounded-2xl p-6 flex flex-wrap gap-8">
+                            <div className="flex items-start gap-4">
+                                <div className="p-3 bg-white rounded-xl shadow-sm">
+                                    <FaExclamationCircle className="text-blue-500" />
+                                </div>
+                                <div className="space-y-4">
+                                    <h3 className="text-sm font-black text-[#2D5A54] uppercase tracking-wider flex items-center gap-2">
+                                        📊 Performance Summary
+                                    </h3>
+                                    <div className="flex gap-8">
+                                        <div>
+                                            <div className="text-xs font-bold text-green-600 mb-2">🏆 Best Performers</div>
+                                            <div className="text-xs text-gray-600 leading-relaxed font-medium">
+                                                <span className="font-bold text-gray-800">WhatsApp:</span> 127 leads, 6% conversion<br />
+                                                <span className="font-bold text-gray-800">Instagram:</span> 89 leads, 6% conversion
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div className="text-xs font-bold text-red-600 mb-2">⚠️ Needs Attention</div>
+                                            <div className="text-xs text-gray-600 leading-relaxed font-medium">
+                                                <span className="font-bold text-gray-800">Property Pro:</span> Only 2% conversion<br />
+                                                <span className="font-bold text-gray-800">Jiji:</span> 4% conversion, below average
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Your Properties Section */}
+                    <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+                        <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
+                            <h2 className="text-xl font-bold">Your Properties</h2>
+                            <select className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-2 text-sm font-bold text-gray-600 outline-none focus:ring-2 focus:ring-inda-teal/20 transition-all">
+                                <option>All Properties</option>
+                                <option>Active</option>
+                                <option>Sold</option>
+                            </select>
+                        </div>
+                        <p className="text-gray-500 text-sm mb-8">Click any property to see its Deal Hub with detailed analytics</p>
+
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead>
+                                    <tr className="text-gray-400 text-[10px] uppercase font-bold tracking-widest border-b border-gray-50">
+                                        <th className="pb-4">Property</th>
+                                        <th className="pb-4">Views</th>
+                                        <th className="pb-4">Leads</th>
+                                        <th className="pb-4">Hot Leads</th>
+                                        <th className="pb-4">Status</th>
+                                        <th className="pb-4">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="text-sm">
+                                    {PROPERTIES_DATA.map((prop, idx) => (
+                                        <tr key={idx} className="border-b border-gray-50 group hover:bg-gray-50/50 transition-colors">
+                                            <td className="py-6">
+                                                <div className="font-bold text-gray-800 text-base flex items-center gap-2">
+                                                    {prop.title}
+                                                    {prop.isHot && (
+                                                        <span className="bg-orange-100 text-orange-600 text-[9px] uppercase font-black px-2 py-0.5 rounded-full">🔥 Hot</span>
+                                                    )}
+                                                </div>
+                                                <div className="text-xs text-gray-400 mt-1">{prop.location}</div>
+                                                <div className="text-xs text-inda-teal font-bold mt-0.5">{prop.price}</div>
+                                            </td>
+                                            <td className="py-6">
+                                                <div className="font-black text-lg">{prop.views.toLocaleString()}</div>
+                                                <div className="text-[10px] font-bold text-green-500">{prop.viewsTrend}</div>
+                                            </td>
+                                            <td className="py-6">
+                                                <div className="font-black text-lg">{prop.leads}</div>
+                                                <div className="text-[10px] font-bold text-gray-400 uppercase">Total inquiries</div>
+                                            </td>
+                                            <td className="py-6">
+                                                <div className="font-black text-lg text-orange-600">{prop.hotLeads}</div>
+                                                <div className="text-[10px] font-bold text-gray-400 uppercase italic">Viewed 3+ times</div>
+                                            </td>
+                                            <td className="py-6">
+                                                <span className="bg-green-50 text-green-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
+                                                    {prop.status}
+                                                </span>
+                                            </td>
+                                            <td className="py-6">
+                                                <div className="flex items-center gap-3">
+                                                    <button className="text-gray-400 hover:text-inda-teal transition-colors" title="Quick View">
+                                                        <FaEye size={16} />
+                                                    </button>
+                                                    <button className="bg-[#67B148] text-white px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-[#5a9c3e] transition-all">
+                                                        <FaShareAlt size={12} /> Share
+                                                    </button>
+                                                    <Link href="/deal-hub" className="text-inda-teal font-bold text-xs hover:underline flex items-center gap-1">
+                                                        View Hub <FaExternalLinkAlt size={10} />
+                                                    </Link>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div className="mt-8 flex items-center justify-between">
+                            <div className="text-xs font-bold text-gray-400">
+                                Showing 1-5 of 24 properties
+                            </div>
+                            <div className="flex gap-2">
+                                <button className="px-4 py-2 bg-gray-50 text-gray-400 font-bold rounded-xl text-xs" disabled>Previous</button>
+                                <button className="px-4 py-2 bg-[#4EA8A1] text-white font-bold rounded-xl text-xs">Next</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Bottom Grid */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-12">
+
+                        {/* Top Listings */}
+                        <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
+                            <h2 className="text-xl font-bold mb-1 flex items-center gap-2">
+                                <FaStar className="text-yellow-400" /> Top Performing Listings
+                            </h2>
+                            <p className="text-gray-500 text-sm mb-8">Properties driving the highest engagement</p>
+
+                            <div className="space-y-6">
+                                {TOP_LISTINGS.map((listing, idx) => (
+                                    <div key={idx} className="flex items-center justify-between p-4 rounded-2xl border border-gray-50 hover:border-gray-100 hover:bg-gray-50 transition-all cursor-pointer group">
+                                        <div className="flex items-center gap-5">
+                                            <div className="text-2xl font-black text-gray-300 group-hover:text-inda-teal transition-colors">
+                                                #{listing.rank}
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-gray-800">{listing.title}</div>
+                                                <div className="text-[10px] text-gray-400 uppercase font-bold tracking-widest">{listing.location}</div>
+                                            </div>
+                                        </div>
+                                        <div className="text-right">
+                                            <div className="text-xs text-gray-400 font-bold uppercase tracking-wider mb-0.5 text-[9px]">Views this week</div>
+                                            <div className="flex items-center justify-end gap-3">
+                                                <span className="font-black text-lg">{listing.views}</span>
+                                                <span className="text-[11px] font-bold text-green-500 bg-green-50 px-2 py-0.5 rounded-lg flex items-center gap-1">
+                                                    <FaArrowUp size={8} /> {listing.trend}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* AI Recommendations */}
+                        <div className="bg-[#F9F6FF] rounded-3xl p-8 shadow-sm border border-purple-100">
+                            <h2 className="text-xl font-bold mb-1 text-[#6A4FC5] flex items-center gap-2">
+                                <FaRobot className="text-[#A374FF]" /> AI Recommendations
+                            </h2>
+                            <p className="text-purple-400 text-sm font-medium mb-8">Data-driven insights to boost your property sales</p>
+
+                            <div className="space-y-4">
+                                {AI_RECOMMENDATIONS.map((rec, idx) => (
+                                    <div key={idx} className="bg-white p-5 rounded-2xl flex items-start gap-4 shadow-sm border border-white hover:border-purple-200 transition-all group">
+                                        <div className="mt-1">
+                                            <rec.icon className="text-green-500 group-hover:scale-110 transition-transform" size={20} />
+                                        </div>
+                                        <div>
+                                            <div className="font-bold text-gray-800 mb-1">{rec.text}</div>
+                                            <div className="text-xs text-gray-500 leading-relaxed font-medium">
+                                                {rec.subtext}
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
             </DashboardLayout>
         </ProtectedRoute>
-    );
-}
-
-// ==========================================
-// 4. PRESENTATIONAL COMPONENTS
-// ==========================================
-
-function MetricCard({ title, children }: { title: string, children: React.ReactNode }) {
-    return (
-        <div className="bg-[#EAF4F4] p-6 rounded-xl shadow-sm border border-transparent hover:border-gray-200 transition-all min-h-[140px] flex flex-col justify-between">
-            <h4 className="text-xs font-medium text-gray-600 uppercase tracking-wide">{title}</h4>
-            {children}
-        </div>
-    );
-}
-
-function TrendIndicator({ value, isPositive }: { value: string, isPositive: boolean }) {
-    const isNeutral = value === '—';
-    return (
-        <span className={`text-xs font-bold flex items-center gap-1 mt-2 ${isNeutral ? 'text-gray-400' : isPositive ? 'text-green-600' : 'text-red-500'
-            }`}>
-            {!isNeutral && (isPositive ? <FaArrowUp size={9} /> : <FaArrowDown size={9} />)}
-            {value}
-        </span>
-    );
-}
-
-function StatCard({ value, label }: { value: string, label: string }) {
-    return (
-        <div className="bg-[#EAF4F4] p-6 rounded-xl text-center flex flex-col justify-center">
-            <h3 className="text-2xl font-bold text-inda-dark">{value}</h3>
-            <p className="text-[10px] text-gray-500 font-medium mt-1 uppercase">{label}</p>
-        </div>
     );
 }
