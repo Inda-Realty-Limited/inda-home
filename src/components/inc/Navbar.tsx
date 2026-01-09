@@ -80,7 +80,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
     setProfileOpen(false);
     setMobileProfileOpen(false);
     setMobileOpen(false);
-    
+
     try {
       await authLogout();
     } catch (error) {
@@ -121,7 +121,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
                 Products
                 <ChevronDown className="w-4 h-4" />
               </button>
-              
+
               {productsOpen && (
                 <div
                   className="absolute top-full left-0 pt-2 w-56 z-[2000]"
@@ -129,20 +129,20 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
                   onMouseLeave={() => setProductsOpen(false)}
                 >
                   <div className="bg-white rounded-xl shadow-lg border border-gray-200 py-2">
-                  <Link
-                    href="/for-buyers"
-                    className="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
-                  >
-                    <div>For Buyers</div>
-                    <div className="text-sm text-gray-500">Invest smarter</div>
-                  </Link>
-                  <Link
-                    href="/for-professionals"
-                    className="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
-                  >
-                    <div>For Professionals</div>
-                    <div className="text-sm text-gray-500">Grow your business</div>
-                  </Link>
+                    <Link
+                      href="/for-buyers"
+                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                    >
+                      <div>For Buyers</div>
+                      <div className="text-sm text-gray-500">Invest smarter</div>
+                    </Link>
+                    <Link
+                      href="/for-professionals"
+                      className="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                    >
+                      <div>For Professionals</div>
+                      <div className="text-sm text-gray-500">Grow your business</div>
+                    </Link>
                   </div>
                 </div>
               )}
@@ -153,12 +153,14 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
             >
               Use Cases
             </button>
-            <button
-              onClick={() => router.push("/dashboard")}
-              className="text-white/90 hover:text-white text-sm font-medium transition-colors duration-200"
-            >
-              Dashboard
-            </button>
+            {(user?.role === 'Agent' || user?.role === 'Developer' || user?.role === 'Admin') && (
+              <button
+                onClick={() => router.push("/dashboard")}
+                className="text-white/90 hover:text-white text-sm font-medium transition-colors duration-200"
+              >
+                Dashboard
+              </button>
+            )}
             <button
               disabled
               className="text-white/60 cursor-not-allowed text-sm font-medium opacity-60"
@@ -228,13 +230,13 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
                       <FiUser className="opacity-90" />
                       View Profile
                     </button>
-                    <button
+                    {/* <button
                       className="w-full text-left px-4 py-2 text-sm text-white/90 hover:bg-white/10 inline-flex items-center gap-2"
                       onClick={() => router.push("/dashboard")}
                     >
                       <FiFileText className="opacity-90" />
                       Dashboard
-                    </button>
+                    </button> */}
                     <button
                       className="w-full text-left px-4 py-2 text-sm text-white/90 hover:bg-white/10 inline-flex items-center gap-2"
                       onClick={() => router.push("/orders")}
@@ -300,9 +302,8 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
                 >
                   <span>Products</span>
                   <span
-                    className={`transition-transform ${
-                      productsOpen ? "rotate-180" : "rotate-0"
-                    }`}
+                    className={`transition-transform ${productsOpen ? "rotate-180" : "rotate-0"
+                      }`}
                   >
                     <ChevronDown className="w-4 h-4" />
                   </span>
@@ -343,15 +344,17 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
               >
                 Use Cases
               </button>
-              <button
-                className="w-full text-left px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white text-base"
-                onClick={() => {
-                  setMobileOpen(false);
-                  router.push("/dashboard");
-                }}
-              >
-                Dashboard
-              </button>
+              {(user?.role === 'Agent' || user?.role === 'Developer' || user?.role === 'Admin') && (
+                <button
+                  className="w-full text-left px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white text-base"
+                  onClick={() => {
+                    setMobileOpen(false);
+                    router.push("/dashboard");
+                  }}
+                >
+                  Dashboard
+                </button>
+              )}
               <button
                 disabled
                 className="w-full text-left px-4 py-3 rounded-xl bg-white/5 text-white/60 text-base cursor-not-allowed opacity-60"
@@ -390,9 +393,8 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
                     <FiUser /> Profile
                   </span>
                   <span
-                    className={`transition-transform ${
-                      mobileProfileOpen ? "rotate-180" : "rotate-0"
-                    }`}
+                    className={`transition-transform ${mobileProfileOpen ? "rotate-180" : "rotate-0"
+                      }`}
                   >
                     ▾
                   </span>
@@ -477,7 +479,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
               Products
               <ChevronDown className="w-4 h-4" />
             </button>
-            
+
             {productsOpen && (
               <div
                 className="absolute top-full left-0 pt-2 w-56 z-[2000]"
@@ -485,20 +487,20 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
                 onMouseLeave={() => setProductsOpen(false)}
               >
                 <div className="bg-white rounded-xl shadow-lg border border-gray-200 py-2">
-                <Link
-                  href="/for-buyers"
-                  className="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
-                >
-                  <div>For Buyers</div>
-                  <div className="text-sm text-gray-500">Invest smarter</div>
-                </Link>
-                <Link
-                  href="/for-professionals"
-                  className="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
-                >
-                  <div>For Professionals</div>
-                  <div className="text-sm text-gray-500">Grow your business</div>
-                </Link>
+                  <Link
+                    href="/for-buyers"
+                    className="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                  >
+                    <div>For Buyers</div>
+                    <div className="text-sm text-gray-500">Invest smarter</div>
+                  </Link>
+                  <Link
+                    href="/for-professionals"
+                    className="block px-4 py-3 text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
+                  >
+                    <div>For Professionals</div>
+                    <div className="text-sm text-gray-500">Grow your business</div>
+                  </Link>
                 </div>
               </div>
             )}
@@ -599,9 +601,8 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
               >
                 <span>Products</span>
                 <span
-                  className={`transition-transform ${
-                    productsOpen ? "rotate-180" : "rotate-0"
-                  }`}
+                  className={`transition-transform ${productsOpen ? "rotate-180" : "rotate-0"
+                    }`}
                 >
                   <ChevronDown className="w-4 h-4" />
                 </span>

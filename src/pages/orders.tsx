@@ -21,6 +21,7 @@ import {
   FiLoader,
   FiPackage,
 } from "react-icons/fi";
+import OrderCard from "@/components/dashboard/OrderCard";
 
 const OrdersPage: React.FC = () => {
   const router = useRouter();
@@ -58,13 +59,13 @@ const OrdersPage: React.FC = () => {
   // Paginate orders locally (since we're fetching 20 but showing 5 per page)
   const paginatedOrders = useMemo(() => {
     if (!data?.orders) return [];
-    
+
     // Filter to only show deepdive and deeperdive orders
     const paidOrders = data.orders.filter(order => {
       const planNames = order.plans.map(p => p.plan.toLowerCase());
       return planNames.some(p => p === 'deepdive' || p === 'deeperdive');
     });
-    
+
     const start = (currentPage - 1) * itemsPerPage;
     return paidOrders.slice(start, start + itemsPerPage);
   }, [data?.orders, currentPage]);
@@ -101,10 +102,10 @@ const OrdersPage: React.FC = () => {
 
   const navigateToResult = (order: OrdersByListingItem) => {
     if (!order.listing.listingUrl) return;
-    
+
     // Get the highest tier plan for this order
     const plan = order.plans[0]?.plan.toLowerCase();
-    
+
     if (plan === 'deepdive') {
       router.push(
         `/deep-dive-report?q=${encodeURIComponent(order.listing.listingUrl)}&type=link`
@@ -205,22 +206,20 @@ const OrdersPage: React.FC = () => {
                 <nav className="-mb-px flex space-x-8">
                   <button
                     onClick={() => handleTabChange("orders")}
-                    className={`flex items-center gap-2 py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-                      activeTab === "orders"
-                        ? "border-[#4EA8A1] text-[#4EA8A1]"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                    }`}
+                    className={`flex items-center gap-2 py-2 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === "orders"
+                      ? "border-[#4EA8A1] text-[#4EA8A1]"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      }`}
                   >
                     <FiPackage size={16} />
                     Orders ({data.summary.totalListings})
                   </button>
                   <button
                     onClick={() => handleTabChange("payments")}
-                    className={`flex items-center gap-2 py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
-                      activeTab === "payments"
-                        ? "border-[#4EA8A1] text-[#4EA8A1]"
-                        : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                    }`}
+                    className={`flex items-center gap-2 py-2 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === "payments"
+                      ? "border-[#4EA8A1] text-[#4EA8A1]"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      }`}
                   >
                     <FiCreditCard size={16} />
                     Payments ({data.summary.totalPayments})
@@ -278,145 +277,13 @@ const OrdersPage: React.FC = () => {
                   {paginatedOrders.length > 0 ? (
                     <div className="space-y-4">
                       {paginatedOrders.map((order) => (
-                        <div
+                        <OrderCard
                           key={order.listingId}
-                          className="rounded-xl bg-white border border-black/10 p-3 sm:p-4 hover:shadow-lg hover:border-[#4EA8A1]/30 transition-all duration-200 cursor-pointer group active:scale-[0.98]"
-                          onClick={() => navigateToResult(order)}
-                        >
-                          <div className="flex items-start gap-3 sm:gap-4">
-                            {/* Property Image */}
-                            <div className="flex-shrink-0 relative">
-                              {order.listing.imageUrls?.[0] ? (
-                                <div className="relative overflow-hidden rounded-lg">
-                                  <Image
-                                    src={order.listing.imageUrls[0]}
-                                    alt={order.listing.title || "Property"}
-                                    width={120}
-                                    height={90}
-                                    className="w-24 h-18 sm:w-28 sm:h-21 object-cover"
-                                    quality={85}
-                                    priority={false}
-                                  />
-                                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                                </div>
-                              ) : (
-                                <div className="w-24 h-18 sm:w-28 sm:h-21 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center">
-                                  <FiFileText
-                                    className="text-gray-400"
-                                    size={24}
-                                  />
-                                </div>
-                              )}
-                              {/* Click indicator */}
-                              <div className="absolute -top-1 -right-1 w-6 h-6 bg-[#4EA8A1] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200 transform scale-75 group-hover:scale-100">
-                                <FiExternalLink
-                                  size={12}
-                                  className="text-white"
-                                />
-                              </div>
-                            </div>
-
-                            {/* Property Details */}
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-start justify-between gap-2">
-                                <div className="flex-1 min-w-0">
-                                  <h3 className="font-semibold text-[#101820] group-hover:text-[#4EA8A1] transition-colors text-sm sm:text-base leading-tight line-clamp-2">
-                                    {order.listing.title || "Property Listing"}
-                                  </h3>
-
-                                  {/* Mobile: Only show location */}
-                                  <p className="text-xs sm:text-sm text-[#6B7280] mt-1 line-clamp-1">
-                                    <span className="sm:hidden">
-                                      {order.listing.microlocationStd ||
-                                        order.listing.propertyTypeStd}
-                                    </span>
-                                    <span className="hidden sm:inline">
-                                      {[
-                                        order.listing.microlocationStd,
-                                        order.listing.propertyTypeStd,
-                                      ]
-                                        .filter(Boolean)
-                                        .join(" • ")}
-                                    </span>
-                                  </p>
-
-                                  {/* Price - more prominent on mobile */}
-                                  <p className="text-sm sm:text-base font-semibold text-[#101820] mt-1">
-                                    {formatPrice(order.listing.priceNGN)}
-                                  </p>
-                                </div>
-
-                                {/* Tap hint for mobile */}
-                                <div className="flex flex-col items-end gap-1 sm:hidden">
-                                  <div className="text-xs text-[#4EA8A1] font-medium opacity-60 group-hover:opacity-100 transition-opacity">
-                                    Tap to view
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Plans - simplified for mobile */}
-                              <div className="mt-2 sm:mt-3 flex flex-wrap items-center gap-1 sm:gap-2">
-                                {/* Mobile: Show only first plan + count */}
-                                <div className="sm:hidden flex items-center gap-1">
-                                  <span
-                                    className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${getPlanColor(
-                                      order.plans[0].plan
-                                    )}`}
-                                  >
-                                    {order.plans[0].plan}
-                                  </span>
-                                  {order.plans.length > 1 && (
-                                    <span className="text-xs text-[#6B7280]">
-                                      +{order.plans.length - 1} more
-                                    </span>
-                                  )}
-                                  <span className="text-xs text-[#6B7280] ml-auto">
-                                    {order.lastPaidAt &&
-                                      new Date(
-                                        order.lastPaidAt
-                                      ).toLocaleDateString()}
-                                  </span>
-                                </div>
-
-                                {/* Desktop: Show all plans */}
-                                <div className="hidden sm:flex flex-wrap items-center gap-2 w-full">
-                                  {order.plans.map((plan, idx) => (
-                                    <span
-                                      key={plan.reference + idx}
-                                      className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium ${getPlanColor(
-                                        plan.plan
-                                      )}`}
-                                    >
-                                      <span className="capitalize">
-                                        {plan.plan}
-                                      </span>
-                                      {plan.paidAt && (
-                                        <span className="opacity-75">
-                                          ·{" "}
-                                          {new Date(
-                                            plan.paidAt
-                                          ).toLocaleDateString()}
-                                        </span>
-                                      )}
-                                    </span>
-                                  ))}
-                                  <div className="text-xs text-[#6B7280] ml-auto">
-                                    {order.plans.length} plan
-                                    {order.plans.length > 1 ? "s" : ""}
-                                    {order.lastPaidAt && (
-                                      <span className="block sm:inline sm:ml-2">
-                                        Last:{" "}
-                                        {new Date(
-                                          order.lastPaidAt
-                                        ).toLocaleDateString()}
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                          order={order}
+                          onClick={navigateToResult}
+                          formatPrice={formatPrice}
+                          getPlanColor={getPlanColor}
+                        />
                       ))}
                     </div>
                   ) : (
@@ -478,10 +345,10 @@ const OrdersPage: React.FC = () => {
                               <p className="font-medium text-[#101820] line-clamp-1">
                                 {payment.listingUrl
                                   ? new URL(payment.listingUrl).pathname
-                                      .split("/")
-                                      .pop()
-                                      ?.replace(/-/g, " ") ||
-                                    "Property Analysis"
+                                    .split("/")
+                                    .pop()
+                                    ?.replace(/-/g, " ") ||
+                                  "Property Analysis"
                                   : "Property Analysis"}
                               </p>
                               <p className="text-sm text-[#6B7280]">
@@ -495,8 +362,8 @@ const OrdersPage: React.FC = () => {
                               <div className="text-sm text-[#6B7280]">
                                 {payment.paidAt
                                   ? new Date(
-                                      payment.paidAt
-                                    ).toLocaleDateString()
+                                    payment.paidAt
+                                  ).toLocaleDateString()
                                   : "Pending"}
                               </div>
                               <div className="text-xs text-[#6B7280] capitalize">
@@ -524,38 +391,38 @@ const OrdersPage: React.FC = () => {
               {/* Pagination */}
               {((activeTab === "orders" && totalOrderPages > 1) ||
                 (activeTab === "payments" && totalPaymentPages > 1)) && (
-                <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
-                  <div className="text-sm text-[#6B7280]">
-                    Page {currentPage} of{" "}
-                    {activeTab === "orders"
-                      ? totalOrderPages
-                      : totalPaymentPages}
+                  <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+                    <div className="text-sm text-[#6B7280]">
+                      Page {currentPage} of{" "}
+                      {activeTab === "orders"
+                        ? totalOrderPages
+                        : totalPaymentPages}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <FiChevronLeft size={16} />
+                        Previous
+                      </button>
+                      <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={
+                          currentPage ===
+                          (activeTab === "orders"
+                            ? totalOrderPages
+                            : totalPaymentPages)
+                        }
+                        className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        Next
+                        <FiChevronRight size={16} />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      <FiChevronLeft size={16} />
-                      Previous
-                    </button>
-                    <button
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={
-                        currentPage ===
-                        (activeTab === "orders"
-                          ? totalOrderPages
-                          : totalPaymentPages)
-                      }
-                      className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      Next
-                      <FiChevronRight size={16} />
-                    </button>
-                  </div>
-                </div>
-              )}
+                )}
             </>
           )}
         </main>

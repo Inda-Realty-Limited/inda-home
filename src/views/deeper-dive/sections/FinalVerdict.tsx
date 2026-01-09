@@ -16,7 +16,7 @@ type Props = {
     investmentGrade: string;
     stars: number;
   };
-  downloadRef?: React.RefObject<HTMLElement>;
+  downloadRef?: React.RefObject<any>;
   filename?: string;
 };
 
@@ -26,13 +26,13 @@ const FinalVerdict: React.FC<Props> = ({ confidenceScoreBreakdown, finalVerdict,
       {/* Confidence Score Breakdown */}
       <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-sm">
         <h2 className="text-2xl font-bold text-gray-900 mb-8 flex items-center gap-2">
-        <svg width="24" height="30" viewBox="0 0 24 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M22.5833 15.9173C22.5833 22.5839 17.9167 25.9173 12.37 27.8506C12.0796 27.949 11.7641 27.9443 11.4767 27.8373C5.91667 25.9173 1.25 22.5839 1.25 15.9173V6.58393C1.25 6.23031 1.39048 5.89117 1.64052 5.64112C1.89057 5.39108 2.22971 5.2506 2.58333 5.2506C5.25 5.2506 8.58333 3.6506 10.9033 1.62393C11.1858 1.3826 11.5451 1.25 11.9167 1.25C12.2882 1.25 12.6475 1.3826 12.93 1.62393C15.2633 3.66393 18.5833 5.2506 21.25 5.2506C21.6036 5.2506 21.9428 5.39108 22.1928 5.64112C22.4429 5.89117 22.5833 6.23031 22.5833 6.58393V15.9173Z" stroke="#101820" stroke-opacity="0.9" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
+          <svg width="24" height="30" viewBox="0 0 24 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22.5833 15.9173C22.5833 22.5839 17.9167 25.9173 12.37 27.8506C12.0796 27.949 11.7641 27.9443 11.4767 27.8373C5.91667 25.9173 1.25 22.5839 1.25 15.9173V6.58393C1.25 6.23031 1.39048 5.89117 1.64052 5.64112C1.89057 5.39108 2.22971 5.2506 2.58333 5.2506C5.25 5.2506 8.58333 3.6506 10.9033 1.62393C11.1858 1.3826 11.5451 1.25 11.9167 1.25C12.2882 1.25 12.6475 1.3826 12.93 1.62393C15.2633 3.66393 18.5833 5.2506 21.25 5.2506C21.6036 5.2506 21.9428 5.39108 22.1928 5.64112C22.4429 5.89117 22.5833 6.23031 22.5833 6.58393V15.9173Z" stroke="#101820" stroke-opacity="0.9" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
 
           Confidence Score Breakdown
         </h2>
-        
+
         {/* Score Breakdown Bars */}
         <div className="space-y-6 mb-8">
           {confidenceScoreBreakdown.sections.map((section, idx) => (
@@ -61,10 +61,10 @@ const FinalVerdict: React.FC<Props> = ({ confidenceScoreBreakdown, finalVerdict,
             <div className="relative w-80 h-80 flex items-center justify-center">
               {/* Outermost light circle */}
               <div className="absolute w-80 h-80 rounded-full bg-gradient-to-br from-inda-teal/30 to-inda-teal/10 opacity-40"></div>
-              
+
               {/* Second layer - lighter teal */}
               <div className="absolute w-72 h-72 rounded-full bg-gradient-to-br from-inda-teal/50 to-inda-teal/30  shadow-lg"></div>
-              
+
               {/* Third layer - medium teal with progress arc */}
               <div className="absolute w-64 h-64 rounded-full bg-gradient-to-br from-inda-teal/70 to-inda-teal/50  shadow-xl">
                 {/* Progress arc */}
@@ -84,13 +84,13 @@ const FinalVerdict: React.FC<Props> = ({ confidenceScoreBreakdown, finalVerdict,
                   />
                 </svg>
               </div>
-              
+
               {/* Fourth layer - darker teal with shadow */}
               <div className="absolute w-52 h-52 rounded-full bg-gradient-to-br from-inda-teal/90 to-inda-teal/70 shadow-2xl">
                 {/* Inner shadow effect */}
                 <div className="absolute inset-0 rounded-full shadow-inner"></div>
               </div>
-              
+
               {/* Center circle with percentage */}
               <div className="absolute w-40 h-40 rounded-full bg-inda-teal flex items-center justify-center shadow-2xl">
                 <span className="text-5xl font-bold text-white">
@@ -159,11 +159,11 @@ const FinalVerdict: React.FC<Props> = ({ confidenceScoreBreakdown, finalVerdict,
       {/* Final Verdict Section */}
       <div className="bg-white border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-sm mt-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-        <svg width="27" height="27" viewBox="0 0 27 27" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M0.75 13.25H4.5M22 13.25H25.75M13.25 25.75V22M13.25 4.5V0.75" stroke="#101820" stroke-opacity="0.9" stroke-width="1.5" stroke-linecap="round"/>
-        <path d="M10.75 13.25H15.75M13.25 15.75V10.75" stroke="#101820" stroke-opacity="0.9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M7 2.42252C8.89931 1.32342 11.0556 0.746398 13.25 0.750017C20.1537 0.750017 25.75 6.34627 25.75 13.25C25.75 20.1538 20.1537 25.75 13.25 25.75C6.34625 25.75 0.75 20.1538 0.75 13.25C0.75 10.9738 1.35875 8.83752 2.4225 7.00002" stroke="#101820" stroke-opacity="0.9" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
+          <svg width="27" height="27" viewBox="0 0 27 27" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0.75 13.25H4.5M22 13.25H25.75M13.25 25.75V22M13.25 4.5V0.75" stroke="#101820" stroke-opacity="0.9" stroke-width="1.5" stroke-linecap="round" />
+            <path d="M10.75 13.25H15.75M13.25 15.75V10.75" stroke="#101820" stroke-opacity="0.9" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M7 2.42252C8.89931 1.32342 11.0556 0.746398 13.25 0.750017C20.1537 0.750017 25.75 6.34627 25.75 13.25C25.75 20.1538 20.1537 25.75 13.25 25.75C6.34625 25.75 0.75 20.1538 0.75 13.25C0.75 10.9738 1.35875 8.83752 2.4225 7.00002" stroke="#101820" stroke-opacity="0.9" stroke-width="1.5" stroke-linecap="round" />
+          </svg>
 
           Final Verdict
         </h2>
@@ -172,8 +172,8 @@ const FinalVerdict: React.FC<Props> = ({ confidenceScoreBreakdown, finalVerdict,
         <div className="bg-inda-teal rounded-2xl p-8 text-center text-white mb-6">
           <div className="flex justify-center mb-4">
             <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="32" cy="32" r="30" stroke="white" strokeWidth="4"/>
-              <path d="M20 32L28 40L44 24" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="32" cy="32" r="30" stroke="white" strokeWidth="4" />
+              <path d="M20 32L28 40L44 24" stroke="white" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </div>
           <h3 className="text-3xl font-bold mb-3">STRONG BUY</h3>
@@ -185,9 +185,9 @@ const FinalVerdict: React.FC<Props> = ({ confidenceScoreBreakdown, finalVerdict,
           <div className="text-center p-4 bg-gray-50 rounded-xl">
             <div className="flex justify-center mb-2">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#4EA8A1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 17L12 22L22 17" stroke="#4EA8A1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M2 12L12 17L22 12" stroke="#4EA8A1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 2L2 7L12 12L22 7L12 2Z" stroke="#4EA8A1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M2 17L12 22L22 17" stroke="#4EA8A1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d="M2 12L12 17L22 12" stroke="#4EA8A1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
             <h4 className="text-sm font-semibold text-gray-900 mb-1">Legal Compliance</h4>
@@ -197,8 +197,8 @@ const FinalVerdict: React.FC<Props> = ({ confidenceScoreBreakdown, finalVerdict,
           <div className="text-center p-4 bg-gray-50 rounded-xl">
             <div className="flex justify-center mb-2">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M21 10C21 17 12 23 12 23C12 23 3 17 3 10C3 7.61305 3.94821 5.32387 5.63604 3.63604C7.32387 1.94821 9.61305 1 12 1C14.3869 1 16.6761 1.94821 18.364 3.63604C20.0518 5.32387 21 7.61305 21 10Z" stroke="#4EA8A1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="12" cy="10" r="3" stroke="#4EA8A1" strokeWidth="2"/>
+                <path d="M21 10C21 17 12 23 12 23C12 23 3 17 3 10C3 7.61305 3.94821 5.32387 5.63604 3.63604C7.32387 1.94821 9.61305 1 12 1C14.3869 1 16.6761 1.94821 18.364 3.63604C20.0518 5.32387 21 7.61305 21 10Z" stroke="#4EA8A1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx="12" cy="10" r="3" stroke="#4EA8A1" strokeWidth="2" />
               </svg>
             </div>
             <h4 className="text-sm font-semibold text-gray-900 mb-1">Survey Verified</h4>
@@ -208,8 +208,8 @@ const FinalVerdict: React.FC<Props> = ({ confidenceScoreBreakdown, finalVerdict,
           <div className="text-center p-4 bg-gray-50 rounded-xl">
             <div className="flex justify-center mb-2">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="#4EA8A1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                <circle cx="12" cy="7" r="4" stroke="#4EA8A1" strokeWidth="2"/>
+                <path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" stroke="#4EA8A1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx="12" cy="7" r="4" stroke="#4EA8A1" strokeWidth="2" />
               </svg>
             </div>
             <h4 className="text-sm font-semibold text-gray-900 mb-1">Seller Verified</h4>
@@ -219,9 +219,9 @@ const FinalVerdict: React.FC<Props> = ({ confidenceScoreBreakdown, finalVerdict,
           <div className="text-center p-4 bg-gray-50 rounded-xl">
             <div className="flex justify-center mb-2">
               <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="3" y="3" width="18" height="18" rx="2" stroke="#4EA8A1" strokeWidth="2"/>
-                <circle cx="8.5" cy="8.5" r="1.5" fill="#4EA8A1"/>
-                <path d="M21 15L16 10L5 21" stroke="#4EA8A1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <rect x="3" y="3" width="18" height="18" rx="2" stroke="#4EA8A1" strokeWidth="2" />
+                <circle cx="8.5" cy="8.5" r="1.5" fill="#4EA8A1" />
+                <path d="M21 15L16 10L5 21" stroke="#4EA8A1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </div>
             <h4 className="text-sm font-semibold text-gray-900 mb-1">Site Inspected</h4>
@@ -236,7 +236,7 @@ const FinalVerdict: React.FC<Props> = ({ confidenceScoreBreakdown, finalVerdict,
           </h3>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <DownloadReportButton
-              targetRef={downloadRef as React.RefObject<HTMLElement>}
+              targetRef={downloadRef}
               filename={filename}
               className="bg-inda-teal text-white px-8 py-3 rounded-xl font-semibold hover:bg-inda-teal/90 transition-colors"
             >

@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
@@ -83,9 +84,17 @@ export default function AppSidebar() {
         `}
             >
 
-                {/* Brand / Logo Placeholder */}
-                <div className="p-6 h-16 flex items-center justify-between">
-                    {/* TODO: Insert <Image /> here */}
+                {/* Brand / Logo */}
+                <div className="p-6 h-28 flex items-center justify-between">
+                    <Link href="/" className="transition-transform hover:scale-105 active:scale-95">
+                        <Image
+                            src="/assets/images/logo.png"
+                            alt="Inda Logo"
+                            width={80}
+                            height={95}
+                            className="h-auto w-[70px] filter drop-shadow-sm"
+                        />
+                    </Link>
                     <span className="font-bold text-lg text-inda-dark md:hidden">Menu</span>
 
                     {/* Close Button inside Drawer (Mobile Only) */}
@@ -102,7 +111,7 @@ export default function AppSidebar() {
                     {MENU_ITEMS.map((item) => {
                         // Skip Logout in the map (handled separately or removed from const)
                         if (item.name === 'Logout') return null;
-                        
+
                         const isActive = router.asPath === item.href || router.asPath.startsWith(`${item.href}/`);
 
                         return (

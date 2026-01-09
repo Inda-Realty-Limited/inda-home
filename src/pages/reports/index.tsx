@@ -1,25 +1,25 @@
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/router';
+import Head from 'next/head';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import {
     FaCheck, FaChevronDown,
     FaExclamationCircle, FaSpinner, FaFileAlt
 } from 'react-icons/fa';
+import {
+    FiPackage, FiCreditCard, FiChevronLeft, FiChevronRight, FiAlertCircle, FiLoader
+} from 'react-icons/fi';
 import { ProReportsService } from '@/api/pro-reports';
+import { useAuth } from '@/contexts/AuthContext';
+import OrderCard from '@/components/dashboard/OrderCard';
+import {
+    getOrdersAndPayments,
+    OrdersApiResponse,
+    OrdersByListingItem,
+} from "@/api/payments";
+import PaymentReceipt from "@/components/inc/PaymentReceipt";
 
-type TabOption = 'library' | 'generate';
-
-interface Report {
-    id: string;
-    client: string;
-    analyst: string;
-    date: string;
-    status: 'Completed' | 'Pending' | 'In Progress';
-    type: string;
-    reportType?: string;
-    propertyAddress?: string;
-    createdAt?: string;
-}
+type TabOption = 'library' | 'payments' | 'generate';
 
 const REPORT_TYPES = [
     {
@@ -51,41 +51,71 @@ const REPORT_TYPES = [
     }
 ];
 
-import { useAuth } from '@/contexts/AuthContext';
-
 export default function ReportsHubPage() {
-    const { user } = useAuth();
+    const { user, isAuthenticated } = useAuth();
+    const router = useRouter();
     const [activeTab, setActiveTab] = useState<TabOption>('library');
     const [generateStep, setGenerateStep] = useState(1);
-    const [reports, setReports] = useState<Report[]>([]);
-    const [loadingReports, setLoadingReports] = useState(false);
-    const [propertyInput, setPropertyInput] = useState({ address: '', type: '' });
+    const [data, setData] = useState<OrdersApiResponse | null>(null);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [selectedPayment, setSelectedPayment] = useState<any | null>(null);
+    const [propertyInput, setPropertyInput] = useState({ address: '', type: '' });
     const [generating, setGenerating] = useState<string | null>(null);
+    const itemsPerPage = 5;
 
-    const fetchReports = async () => {
-        if (!user) return;
-
+    const fetchData = async (page: number) => {
         try {
-            setLoadingReports(true);
-            const userId = user.id || user._id || (user as any).user?.id;
-
-            if (userId) {
-                const data = await ProReportsService.getUserReports(userId);
-                setReports(Array.isArray(data) ? data : (data.data || []));
-            }
-        } catch (err) {
-            console.error("Failed to load reports:", err);
+            setLoading(true);
+            const res = await getOrdersAndPayments({ page, limit: 100 });
+            setData(res);
+            setError(null);
+        } catch (e: any) {
+            setError(e?.message || "Failed to load reports");
         } finally {
-            setLoadingReports(false);
+            setLoading(false);
         }
     };
 
     useEffect(() => {
-        if (activeTab === 'library' && user) {
-            fetchReports();
+        if (isAuthenticated) {
+            fetchData(1);
         }
-    }, [activeTab, user]);
+    }, [isAuthenticated]);
+
+    // Paginate orders locally
+    const paginatedOrders = useMemo(() => {
+        if (!data?.orders) return [];
+        const start = (currentPage - 1) * itemsPerPage;
+        return data.orders.slice(start, start + itemsPerPage);
+    }, [data?.orders, currentPage]);
+
+    const totalOrderPages = useMemo(() => {
+        if (!data?.orders) return 0;
+        return Math.ceil(data.orders.length / itemsPerPage);
+    }, [data?.orders]);
+
+    // Paginate payments locally
+    const paginatedPayments = useMemo(() => {
+        if (!data?.payments?.items) return [];
+        const start = (currentPage - 1) * itemsPerPage;
+        return data.payments.items.slice(start, start + itemsPerPage);
+    }, [data?.payments?.items, currentPage]);
+
+    const totalPaymentPages = useMemo(() => {
+        if (!data?.payments?.items) return 0;
+        return Math.ceil(data.payments.items.length / itemsPerPage);
+    }, [data?.payments?.items]);
+
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+    };
+
+    const handleTabChange = (tab: TabOption) => {
+        setActiveTab(tab);
+        setCurrentPage(1);
+    };
 
     const handleContinue = () => {
         if (!propertyInput.address.trim()) {
@@ -124,7 +154,7 @@ export default function ReportsHubPage() {
                 setGenerateStep(1);
                 setPropertyInput({ address: '', type: '' });
                 setActiveTab('library');
-                fetchReports();
+                fetchData(1);
             }
         } catch (err: any) {
             console.error("Generation failed:", err);
@@ -134,87 +164,251 @@ export default function ReportsHubPage() {
         }
     };
 
+    const formatPrice = (price?: number) => {
+        if (!price) return "N/A";
+        return new Intl.NumberFormat("en-NG", {
+            style: "currency",
+            currency: "NGN",
+            minimumFractionDigits: 0,
+        }).format(price);
+    };
+
+    const getPlanColor = (plan: string) => {
+        switch (plan.toLowerCase()) {
+            case "free": return "bg-green-100 text-green-800 border-green-200";
+            case "instant": return "bg-blue-100 text-blue-800 border-blue-200";
+            case "deep dive":
+            case "deepdive": return "bg-purple-100 text-purple-800 border-purple-200";
+            case "deeper dive":
+            case "deeperdive": return "bg-indigo-100 text-indigo-800 border-indigo-200";
+            default: return "bg-gray-100 text-gray-800 border-gray-200";
+        }
+    };
+
+    const getPaymentStatusColor = (status: string) => {
+        switch (status.toLowerCase()) {
+            case "success": return "bg-green-100 text-green-800";
+            case "pending": return "bg-yellow-100 text-yellow-800";
+            case "failed": return "bg-red-100 text-red-800";
+            default: return "bg-gray-100 text-gray-800";
+        }
+    };
+
+    const navigateToReport = (order: OrdersByListingItem) => {
+        // Find if there's a corresponding report ID
+        // Note: The backend getOrdersAndPayments doesn't directly return the report ID in the 'orders' array currently,
+        // but we can navigate to deep-dive-report or deeper-dive-report with the listing URL
+        if (!order.listing.listingUrl) return;
+
+        const plan = order.plans[0]?.plan.toLowerCase();
+        if (plan === 'deepdive' || plan === 'deep dive') {
+            router.push(`/deep-dive-report?q=${encodeURIComponent(order.listing.listingUrl)}&type=link`);
+        } else if (plan === 'deeperdive' || plan === 'deeper dive') {
+            router.push(`/deeper-dive-report?q=${encodeURIComponent(order.listing.listingUrl)}&type=link`);
+        }
+    };
+
     return (
         <DashboardLayout title="Reports Hub">
-            <div className="max-w-5xl mx-auto pb-12">
+            <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-12">
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-inda-dark">Reports Hub</h1>
-                    <p className="text-gray-500 mt-1">Generate comprehensive property analysis reports</p>
+                    <p className="text-gray-500 mt-1">Generate and track your property analysis reports</p>
                 </div>
 
-                <div className="bg-[#54A6A6] p-1 rounded-lg flex mb-10 shadow-sm">
-                    <button
-                        onClick={() => setActiveTab('library')}
-                        className={`flex-1 py-3 text-sm font-bold rounded-md transition-all ${activeTab === 'library' ? 'bg-white text-inda-teal shadow-sm' : 'text-white hover:bg-white/10'
-                            }`}
-                    >
-                        Reports Library
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('generate')}
-                        className={`flex-1 py-3 text-sm font-bold rounded-md transition-all relative ${activeTab === 'generate' ? 'bg-white text-inda-teal shadow-sm' : 'text-white hover:bg-white/10'
-                            }`}
-                    >
-                        Generate New Report
-                        {activeTab === 'generate' && <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-inda-teal rounded-full"></div>}
-                    </button>
-                </div>
-
-                {activeTab === 'library' && (
-                    <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden auto-in fade-in duration-300">
-                        <div className="grid grid-cols-5 bg-[#F9FAFB] p-4 text-xs font-bold text-gray-400 uppercase tracking-wider border-b border-gray-100">
-                            <div className="col-span-1">Report ID</div>
-                            <div className="col-span-2">Property / Client</div>
-                            <div className="col-span-1">Date</div>
-                            <div className="col-span-1">Status</div>
+                {/* Top summary - Replicated from orders.tsx */}
+                {data && (
+                    <div className="mb-6 grid grid-cols-3 gap-3 sm:gap-4">
+                        <div className="rounded-xl bg-white border border-black/10 p-4 shadow-sm">
+                            <div className="text-xs text-[#6B7280]">Total orders</div>
+                            <div className="text-2xl font-bold">{data.summary.totalOrders}</div>
                         </div>
+                        <div className="rounded-xl bg-white border border-black/10 p-4 shadow-sm">
+                            <div className="text-xs text-[#6B7280]">Listings</div>
+                            <div className="text-2xl font-bold">{data.summary.totalListings}</div>
+                        </div>
+                        <div className="rounded-xl bg-white border border-black/10 p-4 shadow-sm">
+                            <div className="text-xs text-[#6B7280]">Payments</div>
+                            <div className="text-2xl font-bold">{data.summary.totalPayments}</div>
+                        </div>
+                    </div>
+                )}
 
-                        {loadingReports ? (
-                            <div className="p-12 flex justify-center text-inda-teal">
-                                <FaSpinner className="animate-spin text-2xl" />
-                            </div>
-                        ) : (
-                            <div className="divide-y divide-gray-100">
-                                {reports.length > 0 ? (
-                                    reports.map((report) => (
-                                        <Link href={`/reports/${report.id}`} key={report.id || Math.random()} className="grid grid-cols-5 p-4 items-center hover:bg-gray-50 transition-colors text-sm text-gray-700 font-medium cursor-pointer group">
-                                            <div className="col-span-1 font-bold text-inda-dark group-hover:text-inda-teal transition-colors underline decoration-dotted underline-offset-2">
-                                                {report.id}
-                                            </div>
-                                            <div className="col-span-2 flex flex-col">
-                                                <span className="truncate font-bold">{report.propertyAddress || report.client || "Property Report"}</span>
-                                                <span className="text-xs text-gray-400">{report.type || report.reportType}</span>
-                                            </div>
-                                            <div className="col-span-1 text-xs text-gray-500">{report.date || (report.createdAt && new Date(report.createdAt).toLocaleDateString()) || 'N/A'}</div>
-                                            <div className="col-span-1">
-                                                <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${report.status === 'Completed' ? 'bg-green-50 text-green-600 border-green-100' :
-                                                        report.status === 'Pending' ? 'bg-yellow-50 text-yellow-600 border-yellow-100' :
-                                                            'bg-blue-50 text-blue-600 border-blue-100'
-                                                    }`}>
-                                                    {report.status || 'In Progress'}
-                                                </span>
-                                            </div>
-                                        </Link>
-                                    ))
-                                ) : (
-                                    <div className="p-12 text-center text-gray-400 text-sm flex flex-col items-center">
-                                        <div className="bg-gray-100 p-4 rounded-full mb-3">
-                                            <FaFileAlt className="text-gray-300 text-xl" />
+                {/* Tabs - Underlined system from orders.tsx */}
+                <div className="mb-8 border-b border-gray-200">
+                    <nav className="-mb-px flex space-x-8">
+                        <button
+                            onClick={() => handleTabChange('library')}
+                            className={`flex items-center gap-2 py-4 px-1 border-b-2 font-bold text-sm transition-all ${activeTab === 'library'
+                                ? "border-[#4EA8A1] text-[#4EA8A1]"
+                                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                                }`}
+                        >
+                            <FiPackage size={16} />
+                            Reports Library {data && `(${data.summary.totalListings})`}
+                        </button>
+                        <button
+                            onClick={() => handleTabChange('payments')}
+                            className={`flex items-center gap-2 py-4 px-1 border-b-2 font-bold text-sm transition-all ${activeTab === 'payments'
+                                ? "border-[#4EA8A1] text-[#4EA8A1]"
+                                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                                }`}
+                        >
+                            <FiCreditCard size={16} />
+                            Payment History {data && `(${data.summary.totalPayments})`}
+                        </button>
+                        <button
+                            onClick={() => handleTabChange('generate')}
+                            className={`flex items-center gap-2 py-4 px-1 border-b-2 font-bold text-sm transition-all relative ${activeTab === 'generate'
+                                ? "border-[#4EA8A1] text-[#4EA8A1]"
+                                : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                                }`}
+                        >
+                            <FaFileAlt size={14} />
+                            Generate New Report
+                        </button>
+                    </nav>
+                </div>
+
+                {/* Loading / Error states */}
+                {loading && (
+                    <div className="p-12 flex flex-col items-center justify-center text-inda-teal bg-white rounded-xl border border-gray-200">
+                        <FiLoader className="animate-spin text-3xl mb-4" />
+                        <p className="text-sm text-gray-500">Loading your reports history...</p>
+                    </div>
+                )}
+
+                {error && !loading && (
+                    <div className="p-8 text-center bg-red-50 border border-red-200 rounded-xl flex flex-col items-center">
+                        <FiAlertCircle className="text-red-500 text-2xl mb-2" />
+                        <p className="text-red-700 font-medium">{error}</p>
+                    </div>
+                )}
+
+                {/* Library Tab content */}
+                {!loading && !error && activeTab === 'library' && (
+                    <div className="space-y-4">
+                        {paginatedOrders.length > 0 ? (
+                            <>
+                                <div className="grid grid-cols-1 gap-4">
+                                    {paginatedOrders.map((order) => (
+                                        <OrderCard
+                                            key={order.listingId}
+                                            order={order}
+                                            onClick={navigateToReport}
+                                            formatPrice={formatPrice}
+                                            getPlanColor={getPlanColor}
+                                        />
+                                    ))}
+                                </div>
+                                {/* Pagination */}
+                                {totalOrderPages > 1 && (
+                                    <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+                                        <div className="text-sm text-[#6B7280]">Page {currentPage} of {totalOrderPages}</div>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => handlePageChange(currentPage - 1)}
+                                                disabled={currentPage === 1}
+                                                className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                            >
+                                                <FiChevronLeft size={16} /> Previous
+                                            </button>
+                                            <button
+                                                onClick={() => handlePageChange(currentPage + 1)}
+                                                disabled={currentPage === totalOrderPages}
+                                                className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                            >
+                                                Next <FiChevronRight size={16} />
+                                            </button>
                                         </div>
-                                        No reports found. Generate your first report above.
                                     </div>
                                 )}
+                            </>
+                        ) : (
+                            <div className="p-12 text-center text-gray-400 bg-white border border-gray-200 rounded-xl shadow-sm text-sm flex flex-col items-center">
+                                <div className="bg-gray-100 p-4 rounded-full mb-3">
+                                    <FiPackage className="text-gray-300 text-xl" />
+                                </div>
+                                No reports found. Generate your first report to see it here.
                             </div>
                         )}
                     </div>
                 )}
 
-                {activeTab === 'generate' && (
-                    <div className="auto-in fade-in slide-in-from-bottom-2 duration-300">
+                {/* Payments Tab content */}
+                {!loading && !error && activeTab === 'payments' && (
+                    <div className="space-y-4">
+                        {paginatedPayments.length > 0 ? (
+                            <>
+                                <div className="space-y-4">
+                                    {paginatedPayments.map((payment) => (
+                                        <div key={payment._id} className="rounded-xl bg-white border border-black/10 p-4 shadow-sm">
+                                            <div className="flex items-center justify-between gap-3">
+                                                <div className="flex-1">
+                                                    <div className="flex items-center gap-2 mb-1">
+                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${getPlanColor(payment.plan)}`}>
+                                                            {payment.plan.charAt(0).toUpperCase() + payment.plan.slice(1)}
+                                                        </span>
+                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold ${getPaymentStatusColor(payment.status)}`}>
+                                                            {payment.status.charAt(0).toUpperCase() + payment.status.slice(1)}
+                                                        </span>
+                                                    </div>
+                                                    <p className="font-medium text-[#101820] line-clamp-1 text-sm">
+                                                        {payment.listingUrl ? new URL(payment.listingUrl).pathname.split("/").pop()?.replace(/-/g, " ") : "Property Analysis"}
+                                                    </p>
+                                                    <p className="text-xs text-[#6B7280]">Ref: {payment.reference}</p>
+                                                </div>
+                                                <div className="text-right">
+                                                    <div className="font-semibold text-[#101820] text-sm">{formatPrice(payment.amountNGN)}</div>
+                                                    <div className="text-xs text-[#6B7280]">
+                                                        {payment.paidAt ? new Date(payment.paidAt).toLocaleDateString() : "Pending"}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                {/* Pagination */}
+                                {totalPaymentPages > 1 && (
+                                    <div className="flex items-center justify-between mt-6 pt-4 border-t border-gray-200">
+                                        <div className="text-sm text-[#6B7280]">Page {currentPage} of {totalPaymentPages}</div>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => handlePageChange(currentPage - 1)}
+                                                disabled={currentPage === 1}
+                                                className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                            >
+                                                <FiChevronLeft size={16} /> Previous
+                                            </button>
+                                            <button
+                                                onClick={() => handlePageChange(currentPage + 1)}
+                                                disabled={currentPage === totalPaymentPages}
+                                                className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                            >
+                                                Next <FiChevronRight size={16} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            <div className="p-12 text-center text-gray-400 bg-white border border-gray-200 rounded-xl shadow-sm text-sm flex flex-col items-center">
+                                <div className="bg-gray-100 p-4 rounded-full mb-3">
+                                    <FiCreditCard className="text-gray-300 text-xl" />
+                                </div>
+                                No payment history found.
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Generate Tab content */}
+                {!loading && activeTab === 'generate' && (
+                    <div className="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200 shadow-sm animate-in fade-in slide-in-from-bottom-2">
                         <h2 className="text-lg font-bold text-inda-dark mb-6">Generate New Report</h2>
 
                         <div className="flex items-center mb-8 relative">
-                            <div className="absolute left-4 right-auto top-1/2 -translate-y-1/2 w-12 h-0.5 bg-gray-300 -z-10"></div>
+                            <div className="absolute left-4 right-auto top-1/2 -translate-y-1/2 w-12 h-0.5 bg-gray-300 -z-0"></div>
                             <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold mr-8 z-10 transition-colors duration-300 ${generateStep >= 1 ? 'bg-[#54A6A6]' : 'bg-gray-300'
                                 }`}>
                                 {generateStep > 1 ? <FaCheck /> : '1'}
@@ -287,7 +481,7 @@ export default function ReportsHubPage() {
 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                                     {REPORT_TYPES.map((type) => (
-                                        <div key={type.title} className={`p-6 rounded-xl border border-transparent hover:border-inda-teal/30 transition-all ${type.bg} flex flex-col justify-between`}>
+                                        <div key={type.title} className={`p-6 rounded-xl border border-transparent hover:border-inda-teal/30 transition-all ${type.bg} flex flex-col justify-between shadow-sm`}>
                                             <div>
                                                 <div className="mb-4">
                                                     <h4 className="font-bold text-inda-dark text-lg">{type.displayTitle}</h4>
@@ -325,7 +519,7 @@ export default function ReportsHubPage() {
                                 <button
                                     onClick={() => setGenerateStep(1)}
                                     disabled={!!generating}
-                                    className="bg-white border border-gray-300 text-gray-600 px-6 py-2.5 rounded-lg text-xs font-bold hover:bg-gray-50 transition"
+                                    className="bg-white border border-gray-300 text-gray-600 px-6 py-2.5 rounded-lg text-xs font-bold hover:bg-gray-50 transition shadow-sm"
                                 >
                                     Back
                                 </button>
@@ -334,6 +528,14 @@ export default function ReportsHubPage() {
                     </div>
                 )}
             </div>
+
+            {/* Payment Receipt Modal */}
+            {selectedPayment && (
+                <PaymentReceipt
+                    payment={selectedPayment}
+                    onClose={() => setSelectedPayment(null)}
+                />
+            )}
         </DashboardLayout>
     );
 }
