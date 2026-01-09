@@ -262,6 +262,12 @@ const Signup: React.FC = () => {
 
                     // Add Pro fields if not a Buyer
                     if (selectedRole !== 'Buyer') {
+                      // Validate required pro fields
+                      if (!phoneNumber.trim()) {
+                        setErrors({ phoneNumber: 'Phone number is required for Agents and Developers' });
+                        toast.showToast("Phone number is required", 2500, "error");
+                        return;
+                      }
                       payload.companyName = companyName;
                       payload.companyType = companyType;
                       payload.registrationNumber = registrationNumber;

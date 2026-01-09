@@ -7,7 +7,7 @@ import { IconType } from 'react-icons';
 import {
     FaHome, FaListAlt, FaLightbulb, FaBullhorn, FaBriefcase,
     FaFileAlt, FaSearch, FaChartBar, FaUsers, FaSuitcase, FaDoorOpen,
-    FaGift, FaCog, FaBars, FaTimes
+    FaGift, FaCog, FaBars, FaTimes, FaLink, FaComment
 } from 'react-icons/fa';
 
 // --- Types & Interfaces ---
@@ -22,6 +22,7 @@ interface MenuItem {
 
 const MENU_ITEMS: MenuItem[] = [
     { name: 'Home', icon: FaHome, href: '/dashboard' },
+    { name: 'Channel Setup', icon: FaComment, href: '/channels' },
     { name: 'Listings Manager', icon: FaListAlt, href: '/listings' },
     // { name: 'Insights', icon: FaLightbulb, href: '/insights' },
     // { name: 'Advertisement', icon: FaBullhorn, href: '/advertisement' },

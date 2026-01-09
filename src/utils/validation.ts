@@ -38,6 +38,12 @@ export const registerSchema = z.object({
   lastName: nameSchema,
   howDidYouHearAboutUs: z.string().min(1, "Please select how you heard about us"),
   todo: z.string().min(1, "Please select what you're looking to do"),
+  role: z.enum(["Buyer", "Agent", "Investor", "Developer"]).optional(),
+  // Pro fields (optional at schema level, enforced in form for non-Buyers)
+  companyName: z.string().optional(),
+  companyType: z.string().optional(),
+  registrationNumber: z.string().optional(),
+  phoneNumber: z.string().optional(),
 });
 
 export const verifyOtpSchema = z.object({
