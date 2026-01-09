@@ -1,8 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
 import AppSidebar from './AppSidebar';
 import { FaBell } from 'react-icons/fa';
-import Link from 'next/link';
-import Image from 'next/image';
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
 
