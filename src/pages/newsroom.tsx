@@ -384,10 +384,10 @@ export function Newsroom() {
                     <FileText className="w-16 h-16 text-[#4ea8a1]" />
                   </div>
                   <h3 className="text-xl mb-3 text-gray-900">
-                    2025 ROI Outlook — Where Investors Win
+                    2026 ROI Outlook — Where Investors Win
                   </h3>
                   <p className="text-gray-600 mb-4">
-                    Data-driven predictions for high-yield areas across Nigeria in 2025.
+                    Data-driven predictions for high-yield areas across Nigeria in 2026                                                                                                                                                                                                                                                                                     .
                   </p>
                   <Button variant="outline" className="w-full border-[#4ea8a1] text-[#4ea8a1] hover:bg-[#4ea8a1] hover:text-white">
                     Read Report
