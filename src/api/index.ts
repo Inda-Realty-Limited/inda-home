@@ -27,22 +27,7 @@ const getStoredToken = (): string | null => {
   }
 };
 
-let isRefreshing = false;
-let failedQueue: Array<{
-  resolve: (value?: any) => void;
-  reject: (reason?: any) => void;
-}> = [];
-
-const processQueue = (error: any = null) => {
-  failedQueue.forEach(promise => {
-    if (error) {
-      promise.reject(error);
-    } else {
-      promise.resolve();
-    }
-  });
-  failedQueue = [];
-};
+// Refresh logic variables removed
 
 apiClient.interceptors.request.use(
   (config) => {
@@ -51,11 +36,10 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
-    
+
     if (env.isDevelopment) {
       console.log(
-        `API Request: ${config.method?.toUpperCase() || "UNKNOWN"} ${
-          config.url
+        `API Request: ${config.method?.toUpperCase() || "UNKNOWN"} ${config.url
         }`,
         {
           headers: config.headers,
@@ -73,6 +57,7 @@ apiClient.interceptors.request.use(
   }
 );
 
+// Response interceptor
 apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     if (env.isDevelopment) {
@@ -84,8 +69,6 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error) => {
-    const originalRequest = error.config;
-    
     if (error.response) {
       if (env.isDevelopment) {
         console.error("API Error:", {
@@ -94,59 +77,21 @@ apiClient.interceptors.response.use(
           message: error.response?.data?.message || error.message,
         });
       }
-      
-      const status = error.response.status;
-      
-      if (status === 401 && !originalRequest._retry && originalRequest.url !== '/auth/refresh' && originalRequest.url !== '/auth/login') {
-        if (isRefreshing) {
-          return new Promise((resolve, reject) => {
-            failedQueue.push({ resolve, reject });
-          })
-            .then(() => apiClient(originalRequest))
-            .catch(err => Promise.reject(err));
-        }
-        
-        originalRequest._retry = true;
-        isRefreshing = true;
-        
-        try {
-          await axios.post(
-            `${env.api.baseUrl}/auth/refresh`,
-            {},
-            { withCredentials: true }
-          );
-          
-          isRefreshing = false;
-          processQueue();
-          return apiClient(originalRequest);
-        } catch (refreshError: any) {
-          isRefreshing = false;
-          processQueue(refreshError);
-          
-          if (typeof window !== "undefined") {
-            window.dispatchEvent(new Event("inda:session-expired"));
-            const currentPath = window.location.pathname;
-            
-            if (!currentPath.startsWith("/auth")) {
-              const returnTo = encodeURIComponent(currentPath + window.location.search);
-              window.location.href = `/auth/signin?returnTo=${returnTo}`;
-            }
-          }
-          
-          return Promise.reject(refreshError);
-        }
-      }
-      
-      if (status === 401 && originalRequest.url === '/auth/refresh') {
+
+      // Handle 401 Unauthorized
+      if (error.response.status === 401) {
         if (typeof window !== "undefined") {
+          // Dispatch event for other listeners
           window.dispatchEvent(new Event("inda:session-expired"));
+
           const currentPath = window.location.pathname;
-          
+
+          // Redirect to login if not already there
           if (!currentPath.startsWith("/auth")) {
             const returnTo = encodeURIComponent(currentPath + window.location.search);
             window.location.href = `/auth/signin?returnTo=${returnTo}`;
-            }
           }
+        }
       }
     }
     return Promise.reject(error);
