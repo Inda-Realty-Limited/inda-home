@@ -18,6 +18,102 @@ export default function ReportDetailsPage() {
         if (!id) return;
 
         const fetchReport = async () => {
+            if (id === 'IND-8827') {
+                setLoading(true);
+                // Simulate network delay for realism
+                await new Promise(resolve => setTimeout(resolve, 800));
+
+                const sampleData = {
+                    reportId: "IND-8827",
+                    client: "Premium Global Real Estate",
+                    analyst: "Chidiebere Nwankwo",
+                    reportDate: new Date().toLocaleDateString(),
+                    confidenceLevel: "Extreme",
+                    confidenceScore: 98,
+                    propertyOverview: {
+                        propertyType: "Luxury 5-Bedroom Detached Villa",
+                        location: "Zone A, Banana Island, Ikoyi, Lagos",
+                        landSize: "1,200 SQM",
+                        yearBuilt: "2023",
+                        siteVisitDate: "Jan 12, 2024",
+                        inspector: "Engr. Tayo Balogun"
+                    },
+                    keyFindings: [
+                        "Title documents (Certificate of Occupancy) are verified and authentic.",
+                        "Building structure shows 0% signs of subsidence or distress.",
+                        "Microlocation is premium with guaranteed 24/7 power and security.",
+                        "Current market pricing is 5.2% below fair market value for this specific street."
+                    ],
+                    legalVerification: [
+                        { id: 1, title: "Certificate of Occupancy", description: "Verified via Lagos State Land Registry. No encumbrances found.", status: "verified", icon: "shield" },
+                        { id: 2, title: "Governor's Consent", description: "Authenticated and up to date.", status: "verified", icon: "shield" },
+                        { id: 3, title: "Approved Building Plan", description: "Laser-vetted against LASBCA records. 100% compliant.", status: "verified", icon: "shield" }
+                    ],
+                    surveyVerification: [
+                        { id: 1, title: "Survey Plan", description: "Charting confirmed: Coordinates fall perfectly within the private estate boundary.", status: "verified", icon: "map" },
+                        { id: 2, title: "Beacon Verification", description: "Beacons are physically present and in correct positions.", status: "verified", icon: "map" }
+                    ],
+                    propertyCoordinates: { latitude: 6.4529, longitude: 3.4439 },
+                    finalVerdict: {
+                        status: "proceed",
+                        message: "This property is a 'Blue Chip' asset. Title is immaculate, the structure is premium, and the location guarantees high capital appreciation.",
+                        metrics: [
+                            { label: "Title Safety", value: 100 },
+                            { label: "Market Value Score", value: 95 },
+                            { label: "Structural Integrity", value: 98 }
+                        ]
+                    },
+                    plan: "deeperDive",
+                    sellerVerification: {
+                        developerProfile: {
+                            company: "Emerald Luxury Homes Ltd",
+                            yearsInBusiness: "15 Years",
+                            cacRegistration: "RC-1283944 (Verified)",
+                            redanMembership: "Active - Gold Member"
+                        },
+                        riskAssessment: {
+                            financialStability: 95,
+                            deliveryTrackRecord: 98,
+                            customerSatisfaction: 94
+                        },
+                        confidenceScore: 96,
+                        confidenceLabel: "Exceptional",
+                        recentProjects: [
+                            { name: "The Zenith Heights", completion: "2022" },
+                            { name: "Banana Island Villas Phase 1", completion: "2021" }
+                        ]
+                    },
+                    onSiteInspection: [
+                        { id: 1, title: "Foundation & Structure", description: "Reinforced concrete frame with no visible defects.", status: "verified", icon: "check" },
+                        { id: 2, title: "Finishing & ME", description: "Premium Italian marble and high-end electrical fittings throughout.", status: "verified", icon: "check" }
+                    ],
+                    photoDocumentation: {
+                        exterior: [
+                            "https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=800&q=80",
+                            "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80",
+                            "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80"
+                        ],
+                        interior: [
+                            "https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=800&q=80",
+                            "https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=800&q=80",
+                            "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=800&q=80"
+                        ],
+                        electrical: [
+                            "https://images.unsplash.com/photo-1558054665-fbe00cd7d920?auto=format&fit=crop&w=800&q=80",                       
+                            "https://images.unsplash.com/photo-1621905251918-48416bd8575a?auto=format&fit=crop&w=800&q=80"
+                        ],
+                        neighbourhood: [
+                            "https://images.unsplash.com/photo-1579678929710-862f8e01c0b2?auto=format&fit=crop&w=800&q=80",
+                            "https://images.unsplash.com/photo-1499310392581-322cec0355a6?auto=format&fit=crop&w=800&q=80"
+                        ]
+                    }
+                };
+
+                setReport(sampleData);
+                setLoading(false);
+                return;
+            }
+
             try {
                 setLoading(true);
                 const response = await ProReportsService.getReport(id as string);
