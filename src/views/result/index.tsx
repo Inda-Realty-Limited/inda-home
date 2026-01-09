@@ -485,11 +485,6 @@ const ResultPage: React.FC = () => {
         }
     }, [resultView, longTabRef.current, shortTabRef.current]);
 
-    const toQuarterLabel = (d: Date) => {
-        const q = Math.floor(d.getMonth() / 3) + 1;
-        return `Q${q} ${d.getFullYear()}`;
-    };
-    const isValidDateObj = (d: Date) => !Number.isNaN(d.getTime());
 
     const openWhatsApp = (text: string) => {
         const phone = process.env.NEXT_PUBLIC_INDA_WHATSAPP || "2347084960775";
@@ -516,31 +511,6 @@ const ResultPage: React.FC = () => {
 
     // Main render when result exists
     if (result) {
-
-
-
-            let label = "—";
-            if (rawDelivery) {
-                if (typeof rawDelivery === "string") {
-                    const parsed = new Date(rawDelivery);
-                    label = isValidDateObj(parsed)
-                        ? toQuarterLabel(parsed)
-                        : String(rawDelivery);
-                } else if (typeof rawDelivery === "number") {
-                    const parsed = new Date(rawDelivery);
-                    label = isValidDateObj(parsed) ? toQuarterLabel(parsed) : label;
-                }
-            }
-            if (label === "—") {
-                const est = new Date();
-                est.setMonth(est.getMonth() + 9);
-                label = toQuarterLabel(est) + " (est.)";
-            }
-            return label;
-        })();
-
-
-
         const fallbackTitleDisplay = (result as any)?.title || (result as any)?.snapshot?.title || "";
         const fallbackLocationDisplay = (result as any)?.location || (result as any)?.snapshot?.location || "";
         const fallbackListingDisplay = (result as any)?.listingUrl || (result as any)?.snapshot?.listingUrl || "";
@@ -559,7 +529,7 @@ const ResultPage: React.FC = () => {
                 noPadding
                 className="min-h-screen bg-gray-50"
             >
-                <PropertyDetail 
+                <PropertyDetail
                     property={property}
                     onBack={() => router.back()}
                     onReserve={() => {
