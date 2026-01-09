@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import {
     FaWhatsapp,
@@ -9,45 +9,71 @@ import {
     FaCheckCircle,
     FaChevronDown,
     FaMagic,
+    FaSpinner,
 } from 'react-icons/fa';
 import { useToast } from '@/components/ToastProvider';
+import { useAuth } from '@/contexts/AuthContext';
+import { getChannelStats, ChannelStatsItem, getPublicListings, PublicListing } from '@/api/channels';
+
+interface PromotionOption {
+    id: string;
+    label: string;
+    description: string;
+    icon: string;
+}
 
 interface ChannelCardProps {
     platform: string;
+    channelKey: string;
     icon: React.ReactNode;
-    leads: number;
-    conversion: string;
     instructions: string[];
-    trackingLink: string;
     stats: {
         clicks: number;
         leads: number;
-        conversion: string;
     };
     borderColor: string;
     iconColor: string;
+    userId: string;
+    promotionOptions: PromotionOption[];
 }
 
 const ChannelCard: React.FC<ChannelCardProps> = ({
     platform,
+    channelKey,
     icon,
-    leads,
-    conversion,
     instructions,
-    trackingLink,
     stats,
     borderColor,
-    iconColor
+    iconColor,
+    userId,
+    promotionOptions,
 }) => {
     const toast = useToast();
     const [copied, setCopied] = useState(false);
+    const [selectedPromotion, setSelectedPromotion] = useState<string>('all');
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+
+    const conversion = stats.clicks > 0
+        ? Math.round((stats.leads / stats.clicks) * 100)
+        : 0;
+
+    // Generate tracking link based on selection
+    const getTrackingLink = () => {
+        const baseUrl = typeof window !== 'undefined' ? window.location.origin : 'https://investinda.com';
+        if (selectedPromotion === 'all') {
+            return `${baseUrl}/portfolio/${userId}?c=${channelKey}`;
+        }
+        return `${baseUrl}/portfolio/${userId}?c=${channelKey}&listing=${selectedPromotion}`;
+    };
 
     const handleCopy = () => {
-        navigator.clipboard.writeText(trackingLink);
+        navigator.clipboard.writeText(getTrackingLink());
         setCopied(true);
         toast.showToast('Link copied to clipboard!', 2000, 'success');
         setTimeout(() => setCopied(false), 2000);
     };
+
+    const selectedOption = promotionOptions.find(opt => opt.id === selectedPromotion) || promotionOptions[0];
 
     return (
         <div className={`bg-white rounded-[32px] border-2 ${borderColor} p-6 md:p-8 flex flex-col gap-6 shadow-sm transition-all hover:shadow-md h-full`}>
@@ -59,7 +85,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
                 <div>
                     <h3 className="text-xl font-bold text-gray-900">{platform}</h3>
                     <p className="text-sm text-gray-500 font-medium">
-                        {leads} leads <span className="mx-1">•</span> {conversion} conversion
+                        {stats.leads} leads <span className="mx-1">•</span> {conversion}% conversion
                     </p>
                 </div>
             </div>
@@ -68,13 +94,43 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
             <div className="space-y-2">
                 <label className="text-sm font-bold text-gray-900">Choose what to promote:</label>
                 <div className="relative">
-                    <button className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-left text-sm font-medium">
-                        <span className="flex items-center gap-2">
-                            <span className="text-lg">🏘️</span> All Properties (Portfolio Page)
+                    <button
+                        onClick={() => setDropdownOpen(!dropdownOpen)}
+                        className="w-full flex items-center justify-between px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-left text-sm font-medium hover:bg-gray-100 transition-colors"
+                    >
+                        <span className="flex items-center gap-2 truncate">
+                            <span className="text-lg">{selectedOption?.icon}</span>
+                            <span className="truncate">{selectedOption?.label}</span>
                         </span>
-                        <FaChevronDown className="text-gray-400" />
+                        <FaChevronDown className={`text-gray-400 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
                     </button>
-                    <p className="mt-1.5 text-xs text-gray-400">Link shows all your properties in one page</p>
+
+                    {dropdownOpen && (
+                        <div className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                            {promotionOptions.map((option) => (
+                                <button
+                                    key={option.id}
+                                    onClick={() => {
+                                        setSelectedPromotion(option.id);
+                                        setDropdownOpen(false);
+                                    }}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 text-left text-sm hover:bg-gray-50 transition-colors ${selectedPromotion === option.id ? 'bg-[#4EA8A1]/10' : ''
+                                        }`}
+                                >
+                                    <span className="text-lg">{option.icon}</span>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="font-medium text-gray-900 truncate">{option.label}</p>
+                                        <p className="text-xs text-gray-400 truncate">{option.description}</p>
+                                    </div>
+                                    {selectedPromotion === option.id && (
+                                        <FaCheckCircle className="text-[#4EA8A1] shrink-0" />
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+
+                    <p className="mt-1.5 text-xs text-gray-400">{selectedOption?.description}</p>
                 </div>
             </div>
 
@@ -83,7 +139,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
                 <label className="text-sm font-bold text-gray-900">Your Tracking Link:</label>
                 <div className="flex items-center gap-2">
                     <div className="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm font-medium text-gray-600 truncate">
-                        {trackingLink}
+                        {getTrackingLink()}
                     </div>
                     <button
                         onClick={handleCopy}
@@ -119,20 +175,123 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
                 </div>
                 <div className="text-center">
                     <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mb-1">Conversion:</p>
-                    <p className="text-xl font-bold text-[#4EA8A1]">{stats.conversion}</p>
+                    <p className="text-xl font-bold text-[#4EA8A1]">{conversion}%</p>
                 </div>
             </div>
         </div>
     );
 };
 
+// Channel configurations
+const CHANNEL_CONFIG = {
+    whatsapp: {
+        platform: 'WhatsApp',
+        icon: <FaWhatsapp />,
+        instructions: [
+            'Copy the tracking link above',
+            'Share in WhatsApp groups or DMs',
+            'When someone clicks, we track it automatically',
+            'View all WhatsApp leads in your Leads Inbox'
+        ],
+        borderColor: 'border-[#25D366]/20',
+        iconColor: 'bg-[#25D366]',
+    },
+    instagram: {
+        platform: 'Instagram',
+        icon: <FaInstagram />,
+        instructions: [
+            'Copy the tracking link above',
+            'Add to your Instagram bio or link in bio tool',
+            'Use in post captions and Stories',
+            'Track which posts drive the most leads'
+        ],
+        borderColor: 'border-[#E1306C]/20',
+        iconColor: 'bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888]',
+    },
+    facebook: {
+        platform: 'Facebook',
+        icon: <FaFacebook />,
+        instructions: [
+            'Copy the tracking link above',
+            'Share in Facebook groups or your timeline',
+            'Use in Facebook Marketplace listings',
+            'Track which posts get the most engagement'
+        ],
+        borderColor: 'border-[#1877F2]/20',
+        iconColor: 'bg-[#1877F2]',
+    },
+    email: {
+        platform: 'Email Signature',
+        icon: <FaRegEnvelope />,
+        instructions: [
+            'Copy the tracking link above',
+            'Add to your email signature',
+            'Include in property inquiry responses',
+            'Track leads from email outreach'
+        ],
+        borderColor: 'border-red-500/20',
+        iconColor: 'bg-red-500',
+    },
+};
+
 export default function ChannelSetup() {
+    const { user } = useAuth();
+    const [channelStats, setChannelStats] = useState<ChannelStatsItem[]>([]);
+    const [listings, setListings] = useState<PublicListing[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [stats, userListings] = await Promise.all([
+                    getChannelStats(),
+                    user?._id ? getPublicListings(user._id) : Promise.resolve([]),
+                ]);
+                setChannelStats(stats);
+                setListings(userListings);
+            } catch (error) {
+                console.error('Failed to fetch data:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [user?._id]);
+
     const steps = [
         { title: 'Choose Property', desc: 'Select which property (or all) to promote', number: 1 },
         { title: 'Copy Link', desc: 'Get your unique tracking link for that channel', number: 2 },
         { title: 'Share Anywhere', desc: 'Post on WhatsApp, Instagram, Jiji, anywhere', number: 3 },
         { title: 'Track Results', desc: 'See which channel brings the most leads', number: 4 },
     ];
+
+    // Build promotion options from listings
+    const promotionOptions: PromotionOption[] = [
+        {
+            id: 'all',
+            label: 'All Properties (Portfolio Page)',
+            description: 'Link shows all your properties in one page',
+            icon: '🏘️',
+        },
+        ...listings.map((listing) => ({
+            id: listing._id,
+            label: listing.title || 'Untitled Property',
+            description: `${listing.microlocationStd || listing.state || 'No location'} • ${listing.priceNGN ? `₦${listing.priceNGN.toLocaleString()}` : 'Price TBD'}`,
+            icon: '🏠',
+        })),
+    ];
+
+    // Get stats for a specific channel
+    const getStatsForChannel = (channel: string) => {
+        const stat = channelStats.find((s) => s.channel === channel);
+        return {
+            clicks: stat?.clicks || 0,
+            leads: stat?.leads || 0,
+        };
+    };
+
+    const channelOrder = ['whatsapp', 'instagram', 'facebook', 'email'];
 
     return (
         <DashboardLayout title="Channel Setup">
@@ -168,75 +327,31 @@ export default function ChannelSetup() {
                 </div>
 
                 {/* Channels Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-12">
-                    <ChannelCard
-                        platform="WhatsApp"
-                        icon={<FaWhatsapp />}
-                        leads={127}
-                        conversion="6%"
-                        instructions={[
-                            'Copy the tracking link above',
-                            'Share in WhatsApp groups or DMs',
-                            'When someone clicks, we track it automatically',
-                            'View all WhatsApp leads in your Leads Inbox'
-                        ]}
-                        trackingLink="investinda.com/portfolio?c=whatsapp"
-                        stats={{ clicks: 2103, leads: 127, conversion: '6%' }}
-                        borderColor="border-[#25D366]/20"
-                        iconColor="bg-[#25D366]"
-                    />
-
-                    <ChannelCard
-                        platform="Instagram"
-                        icon={<FaInstagram />}
-                        leads={89}
-                        conversion="6%"
-                        instructions={[
-                            'Copy the tracking link above',
-                            'Add to your Instagram bio or link in bio tool',
-                            'Use in post captions and Stories',
-                            'Track which posts drive the most leads'
-                        ]}
-                        trackingLink="investinda.com/portfolio?c=instagram"
-                        stats={{ clicks: 1450, leads: 89, conversion: '6%' }}
-                        borderColor="border-[#E1306C]/20"
-                        iconColor="bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888]"
-                    />
-
-                    <ChannelCard
-                        platform="Facebook"
-                        icon={<FaFacebook />}
-                        leads={56}
-                        conversion="5%"
-                        instructions={[
-                            'Copy the tracking link above',
-                            'Share in Facebook groups or your timeline',
-                            'Use in Facebook Marketplace listings',
-                            'Track which posts get the most engagement'
-                        ]}
-                        trackingLink="investinda.com/portfolio?c=facebook"
-                        stats={{ clicks: 1123, leads: 56, conversion: '5%' }}
-                        borderColor="border-[#1877F2]/20"
-                        iconColor="bg-[#1877F2]"
-                    />
-
-                    <ChannelCard
-                        platform="Email Signature"
-                        icon={<FaRegEnvelope />}
-                        leads={23}
-                        conversion="5%"
-                        instructions={[
-                            'Copy the tracking link above',
-                            'Add to your email signature',
-                            'Include in property inquiry responses',
-                            'Track leads from email outreach'
-                        ]}
-                        trackingLink="investinda.com/portfolio?c=email"
-                        stats={{ clicks: 445, leads: 23, conversion: '5%' }}
-                        borderColor="border-red-500/20"
-                        iconColor="bg-red-500"
-                    />
-                </div>
+                {loading ? (
+                    <div className="flex items-center justify-center py-20">
+                        <FaSpinner className="animate-spin text-4xl text-[#4EA8A1]" />
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-12">
+                        {channelOrder.map((channelKey) => {
+                            const config = CHANNEL_CONFIG[channelKey as keyof typeof CHANNEL_CONFIG];
+                            return (
+                                <ChannelCard
+                                    key={channelKey}
+                                    platform={config.platform}
+                                    channelKey={channelKey}
+                                    icon={config.icon}
+                                    instructions={config.instructions}
+                                    stats={getStatsForChannel(channelKey)}
+                                    borderColor={config.borderColor}
+                                    iconColor={config.iconColor}
+                                    userId={user?._id || 'demo'}
+                                    promotionOptions={promotionOptions}
+                                />
+                            );
+                        })}
+                    </div>
+                )}
             </div>
         </DashboardLayout>
     );
