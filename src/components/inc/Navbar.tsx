@@ -153,12 +153,14 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
             >
               Use Cases
             </button>
-                        <button
-              onClick={() => router.push("/dashboard")}
-              className="text-white/90 hover:text-white text-sm font-medium transition-colors duration-200"
-            >
-              Dashboard
-            </button>
+            {(user?.role === 'Agent' || user?.role === 'Developer' || user?.role === 'Admin') && (
+              <button
+                onClick={() => router.push("/dashboard")}
+                className="text-white/90 hover:text-white text-sm font-medium transition-colors duration-200"
+              >
+                Dashboard
+              </button>
+            )}
             <button
               disabled
               className="text-white/60 cursor-not-allowed text-sm font-medium opacity-60"
@@ -342,15 +344,17 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
               >
                 Use Cases
               </button>
-              <button
-                className="w-full text-left px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white text-base"
-                onClick={() => {
-                  setMobileOpen(false);
-                  router.push("/dashboard");
-                }}
-              >
-                Dashboard
-              </button>
+              {(user?.role === 'Agent' || user?.role === 'Developer' || user?.role === 'Admin') && (
+                <button
+                  className="w-full text-left px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white text-base"
+                  onClick={() => {
+                    setMobileOpen(false);
+                    router.push("/dashboard");
+                  }}
+                >
+                  Dashboard
+                </button>
+              )}
               <button
                 disabled
                 className="w-full text-left px-4 py-3 rounded-xl bg-white/5 text-white/60 text-base cursor-not-allowed opacity-60"

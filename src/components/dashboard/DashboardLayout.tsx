@@ -3,6 +3,8 @@ import AppSidebar from './AppSidebar';
 import { FaBell } from 'react-icons/fa';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useEffect } from 'react';
+import { useRouter } from 'next/router';
 
 interface DashboardLayoutProps {
     children: React.ReactNode;
@@ -10,7 +12,17 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children, title = 'Inda Pro' }: DashboardLayoutProps) {
-    const { user } = useAuth();
+    const { user, isAuthenticated } = useAuth();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (isAuthenticated && user) {
+            const allowedRoles = ['Agent', 'Developer', 'Admin'];
+            if (!allowedRoles.includes(user.role)) {
+                router.replace('/');
+            }
+        }
+    }, [user, isAuthenticated, router]);
 
     // Safety check for user loaded
     // Note: Dashboard pages should be wrapped in ProtectedRoute, so user should exist here.
