@@ -1,68 +1,159 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { FaSpinner, FaArrowLeft } from 'react-icons/fa';
+import { FaSpinner, FaArrowLeft, FaExclamationTriangle } from 'react-icons/fa';
 
-import DeepDiveTemplate, { ReportData } from '@/components/dashboard/reports/DeepDiveReport';
-import DeeperDiveTemplate, { DeeperReportData } from '@/components/dashboard/reports/DeeperDiveReport';
-
-const DEEP_DIVE_MOCK: ReportData = {
-    id: 'IND-8827',
-    client: 'Invest Corp',
-    analyst: 'Sarah J.',
-    date: 'Oct 20, 2023',
-    summary: {
-        securityScore: '92/100',
-        marketValue: '₦85,000,000',
-        appreciation: '12% p.a',
-        verdict: 'Safe to Buy'
-    },
-    keyFindings: [
-        "Clean title (Certificate of Occupancy verified at Alausa).",
-        "Zoning aligns with residential development plans.",
-        "Access road is currently unpaved but motorable.",
-        "No active litigation found on the property."
-    ],
-    legal: [
-        { label: 'Certificate of Occupancy', status: 'Valid', subtext: 'Verified at Alausa Registry (Vol 44, Pg 22)' },
-        { label: 'Deed of Assignment', status: 'Valid', subtext: 'Executed and Registered' },
-        { label: 'Governor’s Consent', status: 'Pending', subtext: 'Application submitted, file no. 8821' },
-        { label: 'Litigation Search', status: 'Valid', subtext: 'No active court cases found' },
-    ],
-    survey: [
-        { label: 'Land Coordinates', status: 'Valid', subtext: 'Matches surveyor general plan' },
-        { label: 'Boundary Verification', status: 'Valid', subtext: 'Beacons are intact and accurate' },
-        { label: 'Flood Risk', status: 'Valid', subtext: 'Dry land, no history of flooding' },
-        { label: 'Encroachment Check', status: 'Valid', subtext: 'No physical encroachment detected' }
-    ],
-    verdict: {
-        status: 'PASSED',
-        message: 'The property has passed all critical legal and survey checks. The pending Governor’s consent is procedural and does not pose a significant risk.'
-    }
-};
-
-const DEEPER_DIVE_MOCK: DeeperReportData = {
-    ...DEEP_DIVE_MOCK,
-    id: 'IND-8829',
-    client: 'Chinedu O.',
-    sellerVerification: [
-        { label: 'Identity Check', value: 'Confirmed (NIN & Passport Match)' },
-        { label: 'Ownership History', value: 'First owner bought from Family in 2010' },
-        { label: 'Litigation Check', value: 'Clear (No disputes on previous owners)' }
-    ],
-    physicalInspection: [
-        { label: 'Property Condition', value: 'Excellent (New Construction)' },
-        { label: 'Current Occupancy', value: 'Vacant' },
-        { label: 'Local Infrastructure', value: 'Paved road, Power available' },
-        { label: 'Neighborhood', value: 'Quiet Residential Zone' }
-    ]
-};
+import DeepDiveReport from '@/components/dashboard/reports/DeepDiveReport';
+import DeeperDiveReport from '@/components/dashboard/reports/DeeperDiveReport';
+import { ProReportsService } from '@/api/pro-reports';
 
 export default function ReportDetailsPage() {
     const router = useRouter();
     const { id } = router.query;
+    const [report, setReport] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-    if (!router.isReady) {
+    useEffect(() => {
+        if (!id) return;
+
+        const fetchReport = async () => {
+            try {
+                setLoading(true);
+                const response = await ProReportsService.getReport(id as string);
+                if (response.success && response.data) {
+                    // Map the data to expected format if it's from DueDiligenceReport
+                    if (response.source === 'DueDiligenceReport') {
+                        const raw = response.data;
+                        const mapped: any = {
+                            reportId: raw.reportId,
+                            client: raw.clientName || raw.propertyOverview?.location || "Valued Client",
+                            analyst: raw.analystName || "Inda Analyst",
+                            reportDate: raw.reportDate ? new Date(raw.reportDate).toLocaleDateString() : new Date(raw.createdAt).toLocaleDateString(),
+                            confidenceLevel: raw.confidenceVerdict?.label || "Medium",
+                            confidenceScore: raw.confidenceScorePercent || 75,
+                            propertyOverview: {
+                                propertyType: raw.propertyOverview?.propertyTypeStd || "Residential",
+                                location: raw.propertyOverview?.location || "Lagos, Nigeria",
+                                landSize: raw.propertyOverview?.landSize || "N/A",
+                                yearBuilt: raw.propertyOverview?.yearBuilt || "N/A",
+                                siteVisitDate: raw.siteInspection?.visitDate || "N/A",
+                                inspector: raw.siteInspection?.inspectorName || "N/A"
+                            },
+                            keyFindings: raw.propertyOverview?.keyFindings || [],
+                            legalVerification: (raw.legalVerification || []).map((v: any) => ({
+                                id: v.title,
+                                title: v.title,
+                                description: v.note || "",
+                                status: v.status === 'verified' ? 'verified' : (v.status === 'issue' ? 'failed' : 'pending'),
+                                icon: "shield"
+                            })),
+                            surveyVerification: (raw.surveyVerification || []).map((v: any) => ({
+                                id: v.title,
+                                title: v.title,
+                                description: v.note || "",
+                                status: v.status === 'verified' ? 'verified' : (v.status === 'issue' ? 'failed' : 'pending'),
+                                icon: "map"
+                            })),
+                            propertyCoordinates: {
+                                latitude: raw.propertyOverview?.coordinates?.latitude || raw.propertyOverview?.coordinates?.lat || 6.45,
+                                longitude: raw.propertyOverview?.coordinates?.longitude || raw.propertyOverview?.coordinates?.lng || 3.6
+                            },
+                            finalVerdict: {
+                                status: raw.finalVerdict?.verdict === 'proceed' ? 'proceed' : (raw.finalVerdict?.verdict === 'decline' ? 'decline' : 'caution'),
+                                message: raw.finalVerdict?.summary || "Report is currently being compiled.",
+                                metrics: raw.finalVerdict?.metrics || []
+                            },
+                            plan: raw.plan
+                        };
+
+                        if (raw.plan === 'deeperDive') {
+                            mapped.sellerVerification = {
+                                developerProfile: {
+                                    company: raw.sellerVerification?.developerProfile?.company || raw.sellerVerification?.developerProfile || "N/A",
+                                    yearsInBusiness: raw.sellerVerification?.developerProfile?.yearsInBusiness || "N/A",
+                                    cacRegistration: raw.sellerVerification?.developerProfile?.cacRegistration || "Verified",
+                                    redanMembership: raw.sellerVerification?.developerProfile?.redanMembership || "Active"
+                                },
+                                riskAssessment: {
+                                    financialStability: raw.sellerVerification?.riskAssessment?.financialStability || 85,
+                                    deliveryTrackRecord: raw.sellerVerification?.riskAssessment?.deliveryTrackRecord || 90,
+                                    customerSatisfaction: raw.sellerVerification?.riskAssessment?.customerSatisfaction || 88
+                                },
+                                confidenceScore: raw.sellerVerification?.confidenceScorePercent || raw.confidenceScorePercent || 80,
+                                confidenceLabel: raw.sellerVerification?.riskLabel || raw.confidenceVerdict?.label || "Strong",
+                                recentProjects: raw.sellerVerification?.recentProjects || []
+                            };
+                            mapped.onSiteInspection = (raw.siteInspection?.checklist || []).map((c: any) => ({
+                                id: c.title,
+                                title: c.title,
+                                description: c.note || "",
+                                status: c.status === 'verified' ? 'verified' : (c.status === 'issue' ? 'failed' : 'pending'),
+                                icon: "check"
+                            }));
+                            mapped.photoDocumentation = raw.siteInspection?.photos || {
+                                exterior: [],
+                                interior: [],
+                                electrical: [],
+                                neighbourhood: []
+                            };
+                            if (Array.isArray(mapped.photoDocumentation)) {
+                                mapped.photoDocumentation = {
+                                    exterior: mapped.photoDocumentation,
+                                    interior: [],
+                                    electrical: [],
+                                    neighbourhood: []
+                                };
+                            }
+                            mapped.environmentalAssessment = raw.environmentalAssessment;
+                            mapped.inspectorNotes = raw.siteInspection?.notes;
+                            mapped.confidenceScoreBreakdown = raw.confidenceScoreBreakdown;
+                        }
+                        setReport(mapped);
+                    } else if (response.source === 'Payment') {
+                        // For raw payments, provide a skeleton matched to high-fidelity format
+                        setReport({
+                            reportId: response.data.id,
+                            client: "Property Analysis",
+                            analyst: "Pending Assignment",
+                            reportDate: new Date(response.data.date).toLocaleDateString(),
+                            confidenceLevel: "TBD",
+                            confidenceScore: 0,
+                            propertyOverview: { propertyType: "TBD", location: "TBD", landSize: "TBD", yearBuilt: "TBD" },
+                            keyFindings: ["Your payment has been received.", "An analyst is being assigned to visit the property."],
+                            legalVerification: [],
+                            surveyVerification: [],
+                            propertyCoordinates: { latitude: 6.45, longitude: 3.6 },
+                            finalVerdict: { status: 'caution', message: 'Report is currently in progress.' },
+                            sellerVerification: {
+                                developerProfile: { company: "TBD", yearsInBusiness: "TBD", cacRegistration: "Pending", redanMembership: "Pending" },
+                                riskAssessment: { financialStability: 0, deliveryTrackRecord: 0, customerSatisfaction: 0 },
+                                confidenceScore: 0,
+                                confidenceLabel: "Pending Assignment",
+                                recentProjects: []
+                            },
+                            onSiteInspection: [],
+                            photoDocumentation: { exterior: [], interior: [], electrical: [], neighbourhood: [] },
+                            plan: response.data.type === 'deepDive' ? 'deepDive' : 'deeperDive'
+                        });
+                    } else {
+                        setReport(response.data);
+                    }
+                } else {
+                    setError("Failed to load report data");
+                }
+            } catch (err: any) {
+                console.error("Error fetching report:", err);
+                setError(err.message || "An error occurred while fetching report");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchReport();
+    }, [id]);
+
+    if (!router.isReady || loading) {
         return (
             <DashboardLayout>
                 <div className="h-screen flex items-center justify-center">
@@ -75,25 +166,45 @@ export default function ReportDetailsPage() {
         );
     }
 
-    const isDeeperDive = id === 'IND-8829';
-    const reportData = isDeeperDive ? DEEPER_DIVE_MOCK : { ...DEEP_DIVE_MOCK, id: id as string };
+    if (error || !report) {
+        return (
+            <DashboardLayout title="Report Error">
+                <div className="h-screen flex flex-col items-center justify-center gap-4 p-4 text-center">
+                    <FaExclamationTriangle className="text-red-500 text-5xl mb-2" />
+                    <h2 className="text-2xl font-bold text-inda-dark">Report Not Found</h2>
+                    <p className="text-gray-500 max-w-md">
+                        {error || "We couldn't find the report you're looking for. It might still be in progress or doesn't exist."}
+                    </p>
+                    <button
+                        onClick={() => router.push('/reports')}
+                        className="mt-4 px-6 py-2 bg-inda-teal text-white rounded-lg font-bold hover:bg-inda-dark transition-colors"
+                    >
+                        Back to Reports Library
+                    </button>
+                </div>
+            </DashboardLayout>
+        );
+    }
+
+    // Determine template based on report type
+    const isDeeperDive = report.plan === 'deeperDive' || report.type === 'Deeper Dive' || (report.metadata && report.metadata.type === 'Deeper Dive');
 
     return (
-        <DashboardLayout title={`Report: ${id}`}>
+        <DashboardLayout title={`Report: ${report.reportId}`}>
             <div className="bg-[#F8FAFC] min-h-screen pb-20">
-                <div className="max-w-4xl mx-auto mb-6 pt-6 px-4 md:px-0">
+                <div className="max-w-7xl mx-auto mb-6 pt-6 px-4 md:px-0">
                     <button
                         onClick={() => router.back()}
-                        className="text-xs text-gray-500 hover:text-inda-teal font-medium flex items-center gap-2 transition-colors"
+                        className="text-xs text-gray-500 hover:text-inda-teal font-medium flex items-center gap-2 transition-colors mb-4"
                     >
                         <FaArrowLeft /> Back to Reports Library
                     </button>
                 </div>
 
                 {isDeeperDive ? (
-                    <DeeperDiveTemplate data={reportData as DeeperReportData} />
+                    <DeeperDiveReport data={report} />
                 ) : (
-                    <DeepDiveTemplate data={reportData as ReportData} />
+                    <DeepDiveReport data={report} />
                 )}
             </div>
         </DashboardLayout>
