@@ -165,7 +165,7 @@ const ForProfessionals: React.FC = () => {
                 onClick={onGetStarted}
                 className="group px-6 py-3 bg-[#50b8b1] text-white rounded-lg font-medium hover:bg-[#3a9892] transition-all flex items-center gap-2 shadow-sm"
               >
-                Start free trial
+                Start free
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </button>
               <button
@@ -514,7 +514,7 @@ const ForProfessionals: React.FC = () => {
                 onClick={onGetStarted}
                 className="w-full py-2.5 bg-[#50b8b1] rounded-lg text-white hover:bg-[#3a9892] transition-colors text-sm font-medium"
               >
-                Start free trial
+                Start free
               </button>
             </motion.div>
 
@@ -582,7 +582,7 @@ const ForProfessionals: React.FC = () => {
               onClick={onGetStarted}
               className="group px-8 py-4 bg-[#50b8b1] text-white rounded-lg font-medium hover:bg-[#3a9892] transition-all inline-flex items-center gap-2 shadow-lg text-lg"
             >
-              Start free trial
+              Start free
               <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
             </button>
           </motion.div>
