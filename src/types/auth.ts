@@ -9,6 +9,9 @@ export type StoredUser = {
   todo?: string;
   createdAt?: string;
   updatedAt?: string;
+  subscriptionPlan?: "free" | "pro" | "enterprise";
+  subscriptionStatus?: "active" | "expired" | "none";
+  subscriptionExpiresAt?: string;
   [key: string]: any;
 };
 

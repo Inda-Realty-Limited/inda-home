@@ -8,6 +8,7 @@ import {
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
+import { PlanGuard } from '@/components/dashboard/PlanGuard';
 
 // --- Mock Data / Constants ---
 
@@ -15,7 +16,7 @@ const QUICK_ACTIONS = [
     { name: 'Add Property', icon: FaPlus, href: '/listings/add', color: 'bg-white/10' },
     { name: 'All Leads', icon: FaUsers, href: '/leads', color: 'bg-white/10' },
     { name: 'Portfolio Page', icon: FaExternalLinkAlt, href: '/portfolio', color: 'bg-white/10' },
-    { name: 'Upgrade Plan', icon: FaRocket, href: '/upgrade', color: 'bg-[#E2E689] text-gray-900', isSpecial: true },
+    { name: 'Upgrade Plan', icon: FaRocket, href: '/for-professionals#pricing', color: 'bg-[#E2E689] text-gray-900', isSpecial: true },
 ];
 
 const PERFORMANCE_STATS = [
@@ -124,67 +125,69 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Channel Performance Table */}
-                    <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
-                        <h2 className="text-xl font-bold mb-1">Channel Performance</h2>
-                        <p className="text-gray-500 text-sm mb-8">See exactly where your leads come from</p>
+                    <PlanGuard plan={user?.subscriptionPlan || 'free'} message="Upgrade to Pro to see exactly where your leads come from. Track Instagram, WhatsApp, and more.">
+                        <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100 h-full">
+                            <h2 className="text-xl font-bold mb-1">Channel Performance</h2>
+                            <p className="text-gray-500 text-sm mb-8">See exactly where your leads come from</p>
 
-                        <div className="overflow-x-auto">
-                            <table className="w-full text-left">
-                                <thead>
-                                    <tr className="text-gray-400 text-[10px] uppercase font-bold tracking-widest border-b border-gray-50">
-                                        <th className="pb-4">Channel</th>
-                                        <th className="pb-4">Leads</th>
-                                        <th className="pb-4">Trend</th>
-                                        <th className="pb-4">Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="text-sm">
-                                    {CHANNEL_PERFORMANCE.map((item, idx) => (
-                                        <tr key={idx} className="border-b border-gray-50 group hover:bg-gray-50/50 transition-colors">
-                                            <td className="py-5 font-bold text-gray-800">{item.channel}</td>
-                                            <td className="py-5 font-black text-lg">{item.leads}</td>
-                                            <td className={`py-5 font-bold ${item.trendColor} flex items-center gap-2 italic`}>
-                                                <FaChartLine size={12} /> {item.trend}
-                                            </td>
-                                            <td className={`py-5 font-bold ${item.actionColor}`}>
-                                                {item.action === 'Keep using' ? '✓ ' : '✕ '}{item.action}
-                                            </td>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left">
+                                    <thead>
+                                        <tr className="text-gray-400 text-[10px] uppercase font-bold tracking-widest border-b border-gray-50">
+                                            <th className="pb-4">Channel</th>
+                                            <th className="pb-4">Leads</th>
+                                            <th className="pb-4">Trend</th>
+                                            <th className="pb-4">Action</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                    </thead>
+                                    <tbody className="text-sm">
+                                        {CHANNEL_PERFORMANCE.map((item, idx) => (
+                                            <tr key={idx} className="border-b border-gray-50 group hover:bg-gray-50/50 transition-colors">
+                                                <td className="py-5 font-bold text-gray-800">{item.channel}</td>
+                                                <td className="py-5 font-black text-lg">{item.leads}</td>
+                                                <td className={`py-5 font-bold ${item.trendColor} flex items-center gap-2 italic`}>
+                                                    <FaChartLine size={12} /> {item.trend}
+                                                </td>
+                                                <td className={`py-5 font-bold ${item.actionColor}`}>
+                                                    {item.action === 'Keep using' ? '✓ ' : '✕ '}{item.action}
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
 
-                        {/* Performance Summary Box */}
-                        <div className="mt-8 bg-[#E9F3F6] rounded-2xl p-6 flex flex-wrap gap-8">
-                            <div className="flex items-start gap-4">
-                                <div className="p-3 bg-white rounded-xl shadow-sm">
-                                    <FaExclamationCircle className="text-blue-500" />
-                                </div>
-                                <div className="space-y-4">
-                                    <h3 className="text-sm font-black text-[#2D5A54] uppercase tracking-wider flex items-center gap-2">
-                                        📊 Performance Summary
-                                    </h3>
-                                    <div className="flex gap-8">
-                                        <div>
-                                            <div className="text-xs font-bold text-green-600 mb-2">🏆 Best Performers</div>
-                                            <div className="text-xs text-gray-600 leading-relaxed font-medium">
-                                                <span className="font-bold text-gray-800">WhatsApp:</span> 127 leads, 6% conversion<br />
-                                                <span className="font-bold text-gray-800">Instagram:</span> 89 leads, 6% conversion
+                            {/* Performance Summary Box */}
+                            <div className="mt-8 bg-[#E9F3F6] rounded-2xl p-6 flex flex-wrap gap-8">
+                                <div className="flex items-start gap-4">
+                                    <div className="p-3 bg-white rounded-xl shadow-sm">
+                                        <FaExclamationCircle className="text-blue-500" />
+                                    </div>
+                                    <div className="space-y-4">
+                                        <h3 className="text-sm font-black text-[#2D5A54] uppercase tracking-wider flex items-center gap-2">
+                                            📊 Performance Summary
+                                        </h3>
+                                        <div className="flex gap-8">
+                                            <div>
+                                                <div className="text-xs font-bold text-green-600 mb-2">🏆 Best Performers</div>
+                                                <div className="text-xs text-gray-600 leading-relaxed font-medium">
+                                                    <span className="font-bold text-gray-800">WhatsApp:</span> 127 leads, 6% conversion<br />
+                                                    <span className="font-bold text-gray-800">Instagram:</span> 89 leads, 6% conversion
+                                                </div>
                                             </div>
-                                        </div>
-                                        <div>
-                                            <div className="text-xs font-bold text-red-600 mb-2">⚠️ Needs Attention</div>
-                                            <div className="text-xs text-gray-600 leading-relaxed font-medium">
-                                                <span className="font-bold text-gray-800">Property Pro:</span> Only 2% conversion<br />
-                                                <span className="font-bold text-gray-800">Jiji:</span> 4% conversion, below average
+                                            <div>
+                                                <div className="text-xs font-bold text-red-600 mb-2">⚠️ Needs Attention</div>
+                                                <div className="text-xs text-gray-600 leading-relaxed font-medium">
+                                                    <span className="font-bold text-gray-800">Property Pro:</span> Only 2% conversion<br />
+                                                    <span className="font-bold text-gray-800">Jiji:</span> 4% conversion, below average
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </PlanGuard>
 
                     {/* Your Properties Section */}
                     <div className="bg-white rounded-3xl p-8 shadow-sm border border-gray-100">
@@ -307,28 +310,30 @@ export default function DashboardPage() {
                         </div>
 
                         {/* AI Recommendations */}
-                        <div className="bg-[#F9F6FF] rounded-3xl p-8 shadow-sm border border-purple-100">
-                            <h2 className="text-xl font-bold mb-1 text-[#6A4FC5] flex items-center gap-2">
-                                <FaRobot className="text-[#A374FF]" /> AI Recommendations
-                            </h2>
-                            <p className="text-purple-400 text-sm font-medium mb-8">Data-driven insights to boost your property sales</p>
+                        <PlanGuard plan={user?.subscriptionPlan || 'free'} message="Upgrade to Pro for AI-driven pricing insights and marketing recommendations that boost sales.">
+                            <div className="bg-[#F9F6FF] rounded-3xl p-8 shadow-sm border border-purple-100 h-full">
+                                <h2 className="text-xl font-bold mb-1 text-[#6A4FC5] flex items-center gap-2">
+                                    <FaRobot className="text-[#A374FF]" /> AI Recommendations
+                                </h2>
+                                <p className="text-purple-400 text-sm font-medium mb-8">Data-driven insights to boost your property sales</p>
 
-                            <div className="space-y-4">
-                                {AI_RECOMMENDATIONS.map((rec, idx) => (
-                                    <div key={idx} className="bg-white p-5 rounded-2xl flex items-start gap-4 shadow-sm border border-white hover:border-purple-200 transition-all group">
-                                        <div className="mt-1">
-                                            <rec.icon className="text-green-500 group-hover:scale-110 transition-transform" size={20} />
-                                        </div>
-                                        <div>
-                                            <div className="font-bold text-gray-800 mb-1">{rec.text}</div>
-                                            <div className="text-xs text-gray-500 leading-relaxed font-medium">
-                                                {rec.subtext}
+                                <div className="space-y-4">
+                                    {AI_RECOMMENDATIONS.map((rec, idx) => (
+                                        <div key={idx} className="bg-white p-5 rounded-2xl flex items-start gap-4 shadow-sm border border-white hover:border-purple-200 transition-all group">
+                                            <div className="mt-1">
+                                                <rec.icon className="text-green-500 group-hover:scale-110 transition-transform" size={20} />
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-gray-800 mb-1">{rec.text}</div>
+                                                <div className="text-xs text-gray-500 leading-relaxed font-medium">
+                                                    {rec.subtext}
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    ))}
+                                </div>
                             </div>
-                        </div>
+                        </PlanGuard>
 
                     </div>
                 </div>
