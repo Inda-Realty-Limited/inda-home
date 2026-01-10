@@ -43,8 +43,8 @@ export default function ListingsManagerPage() {
 
                     setListings(data);
                 }
-            } catch (err) {
-                console.error("Failed to fetch listings:", err);
+            } catch (_err) {
+                console.error("Failed to fetch listings:", _err);
                 setError("Could not load listings.");
             } finally {
                 setLoading(false);
@@ -54,19 +54,19 @@ export default function ListingsManagerPage() {
         if (user) {
             fetchListings();
         } else {
-             // If no user immediately, wait or stop loading? 
-             // Ideally loading stays true until auth check is done, but useAuth usually handles that.
-             // If user is null but loading is true in auth context, we wait.
-             // Assuming useAuth provides a loading state too, but I'll stick to this for now.
-             // Actually, if user is null initially (before context loads), we shouldn't confirm "no user" yet if auth is loading.
-             // But for now replacing localStorage logic directly.
-             setLoading(false);
+            // If no user immediately, wait or stop loading? 
+            // Ideally loading stays true until auth check is done, but useAuth usually handles that.
+            // If user is null but loading is true in auth context, we wait.
+            // Assuming useAuth provides a loading state too, but I'll stick to this for now.
+            // Actually, if user is null initially (before context loads), we shouldn't confirm "no user" yet if auth is loading.
+            // But for now replacing localStorage logic directly.
+            setLoading(false);
         }
     }, [user]);
 
     const handleDelete = async (indaTag: string) => {
         if (!window.confirm("Are you sure you want to delete this listing?")) return;
-        
+
         if (!user) {
             alert("You must be logged in to delete listings.");
             return;
@@ -76,7 +76,7 @@ export default function ListingsManagerPage() {
             const userId = user.id || user._id || (user as any).user?.id;
             await ProListingsService.deleteListing(indaTag, userId);
             setListings(prev => prev.filter(l => l.indaTag !== indaTag && l.id !== indaTag));
-        } catch (err) {
+        } catch (_err) {
             alert("Failed to delete listing.");
         }
     };

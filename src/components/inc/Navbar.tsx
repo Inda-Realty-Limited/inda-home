@@ -26,7 +26,6 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
   const [productsOpen, setProductsOpen] = useState(false);
-  const [notificationCount, setNotificationCount] = useState(0);
   const profileRef = useRef<HTMLDivElement | null>(null);
   const productsRef = useRef<HTMLDivElement | null>(null);
 
@@ -179,12 +178,6 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
                 color="#F9F9F9"
                 className="group-hover:scale-110 transition-transform duration-200"
               />
-              {/* Notification count badge */}
-              {notificationCount > 0 && (
-                <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                  {notificationCount > 99 ? "99+" : notificationCount}
-                </div>
-              )}
             </div>
             {/* Profile (dropdown) */}
             <div
@@ -377,11 +370,6 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
                 <span className="flex items-center gap-3">
                   <FiBell /> Notifications
                 </span>
-                {notificationCount > 0 && (
-                  <div className="bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                    {notificationCount > 99 ? "99+" : notificationCount}
-                  </div>
-                )}
               </button>
               {/* Mobile Profile submenu */}
               <div className="w-full">

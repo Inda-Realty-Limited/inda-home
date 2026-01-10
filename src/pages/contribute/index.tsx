@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-    FaCheckCircle, FaCloudUploadAlt, FaChevronDown, FaPlus, FaCalendarAlt, FaFileAlt, FaTimes
+    FaCloudUploadAlt,FaPlus
 } from 'react-icons/fa';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import DashboardButton from '@/components/dashboard/DashboardButton';

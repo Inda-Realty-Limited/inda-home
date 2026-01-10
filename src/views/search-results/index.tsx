@@ -74,7 +74,7 @@ const mapListingToProperty = (listing: any): Property => {
   const firstImage = images.length > 0 ? images[0] : 'https://images.unsplash.com/photo-1662454419736-de132ff75638?w=800';
   const bedroomCount = parseInt(listing.bedrooms) || listing.bedrooms || 0;
   const priceValue = Number(listing.purchasePrice) || listing.priceNGN || 0;
-  
+
   return {
     id: listing._id || listing.id || listing.indaTag || String(Math.random()),
     image: firstImage,
@@ -95,7 +95,7 @@ const mapListingToProperty = (listing: any): Property => {
 export function ResultsView() {
   const router = useRouter();
   const query = (router.query.q as string) || '';
-  
+
   const [properties, setProperties] = useState<Property[]>([]);
   const [suggestedProperties, setSuggestedProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,12 +108,12 @@ export function ResultsView() {
   const [selectedBedrooms, setSelectedBedrooms] = useState<string[]>([]);
   const [selectedPropertyTypes, setSelectedPropertyTypes] = useState<string[]>([]);
   const [locationSearch, setLocationSearch] = useState('');
-  
+
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const observer = useRef<IntersectionObserver | null>(null);
   const isResettingRef = useRef(false);
-  
+
   const lastPropertyElementRef = useCallback((node: HTMLDivElement | null) => {
     if (loading) return;
     if (observer.current) observer.current.disconnect();
@@ -124,7 +124,7 @@ export function ResultsView() {
     });
     if (node) observer.current.observe(node);
   }, [loading, hasMore]);
-  
+
   const debouncedPriceRange = useDebounce(priceRange, 500);
   const debouncedLocationSearch = useDebounce(locationSearch, 500);
 
@@ -156,7 +156,7 @@ export function ResultsView() {
         return;
       }
       isResettingRef.current = false;
-      
+
       setLoading(true);
       setError(null);
       try {
@@ -165,12 +165,12 @@ export function ResultsView() {
           page: page,
           limit: 20,
         };
-        
+
         // Add text search query if present
         if (query.trim()) {
           params.q = query.trim();
         }
-        
+
         // Add bedroom filter
         if (selectedBedrooms.length > 0) {
           // Extract number from "1 Bed", "2 Beds", etc.
@@ -182,7 +182,7 @@ export function ResultsView() {
             params.bedrooms = bedroomNums[0];
           }
         }
-        
+
         // Add price range filter
         if (debouncedPriceRange[0] > 0) {
           params.minPrice = debouncedPriceRange[0];
@@ -190,17 +190,17 @@ export function ResultsView() {
         if (debouncedPriceRange[1] < 5000000000) {
           params.maxPrice = debouncedPriceRange[1];
         }
-        
+
         // Add property type filter
         if (selectedPropertyTypes.length > 0) {
           params.propertyType = selectedPropertyTypes.join(',');
         }
-        
+
         // Add location filter if set
         if (debouncedLocationSearch.trim()) {
           params.microlocation = debouncedLocationSearch.trim();
         }
-        
+
         // Add sort parameter
         let sortParam = 'newest';
         if (sortBy === 'Lowest Price') {
@@ -209,16 +209,16 @@ export function ResultsView() {
           sortParam = 'price_desc';
         }
         params.sort = sortParam;
-        
+
         const response = await apiClient.get('/listings', { params });
-        
+
         const data = response.data;
         // Handle response format: { data: { items: [...] } } or { data: { listings: [...] } }
         const listings = data.data?.items || data.data?.listings || data.listings || data.data || [];
-        
+
         if (Array.isArray(listings)) {
           const mappedProperties = listings.map(mapListingToProperty);
-          
+
           if (page === 1) {
             setProperties(mappedProperties);
           } else {
@@ -233,7 +233,7 @@ export function ResultsView() {
             // Fallback if pagination object is missing
             setHasMore(mappedProperties.length === 20);
           }
-          
+
           // If no results found with filters, fetch suggestions
           if (mappedProperties.length === 0) {
             try {
@@ -250,7 +250,7 @@ export function ResultsView() {
               console.warn('Failed to fetch suggestions:', suggestionErr);
             }
           } else {
-             setSuggestedProperties([]);
+            setSuggestedProperties([]);
           }
         } else {
           console.warn('Unexpected API response format:', data);
@@ -323,7 +323,7 @@ export function ResultsView() {
                 background: `linear-gradient(to right, #4ea8a1 0%, #4ea8a1 ${(priceRange[0] / 5000000000) * 100}%, #e5e7eb ${(priceRange[0] / 5000000000) * 100}%, #e5e7eb 100%)`
               }}
             />
-            
+
             <div className="flex items-center justify-between mt-8">
               <span className="text-[14px] text-muted-foreground">Max Price</span>
               <span className="text-[15px]">{formatPrice(priceRange[1])}</span>
@@ -362,7 +362,7 @@ export function ResultsView() {
                 className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4ea8a1] focus:border-transparent text-[14px]"
               />
             </div>
-            
+
             {locationSearch && (
               <div className="space-y-1">
                 <p className="text-[13px] text-muted-foreground mb-2">Suggested locations:</p>
@@ -452,7 +452,7 @@ export function ResultsView() {
   // Sort properties (client-side for Inda Score, API handles price sorting)
   const sortedProperties = useMemo(() => {
     const sorted = [...properties];
-    
+
     switch (sortBy) {
       case 'Highest Inda Score':
         return sorted.sort((a, b) => b.trustScore - a.trustScore);
@@ -467,7 +467,7 @@ export function ResultsView() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-          <Navbar/>
+      <Navbar />
       {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w-[1400px] mx-auto px-6 py-4">
@@ -495,7 +495,7 @@ export function ResultsView() {
             <div>
               <h1 className="text-xl font-bold text-gray-900">
                 {filteredProperties.length} Properties Found
-                {query && <span className="text-gray-500 font-normal ml-2">for "{query}"</span>}
+                {query && <span className="text-gray-500 font-normal ml-2">for &quot;{query}&quot;</span>}
               </h1>
             </div>
 
@@ -572,10 +572,10 @@ export function ResultsView() {
               <div>
                 <div className="flex flex-col items-center justify-center py-12 text-center mb-8">
                   <Home className="w-16 h-16 text-gray-300 mb-4" />
-                  <p className="text-gray-500 text-lg">No properties found for "{query}"</p>
+                  <p className="text-gray-500 text-lg">No properties found for &quot;{query}&quot;</p>
                   <p className="text-sm text-gray-400 mt-2">Try adjusting your filters or search query</p>
                 </div>
-                
+
                 {/* Suggested Properties */}
                 {suggestedProperties.length > 0 && (
                   <div>
@@ -595,10 +595,10 @@ export function ResultsView() {
                     const isLastElement = filteredProperties.length === index + 1;
                     return (
                       <div key={property.id} ref={isLastElement ? lastPropertyElementRef : null}>
-                        <PropertyCard 
-                          {...property} 
-                          onViewProperty={handleViewProperty} 
-                          onMakeOffer={handleMakeOffer} 
+                        <PropertyCard
+                          {...property}
+                          onViewProperty={handleViewProperty}
+                          onMakeOffer={handleMakeOffer}
                         />
                       </div>
                     );
@@ -627,11 +627,11 @@ export function ResultsView() {
       {activeFilter && (
         <>
           {/* Overlay */}
-          <div 
+          <div
             className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
             onClick={() => setActiveFilter(null)}
           />
-          
+
           {/* Sidebar */}
           <div className="fixed top-0 right-0 bottom-0 w-96 bg-white shadow-2xl z-50 overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 p-5 flex items-center justify-between">

@@ -8,7 +8,6 @@ import PaymentReceipt from "@/components/inc/PaymentReceipt";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
 import Head from "next/head";
-import Image from "next/image";
 import { useRouter } from "next/router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -16,7 +15,6 @@ import {
   FiChevronLeft,
   FiChevronRight,
   FiCreditCard,
-  FiExternalLink,
   FiFileText,
   FiLoader,
   FiPackage,
@@ -39,8 +37,8 @@ const OrdersPage: React.FC = () => {
       const res = await getOrdersAndPayments({ page, limit: 20 });
       setData(res);
       setError(null);
-    } catch (e: any) {
-      setError(e?.message || "Failed to load orders");
+    } catch (_e: any) {
+      setError(_e?.message || "Failed to load orders");
     } finally {
       setLoading(false);
     }

@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import {
-    FaChartLine, FaArrowUp, FaArrowDown, FaMapMarkerAlt,
+    FaChartLine, FaArrowUp, FaArrowDown,
     FaCity, FaLightbulb, FaChevronDown, FaCircle, FaExclamationCircle
 } from 'react-icons/fa';
 
@@ -23,11 +23,6 @@ interface MarketItem {
     isNegative?: boolean;
 }
 
-interface RankingItem {
-    rank: number;
-    name: string;
-    label: string;
-}
 
 const INITIAL_ROI_CARDS: RoiMetric[] = [
     { title: "Yield High-end Apts (Lekki)", value: "0.0%", sub: "Waiting for data...", color: "text-gray-400", progress: 0 },
@@ -39,9 +34,6 @@ const INITIAL_ROI_CARDS: RoiMetric[] = [
 export default function InsightsPage() {
     const [roiCards] = useState<RoiMetric[]>(INITIAL_ROI_CARDS);
     const [microMarkets] = useState<MarketItem[]>([]);
-    const [emergingAreas] = useState<RankingItem[]>([]);
-    const [coolingAreas] = useState<RankingItem[]>([]);
-    const [recommendations] = useState<string[]>([]);
 
     return (
         <DashboardLayout title="Insights">

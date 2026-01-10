@@ -68,7 +68,7 @@ const SignIn: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await authLogin(validation.data.email, validation.data.password);
+      const _response = await authLogin(validation.data.email, validation.data.password);
 
       limiter.reset();
       toast.showToast("Sign in successful!", 2000, "success");
@@ -198,12 +198,12 @@ const SignIn: React.FC = () => {
               <div className="flex justify-end">
                 <a
                   href={`/auth/forgot-password${returnTo
-                      ? `?returnTo=${encodeURIComponent(returnTo)}`
-                      : searchQuery
-                        ? `?q=${encodeURIComponent(
-                          searchQuery
-                        )}&type=${searchType}`
-                        : ""
+                    ? `?returnTo=${encodeURIComponent(returnTo)}`
+                    : searchQuery
+                      ? `?q=${encodeURIComponent(
+                        searchQuery
+                      )}&type=${searchType}`
+                      : ""
                     }`}
                   className="text-xs sm:text-sm text-[#4EA8A1] font-semibold hover:underline transition-all duration-200"
                 >
@@ -224,13 +224,13 @@ const SignIn: React.FC = () => {
               </Button>
             </form>
             <span className="text-xs sm:text-sm text-gray-600 mt-4 sm:mt-6 text-center">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <a
                 href={`/auth/signup${returnTo
-                    ? `?returnTo=${encodeURIComponent(returnTo)}`
-                    : searchQuery
-                      ? `?q=${encodeURIComponent(searchQuery)}&type=${searchType}`
-                      : ""
+                  ? `?returnTo=${encodeURIComponent(returnTo)}`
+                  : searchQuery
+                    ? `?q=${encodeURIComponent(searchQuery)}&type=${searchType}`
+                    : ""
                   }`}
                 className="text-[#4EA8A1] font-semibold hover:underline transition-all duration-200"
               >

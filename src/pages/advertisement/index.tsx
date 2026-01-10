@@ -2,7 +2,7 @@ import { useState } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import {
     FaEye, FaUserFriends, FaBullseye, FaChartLine,
-    FaStar, FaBolt, FaCheck, FaChartBar, FaBullhorn, FaPlus
+    FaBolt, FaCheck, FaChartBar, FaBullhorn, FaPlus
 } from 'react-icons/fa';
 
 interface PerformanceMetric {

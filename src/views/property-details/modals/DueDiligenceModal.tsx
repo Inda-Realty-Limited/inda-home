@@ -43,11 +43,10 @@ export function DueDiligenceModal({ isOpen, onClose, propertyName, propertyPrice
           <div className="grid grid-cols-2 gap-3 mb-6">
             <button
               onClick={() => onTierChange('deep')}
-              className={`p-4 rounded-lg border-2 transition-all text-left ${
-                isDeepDive
-                  ? 'border-[#50b8b1] bg-[#e8f5f4]'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
+              className={`p-4 rounded-lg border-2 transition-all text-left ${isDeepDive
+                ? 'border-[#50b8b1] bg-[#e8f5f4]'
+                : 'border-gray-200 hover:border-gray-300'
+                }`}
             >
               <div className="font-semibold text-gray-900 mb-1">Deep Dive</div>
               <div className="text-xs text-gray-600 mb-2">Registry + Legal checks</div>
@@ -55,11 +54,10 @@ export function DueDiligenceModal({ isOpen, onClose, propertyName, propertyPrice
             </button>
             <button
               onClick={() => onTierChange('deeper')}
-              className={`p-4 rounded-lg border-2 transition-all text-left ${
-                !isDeepDive
-                  ? 'border-[#50b8b1] bg-[#e8f5f4]'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
+              className={`p-4 rounded-lg border-2 transition-all text-left ${!isDeepDive
+                ? 'border-[#50b8b1] bg-[#e8f5f4]'
+                : 'border-gray-200 hover:border-gray-300'
+                }`}
             >
               <div className="font-semibold text-gray-900 mb-1">Deeper Dive</div>
               <div className="text-xs text-gray-600 mb-2">Full package + In-person visits</div>
@@ -75,7 +73,7 @@ export function DueDiligenceModal({ isOpen, onClose, propertyName, propertyPrice
 
           {/* What's Included */}
           <div className="mb-6">
-            <h3 className="text-gray-900 mb-4">What's Included:</h3>
+            <h3 className="text-gray-900 mb-4">What&apos;s Included:</h3>
             <div className="space-y-3">
               <div className="flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
@@ -89,10 +87,10 @@ export function DueDiligenceModal({ isOpen, onClose, propertyName, propertyPrice
                 <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                 <div>
                   <p className="text-gray-900">Legal Documentation Review</p>
-                  <p className="text-sm text-gray-600">Property lawyer review of C of O, Governor's Consent, and all relevant documents</p>
+                  <p className="text-sm text-gray-600">Property lawyer review of C of O, Governor&apos;s Consent, and all relevant documents</p>
                 </div>
               </div>
-              
+
               {!isDeepDive && (
                 <>
                   <div className="flex items-start gap-3">
@@ -118,7 +116,7 @@ export function DueDiligenceModal({ isOpen, onClose, propertyName, propertyPrice
                   </div>
                 </>
               )}
-              
+
               <div className="flex items-start gap-3">
                 <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
                 <div>
@@ -202,7 +200,7 @@ export function DueDiligenceModal({ isOpen, onClose, propertyName, propertyPrice
           </form>
 
           <p className="text-xs text-gray-500 mt-4 text-center">
-            💡 Payment via bank transfer or card • Full refund if we can't complete the report • Secure & confidential
+            💡 Payment via bank transfer or card • Full refund if we can&apos;t complete the report • Secure & confidential
           </p>
         </div>
       </div>

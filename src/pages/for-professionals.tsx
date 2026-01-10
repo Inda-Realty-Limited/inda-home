@@ -182,7 +182,7 @@ const ForProfessionals: React.FC = () => {
             }
             router.push("/dashboard");
           }
-        } catch (error) {
+        } catch (_error) {
           toast.error("Subscription verification failed");
         }
       };
@@ -215,7 +215,7 @@ const ForProfessionals: React.FC = () => {
             >
               Answer questions
               <br />
-              <span className="text-[#50b8b1]">you don't even know.</span>
+              <span className="text-[#50b8b1]">you don&apos;t even know.</span>
             </motion.h1>
 
             <motion.p
@@ -224,7 +224,7 @@ const ForProfessionals: React.FC = () => {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed"
             >
-              Buyers ask about flood risk, neighborhood growth, and legal history you don't have.
+              Buyers ask about flood risk, neighborhood growth, and legal history you don&apos;t have.
               Deals die in 52 days of back-and-forth. We verify everything upfront.
             </motion.p>
 
@@ -299,19 +299,19 @@ const ForProfessionals: React.FC = () => {
                 <h2 className="text-4xl md:text-5xl lg:text-6xl text-white mb-6 tracking-tight">
                   Questions you
                   <br />
-                  <span className="text-red-400">can't answer.</span>
+                  <span className="text-red-400">can&apos;t answer.</span>
                 </h2>
                 <p className="text-lg text-gray-400 leading-relaxed mb-6">
-                  "What's the flood risk?" "How's the area growing?" "Any legal disputes?"
-                  You don't know. Buyers spend weeks researching. Finding nothing. Getting frustrated.
+                  "What&apos;s the flood risk?" "How&apos;s the area growing?" "Any legal disputes?"
+                  You don&apos;t know. Buyers spend weeks researching. Finding nothing. Getting frustrated.
                 </p>
                 <p className="text-lg text-gray-400 leading-relaxed mb-8">
-                  Meanwhile, you're scrambling for answers you don't have access to.
+                  Meanwhile, you&apos;re scrambling for answers you don&apos;t have access to.
                   52 days wasted. Deals collapse.
                 </p>
                 <p className="text-lg text-white leading-relaxed">
                   Inda verifies everything—title, legal, microlocation insights, environmental
-                  risks. Questions you can't answer become certainties buyers trust.
+                  risks. Questions you can&apos;t answer become certainties buyers trust.
                   Both sides get complete transparency. Deals close in 11 days.
                 </p>
               </motion.div>
@@ -337,7 +337,7 @@ const ForProfessionals: React.FC = () => {
                 </div>
                 <div className="space-y-2 text-sm text-gray-400">
                   <div className="flex justify-between">
-                    <span>Researching answers you don't have</span>
+                    <span>Researching answers you don&apos;t have</span>
                     <span className="text-red-400">21 days</span>
                   </div>
                   <div className="flex justify-between">

@@ -1,4 +1,4 @@
-import React, { useRef} from 'react';
+import React, { useRef } from 'react';
 import GallerySection from '../result/sections/GallerySection';
 import SmartSummary from '../result/sections/SmartSummary';
 import AmenitiesSection from '../result/sections/AmenitiesSection';
@@ -117,7 +117,7 @@ export const PropertyDetailsView: React.FC<PropertyDetailsViewProps> = ({
                   Hi {user?.firstName || "there"},
                 </h2>
                 <p className="text-lg text-gray-700">
-                  Here's what we found based on your search.
+                  Here&apos;s what we found based on your search.
                 </p>
               </div>
 
@@ -296,9 +296,9 @@ export const PropertyDetailsView: React.FC<PropertyDetailsViewProps> = ({
 
       {/* Call to Action Buttons */}
       <ProceedActions
-        onDeeperVerification={onDeeperVerification || (() => {})}
-        onBuyWithInda={onBuyWithInda || (() => {})}
-        onFinanceWithInda={onFinanceWithInda || (() => {})}
+        onDeeperVerification={onDeeperVerification || (() => { })}
+        onBuyWithInda={onBuyWithInda || (() => { })}
+        onFinanceWithInda={onFinanceWithInda || (() => { })}
         legalDisclaimer={(result as any)?.legalDisclaimer}
       />
 

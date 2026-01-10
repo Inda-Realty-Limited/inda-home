@@ -3,7 +3,7 @@ import { Button, Container, Footer, Input, Navbar } from "@/components";
 import GoogleButton from "@/components/OAuth/GoogleButton";
 import { useToast } from "@/components/ToastProvider";
 import { useAuth } from "@/contexts/AuthContext";
-import { registerSchema, verifyOtpSchema, validateAndSanitize } from "@/utils/validation";
+import { registerSchema, validateAndSanitize } from "@/utils/validation";
 import { createFormSubmitLimiter } from "@/utils/rateLimiter";
 import { useMutation } from "@tanstack/react-query";
 import { useRouter } from "next/router";
@@ -56,7 +56,7 @@ const Signup: React.FC = () => {
   const toast = useToast();
 
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-  const otpInputs = Array.from({ length: 6 }, (_, i) =>
+  const otpInputs = Array.from({ length: 6 }, (_, _i) =>
     React.createRef<HTMLInputElement>()
   );
   const [otpLoading, setOtpLoading] = useState(false);
@@ -653,7 +653,7 @@ const Signup: React.FC = () => {
                     </div>
                     <div className="flex-1">
                       <h4 className="font-medium text-blue-900 text-sm sm:text-base mb-1">
-                        Don't see the code?
+                        Don&apos;t see the code?
                       </h4>
                       <p className="text-blue-700 text-xs sm:text-sm leading-relaxed">
                         Check your{" "}

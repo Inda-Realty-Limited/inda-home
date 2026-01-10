@@ -289,7 +289,7 @@ const ProfileTab = () => {
 
             const result = await response.json();
             const updatedUser = result.data || result.user || payload;
-            
+
             // Update context
             setUser(updatedUser, localUser.token); // Assuming setUser updates both user state and localStorage internally in AuthContext
 
@@ -474,7 +474,7 @@ const SubscriptionTab = () => {
                         const response = await ProBillingService.getSubscription(userId);
                         const data = response.data || response;
                         setSubData(data);
-                    } catch (e) {
+                    } catch (_e) {
                         setSubData({
                             planName: 'Pro Annual', status: 'Active', renewalDate: 'Jan 15, 2026',
                             price: '₦180,000', credits: { used: 24, total: 50 }
@@ -487,14 +487,14 @@ const SubscriptionTab = () => {
         if (user) {
             fetchSub();
         } else {
-             // If loading state in auth is true, we wait. If user is null, we can't fetch.
-             // If we rely on initial loading state being true, we might hang if user is null.
-             // But usually auth loads fast.
-             // For now, if no user, we just return.
-             // Actually, set loading false if no user?
-             // If useAuth exposes loading state, we should use it.
-             // Assuming user is available if we are on this protected page (usually).
-             setLoading(false);
+            // If loading state in auth is true, we wait. If user is null, we can't fetch.
+            // If we rely on initial loading state being true, we might hang if user is null.
+            // But usually auth loads fast.
+            // For now, if no user, we just return.
+            // Actually, set loading false if no user?
+            // If useAuth exposes loading state, we should use it.
+            // Assuming user is available if we are on this protected page (usually).
+            setLoading(false);
         }
     }, [user]);
 
@@ -560,16 +560,16 @@ const BillingTab = () => {
             try {
                 const userId = user.id || user._id || (user as any).user?.id;
                 if (!userId) { setLoading(false); return; }
-                
+
                 const res = await ProBillingService.getHistory(userId);
                 setHistory(Array.isArray(res.data) ? res.data : []);
-            } catch (e) {
+            } catch (_e) {
                 setHistory([
                     { desc: 'Pro Annual Subscription', date: 'Nov 15, 2025', amount: '₦180,000', status: 'Paid' }
                 ]);
             } finally { setLoading(false); }
         };
-        
+
         if (user) {
             fetchHistory();
         } else {

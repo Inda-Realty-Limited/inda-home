@@ -47,7 +47,7 @@ const NotFoundScreen: React.FC<Props> = ({ searchQuery, searchType }) => {
               <div className="mb-6 sm:mb-8">
                 <div className="inline-block bg-white rounded-2xl shadow-lg px-6 py-4 mb-4">
                   <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-[#4EA8A1] mb-2">
-                    "{searchQuery}"
+                    &quot;{searchQuery}&quot;
                   </p>
                   {searchType && (
                     <span className="inline-flex items-center bg-[#4EA8A1]/10 border border-[#4EA8A1]/20 rounded-full px-4 py-2 text-sm font-medium text-[#4EA8A1] capitalize">
@@ -59,7 +59,7 @@ const NotFoundScreen: React.FC<Props> = ({ searchQuery, searchType }) => {
             )}
 
             <p className="text-lg sm:text-xl lg:text-2xl text-[#101820]/70 max-w-3xl mx-auto leading-relaxed mb-8">
-              We couldn't find any verified property, agent, or developer
+              We couldn&apos;t find any verified property, agent, or developer
               matching your search.
               <br className="hidden sm:block" />
               Our database is constantly growing—try searching for something

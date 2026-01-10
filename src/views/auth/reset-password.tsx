@@ -31,11 +31,10 @@ const ResetPassword: React.FC = () => {
     mutationFn: resetPasswordApi,
     onSuccess: () => {
       toast.showToast("Password reset successful.", 2500, "success");
-      const next = `/auth/signin${
-        searchQuery
+      const next = `/auth/signin${searchQuery
           ? `?q=${encodeURIComponent(searchQuery)}&type=${searchType}`
           : ""
-      }`;
+        }`;
       setTimeout(() => router.push(next), 800);
     },
     onError: (error: any) => {
@@ -50,27 +49,27 @@ const ResetPassword: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
-    
+
     const validation = validateAndSanitize(resetPasswordSchema, {
       email,
       code,
       newPassword,
     });
-    
+
     if (!validation.success) {
       setErrors(validation.errors);
       toast.showToast("Please fix the errors in the form", 2500, "error");
       return;
     }
-    
+
     const limiter = createFormSubmitLimiter("reset-password");
     const limitCheck = limiter.checkLimit();
-    
+
     if (!limitCheck.allowed) {
       toast.showToast("Please wait a moment before trying again", 2000, "error");
       return;
     }
-    
+
     mutation.mutate(validation.data);
   };
 
@@ -113,9 +112,8 @@ const ResetPassword: React.FC = () => {
                       setEmail(e.target.value);
                       setErrors(prev => ({ ...prev, email: "" }));
                     }}
-                    className={`w-full rounded-xl bg-[#F9F9F9] border ${
-                      errors.email ? "border-red-500" : "border-[#e0e0e0]"
-                    } focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base`}
+                    className={`w-full rounded-xl bg-[#F9F9F9] border ${errors.email ? "border-red-500" : "border-[#e0e0e0]"
+                      } focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base`}
                   />
                 </div>
                 {errors.email && (
@@ -138,9 +136,8 @@ const ResetPassword: React.FC = () => {
                     setCode(e.target.value);
                     setErrors(prev => ({ ...prev, code: "" }));
                   }}
-                  className={`w-full rounded-xl bg-[#F9F9F9] border ${
-                    errors.code ? "border-red-500" : "border-[#e0e0e0]"
-                  } focus:ring-2 focus:ring-[#4EA8A1] px-3 sm:px-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base`}
+                  className={`w-full rounded-xl bg-[#F9F9F9] border ${errors.code ? "border-red-500" : "border-[#e0e0e0]"
+                    } focus:ring-2 focus:ring-[#4EA8A1] px-3 sm:px-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base`}
                 />
                 {errors.code && (
                   <p className="text-red-500 text-xs sm:text-sm mt-1">{errors.code}</p>
@@ -166,9 +163,8 @@ const ResetPassword: React.FC = () => {
                       setNewPassword(e.target.value);
                       setErrors(prev => ({ ...prev, newPassword: "" }));
                     }}
-                    className={`w-full rounded-xl bg-[#F9F9F9] border ${
-                      errors.newPassword ? "border-red-500" : "border-[#e0e0e0]"
-                    } focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base`}
+                    className={`w-full rounded-xl bg-[#F9F9F9] border ${errors.newPassword ? "border-red-500" : "border-[#e0e0e0]"
+                      } focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base`}
                   />
                 </div>
                 {errors.newPassword && (
@@ -184,13 +180,12 @@ const ResetPassword: React.FC = () => {
               </Button>
             </form>
             <span className="text-xs sm:text-sm text-gray-600 mt-4 sm:mt-6 text-center">
-              Didn't get a code?{" "}
+              Didn&apos;t get a code?{" "}
               <a
-                href={`/auth/forgot-password${
-                  searchQuery
+                href={`/auth/forgot-password${searchQuery
                     ? `?q=${encodeURIComponent(searchQuery)}&type=${searchType}`
                     : ""
-                }`}
+                  }`}
                 className="text-[#4EA8A1] font-semibold hover:underline transition-all duration-200"
               >
                 Resend

@@ -52,21 +52,7 @@ const INITIAL_DATA: DashboardData = {
 export default function PortfolioPage() {
     const [data] = useState<DashboardData>(INITIAL_DATA);
 
-    const getActivityColor = (type: string) => {
-        switch (type) {
-            case 'report': return 'bg-teal-700';
-            case 'alert': return 'bg-teal-700';
-            default: return 'bg-teal-500';
-        }
-    };
 
-    const getBadgeStyles = (variant: string) => {
-        switch (variant) {
-            case 'yellow': return 'bg-[#F3F1A0] text-yellow-800';
-            case 'teal': return 'bg-inda-teal text-white';
-            default: return 'bg-gray-200 text-gray-700';
-        }
-    };
 
     return (
         <DashboardLayout title="Inda Pro">

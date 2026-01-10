@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { FaArrowLeft, FaChevronDown, FaFileContract, FaCheck, FaTimes } from 'react-icons/fa';
+import { FaArrowLeft, FaChevronDown } from 'react-icons/fa';
 import { ProListingsService } from '@/api/pro-listings';
 
 interface ListingFormData {
@@ -67,8 +67,8 @@ export default function EditListingPage() {
                         parking: '', power: '', water: '', encumbrances: '', estateName: ''
                     });
                 }
-            } catch (error) {
-                console.error("Failed to fetch listing", error);
+            } catch (_error) {
+                console.error("Failed to fetch listing", _error);
             } finally {
                 setIsLoading(false);
             }

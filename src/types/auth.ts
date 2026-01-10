@@ -6,7 +6,7 @@ export type StoredUser = {
   isActive?: boolean;
   howDidYouHearAboutUs?: string;
   isVerified?: boolean;
-  role?: "Buyer" | "Investor" | "Agent" | "Developer" | "Admin";
+  role: "Buyer" | "Investor" | "Agent" | "Developer" | "Admin";
   todo?: string;
   createdAt?: string;
   updatedAt?: string;

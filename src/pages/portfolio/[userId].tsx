@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState} from 'react';
 import { useRouter } from 'next/router';
 import { trackChannelClick, getPublicListings, getPublicListingById, submitInquiry, PublicListing } from '@/api/channels';
 import { Container, Navbar, Footer } from '@/components';

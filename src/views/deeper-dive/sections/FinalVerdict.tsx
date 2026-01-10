@@ -1,7 +1,5 @@
 import React from "react";
 import DownloadReportButton from "@/components/inc/DownloadReportButton";
-import { FiCheck, FiDownload, FiInfo } from "react-icons/fi";
-
 type Props = {
   confidenceScoreBreakdown: {
     overallScore: number;

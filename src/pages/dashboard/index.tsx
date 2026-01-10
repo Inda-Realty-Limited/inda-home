@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import {
-    FaPlus, FaUsers, FaBriefcase, FaRocket, FaWhatsapp,
+    FaPlus, FaUsers, FaRocket, FaWhatsapp,
     FaChartLine, FaClock, FaStar, FaEye, FaShareAlt, FaExternalLinkAlt,
     FaArrowUp, FaArrowDown, FaCheckCircle, FaExclamationCircle, FaRobot
 } from 'react-icons/fa';

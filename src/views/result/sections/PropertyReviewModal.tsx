@@ -19,7 +19,7 @@ const PropertyReviewModal: React.FC<Props> = ({
   listingId,
   onSuccess 
 }) => {
-  const { user, isAuthenticated } = useAuth();
+  const {isAuthenticated } = useAuth();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({

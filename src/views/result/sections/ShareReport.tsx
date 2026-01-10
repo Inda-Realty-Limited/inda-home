@@ -1,11 +1,10 @@
 import React from "react";
 
 type Props = {
-  listingUrl?: string;
   propertyTitle?: string;
 };
 
-const ShareReport: React.FC<Props> = ({ listingUrl, propertyTitle }) => {
+const ShareReport: React.FC<Props> = ({ propertyTitle }) => {
   const handleShare = () => {
     const shareUrl = window.location.href;
     const shareText = propertyTitle 
