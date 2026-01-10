@@ -103,7 +103,7 @@ function VerificationPreview() {
 
 const ForProfessionals: React.FC = () => {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
 
   const getButtonText = () => {
     if (!user) return "Start free";
@@ -141,6 +141,12 @@ const ForProfessionals: React.FC = () => {
       return;
     }
 
+    const allowedRoles = ["Agent", "Developer"];
+    if (!user.role || !allowedRoles.includes(user.role)) {
+      toast.error("Only Agents and Developers can subscribe to professional plans.");
+      return;
+    }
+
     try {
       setIsSubscribing(plan);
       const callbackUrl = `${window.location.origin}/for-professionals?verify=true&plan=${plan}`;
@@ -161,14 +167,19 @@ const ForProfessionals: React.FC = () => {
   };
 
   useEffect(() => {
-    const { verify, reference, plan } = router.query;
-    if (verify === "true" && reference) {
+    const { verify, reference, tx_ref, plan } = router.query;
+    const finalReference = (reference || tx_ref) as string;
+
+    if (verify === "true" && finalReference) {
       const verifyPayment = async () => {
         try {
-          const response = await verifySubscription(reference as string);
+          const response = await verifySubscription(finalReference);
           if (response.status === "OK") {
             toast.success(`Welcome to the ${plan} plan!`);
-            // Update user state if possible or reload
+            // Sync user state
+            if (response.data) {
+              setUser(response.data);
+            }
             router.push("/dashboard");
           }
         } catch (error) {
@@ -177,7 +188,7 @@ const ForProfessionals: React.FC = () => {
       };
       verifyPayment();
     }
-  }, [router.query]);
+  }, [router.query, setUser]);
 
   return (
     <Container noPadding className="min-h-screen bg-white">
