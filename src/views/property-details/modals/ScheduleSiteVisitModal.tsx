@@ -61,7 +61,7 @@ export function ScheduleSiteVisitModal({
             </div>
             <h2 className="text-gray-900 mb-2">Visit Request Submitted!</h2>
             <p className="text-gray-600 mb-6">
-              We'll contact you within 24 hours to confirm your site visit appointment at {propertyName}.
+              We&apos;ll contact you within 24 hours to confirm your site visit appointment at {propertyName}.
             </p>
             <p className="text-sm text-gray-500 mb-6">
               Check your email ({formData.email}) for confirmation details.
@@ -293,10 +293,7 @@ export function ScheduleSiteVisitModal({
           {/* Disclaimer */}
           <div className="bg-gray-50 rounded-lg p-4 text-xs text-gray-600">
             <p className="mb-2">
-              ✓ By submitting this request, you agree to Inda's site visit terms and conditions.
-            </p>
-            <p className="mb-2">
-              ✓ You'll receive a confirmation email within 24 hours with exact meeting point and security access details.
+              ✓ You&apos;ll receive a confirmation email within 24 hours with exact meeting point and security access details.
             </p>
             <p>
               ✓ Please bring a valid ID for security clearance at the estate gate.

@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import Image from "next/image";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 type Props = {
@@ -9,7 +10,7 @@ type Props = {
 const GallerySection: React.FC<Props> = ({ imageUrls, isHeaderGallery = false }) => {
   const galleryRef = useRef<HTMLDivElement | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  
+
   const scrollGalleryBy = (dir: 1 | -1) => {
     const el = galleryRef.current;
     if (!el) return;
@@ -35,19 +36,21 @@ const GallerySection: React.FC<Props> = ({ imageUrls, isHeaderGallery = false })
 
   if (isHeaderGallery) {
     const images = Array.isArray(imageUrls) && imageUrls.length > 0 ? imageUrls : [];
-    
+
     return (
       <div className="space-y-4">
         {/* Main Image */}
         <div className="relative w-full rounded-3xl overflow-hidden bg-gray-200" style={{ height: '340px' }}>
           {images.length > 0 ? (
             <>
-              <img
+              <Image
                 src={images[currentIndex]}
                 alt={`property-${currentIndex}`}
-                className="w-full h-full object-cover"
+                fill
+                unoptimized
+                className="object-cover"
               />
-              
+
               <button
                 onClick={prevSlide}
                 className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 flex items-center justify-center hover:bg-white transition-colors shadow-lg"
@@ -69,9 +72,8 @@ const GallerySection: React.FC<Props> = ({ imageUrls, isHeaderGallery = false })
                   <button
                     key={idx}
                     onClick={() => goToSlide(idx)}
-                    className={`h-2 rounded-full transition-all ${
-                      idx === currentIndex ? "bg-white w-8" : "bg-white/60 w-2"
-                    }`}
+                    className={`h-2 rounded-full transition-all ${idx === currentIndex ? "bg-white w-8" : "bg-white/60 w-2"
+                      }`}
                     aria-label={`Go to slide ${idx + 1}`}
                   />
                 ))}
@@ -91,12 +93,17 @@ const GallerySection: React.FC<Props> = ({ imageUrls, isHeaderGallery = false })
               <button
                 key={idx}
                 onClick={() => goToSlide(idx)}
-                className={`relative rounded-2xl overflow-hidden transition-all ${
-                  idx === currentIndex ? "ring-2 ring-white ring-offset-2 ring-offset-gray-100" : "opacity-70 hover:opacity-100"
-                }`}
+                className={`relative rounded-2xl overflow-hidden transition-all ${idx === currentIndex ? "ring-2 ring-white ring-offset-2 ring-offset-gray-100" : "opacity-70 hover:opacity-100"
+                  }`}
                 style={{ aspectRatio: '4/3' }}
               >
-                <img src={img} alt={`thumbnail-${idx}`} className="w-full h-full object-cover" />
+                <Image
+                  src={img}
+                  alt={`thumbnail-${idx}`}
+                  fill
+                  unoptimized
+                  className="object-cover"
+                />
               </button>
             ))}
           </div>
@@ -134,11 +141,13 @@ const GallerySection: React.FC<Props> = ({ imageUrls, isHeaderGallery = false })
                 className="flex-shrink-0 bg-[#DDECEB] p-4 rounded-3xl"
               >
                 <div className="w-72 h-48 md:w-88 md:h-56 lg:w-96 lg:h-64 rounded-2xl overflow-hidden">
-                <img
-                  src={url}
-                  alt={`property-${idx}`}
-                  className="w-full h-full object-cover"
-                />
+                  <Image
+                    src={url}
+                    alt={`property-${idx}`}
+                    fill
+                    unoptimized
+                    className="object-cover"
+                  />
                 </div>
               </div>
             ))

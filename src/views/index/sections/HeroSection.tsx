@@ -1,22 +1,8 @@
-import { useRouter } from 'next/router';
-import { useAuth } from '@/contexts/AuthContext';
 import { Button } from './ui/button';
-import { ArrowRight, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 export function HeroSection() {
-  const router = useRouter();
-  const { isAuthenticated } = useAuth();
 
-  const handleGetStarted = () => {
-    if (!isAuthenticated) {
-      router.push('/auth/signup');
-    } else {
-      const element = document.querySelector('[data-product-section]');
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
-  };
 
   const openWhatsAppDemo = () => {
     const phone = process.env.NEXT_PUBLIC_INDA_WHATSAPP || "2347084960775";
@@ -31,29 +17,29 @@ export function HeroSection() {
     <section className="relative pt-32 pb-32 px-6 overflow-hidden">
       {/* Animated gradient background with pattern */}
       <div className="absolute inset-0 bg-gradient-to-br from-[#4ea8a1]/5 via-purple-50/30 to-orange-50/30" />
-      
+
       {/* Dot pattern overlzay */}
-      <div 
+      <div
         className="absolute inset-0 opacity-40"
         style={{
           backgroundImage: `radial-gradient(circle, #4ea8a1 1px, transparent 1px)`,
           backgroundSize: '30px 30px',
         }}
       />
-      
+
       {/* Grid pattern */}
-      <div 
+      <div
         className="absolute inset-0 opacity-20"
         style={{
           backgroundImage: `linear-gradient(#4ea8a1 1px, transparent 1px), linear-gradient(90deg, #4ea8a1 1px, transparent 1px)`,
           backgroundSize: '60px 60px',
         }}
       />
-      
+
       {/* Floating decorative elements */}
       <div className="absolute top-20 right-10 w-72 h-72 bg-[#4ea8a1]/10 rounded-full blur-3xl animate-pulse" />
       <div className="absolute bottom-20 left-10 w-96 h-96 bg-purple-200/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }} />
-      
+
       <div className="max-w-7xl mx-auto relative">
         <div className="max-w-5xl mx-auto text-center">
           {/* Badge */}
@@ -61,15 +47,15 @@ export function HeroSection() {
             <Sparkles className="w-4 h-4 text-[#4ea8a1]" />
             <span className="text-sm text-gray-700">Trusted by 200+ real estate professionals</span>
           </div>
-          
+
           {/* Main Heading */}
           <h1 className="text-5xl md:text-5xl lg:text-6xl text-gray-900 mb-8 animate-in fade-in slide-in-from-bottom-6 duration-700" style={{ animationDelay: '100ms', animationFillMode: 'backwards' }}>
             Verified Real Estate Intelligence - {' '}
             <span className="bg-gradient-to-r from-[#4ea8a1] to-[#3d8680] bg-clip-text text-transparent">
-               So Deals Close Faster
+              So Deals Close Faster
             </span>
           </h1>
-          
+
           {/* Subheading */}
           <p className="text-2xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed animate-in fade-in slide-in-from-bottom-6 duration-700" style={{ animationDelay: '200ms', animationFillMode: 'backwards' }}>
             Inda verifies pricing, documents, and risk before listings go live, giving buyers, banks, and developers decision-ready deals.

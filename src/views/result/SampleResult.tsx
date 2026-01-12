@@ -459,7 +459,7 @@ const SampleResultPage: React.FC = () => {
         left: rect.left - parentRect.left,
       });
     }
-  }, [resultView, longTabRef.current, shortTabRef.current]);
+  }, [resultView, longTabRef, shortTabRef]);
 
   // Collapsibles
   const [isPriceSummaryOpen, setIsPriceSummaryOpen] = useState(true);
@@ -512,7 +512,7 @@ const SampleResultPage: React.FC = () => {
               Hi there,
             </h2>
             <p className="text-lg md:text-xl lg:text-2xl font-normal mb-6">
-              Here's what we found based on your search.
+              Here&apos;s what we found based on your search.
             </p>
           </div>
 
@@ -533,7 +533,6 @@ const SampleResultPage: React.FC = () => {
             total={result.totalReviews}
             breakdown={result.ratingBreakdown as any}
             reviews={result.reviews as any}
-            aiSummary={(result as any)?.aiReport?.sellerCredibility?.summary}
           />
           <PriceAnalysis
             price={priceNum}
@@ -611,9 +610,9 @@ const SampleResultPage: React.FC = () => {
 
           <ProceedActions
             disabled
-            onDeeperVerification={() => {}}
-            onBuyWithInda={() => {}}
-            onFinanceWithInda={() => {}}
+            onDeeperVerification={() => { }}
+            onBuyWithInda={() => { }}
+            onFinanceWithInda={() => { }}
             legalDisclaimer={result.legalDisclaimer}
           />
         </div>

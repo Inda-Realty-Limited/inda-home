@@ -23,7 +23,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   startOnPaid,
 }) => {
   const router = useRouter();
-  const { user, isAuthenticated } = useAuth();
+  const {isAuthenticated } = useAuth();
   const [isStartingPayment, setIsStartingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState<string | null>(null);
   const [showPaidPlans, setShowPaidPlans] = useState(!!startOnPaid);

@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import Image from "next/image";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 interface ComparableProperty {
@@ -140,10 +141,12 @@ const VerifiedComparables: React.FC<Props> = ({ comparables }) => {
               >
                 <div className="relative h-32 bg-gray-200 overflow-hidden">
                   {property.imageUrl ? (
-                    <img
+                    <Image
                       src={property.imageUrl}
                       alt={property.title}
-                      className="w-full h-full object-cover"
+                      fill
+                      unoptimized
+                      className="object-cover"
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400" />

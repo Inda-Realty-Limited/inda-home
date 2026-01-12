@@ -31,7 +31,7 @@ const Auth = () => {
       <div className="flex-1 flex items-center justify-center py-8 sm:py-12">
         <div className="flex flex-col bg-[#E5E5E573] items-center justify-center rounded-3xl w-[95%] sm:w-[85%] md:w-[75%] lg:w-[65%] xl:w-[50%] mx-auto py-8 sm:py-12">
           <h1 className="text-inda-dark text-center font-medium text-2xl sm:text-3xl md:text-4xl lg:text-5xl mb-4 sm:mb-6 px-4">
-            Let's unlock smarter property decisions.
+            Let&apos;s unlock smarter property decisions.
           </h1>
           <p className="text-inda-dark font-medium text-center text-base sm:text-lg md:text-xl mb-8 sm:mb-10 max-w-xs sm:max-w-md md:max-w-xl px-4">
             No noise. No spam. Just clarity where it matters most.

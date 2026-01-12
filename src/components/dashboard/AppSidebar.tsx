@@ -36,7 +36,7 @@ const MENU_ITEMS: MenuItem[] = [
 
 export default function AppSidebar() {
     const router = useRouter();
-    const { logout } = useAuth();
+    const { logout, user } = useAuth();
     const [isMobileOpen, setIsMobileOpen] = useState(false);
 
     // Auto-close sidebar on mobile when route changes
@@ -136,6 +136,23 @@ export default function AppSidebar() {
                         Logout
                     </button>
                 </nav>
+
+                {/* Subscription Badge */}
+                <div className="p-4 border-t border-gray-50 bg-[#FAFAFA]">
+                    <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                        <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Your Plan</div>
+                        <div className="flex items-center justify-between">
+                            <span className={`text-sm font-black uppercase ${(user as any)?.subscriptionPlan === 'enterprise' ? 'text-purple-600' :
+                                (user as any)?.subscriptionPlan === 'pro' ? 'text-inda-teal' : 'text-gray-600'
+                                }`}>
+                                {(user as any)?.subscriptionPlan || 'Free'}
+                            </span>
+                            <Link href="/for-professionals#pricing" className="text-[10px] font-bold text-inda-teal hover:underline">
+                                {(user as any)?.subscriptionPlan === 'enterprise' ? 'Manage' : 'Upgrade'}
+                            </Link>
+                        </div>
+                    </div>
+                </div>
             </aside>
         </>
     );

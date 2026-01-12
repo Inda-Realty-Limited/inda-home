@@ -68,12 +68,6 @@ const KeyRow = ({
   </div>
 );
 
-const Badge = ({ children }: { children: React.ReactNode }) => (
-  <span className="inline-flex items-center bg-[#4EA8A1]/10 text-[#4EA8A1] border border-[#4EA8A1]/20 rounded-full px-3 py-1 text-xs font-medium">
-    {children}
-  </span>
-);
-
 const RatingStars = ({ value }: { value: number }) => {
   const full = Math.floor(value);
   const half = value - full >= 0.5;
@@ -98,7 +92,6 @@ const AgentResult: React.FC = () => {
   const router = useRouter();
   const agentName = (router.query.q as string) || "Mr. Seyi Ajayi";
   const [isVerificationOpen, setIsVerificationOpen] = useState(false);
-  const [isAISummaryOpen, setIsAISummaryOpen] = useState(true);
   // Stable per-mount Inda Trust Score between 80 and 89
   const [trustScore] = useState<number>(
     () => 80 + Math.floor(Math.random() * 10)

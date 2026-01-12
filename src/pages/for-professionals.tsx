@@ -12,7 +12,10 @@ import {
   Link2,
   CheckCircle2,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
+import { startSubscription, verifySubscription } from "@/api/subscription";
+import { toast } from "react-hot-toast";
 
 
 function VerificationPreview() {
@@ -51,28 +54,25 @@ function VerificationPreview() {
         {stages.map((stage, idx) => {
           const Icon = stage.icon;
           const isActive = idx === verificationStage;
-          
+
           return (
             <motion.div
               key={idx}
               initial={{ opacity: 0.6 }}
-              animate={{ 
+              animate={{
                 opacity: isActive ? 1 : 0.6,
-                scale: isActive ? 1.02 : 1 
+                scale: isActive ? 1.02 : 1
               }}
-              className={`flex items-center justify-between p-4 rounded-xl border ${
-                stage.status === 'complete' 
-                  ? 'bg-green-50 border-green-200' 
-                  : 'bg-gray-50 border-gray-200'
-              }`}
+              className={`flex items-center justify-between p-4 rounded-xl border ${stage.status === 'complete'
+                ? 'bg-green-50 border-green-200'
+                : 'bg-gray-50 border-gray-200'
+                }`}
             >
               <div className="flex items-center gap-3">
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                  stage.status === 'complete' ? 'bg-green-100' : 'bg-gray-200'
-                }`}>
-                  <Icon className={`w-5 h-5 ${
-                    stage.status === 'complete' ? 'text-green-600' : 'text-gray-600'
-                  }`} />
+                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${stage.status === 'complete' ? 'bg-green-100' : 'bg-gray-200'
+                  }`}>
+                  <Icon className={`w-5 h-5 ${stage.status === 'complete' ? 'text-green-600' : 'text-gray-600'
+                    }`} />
                 </div>
                 <div>
                   <div className="font-medium text-gray-900">{stage.label}</div>
@@ -103,19 +103,92 @@ function VerificationPreview() {
 
 const ForProfessionals: React.FC = () => {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
+
+  const getButtonText = () => {
+    if (!user) return "Start free";
+    if (user.subscriptionPlan === "free") return "Upgrade Now";
+    return "Go to Dashboard";
+  };
 
   const onGetStarted = () => {
-    if (user) {
-      router.push("/profile");
+    if (user && user.subscriptionPlan !== "free") {
+      router.push("/dashboard");
+      return;
+    }
+    const pricingElement = document.getElementById('pricing');
+    if (pricingElement) {
+      pricingElement.scrollIntoView({ behavior: 'smooth' });
     } else {
-      const rt = encodeURIComponent("/for-professionals");
-      router.push(`/auth/signup?returnTo=${rt}`);
+      router.push("/for-professionals#pricing");
     }
   };
   const onViewVerificationReport = () => {
     router.push("/reports/IND-8827");
   };
+
+  const [isSubscribing, setIsSubscribing] = useState<string | null>(null);
+
+  const handleSubscription = async (plan: string) => {
+    if (!user) {
+      const rt = encodeURIComponent("/for-professionals");
+      router.push(`/auth/signup?returnTo=${rt}`);
+      return;
+    }
+
+    if (user.subscriptionPlan === plan && user.subscriptionStatus === "active") {
+      router.push("/dashboard");
+      return;
+    }
+
+    const allowedRoles = ["Agent", "Developer"];
+    if (!user.role || !allowedRoles.includes(user.role)) {
+      toast.error("Only Agents and Developers can subscribe to professional plans.");
+      return;
+    }
+
+    try {
+      setIsSubscribing(plan);
+      const callbackUrl = `${window.location.origin}/for-professionals?verify=true&plan=${plan}`;
+      const response = await startSubscription(plan, callbackUrl);
+
+      if (response.data?.authorizationUrl) {
+        window.location.href = response.data.authorizationUrl;
+      } else if (response.message.includes("successfully")) {
+        // Free plan case
+        toast.success(response.message);
+        router.reload();
+      }
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Failed to start subscription");
+    } finally {
+      setIsSubscribing(null);
+    }
+  };
+
+  useEffect(() => {
+    const { verify, reference, tx_ref, plan } = router.query;
+    const finalReference = (reference || tx_ref) as string;
+
+    if (verify === "true" && finalReference) {
+      const verifyPayment = async () => {
+        try {
+          const response = await verifySubscription(finalReference);
+          if (response.status === "OK") {
+            toast.success(`Welcome to the ${plan} plan!`);
+            // Sync user state
+            if (response.data) {
+              setUser(response.data);
+            }
+            router.push("/dashboard");
+          }
+        } catch (_error) {
+          toast.error("Subscription verification failed");
+        }
+      };
+      verifyPayment();
+    }
+  }, [router.query, setUser]);
 
   return (
     <Container noPadding className="min-h-screen bg-white">
@@ -142,7 +215,7 @@ const ForProfessionals: React.FC = () => {
             >
               Answer questions
               <br />
-              <span className="text-[#50b8b1]">you don't even know.</span>
+              <span className="text-[#50b8b1]">you don&apos;t even know.</span>
             </motion.h1>
 
             <motion.p
@@ -151,7 +224,7 @@ const ForProfessionals: React.FC = () => {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed"
             >
-              Buyers ask about flood risk, neighborhood growth, and legal history you don't have. 
+              Buyers ask about flood risk, neighborhood growth, and legal history you don&apos;t have.
               Deals die in 52 days of back-and-forth. We verify everything upfront.
             </motion.p>
 
@@ -165,7 +238,7 @@ const ForProfessionals: React.FC = () => {
                 onClick={onGetStarted}
                 className="group px-6 py-3 bg-[#50b8b1] text-white rounded-lg font-medium hover:bg-[#3a9892] transition-all flex items-center gap-2 shadow-sm"
               >
-                Start free
+                {getButtonText()}
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </button>
               <button
@@ -226,19 +299,19 @@ const ForProfessionals: React.FC = () => {
                 <h2 className="text-4xl md:text-5xl lg:text-6xl text-white mb-6 tracking-tight">
                   Questions you
                   <br />
-                  <span className="text-red-400">can't answer.</span>
+                  <span className="text-red-400">can&apos;t answer.</span>
                 </h2>
                 <p className="text-lg text-gray-400 leading-relaxed mb-6">
-                  "What's the flood risk?" "How's the area growing?" "Any legal disputes?" 
-                  You don't know. Buyers spend weeks researching. Finding nothing. Getting frustrated.
+                  "What&apos;s the flood risk?" "How&apos;s the area growing?" "Any legal disputes?"
+                  You don&apos;t know. Buyers spend weeks researching. Finding nothing. Getting frustrated.
                 </p>
                 <p className="text-lg text-gray-400 leading-relaxed mb-8">
-                  Meanwhile, you're scrambling for answers you don't have access to. 
+                  Meanwhile, you&apos;re scrambling for answers you don&apos;t have access to.
                   52 days wasted. Deals collapse.
                 </p>
                 <p className="text-lg text-white leading-relaxed">
-                  Inda verifies everything—title, legal, microlocation insights, environmental 
-                  risks. Questions you can't answer become certainties buyers trust. 
+                  Inda verifies everything—title, legal, microlocation insights, environmental
+                  risks. Questions you can&apos;t answer become certainties buyers trust.
                   Both sides get complete transparency. Deals close in 11 days.
                 </p>
               </motion.div>
@@ -264,7 +337,7 @@ const ForProfessionals: React.FC = () => {
                 </div>
                 <div className="space-y-2 text-sm text-gray-400">
                   <div className="flex justify-between">
-                    <span>Researching answers you don't have</span>
+                    <span>Researching answers you don&apos;t have</span>
                     <span className="text-red-400">21 days</span>
                   </div>
                   <div className="flex justify-between">
@@ -346,7 +419,7 @@ const ForProfessionals: React.FC = () => {
               <div className="text-5xl font-bold text-gray-200 mb-4">01</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-3">Enter 8-12 Details</h3>
               <p className="text-gray-600 leading-relaxed">
-                Fill out basic listing info—location, price, features. 
+                Fill out basic listing info—location, price, features.
                 Our AI instantly compiles <span className="font-semibold text-gray-900">70+ verified answers</span> buyers need.
               </p>
             </motion.div>
@@ -382,7 +455,7 @@ const ForProfessionals: React.FC = () => {
               <div className="text-5xl font-bold text-gray-200 mb-4">03</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-3">Track & Close</h3>
               <p className="text-gray-600 leading-relaxed">
-                See who viewed, which channels convert. Know which leads are serious. 
+                See who viewed, which channels convert. Know which leads are serious.
                 Close faster.
               </p>
             </motion.div>
@@ -404,7 +477,7 @@ const ForProfessionals: React.FC = () => {
               <div className="text-6xl mb-6">"</div>
               <p className="text-2xl md:text-3xl lg:text-4xl text-gray-900 leading-snug mb-8">
                 We closed ₦340M in properties{" "}
-                <span className="text-[#50b8b1]">17 days faster</span> than our usual timeline. 
+                <span className="text-[#50b8b1]">17 days faster</span> than our usual timeline.
                 Buyers trust the verified reports.
               </p>
             </div>
@@ -420,7 +493,7 @@ const ForProfessionals: React.FC = () => {
       </section>
 
       {/* Pricing */}
-      <section className="py-32 px-6">
+      <section id="pricing" className="py-32 px-6">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <motion.h2
@@ -430,9 +503,7 @@ const ForProfessionals: React.FC = () => {
               className="text-4xl md:text-5xl lg:text-6xl text-gray-900 mb-4 tracking-tight"
             >
               Start free. Scale when ready.
-            </motion.h2>
-            <p className="text-lg text-gray-600">No credit card required</p>
-          </div>
+            </motion.h2>          </div>
 
           <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
             {/* Starter */}
@@ -441,8 +512,14 @@ const ForProfessionals: React.FC = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0 }}
-              className="bg-white rounded-2xl border border-gray-200 p-8 hover:shadow-lg transition-shadow"
+              className={`bg-white rounded-2xl border p-8 hover:shadow-lg transition-shadow relative ${user?.subscriptionPlan === "free" ? "border-[#50b8b1] ring-1 ring-[#50b8b1]" : "border-gray-200"
+                }`}
             >
+              {user?.subscriptionPlan === "free" && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#50b8b1] text-white px-3 py-1 rounded-full text-xs font-medium">
+                  Current Plan
+                </div>
+              )}
               <div className="mb-6">
                 <div className="text-sm text-gray-500 mb-2">Starter</div>
                 <div className="text-5xl font-semibold text-gray-900 mb-1">Free</div>
@@ -463,10 +540,12 @@ const ForProfessionals: React.FC = () => {
                 </li>
               </ul>
               <button
-                onClick={onGetStarted}
-                className="w-full py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:border-gray-400 transition-colors text-sm font-medium"
+                onClick={() => handleSubscription("free")}
+                disabled={isSubscribing !== null}
+                className="w-full py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:border-gray-400 transition-colors text-sm font-medium flex items-center justify-center gap-2"
               >
-                Get started
+                {isSubscribing === "free" ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                {!user ? "Get started" : user.subscriptionPlan === "free" ? "Go to Dashboard" : "Switch to Starter"}
               </button>
             </motion.div>
 
@@ -478,13 +557,21 @@ const ForProfessionals: React.FC = () => {
               transition={{ delay: 0.1 }}
               className="bg-gray-900 rounded-2xl border-2 border-[#50b8b1] p-8 relative hover:shadow-2xl transition-shadow"
             >
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#50b8b1] text-white px-3 py-1 rounded-full text-xs font-medium">
-                Most popular
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex gap-2">
+                {user?.subscriptionPlan === "pro" ? (
+                  <div className="bg-[#50b8b1] text-white px-3 py-1 rounded-full text-xs font-medium">
+                    Current Plan
+                  </div>
+                ) : (
+                  <div className="bg-[#50b8b1] text-white px-3 py-1 rounded-full text-xs font-medium">
+                    Most popular
+                  </div>
+                )}
               </div>
               <div className="mb-6">
                 <div className="text-sm text-gray-400 mb-2">Pro</div>
                 <div className="text-5xl font-semibold text-white mb-1">
-                  ₦50
+                  ₦50K
                 </div>
                 <div className="text-sm text-gray-400">per month</div>
               </div>
@@ -511,10 +598,12 @@ const ForProfessionals: React.FC = () => {
                 </li>
               </ul>
               <button
-                onClick={onGetStarted}
-                className="w-full py-2.5 bg-[#50b8b1] rounded-lg text-white hover:bg-[#3a9892] transition-colors text-sm font-medium"
+                onClick={() => handleSubscription("pro")}
+                disabled={isSubscribing !== null}
+                className="w-full py-2.5 bg-[#50b8b1] rounded-lg text-white hover:bg-[#3a9892] transition-colors text-sm font-medium flex items-center justify-center gap-2"
               >
-                Start free
+                {isSubscribing === "pro" ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                {!user ? "Start free" : user.subscriptionPlan === "pro" ? "Go to Dashboard" : user.subscriptionPlan === "free" ? "Upgrade to Pro" : "Switch to Pro"}
               </button>
             </motion.div>
 
@@ -524,8 +613,14 @@ const ForProfessionals: React.FC = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.2 }}
-              className="bg-white rounded-2xl border border-gray-200 p-8 hover:shadow-lg transition-shadow"
+              className={`bg-white rounded-2xl border p-8 hover:shadow-lg transition-shadow relative ${user?.subscriptionPlan === "enterprise" ? "border-[#50b8b1] ring-1 ring-[#50b8b1]" : "border-gray-200"
+                }`}
             >
+              {user?.subscriptionPlan === "enterprise" && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#50b8b1] text-white px-3 py-1 rounded-full text-xs font-medium">
+                  Current Plan
+                </div>
+              )}
               <div className="mb-6">
                 <div className="text-sm text-gray-500 mb-2">Enterprise</div>
                 <div className="text-5xl font-semibold text-gray-900 mb-1">₦75K</div>
@@ -554,10 +649,12 @@ const ForProfessionals: React.FC = () => {
                 </li>
               </ul>
               <button
-                onClick={onGetStarted}
-                className="w-full py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:border-gray-400 transition-colors text-sm font-medium"
+                onClick={() => handleSubscription("enterprise")}
+                disabled={isSubscribing !== null}
+                className="w-full py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:border-gray-400 transition-colors text-sm font-medium flex items-center justify-center gap-2"
               >
-                Contact sales
+                {isSubscribing === "enterprise" ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                {!user ? "Get Started" : user.subscriptionPlan === "enterprise" ? "Go to Dashboard" : "Upgrade to Enterprise"}
               </button>
             </motion.div>
           </div>
@@ -582,7 +679,7 @@ const ForProfessionals: React.FC = () => {
               onClick={onGetStarted}
               className="group px-8 py-4 bg-[#50b8b1] text-white rounded-lg font-medium hover:bg-[#3a9892] transition-all inline-flex items-center gap-2 shadow-lg text-lg"
             >
-              Start free
+              {getButtonText()}
               <ArrowRight className="w-5 h-5 group-hover:translate-x-0.5 transition-transform" />
             </button>
           </motion.div>

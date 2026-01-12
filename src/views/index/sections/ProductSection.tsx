@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { Button } from './ui/button';
-import { Search, BarChart3, Users, Building2, TrendingUp, Zap, ArrowRight, Layers, FileText, Bell } from 'lucide-react';
+import { Search, BarChart3, Building2, TrendingUp, ArrowRight, Layers, Bell } from 'lucide-react';
 
 export function ProductSection() {
   const router = useRouter();

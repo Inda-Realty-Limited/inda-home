@@ -9,7 +9,7 @@ interface VerificationModalProps {
   onVerificationPaid: (paid: boolean) => void;
 }
 
-export function VerificationModal({ isOpen, onClose, propertyName, propertyPrice,  onVerificationPaid }: VerificationModalProps) {
+export function VerificationModal({ isOpen, onClose, propertyName, propertyPrice, onVerificationPaid }: VerificationModalProps) {
   if (!isOpen) return null;
 
   const handleConfirm = () => {
@@ -91,7 +91,7 @@ export function VerificationModal({ isOpen, onClose, propertyName, propertyPrice
             <Clock className="w-4 h-4 text-yellow-600 flex-shrink-0 mt-0.5" />
             <div className="text-xs text-gray-700">
               <strong>Timeline:</strong> Verification dispatched within 24 hours. Full report ready in 48-72 hours.
-              <div className="mt-1">📧 You'll receive an email notification once your report is complete.</div>
+              <div className="mt-1">📧 You&apos;ll receive an email notification once your report is complete.</div>
             </div>
           </div>
 

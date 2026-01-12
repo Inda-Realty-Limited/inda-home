@@ -6,9 +6,13 @@ export type StoredUser = {
   isActive?: boolean;
   howDidYouHearAboutUs?: string;
   isVerified?: boolean;
+  role: "Buyer" | "Investor" | "Agent" | "Developer" | "Admin";
   todo?: string;
   createdAt?: string;
   updatedAt?: string;
+  subscriptionPlan?: "free" | "pro" | "enterprise";
+  subscriptionStatus?: "active" | "expired" | "none";
+  subscriptionExpiresAt?: string;
   [key: string]: any;
 };
 

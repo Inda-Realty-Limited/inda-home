@@ -1,4 +1,5 @@
 import { env } from "@/config/env";
+import Link from "next/link";
 import React, { Component, ErrorInfo, ReactNode } from "react";
 
 interface Props {
@@ -87,7 +88,7 @@ class ErrorBoundary extends Component<Props, State> {
                 Something went wrong
               </h1>
               <p className="text-gray-600 mb-6">
-                We encountered an unexpected error. Don't worry, we're on it!
+                We encountered an unexpected error. Don&apos;t worry, we&apos;re on it!
               </p>
             </div>
 
@@ -122,12 +123,12 @@ class ErrorBoundary extends Component<Props, State> {
               >
                 Reload Page
               </button>
-              <a
+              <Link
                 href="/"
                 className="w-full text-center bg-white border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-50 transition-colors"
               >
                 Go Home
-              </a>
+              </Link>
             </div>
 
             <p className="text-xs text-gray-500 text-center mt-6">

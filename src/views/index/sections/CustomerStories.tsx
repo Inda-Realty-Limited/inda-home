@@ -75,7 +75,7 @@ export function CustomerStories() {
 
               {/* Story */}
               <p className="text-gray-700 mb-8 leading-relaxed text-lg relative z-10">
-                "{story.story}"
+                &quot;{story.story}&quot;
               </p>
 
               {/* Author */}

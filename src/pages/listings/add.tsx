@@ -4,6 +4,13 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { FaCloudUploadAlt, FaChevronDown, FaTimes, FaFileContract } from 'react-icons/fa';
 import { ProListingsService, ListingPayload } from '@/api/pro-listings';
+import { toast } from 'react-hot-toast';
+
+const PLAN_LIMITS = {
+    free: 1,
+    pro: 10,
+    enterprise: Infinity,
+} as const;
 
 interface ListingFormData {
     title: string;
@@ -88,6 +95,23 @@ export default function AddListingPage() {
         setFormData(prev => ({ ...prev, documents: prev.documents.filter((_, i) => i !== index) }));
     };
 
+    const [listingCount, setListingCount] = useState<number | null>(null);
+
+    useEffect(() => {
+        const fetchCount = async () => {
+            const userId = user?.id || user?._id || (user as any)?.user?.id;
+            if (userId) {
+                try {
+                    const listings = await ProListingsService.getUserListings(userId);
+                    setListingCount(Array.isArray(listings) ? listings.length : 0);
+                } catch (error) {
+                    console.error('Failed to fetch listing count:', error);
+                }
+            }
+        };
+        fetchCount();
+    }, [user]);
+
     const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(true); };
     const handleDragLeave = (e: React.DragEvent) => { e.preventDefault(); setIsDragging(false); };
     const handleDrop = (e: React.DragEvent) => {
@@ -97,6 +121,17 @@ export default function AddListingPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Enforce plan limits
+        const plan = user?.subscriptionPlan || 'free';
+        const limit = PLAN_LIMITS[plan as keyof typeof PLAN_LIMITS] || 1;
+
+        if (listingCount !== null && listingCount >= limit) {
+            toast.error(`You have reached the limit for the ${plan} plan (${limit} property). Please upgrade to add more.`);
+            router.push('/for-professionals');
+            return;
+        }
+
         setIsSubmitting(true);
 
         try {

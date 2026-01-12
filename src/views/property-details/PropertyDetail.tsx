@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import Image from "next/image";
 import { ChevronLeft, Bookmark, Share2, ChevronDown, ChevronUp, MapPin, Bed, Bath, Car, Home, Eye, Users, AlertTriangle, CheckCircle2, Link2, Star, TrendingUp, Shield, Building2, MessageCircle, BadgeCheck, FileText, Sparkles } from "lucide-react";
 import { Property, QASection } from "../property-details/data/propertyData";
 import { qaData } from "../property-details/data/propertyData";
@@ -57,7 +58,7 @@ export function PropertyDetail({ property, onBack }: PropertyDetailProps) {
       const yOffset = -80; // Account for sticky header
       const y = section.getBoundingClientRect().top + window.pageYOffset + yOffset;
       window.scrollTo({ top: y, behavior: "smooth" });
-      
+
       // Expand the section if not already expanded
       if (!expandedSections.includes(title)) {
         setExpandedSections((prev) => [...prev, title]);
@@ -73,7 +74,7 @@ export function PropertyDetail({ property, onBack }: PropertyDetailProps) {
           text: `Check out this property: ${property.name} in ${property.location}`,
           url: window.location.href,
         });
-      } catch (err) {
+      } catch (_err) {
         console.log("Share cancelled");
       }
     } else {
@@ -96,7 +97,7 @@ export function PropertyDetail({ property, onBack }: PropertyDetailProps) {
         </button>
       );
     }
-    
+
     if (details.includes('title insurance') || details.includes('Get a quote')) {
       return (
         <button
@@ -107,7 +108,7 @@ export function PropertyDetail({ property, onBack }: PropertyDetailProps) {
         </button>
       );
     }
-    
+
     if (details.includes('Bundle your insurance') || details.includes('Bundle insurance')) {
       return (
         <button
@@ -118,7 +119,7 @@ export function PropertyDetail({ property, onBack }: PropertyDetailProps) {
         </button>
       );
     }
-    
+
     // Default non-clickable rendering
     return <p className="text-sm text-gray-700">{details}</p>;
   };
@@ -158,11 +159,13 @@ export function PropertyDetail({ property, onBack }: PropertyDetailProps) {
 
       <div className="max-w-4xl mx-auto p-4">
         {/* Image Carousel */}
-        <div className="relative mb-6 rounded-xl overflow-hidden">
-          <img
+        <div className="relative mb-6 rounded-xl overflow-hidden h-64 md:h-96">
+          <Image
             src={property.images[currentImageIndex]}
             alt={property.name}
-            className="w-full h-64 md:h-96 object-cover"
+            fill
+            unoptimized
+            className="object-cover"
           />
           {property.images.length > 1 && (
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
@@ -170,9 +173,8 @@ export function PropertyDetail({ property, onBack }: PropertyDetailProps) {
                 <button
                   key={index}
                   onClick={() => setCurrentImageIndex(index)}
-                  className={`w-2 h-2 rounded-full transition-all ${
-                    index === currentImageIndex ? "bg-white w-6" : "bg-white/50"
-                  }`}
+                  className={`w-2 h-2 rounded-full transition-all ${index === currentImageIndex ? "bg-white w-6" : "bg-white/50"
+                    }`}
                 />
               ))}
             </div>
@@ -347,7 +349,7 @@ export function PropertyDetail({ property, onBack }: PropertyDetailProps) {
               <span className="font-semibold">Schedule Site Visit</span>
               <span className="text-xs text-gray-500 group-hover:text-white/80 transition-colors">In-person viewing</span>
             </button>
-            
+
             <button
               onClick={() => setShowSiteVisit(true)}
               className="flex flex-col items-center gap-2 p-4 bg-white border-2 border-[#f59e0b] rounded-lg hover:bg-[#f59e0b] hover:text-white transition-all group"
@@ -362,11 +364,11 @@ export function PropertyDetail({ property, onBack }: PropertyDetailProps) {
           {property.scannedData && (
             <div className="bg-gray-50 rounded-lg p-4 mb-6">
               <h4 className="text-gray-900 mb-3">Property Details</h4>
-              
+
               {property.scannedData.description && (
                 <p className="text-sm text-gray-700 mb-4">{property.scannedData.description}</p>
               )}
-              
+
               {property.scannedData.features && property.scannedData.features.length > 0 && (
                 <div className="mb-4">
                   <h5 className="text-sm text-gray-900 mb-2">Features:</h5>
@@ -380,25 +382,25 @@ export function PropertyDetail({ property, onBack }: PropertyDetailProps) {
                   </ul>
                 </div>
               )}
-              
+
               <div className="grid grid-cols-2 gap-3 text-sm">
                 {property.scannedData.landSize && (
-                    <div>
-                        <span className="text-gray-600">Land Size:</span>
-                        <span className="ml-2 text-gray-900">{property.scannedData.landSize}</span>
-                    </div>
+                  <div>
+                    <span className="text-gray-600">Land Size:</span>
+                    <span className="ml-2 text-gray-900">{property.scannedData.landSize}</span>
+                  </div>
                 )}
                 {property.scannedData.builtUpArea && (
-                    <div>
-                        <span className="text-gray-600">Built Area:</span>
-                        <span className="ml-2 text-gray-900">{property.scannedData.builtUpArea}</span>
-                    </div>
+                  <div>
+                    <span className="text-gray-600">Built Area:</span>
+                    <span className="ml-2 text-gray-900">{property.scannedData.builtUpArea}</span>
+                  </div>
                 )}
                 {property.scannedData.listedDate && (
-                    <div>
-                        <span className="text-gray-600">Listed:</span>
-                        <span className="ml-2 text-gray-900">{property.scannedData.listedDate}</span>
-                    </div>
+                  <div>
+                    <span className="text-gray-600">Listed:</span>
+                    <span className="ml-2 text-gray-900">{property.scannedData.listedDate}</span>
+                  </div>
                 )}
               </div>
             </div>
@@ -427,7 +429,7 @@ export function PropertyDetail({ property, onBack }: PropertyDetailProps) {
             {property.isScanned ? (
               /* External Listing CTAs */
               <div className="space-y-3">
-                <button 
+                <button
                   onClick={() => {
                     setDueDiligenceTier('deep');
                     setShowDueDiligence(true);
@@ -443,7 +445,7 @@ export function PropertyDetail({ property, onBack }: PropertyDetailProps) {
                   </div>
                   <div className="text-sm">₦750K</div>
                 </button>
-                <button 
+                <button
                   onClick={() => {
                     setDueDiligenceTier('deeper');
                     setShowDueDiligence(true);
@@ -467,19 +469,19 @@ export function PropertyDetail({ property, onBack }: PropertyDetailProps) {
               /* Verified Listing 3-Click Flow */
               <>
                 <div className="grid grid-cols-3 gap-3">
-                  <button 
+                  <button
                     onClick={() => setShowMakeOffer(true)}
                     className="px-4 py-3 bg-[#e8f5f4] text-[#50b8b1] rounded-lg hover:bg-[#50b8b1] hover:text-white transition-colors border border-[#50b8b1]"
                   >
                     1. Make Offer
                   </button>
-                  <button 
+                  <button
                     className="px-4 py-3 bg-gray-100 text-gray-400 rounded-lg border border-gray-200 cursor-not-allowed"
                     title="Coming soon"
                   >
                     2. Lock Offer
                   </button>
-                  <button 
+                  <button
                     className="px-4 py-3 bg-gray-100 text-gray-400 rounded-lg border border-gray-200 cursor-not-allowed"
                     title="Coming soon"
                   >

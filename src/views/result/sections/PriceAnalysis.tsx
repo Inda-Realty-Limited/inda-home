@@ -334,7 +334,6 @@ const PriceAnalysis: React.FC<Props> = ({
                         
                         // Calculate tooltip dimensions
                         const tooltipPadding = 12;
-                        const lineHeight = 18;
                         const tooltipWidth = 180;
                         const tooltipHeight = 90;
                         

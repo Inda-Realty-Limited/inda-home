@@ -22,7 +22,7 @@ const getStoredToken = (): string | null => {
     const bytes = CryptoJS.AES.decrypt(encrypted, env.security.encryptionSecret);
     const decrypted = bytes.toString(CryptoJS.enc.Utf8);
     return decrypted || null;
-  } catch (e) {
+  } catch {
     return null;
   }
 };

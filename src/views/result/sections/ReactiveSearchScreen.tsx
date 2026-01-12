@@ -1,9 +1,9 @@
-import { Button, Container, Footer, Navbar } from "@/components";
+import { Container, Footer, Navbar } from "@/components";
 import PropertyMap from "@/components/PropertyMap";
 import { ReactiveSearchResult } from "@/api/listings";
 import { useRouter } from "next/router";
 import React from "react";
-import { ArrowRight, MapPin, Home, DollarSign, Share2 } from "lucide-react";
+import { MapPin, Share2 } from "lucide-react";
 
 type Props = {
     reactiveData: ReactiveSearchResult;
@@ -12,7 +12,6 @@ type Props = {
 
 const ReactiveSearchScreen: React.FC<Props> = ({
     reactiveData,
-    searchQuery,
 }) => {
     const router = useRouter();
     const data = reactiveData?.merged_data;

@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import {
     FaSearch, FaCheck, FaBed, FaBath, FaRulerCombined,
@@ -24,7 +25,7 @@ export default function SourceExplorerPage() {
     const [hasMore, setHasMore] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
 
-    const fetchListings = async (reset = false) => {
+    const fetchListings = useCallback(async (reset = false) => {
         try {
             if (reset) setLoading(true);
             const currentPage = reset ? 1 : page;
@@ -52,12 +53,12 @@ export default function SourceExplorerPage() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [activeFilters, listings.length, page, searchQuery]);
 
     useEffect(() => {
         setPage(1);
         fetchListings(true);
-    }, [activeFilters]);
+    }, [activeFilters, fetchListings]);
 
     const handleLoadMore = () => {
         setPage(prev => prev + 1);
@@ -160,10 +161,12 @@ export default function SourceExplorerPage() {
                             return (
                                 <div key={property.id || property._id || property.indaTag} className="bg-white rounded-xl overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
                                     <div className="h-48 w-full bg-gray-200 relative group overflow-hidden">
-                                        <img
+                                        <Image
                                             src={displayImage}
                                             alt={property.title}
-                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                            fill
+                                            unoptimized
+                                            className="object-cover transition-transform duration-500 group-hover:scale-105"
                                         />
                                         <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
                                             <span className="bg-white/90 text-inda-dark text-[10px] font-bold px-2 py-1 rounded shadow-sm">

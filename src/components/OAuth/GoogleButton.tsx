@@ -9,7 +9,6 @@ interface GoogleButtonProps {
 }
 
 const GoogleButton: React.FC<GoogleButtonProps> = ({
-  onSuccess,
   returnTo,
   className = "",
 }) => {
@@ -17,12 +16,12 @@ const GoogleButton: React.FC<GoogleButtonProps> = ({
 
   const handleGoogleLogin = () => {
     setIsLoading(true);
-    
+
     const state = returnTo ? encodeURIComponent(returnTo) : "";
     const redirectUri = `${typeof window !== "undefined" ? window.location.origin : ""}/auth/oauth/callback`;
-    
+
     const oauthUrl = `${env.api.baseUrl}/auth/google?state=${state}&redirectUri=${encodeURIComponent(redirectUri)}`;
-    
+
     window.location.href = oauthUrl;
   };
 
