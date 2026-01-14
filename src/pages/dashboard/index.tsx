@@ -12,16 +12,16 @@ import { PlanGuard } from '@/components/dashboard/PlanGuard';
 // --- Mock Data / Constants ---
 
 const QUICK_ACTIONS = [
-    { name: 'Add Property', icon: FaPlus, href: '/listings/add', color: 'bg-white/10' },
+    { name: 'Add Property', icon: FaPlus, href: '/listings?add=true', color: 'bg-white/10' },
     { name: 'All Leads', icon: FaUsers, href: '/leads', color: 'bg-white/10' },
     { name: 'Portfolio Page', icon: FaExternalLinkAlt, href: '/portfolio', color: 'bg-white/10' },
     { name: 'Upgrade Plan', icon: FaRocket, href: '/for-professionals#pricing', color: 'bg-[#E2E689] text-gray-900', isSpecial: true },
 ];
 
 const PERFORMANCE_STATS = [
-    { label: 'Revenue This Month', value: '₦48M', trend: '+₦12M vs last month', icon: FaChartLine, color: 'bg-[#67B148]', trendIcon: FaArrowUp },
+    { label: 'Revenue This Month', value: 'Coming Soon', trend: 'Coming Soon', icon: FaChartLine, color: 'bg-[#67B148]', trendIcon: FaArrowUp },
     { label: 'WhatsApp Leads', value: '127', trend: '+34% this week', icon: FaWhatsapp, color: 'bg-white', trendIcon: FaArrowUp, textColor: 'text-gray-900', iconColor: 'text-[#67B148]' },
-    { label: 'Avg. Close Time', value: '11d', trend: '-40% vs industry avg', icon: FaClock, color: 'bg-white', trendIcon: FaArrowDown, textColor: 'text-gray-900', iconColor: 'text-orange-500' },
+    { label: 'Avg. Close Time', value: 'Coming Soon', trend: 'Coming Soon', icon: FaClock, color: 'bg-white', trendIcon: FaArrowDown, textColor: 'text-gray-900', iconColor: 'text-orange-500' },
     { label: 'Top Performing Channel', value: 'Instagram', trend: '2,103 clicks', icon: FaStar, color: 'bg-[#A374FF]', trendIcon: null },
 ];
 

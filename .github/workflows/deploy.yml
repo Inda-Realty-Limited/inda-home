@@ -30,6 +30,6 @@ jobs:
             git pull origin staging
             npm install
             npm run build
-            pm2 reload inda-home 
+            pm2 restart inda-home 
             pm2 save
           EOF
