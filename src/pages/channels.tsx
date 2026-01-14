@@ -10,7 +10,13 @@ import {
     FaChevronDown,
     FaMagic,
     FaSpinner,
+    FaLinkedin,
+    FaYoutube,
+    FaSnapchatGhost,
+    FaTiktok,
 } from 'react-icons/fa';
+import { FaSquareXTwitter } from "react-icons/fa6";
+
 import { useToast } from '@/components/ToastProvider';
 import { useAuth } from '@/contexts/AuthContext';
 import { getChannelStats, ChannelStatsItem, getPublicListings, PublicListing } from '@/api/channels';
@@ -221,7 +227,7 @@ const CHANNEL_CONFIG = {
         iconColor: 'bg-[#1877F2]',
     },
     email: {
-        platform: 'Email Signature',
+        platform: 'Email Campaign',
         icon: <FaRegEnvelope />,
         instructions: [
             'Copy the tracking link above',
@@ -231,6 +237,66 @@ const CHANNEL_CONFIG = {
         ],
         borderColor: 'border-red-500/20',
         iconColor: 'bg-red-500',
+    },
+    twitter: {
+        platform: 'Twitter / X',
+        icon: <FaSquareXTwitter />,
+        instructions: [
+            'Copy the tracking link above',
+            'Add to your bio or pin as a tweet',
+            'Share in property-related threads',
+            'Track engagement from Twitter/X'
+        ],
+        borderColor: 'border-[#1DA1F2]/20',
+        iconColor: 'bg-black',
+    },
+    linkedin: {
+        platform: 'LinkedIn',
+        icon: <FaLinkedin />,
+        instructions: [
+            'Copy the tracking link above',
+            'Share in LinkedIn posts or articles',
+            'Add to company page',
+            'Track professional network leads'
+        ],
+        borderColor: 'border-[#0077B5]/20',
+        iconColor: 'bg-[#0077B5]',
+    },
+    youtube: {
+        platform: 'YouTube',
+        icon: <FaYoutube />,
+        instructions: [
+            'Copy the tracking link above',
+            'Add to video descriptions and pinned comments',
+            'Use in channel banner and About section',
+            'Track leads from property walkthrough videos'
+        ],
+        borderColor: 'border-[#FF0000]/20',
+        iconColor: 'bg-[#FF0000]',
+    },
+    snapchat: {
+        platform: 'Snapchat',
+        icon: <FaSnapchatGhost />,
+        instructions: [
+            'Copy the tracking link above',
+            'Add to your Snapchat profile',
+            'Share in Stories and Spotlight videos',
+            'Track engagement from younger buyers'
+        ],
+        borderColor: 'border-[#FFFC00]/20',
+        iconColor: 'bg-[#FFFC00] text-black',
+    },
+    tiktok: {
+        platform: 'TikTok',
+        icon: <FaTiktok />,
+        instructions: [
+            'Copy the tracking link above',
+            'Add to your TikTok bio',
+            'Use in video descriptions and pins',
+            'Track viral property tour videos'
+        ],
+        borderColor: 'border-black/20',
+        iconColor: 'bg-black',
     },
 };
 
@@ -291,7 +357,7 @@ export default function ChannelSetup() {
         };
     };
 
-    const channelOrder = ['whatsapp', 'instagram', 'facebook', 'email'];
+    const channelOrder = ['whatsapp', 'instagram', 'facebook', 'twitter', 'linkedin', 'youtube', 'tiktok', 'snapchat', 'email'];
 
     return (
         <DashboardLayout title="Channel Setup">
