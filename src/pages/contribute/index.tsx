@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-    FaCloudUploadAlt,FaPlus
+    FaCloudUploadAlt, FaPlus
 } from 'react-icons/fa';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import DashboardButton from '@/components/dashboard/DashboardButton';
 import { ProContributionService } from '@/api/pro-contributions';
+import ComingSoonOverlay from '@/components/shared/ComingSoonOverlay';
 
 interface ContributionStat {
     label: string;
@@ -55,7 +56,7 @@ export default function DataContributionPage() {
                 setLoading(false);
             }
         };
-        
+
         if (user) {
             loadDashboard();
         } else {
@@ -66,16 +67,18 @@ export default function DataContributionPage() {
     return (
         <DashboardLayout title="Data Contribution">
             <div className="max-w-6xl mx-auto pb-10">
-                {isContributing ? (
-                    <ContributionForm onCancel={() => setIsContributing(false)} />
-                ) : (
-                    <DashboardView
-                        loading={loading}
-                        stats={stats}
-                        history={history}
-                        onContribute={() => setIsContributing(true)}
-                    />
-                )}
+                <ComingSoonOverlay>
+                    {isContributing ? (
+                        <ContributionForm onCancel={() => setIsContributing(false)} />
+                    ) : (
+                        <DashboardView
+                            loading={loading}
+                            stats={stats}
+                            history={history}
+                            onContribute={() => setIsContributing(true)}
+                        />
+                    )}
+                </ComingSoonOverlay>
             </div>
         </DashboardLayout>
     );
