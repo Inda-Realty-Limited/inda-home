@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import Link from 'next/link';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,15 +8,24 @@ import {
     FaPen, FaComment, FaTrash, FaSpinner, FaPlusCircle, FaMapMarkerAlt
 } from 'react-icons/fa';
 import { ProListingsService, Listing } from '@/api/pro-listings';
+import { PropertyUploadModal } from '@/components/listings/PropertyUploadModal';
 
-type TabOption = 'active' | 'analytics';
 
 export default function ListingsManagerPage() {
     const { user } = useAuth();
-    const [activeTab, setActiveTab] = useState<TabOption>('active');
+    const router = useRouter();
     const [listings, setListings] = useState<Listing[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+
+    useEffect(() => {
+        if (router.query.add === 'true') {
+            setIsUploadModalOpen(true);
+            // Clear the query param to avoid re-opening on refresh
+            router.replace('/listings', undefined, { shallow: true });
+        }
+    }, [router.query.add, router]);
 
     useEffect(() => {
         const fetchListings = async () => {
@@ -81,6 +91,10 @@ export default function ListingsManagerPage() {
         }
     };
 
+    const handlePropertyAdded = (newProperty: any) => {
+        setListings(prev => [newProperty, ...prev]);
+    };
+
     return (
         <DashboardLayout title="Listings Manager">
             <div className="max-w-6xl mx-auto pb-10">
@@ -90,31 +104,16 @@ export default function ListingsManagerPage() {
                         <h1 className="text-3xl font-bold text-inda-dark">My Listings</h1>
                         <p className="text-sm text-gray-500 mt-1">Manage and track your property portfolio</p>
                     </div>
-                    <Link href="/listings/add">
-                        <button className="bg-inda-teal text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-md hover:bg-teal-700 transition-all flex items-center gap-2">
-                            <FaPlusCircle /> Create New Listing
-                        </button>
-                    </Link>
-                </div>
-
-                <div className="flex gap-8 border-b border-gray-200 mb-8">
                     <button
-                        onClick={() => setActiveTab('active')}
-                        className={`pb-3 text-sm font-medium transition-all ${activeTab === 'active' ? 'border-b-2 border-inda-teal text-inda-teal' : 'text-gray-500 hover:text-inda-dark'
-                            }`}
+                        onClick={() => setIsUploadModalOpen(true)}
+                        className="bg-inda-teal text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-md hover:bg-teal-700 transition-all flex items-center gap-2"
                     >
-                        Active Listings
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('analytics')}
-                        className={`pb-3 text-sm font-medium transition-all ${activeTab === 'analytics' ? 'border-b-2 border-inda-teal text-inda-teal' : 'text-gray-500 hover:text-inda-dark'
-                            }`}
-                    >
-                        Performance Analytics
+                        <FaPlusCircle /> Create New Listing
                     </button>
                 </div>
 
-                {activeTab === 'active' && (
+
+                <div className="mt-4">
                     <div>
                         {loading ? (
                             <div className="flex justify-center py-20"><FaSpinner className="animate-spin text-3xl text-inda-teal" /></div>
@@ -131,11 +130,12 @@ export default function ListingsManagerPage() {
                                 <p className="text-gray-500 mb-6 max-w-sm">
                                     You haven&apos;t created any listings yet. Start adding your properties to track them here.
                                 </p>
-                                <Link href="/listings/add">
-                                    <button className="bg-inda-teal text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-teal-700 transition-colors">
-                                        Create your first listing
-                                    </button>
-                                </Link>
+                                <button
+                                    onClick={() => setIsUploadModalOpen(true)}
+                                    className="bg-inda-teal text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-teal-700 transition-colors"
+                                >
+                                    Create your first listing
+                                </button>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -224,15 +224,16 @@ export default function ListingsManagerPage() {
                             </div>
                         )}
                     </div>
-                )}
-
-                {activeTab === 'analytics' && (
-                    <div className="text-center py-20 bg-gray-50 rounded-xl border border-gray-100">
-                        <p className="text-gray-500">Detailed performance analytics are coming soon.</p>
-                    </div>
-                )}
+                </div>
 
             </div>
+
+            {isUploadModalOpen && (
+                <PropertyUploadModal
+                    onClose={() => setIsUploadModalOpen(false)}
+                    onPropertyAdded={handlePropertyAdded}
+                />
+            )}
         </DashboardLayout>
     );
 }
