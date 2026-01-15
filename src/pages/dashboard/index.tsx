@@ -1,10 +1,11 @@
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import {
-    FaPlus, FaUsers, FaRocket, FaWhatsapp,
+    FaPlus, FaUsers, FaRocket,
     FaChartLine, FaClock, FaStar, FaEye, FaShareAlt, FaExternalLinkAlt,
     FaArrowUp, FaArrowDown, FaCheckCircle, FaExclamationCircle, FaRobot,
     FaSync
 } from 'react-icons/fa';
+import { MessageSquare } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
@@ -78,11 +79,12 @@ export default function DashboardPage() {
             label: 'All Leads',
             value: stats?.metrics?.totalLeads || '0',
             trend: 'Lifetime',
-            icon: FaWhatsapp,
+            icon: MessageSquare,
             color: 'bg-white',
             trendIcon: FaArrowUp,
             textColor: 'text-gray-900',
-            iconColor: 'text-[#67B148]'
+            iconColor: 'text-inda-teal',
+            href: '/leads'
         },
         {
             label: 'Active Listings',
@@ -141,28 +143,44 @@ export default function DashboardPage() {
                         <p className="text-gray-500 text-sm mb-6">Track what matters: leads and revenue</p>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {performanceStats.map((stat, idx) => (
-                                <div key={idx} className={`${stat.color} rounded-3xl p-6 shadow-sm flex flex-col justify-between min-h-[160px] relative overflow-hidden`}>
-                                    <div className={`flex justify-between items-start ${stat.textColor || 'text-white'}`}>
-                                        <div>
-                                            <div className="text-3xl font-black mb-1">
-                                                {loading ? <div className="h-8 w-16 bg-gray-200 animate-pulse rounded"></div> : stat.value}
+                            {performanceStats.map((stat, idx) => {
+                                const card = (
+                                    <div className={`${stat.color} rounded-3xl p-6 shadow-sm flex flex-col justify-between min-h-[160px] relative overflow-hidden`}>
+                                        <div className={`flex justify-between items-start ${stat.textColor || 'text-white'}`}>
+                                            <div>
+                                                <div className="text-3xl font-black mb-1">
+                                                    {loading ? <div className="h-8 w-16 bg-gray-200 animate-pulse rounded"></div> : stat.value}
+                                                </div>
+                                                <div className="text-xs font-bold opacity-80 uppercase tracking-wider">{stat.label}</div>
                                             </div>
-                                            <div className="text-xs font-bold opacity-80 uppercase tracking-wider">{stat.label}</div>
+                                            <div className={`p-3 rounded-2xl ${stat.textColor ? 'bg-gray-100' : 'bg-black/10'}`}>
+                                                <stat.icon className={stat.iconColor || 'text-white'} size={20} />
+                                            </div>
                                         </div>
-                                        <div className={`p-3 rounded-2xl ${stat.textColor ? 'bg-gray-100' : 'bg-black/10'}`}>
-                                            <stat.icon className={stat.iconColor || 'text-white'} size={20} />
+                                        <div className={`mt-4 flex items-center gap-1 text-[11px] font-bold ${stat.textColor || 'text-white opacity-90'}`}>
+                                            {stat.trendIcon && <stat.trendIcon size={12} />}
+                                            {stat.trend}
+                                        </div>
+                                        <div className="absolute bottom-0 right-0 p-4 opacity-5">
+                                            <stat.icon size={60} />
                                         </div>
                                     </div>
-                                    <div className={`mt-4 flex items-center gap-1 text-[11px] font-bold ${stat.textColor || 'text-white opacity-90'}`}>
-                                        {stat.trendIcon && <stat.trendIcon size={12} />}
-                                        {stat.trend}
+                                );
+
+                                if ((stat as any).href) {
+                                    return (
+                                        <Link key={idx} href={(stat as any).href} className="block hover:translate-y-0.5 transition-transform">
+                                            {card}
+                                        </Link>
+                                    );
+                                }
+
+                                return (
+                                    <div key={idx}>
+                                        {card}
                                     </div>
-                                    <div className="absolute bottom-0 right-0 p-4 opacity-5">
-                                        <stat.icon size={60} />
-                                    </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </div>
 

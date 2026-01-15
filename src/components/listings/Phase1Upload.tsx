@@ -216,7 +216,7 @@ export function Phase1Upload({
             {/* Submit Button */}
             <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                 <p className="text-sm text-gray-600">
-                    <strong>Next:</strong> AI will analyze your uploads (takes ~30 seconds)
+                    <strong>Next:</strong> AI will analyze your uploads (takes ~60 seconds)
                 </p>
                 <button
                     onClick={onSubmit}
