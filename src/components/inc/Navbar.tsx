@@ -26,6 +26,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileProfileOpen, setMobileProfileOpen] = useState(false);
   const [productsOpen, setProductsOpen] = useState(false);
+  const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement | null>(null);
   const productsRef = useRef<HTMLDivElement | null>(null);
 
@@ -282,7 +283,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
                   className="inline-flex items-center justify-center p-2 rounded-full text-white/90 hover:text-white bg-white/10 hover:bg-white/20"
                   onClick={() => {
                     setMobileOpen(false);
-                    setProductsOpen(false);
+                    setMobileProductsOpen(false);
                   }}
                 >
                   <FiX size={20} />
@@ -291,24 +292,24 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
               <div className="w-full">
                 <button
                   className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white text-base"
-                  onClick={() => setProductsOpen((v) => !v)}
+                  onClick={() => setMobileProductsOpen((v) => !v)}
                 >
                   <span>Products</span>
                   <span
-                    className={`transition-transform ${productsOpen ? "rotate-180" : "rotate-0"
+                    className={`transition-transform ${mobileProductsOpen ? "rotate-180" : "rotate-0"
                       }`}
                   >
                     <ChevronDown className="w-4 h-4" />
                   </span>
                 </button>
-                {productsOpen && (
+                {mobileProductsOpen && (
                   <div className="mt-2 mx-2 rounded-xl border border-white/10 bg-inda-dark/90">
                     <Link
                       href="/for-buyers"
                       className="block px-4 py-3 text-white/90 hover:bg-white/10 transition-colors"
                       onClick={() => {
                         setMobileOpen(false);
-                        setProductsOpen(false);
+                        setMobileProductsOpen(false);
                       }}
                     >
                       <div className="font-medium">For Buyers</div>
@@ -319,7 +320,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
                       className="block px-4 py-3 text-white/90 hover:bg-white/10 transition-colors"
                       onClick={() => {
                         setMobileOpen(false);
-                        setProductsOpen(false);
+                        setMobileProductsOpen(false);
                       }}
                     >
                       <div className="font-medium">For Professionals</div>
@@ -585,24 +586,24 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
             <div className="w-full">
               <button
                 className="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white text-base"
-                onClick={() => setProductsOpen((v) => !v)}
+                onClick={() => setMobileProductsOpen((v) => !v)}
               >
                 <span>Products</span>
                 <span
-                  className={`transition-transform ${productsOpen ? "rotate-180" : "rotate-0"
+                  className={`transition-transform ${mobileProductsOpen ? "rotate-180" : "rotate-0"
                     }`}
                 >
                   <ChevronDown className="w-4 h-4" />
                 </span>
               </button>
-              {productsOpen && (
+              {mobileProductsOpen && (
                 <div className="mt-2 mx-2 rounded-xl border border-white/10 bg-inda-dark/90">
                   <Link
                     href="/for-buyers"
                     className="block px-4 py-3 text-white/90 hover:bg-white/10 transition-colors"
                     onClick={() => {
                       setMobileOpen(false);
-                      setProductsOpen(false);
+                      setMobileProductsOpen(false);
                     }}
                   >
                     <div className="font-medium">For Buyers</div>
@@ -613,7 +614,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
                     className="block px-4 py-3 text-white/90 hover:bg-white/10 transition-colors"
                     onClick={() => {
                       setMobileOpen(false);
-                      setProductsOpen(false);
+                      setMobileProductsOpen(false);
                     }}
                   >
                     <div className="font-medium">For Professionals</div>

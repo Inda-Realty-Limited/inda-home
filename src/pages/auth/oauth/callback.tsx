@@ -52,6 +52,15 @@ const OAuthCallback: React.FC = () => {
       const parsedUser = JSON.parse(userJson);
       setUser(parsedUser, token);
 
+      // Check if profile is incomplete (no role set)
+      if (!parsedUser.role) {
+        const destination = getSafeReturnTo(returnTo);
+        const onboardingUrl = `/auth/onboarding?returnTo=${encodeURIComponent(destination)}`;
+        setTimeout(() => router.push(onboardingUrl), 500);
+        return;
+      }
+
+      // Profile is complete, proceed to destination
       const destination = getSafeReturnTo(returnTo);
       setTimeout(() => router.push(destination), 500);
     } catch (err: any) {
