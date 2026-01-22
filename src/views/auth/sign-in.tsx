@@ -7,6 +7,7 @@ import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { FiLock, FiMail } from "react-icons/fi";
 import CryptoJS from "crypto-js";
+import GoogleButton from "@/components/OAuth/GoogleButton";
 
 const SignIn: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -135,6 +136,19 @@ const SignIn: React.FC = () => {
             <h1 className="text-center font-bold text-2xl sm:text-3xl mb-6 sm:mb-8">
               Welcome Back!
             </h1>
+
+            {/* Google Sign-In Button */}
+            <div className="w-full mb-6">
+              <GoogleButton returnTo={returnTo || (searchQuery ? `/${searchType === "ai" ? "search-results" : "result"}?q=${encodeURIComponent(searchQuery)}&type=${searchType}` : undefined)} />
+            </div>
+
+            {/* Divider */}
+            <div className="flex items-center gap-4 w-full mb-6">
+              <div className="flex-1 h-px bg-gray-300"></div>
+              <span className="text-gray-500 text-sm">or</span>
+              <div className="flex-1 h-px bg-gray-300"></div>
+            </div>
+
             <form
               className="w-full flex flex-col gap-4 sm:gap-6"
               onSubmit={handleSubmit}

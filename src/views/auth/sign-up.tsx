@@ -249,6 +249,19 @@ const Signup: React.FC = () => {
                     e.preventDefault();
                     setErrors({});
 
+                    // Validate required fields
+                    if (!lookingToDo) {
+                      setErrors({ lookingToDo: 'Please select what you\'re looking to do' });
+                      toast.showToast("Please select what you're looking to do", 2500, "error");
+                      return;
+                    }
+
+                    if (!hearAboutUs) {
+                      setErrors({ hearAboutUs: 'Please tell us how you heard about us' });
+                      toast.showToast("Please tell us how you heard about us", 2500, "error");
+                      return;
+                    }
+
                     // Build payload with role and conditional Pro fields
                     const payload: any = {
                       email,
@@ -299,7 +312,7 @@ const Signup: React.FC = () => {
                       htmlFor="email"
                       className="text-gray-700 font-medium text-sm sm:text-base"
                     >
-                      Email
+                      Email <span className="text-red-500">*</span>
                     </label>
                     <div className="relative flex items-center">
                       <span className="absolute left-3 sm:left-4 text-gray-400 text-sm sm:text-base">
@@ -332,7 +345,7 @@ const Signup: React.FC = () => {
                       htmlFor="firstName"
                       className="text-gray-700 font-medium text-sm sm:text-base"
                     >
-                      First Name
+                      First Name <span className="text-red-500">*</span>
                     </label>
                     <div className="relative flex items-center">
                       <span className="absolute left-3 sm:left-4 text-gray-400 text-sm sm:text-base">
@@ -354,7 +367,7 @@ const Signup: React.FC = () => {
                       htmlFor="lastName"
                       className="text-gray-700 font-medium text-sm sm:text-base"
                     >
-                      Last Name
+                      Last Name <span className="text-red-500">*</span>
                     </label>
                     <div className="relative flex items-center">
                       <span className="absolute left-3 sm:left-4 text-gray-400 text-sm sm:text-base">
@@ -376,7 +389,7 @@ const Signup: React.FC = () => {
                       htmlFor="password"
                       className="text-gray-700 font-medium text-sm sm:text-base"
                     >
-                      Password
+                      Password <span className="text-red-500">*</span>
                     </label>
                     <div className="relative flex items-center">
                       <span className="absolute left-3 sm:left-4 text-gray-400 text-sm sm:text-base">
@@ -398,7 +411,7 @@ const Signup: React.FC = () => {
                       htmlFor="lookingToDo"
                       className="text-gray-700 font-medium text-sm sm:text-base"
                     >
-                      What are you looking to do?
+                      What are you looking to do? <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <button
@@ -459,7 +472,7 @@ const Signup: React.FC = () => {
                       htmlFor="hearAboutUs"
                       className="text-gray-700 font-medium text-sm sm:text-base"
                     >
-                      How did you hear about us?
+                      How did you hear about us? <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <button
@@ -526,7 +539,7 @@ const Signup: React.FC = () => {
                         {/* Company Name */}
                         <div className="flex flex-col gap-1 sm:gap-2 mb-4">
                           <label htmlFor="companyName" className="text-gray-700 font-medium text-sm sm:text-base">
-                            Company Name *
+                            Company Name <span className="text-red-500">*</span>
                           </label>
                           <Input
                             id="companyName"
@@ -541,7 +554,7 @@ const Signup: React.FC = () => {
                         {/* Company Type */}
                         <div className="flex flex-col gap-1 sm:gap-2 mb-4">
                           <label htmlFor="companyType" className="text-gray-700 font-medium text-sm sm:text-base">
-                            Company Type *
+                            Company Type <span className="text-red-500">*</span>
                           </label>
                           <div className="relative">
                             <select
@@ -562,7 +575,7 @@ const Signup: React.FC = () => {
                         {/* Registration Number */}
                         <div className="flex flex-col gap-1 sm:gap-2 mb-4">
                           <label htmlFor="registrationNumber" className="text-gray-700 font-medium text-sm sm:text-base">
-                            Registration Number *
+                            Registration Number <span className="text-red-500">*</span>
                           </label>
                           <Input
                             id="registrationNumber"
@@ -577,7 +590,7 @@ const Signup: React.FC = () => {
                         {/* Phone Number */}
                         <div className="flex flex-col gap-1 sm:gap-2">
                           <label htmlFor="phoneNumber" className="text-gray-700 font-medium text-sm sm:text-base">
-                            Phone Number *
+                            Phone Number <span className="text-red-500">*</span>
                           </label>
                           <Input
                             id="phoneNumber"
