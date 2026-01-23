@@ -37,13 +37,22 @@ jobs:
         run: |
           gcloud auth configure-docker ${{ env.ARTIFACT_REGISTRY }} --quiet
 
+      - name: Create Artifact Registry repository (if not exists)
+        run: |
+          gcloud artifacts repositories describe inda --location=${{ env.REGION }} || \
+          gcloud artifacts repositories create inda --repository-format=docker --location=${{ env.REGION }} --description="Inda Docker images"
+
       - name: Build Docker image
-        run: docker build --build-arg NEXT_PUBLIC_API_BASE_URL=${{ secrets.API_URL }} -t ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/inda/${{ env.SERVICE_NAME }}:${{ github.sha }} -t ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/inda/${{ env.SERVICE_NAME }}:latest .
+        env:
+          IMAGE_TAG: ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/inda/${{ env.SERVICE_NAME }}
+        run: docker build --build-arg NEXT_PUBLIC_API_BASE_URL="${{ secrets.API_URL }}" -t "$IMAGE_TAG:${{ github.sha }}" -t "$IMAGE_TAG:latest" .
 
       - name: Push Docker image
+        env:
+          IMAGE_TAG: ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/inda/${{ env.SERVICE_NAME }}
         run: |
-          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/inda/${{ env.SERVICE_NAME }}:${{ github.sha }}
-          docker push ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/inda/${{ env.SERVICE_NAME }}:latest
+          docker push "$IMAGE_TAG:${{ github.sha }}"
+          docker push "$IMAGE_TAG:latest"
 
       - name: Deploy to Cloud Run
         run: |
