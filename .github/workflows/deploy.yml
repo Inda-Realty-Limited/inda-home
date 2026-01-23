@@ -38,12 +38,7 @@ jobs:
           gcloud auth configure-docker ${{ env.ARTIFACT_REGISTRY }} --quiet
 
       - name: Build Docker image
-        run: |
-          docker build \
-            --build-arg NEXT_PUBLIC_API_URL=${{ secrets.API_URL }} \
-            -t ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/inda/${{ env.SERVICE_NAME }}:${{ github.sha }} \
-            -t ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/inda/${{ env.SERVICE_NAME }}:latest \
-            .
+        run: docker build --build-arg NEXT_PUBLIC_API_BASE_URL=${{ secrets.API_URL }} -t ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/inda/${{ env.SERVICE_NAME }}:${{ github.sha }} -t ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/inda/${{ env.SERVICE_NAME }}:latest .
 
       - name: Push Docker image
         run: |
