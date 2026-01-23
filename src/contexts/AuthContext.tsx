@@ -1,4 +1,5 @@
 import { login as loginApi, logout as logoutApi } from "@/api/auth";
+import { env } from "@/config/env";
 import { AuthContextType, AuthState, StoredUser } from "@/types/auth";
 import { useRouter } from "next/router";
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
@@ -8,8 +9,7 @@ const TOKEN_KEY = "inda_token";
 const USER_KEY = "inda_user";
 
 const getSecretKey = () => {
-  if (typeof window === "undefined") return "fallback_key";
-  return process.env.NEXT_PUBLIC_ENCRYPTION_SECRET || "inda_super_secret_key";
+  return env.security.encryptionSecret;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -55,15 +55,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       if (user && currentToken) {
-        // Store user in localStorage (encrypted)
+        const secret = getSecretKey();
+
         const userJson = JSON.stringify(user);
-        const encryptedUser = CryptoJS.AES.encrypt(userJson, getSecretKey()).toString();
+        const encryptedUser = CryptoJS.AES.encrypt(userJson, secret).toString();
         localStorage.setItem(USER_KEY, encryptedUser);
 
-        // Store token (encrypted) if a new one was provided
         if (token) {
-          const encryptedToken = CryptoJS.AES.encrypt(token, getSecretKey()).toString();
+          const encryptedToken = CryptoJS.AES.encrypt(token, secret).toString();
           localStorage.setItem(TOKEN_KEY, encryptedToken);
+        }
+
+        if (typeof window !== "undefined") {
+          (window as any).__INDA_TOKEN__ = currentToken;
         }
 
         setState(prev => ({

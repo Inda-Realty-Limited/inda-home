@@ -1,4 +1,6 @@
+import { env } from "@/config/env";
 import { useAuth } from "@/contexts/AuthContext";
+import CryptoJS from "crypto-js";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 
@@ -50,19 +52,30 @@ const OAuthCallback: React.FC = () => {
     try {
       const userJson = decodeBase64Url(user);
       const parsedUser = JSON.parse(userJson);
+      const needsOnboarding = !parsedUser.role;
+
+      if (typeof window !== "undefined") {
+        const secret = env.security.encryptionSecret;
+        const encryptedToken = CryptoJS.AES.encrypt(token, secret).toString();
+        localStorage.setItem("inda_token", encryptedToken);
+      }
+
       setUser(parsedUser, token);
 
-      // Check if profile is incomplete (no role set)
-      if (!parsedUser.role) {
-        const destination = getSafeReturnTo(returnTo);
-        const onboardingUrl = `/auth/onboarding?returnTo=${encodeURIComponent(destination)}`;
-        setTimeout(() => router.push(onboardingUrl), 500);
+      const safeReturnTo = getSafeReturnTo(returnTo);
+
+      if (needsOnboarding) {
+        const onboardingDestination =
+          safeReturnTo && safeReturnTo !== "/"
+            ? `/auth/complete-profile?returnTo=${encodeURIComponent(
+                safeReturnTo
+              )}`
+            : "/auth/complete-profile";
+        setTimeout(() => router.push(onboardingDestination), 500);
         return;
       }
 
-      // Profile is complete, proceed to destination
-      const destination = getSafeReturnTo(returnTo);
-      setTimeout(() => router.push(destination), 500);
+      setTimeout(() => router.push(safeReturnTo), 500);
     } catch (err: any) {
       console.error("Failed to process OAuth payload:", err);
       setError("An error occurred during authentication");
@@ -93,5 +106,3 @@ const OAuthCallback: React.FC = () => {
 };
 
 export default OAuthCallback;
-
-

@@ -14,12 +14,15 @@ const apiClient = axios.create({
   },
 });
 
-// Helper to get decrypted token from localStorage
+const getTokenSecret = () => {
+  return env.security.encryptionSecret;
+};
+
 const getStoredToken = (): string | null => {
   try {
     const encrypted = localStorage.getItem("inda_token");
     if (!encrypted) return null;
-    const bytes = CryptoJS.AES.decrypt(encrypted, env.security.encryptionSecret);
+    const bytes = CryptoJS.AES.decrypt(encrypted, getTokenSecret());
     const decrypted = bytes.toString(CryptoJS.enc.Utf8);
     return decrypted || null;
   } catch {
