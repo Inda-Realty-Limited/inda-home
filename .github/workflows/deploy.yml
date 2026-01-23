@@ -8,7 +8,7 @@ on:
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   REGION: ${{ secrets.GCP_REGION }}
-  SERVICE_NAME: inda-home-staging
+  SERVICE_NAME: inda-user
   ARTIFACT_REGISTRY: ${{ secrets.GCP_REGION }}-docker.pkg.dev
 
 jobs:
