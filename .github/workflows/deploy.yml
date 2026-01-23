@@ -37,6 +37,11 @@ jobs:
         run: |
           gcloud auth configure-docker ${{ env.ARTIFACT_REGISTRY }} --quiet
 
+      - name: Create Artifact Registry repository (if not exists)
+        run: |
+          gcloud artifacts repositories describe inda --location=${{ env.REGION }} || \
+          gcloud artifacts repositories create inda --repository-format=docker --location=${{ env.REGION }} --description="Inda Docker images"
+
       - name: Build Docker image
         run: docker build --build-arg NEXT_PUBLIC_API_BASE_URL=${{ secrets.API_URL }} -t ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/inda/${{ env.SERVICE_NAME }}:${{ github.sha }} -t ${{ env.ARTIFACT_REGISTRY }}/${{ env.PROJECT_ID }}/inda/${{ env.SERVICE_NAME }}:latest .
 
