@@ -82,7 +82,7 @@ const OnSiteInspection: React.FC<Props> = ({ items, photos }) => {
                 </h4>
                 <div className="grid grid-cols-3 gap-2 mb-2">
                   {photos.exterior.map((src, i) => (
-                    <div key={`ext-${i}`} className="aspect-square rounded-xl overflow-hidden bg-[#E5F5F4]">
+                    <div key={`ext-${i}`} className="relative aspect-square rounded-xl overflow-hidden bg-[#E5F5F4]">
                       <Image
                         src={src}
                         alt={`Exterior ${i + 1}`}
@@ -108,7 +108,7 @@ const OnSiteInspection: React.FC<Props> = ({ items, photos }) => {
                 </h4>
                 <div className="grid grid-cols-3 gap-2 mb-2">
                   {photos.interior.map((src, i) => (
-                    <div key={`int-${i}`} className="aspect-square rounded-xl overflow-hidden bg-[#E5F5F4]">
+                    <div key={`int-${i}`} className="relative aspect-square rounded-xl overflow-hidden bg-[#E5F5F4]">
                       <Image
                         src={src}
                         alt={`Interior ${i + 1}`}
@@ -135,7 +135,7 @@ const OnSiteInspection: React.FC<Props> = ({ items, photos }) => {
                   </h4>
                   <div className="grid grid-cols-3 gap-2 mb-2">
                     {photos.electrical.map((src, i) => (
-                      <div key={`elec-${i}`} className="aspect-square rounded-xl overflow-hidden bg-[#E5F5F4]">
+                      <div key={`elec-${i}`} className="relative aspect-square rounded-xl overflow-hidden bg-[#E5F5F4]">
                         <Image
                           src={src}
                           alt={`Electrical ${i + 1}`}
@@ -163,7 +163,7 @@ const OnSiteInspection: React.FC<Props> = ({ items, photos }) => {
                   </h4>
                   <div className="grid grid-cols-3 gap-2 mb-2">
                     {photos.neighbourhood.map((src, i) => (
-                      <div key={`neigh-${i}`} className="aspect-square rounded-xl overflow-hidden bg-[#E5F5F4]">
+                      <div key={`neigh-${i}`} className="relative aspect-square rounded-xl overflow-hidden bg-[#E5F5F4]">
                         <Image
                           src={src}
                           alt={`Neighbourhood ${i + 1}`}

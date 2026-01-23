@@ -1,11 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
+import PublicReportLayout from '@/components/reports/PublicReportLayout';
 import { FaSpinner, FaArrowLeft, FaExclamationTriangle } from 'react-icons/fa';
 
 import DeepDiveReport from '@/components/dashboard/reports/DeepDiveReport';
 import DeeperDiveReport from '@/components/dashboard/reports/DeeperDiveReport';
 import { ProReportsService } from '@/api/pro-reports';
+
+const SAMPLE_REPORT_ID = 'IND-8827';
 
 export default function ReportDetailsPage() {
     const router = useRouter();
@@ -18,7 +21,7 @@ export default function ReportDetailsPage() {
         if (!id) return;
 
         const fetchReport = async () => {
-            if (id === 'IND-8827') {
+            if (id === SAMPLE_REPORT_ID) {
                 setLoading(true);
                 // Simulate network delay for realism
                 await new Promise(resolve => setTimeout(resolve, 800));
@@ -56,7 +59,10 @@ export default function ReportDetailsPage() {
                     propertyCoordinates: { latitude: 6.4529, longitude: 3.4439 },
                     finalVerdict: {
                         status: "proceed",
+                        statusLabel: "Proceed with Confidence",
                         message: "This property is a 'Blue Chip' asset. Title is immaculate, the structure is premium, and the location guarantees high capital appreciation.",
+                        investmentGrade: "AAA",
+                        stars: 5,
                         metrics: [
                             { label: "Title Safety", value: 100 },
                             { label: "Market Value Score", value: 95 },
@@ -79,13 +85,17 @@ export default function ReportDetailsPage() {
                         confidenceScore: 96,
                         confidenceLabel: "Exceptional",
                         recentProjects: [
-                            { name: "The Zenith Heights", completion: "2022" },
-                            { name: "Banana Island Villas Phase 1", completion: "2021" }
+                            { title: "The Zenith Heights", deliveryDate: "December 2022", feedback: "Delivered 2 months ahead of schedule. All 24 units sold within 6 months.", rating: 5 },
+                            { title: "Banana Island Villas Phase 1", deliveryDate: "August 2021", feedback: "Premium quality finishes. Buyers reported 40% appreciation within first year.", rating: 5 },
+                            { title: "Lekki Pearl Residences", deliveryDate: "March 2020", feedback: "Excellent build quality. Minor delays due to COVID but handled professionally.", rating: 4 }
                         ]
                     },
                     onSiteInspection: [
-                        { id: 1, title: "Foundation & Structure", description: "Reinforced concrete frame with no visible defects.", status: "verified", icon: "check" },
-                        { id: 2, title: "Finishing & ME", description: "Premium Italian marble and high-end electrical fittings throughout.", status: "verified", icon: "check" }
+                        { id: 1, title: "Foundation & Structure", description: "Reinforced concrete frame with no visible defects.", status: "verified", icon: "structure" },
+                        { id: 2, title: "Finishing & ME", description: "Premium Italian marble and high-end electrical fittings throughout.", status: "verified", icon: "finishes" },
+                        { id: 3, title: "Electrical Systems", description: "Full backup generator system, smart home wiring, and surge protection installed.", status: "verified", icon: "electrical" },
+                        { id: 4, title: "Plumbing & Water", description: "Borehole with treatment plant, overhead and underground tanks. No leaks detected.", status: "verified", icon: "plumbing" },
+                        { id: 5, title: "Security Features", description: "CCTV, electric fence, bulletproof doors, and 24/7 estate security.", status: "verified", icon: "security" }
                     ],
                     photoDocumentation: {
                         exterior: [
@@ -99,13 +109,42 @@ export default function ReportDetailsPage() {
                             "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=800&q=80"
                         ],
                         electrical: [
-                            "https://images.unsplash.com/photo-1558054665-fbe00cd7d920?auto=format&fit=crop&w=800&q=80",                       
+                            "https://images.unsplash.com/photo-1558054665-fbe00cd7d920?auto=format&fit=crop&w=800&q=80",
                             "https://images.unsplash.com/photo-1621905251918-48416bd8575a?auto=format&fit=crop&w=800&q=80"
                         ],
                         neighbourhood: [
                             "https://images.unsplash.com/photo-1579678929710-862f8e01c0b2?auto=format&fit=crop&w=800&q=80",
                             "https://images.unsplash.com/photo-1499310392581-322cec0355a6?auto=format&fit=crop&w=800&q=80"
                         ]
+                    },
+                    environmentalAssessment: {
+                        airQuality: 92,
+                        noiseLevel: 18,
+                        floodRisk: 5
+                    },
+                    inspectorNotes: [
+                        "Property is in excellent condition with premium finishes throughout.",
+                        "All utility connections verified and functional.",
+                        "Estate management is professional with well-maintained common areas.",
+                        "Recommended for immediate acquisition - no red flags identified."
+                    ],
+                    confidenceScoreBreakdown: {
+                        overallScore: 98,
+                        sections: [
+                            { label: "Legal Documentation", score: 100, note: "All title documents verified. C of O authenticated via Lagos State Land Registry." },
+                            { label: "Survey & Boundaries", score: 100, note: "Survey plan charting confirmed. All beacons physically verified on site." },
+                            { label: "Seller Verification", score: 96, note: "Developer has 15-year track record with verified CAC registration and REDAN membership." },
+                            { label: "Physical Inspection", score: 95, note: "Premium construction quality. Minor cosmetic items noted but no structural concerns." },
+                            { label: "Environmental Factors", score: 94, note: "Excellent air quality, low noise levels, minimal flood risk in elevated location." }
+                        ],
+                        weightedCalculation: [
+                            { label: "Legal Documentation", weight: "30%", calculation: "100 × 0.30 = 30.0" },
+                            { label: "Survey & Boundaries", weight: "20%", calculation: "100 × 0.20 = 20.0" },
+                            { label: "Seller Verification", weight: "20%", calculation: "96 × 0.20 = 19.2" },
+                            { label: "Physical Inspection", weight: "20%", calculation: "95 × 0.20 = 19.0" },
+                            { label: "Environmental Factors", weight: "10%", calculation: "94 × 0.10 = 9.4" }
+                        ],
+                        analystNote: "This property represents an exceptional investment opportunity. The combination of immaculate legal documentation, verified developer credentials, and premium construction quality positions this asset in the top tier of Lagos real estate. Recommended for immediate acquisition."
                     }
                 };
 
@@ -249,22 +288,25 @@ export default function ReportDetailsPage() {
         fetchReport();
     }, [id]);
 
+    const isSampleReport = id === SAMPLE_REPORT_ID;
+    const Layout = isSampleReport ? PublicReportLayout : DashboardLayout;
+
     if (!router.isReady || loading) {
         return (
-            <DashboardLayout>
+            <Layout>
                 <div className="h-screen flex items-center justify-center">
                     <div className="flex flex-col items-center gap-4">
                         <FaSpinner className="animate-spin text-inda-teal text-3xl" />
                         <p className="text-gray-500 text-sm">Loading Report Data...</p>
                     </div>
                 </div>
-            </DashboardLayout>
+            </Layout>
         );
     }
 
     if (error || !report) {
         return (
-            <DashboardLayout title="Report Error">
+            <Layout title="Report Error">
                 <div className="h-screen flex flex-col items-center justify-center gap-4 p-4 text-center">
                     <FaExclamationTriangle className="text-red-500 text-5xl mb-2" />
                     <h2 className="text-2xl font-bold text-inda-dark">Report Not Found</h2>
@@ -272,13 +314,13 @@ export default function ReportDetailsPage() {
                         {error || "We couldn't find the report you're looking for. It might still be in progress or doesn't exist."}
                     </p>
                     <button
-                        onClick={() => router.push('/reports')}
+                        onClick={() => isSampleReport ? router.push('/for-professionals') : router.push('/reports')}
                         className="mt-4 px-6 py-2 bg-inda-teal text-white rounded-lg font-bold hover:bg-inda-dark transition-colors"
                     >
-                        Back to Reports Library
+                        {isSampleReport ? 'Back to For Professionals' : 'Back to Reports Library'}
                     </button>
                 </div>
-            </DashboardLayout>
+            </Layout>
         );
     }
 
@@ -286,16 +328,18 @@ export default function ReportDetailsPage() {
     const isDeeperDive = report.plan === 'deeperDive' || report.type === 'Deeper Dive' || (report.metadata && report.metadata.type === 'Deeper Dive');
 
     return (
-        <DashboardLayout title={`Report: ${report.reportId}`}>
+        <Layout title={`Report: ${report.reportId}`}>
             <div className="bg-[#F8FAFC] min-h-screen pb-20">
-                <div className="max-w-7xl mx-auto mb-6 pt-6 px-4 md:px-0">
-                    <button
-                        onClick={() => router.back()}
-                        className="text-xs text-gray-500 hover:text-inda-teal font-medium flex items-center gap-2 transition-colors mb-4"
-                    >
-                        <FaArrowLeft /> Back to Reports Library
-                    </button>
-                </div>
+                {!isSampleReport && (
+                    <div className="max-w-7xl mx-auto mb-6 pt-6 px-4 md:px-0">
+                        <button
+                            onClick={() => router.back()}
+                            className="text-xs text-gray-500 hover:text-inda-teal font-medium flex items-center gap-2 transition-colors mb-4"
+                        >
+                            <FaArrowLeft /> Back to Reports Library
+                        </button>
+                    </div>
+                )}
 
                 {isDeeperDive ? (
                     <DeeperDiveReport data={report} />
@@ -303,6 +347,6 @@ export default function ReportDetailsPage() {
                     <DeepDiveReport data={report} />
                 )}
             </div>
-        </DashboardLayout>
+        </Layout>
     );
 }

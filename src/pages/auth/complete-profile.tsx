@@ -4,6 +4,7 @@ import { updateProfile } from "@/api/profile";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
+import { FiChevronDown } from "react-icons/fi";
 
 const getSafeReturnTo = (value?: string | string[]) => {
   if (!value || Array.isArray(value)) {
@@ -16,6 +17,25 @@ const getSafeReturnTo = (value?: string | string[]) => {
     return "/";
   }
 };
+
+// Enum options matching backend
+const howDidYouHearAboutUsOptions = [
+  { value: "Search Engines – Google, Bing, Yahoo, etc.", label: "Search Engines – Google, Bing, Yahoo, etc." },
+  { value: "Social Media (Organic) – Facebook, Instagram, Twitter/X, YouTube, TikTok", label: "Social Media (Organic)" },
+  { value: "Social Media (Paid Ads) – Facebook Ads, Instagram Ads, Twitter Ads, YouTube Ads", label: "Social Media (Paid Ads)" },
+  { value: "Referrals – Direct mentions, backlinks, influencer shares", label: "Referrals" },
+  { value: "Community Groups & Forums – WhatsApp groups, Telegram, niche online forums", label: "Community Groups & Forums" },
+  { value: "Email / Newsletters – Campaigns, drip sequences, updates", label: "Email / Newsletters" },
+  { value: "Other", label: "Other" },
+];
+
+const todoOptions = [
+  { value: "Buy a home to live in", label: "Buy a home to live in" },
+  { value: "Invest in Property", label: "Invest in Property" },
+  { value: "I am an agent or developer", label: "I am an agent or developer" },
+  { value: "I work with a bank or mortgage company", label: "I work with a bank or mortgage company" },
+  { value: "Just Browsing", label: "Just Browsing" },
+];
 
 const CompleteProfilePage: React.FC = () => {
   const router = useRouter();
@@ -60,17 +80,24 @@ const CompleteProfilePage: React.FC = () => {
     try {
       const payload: any = {
         role: selectedRole,
-        howDidYouHearAboutUs,
-        todo,
       };
 
+      // Only include these if they have values
+      if (howDidYouHearAboutUs) {
+        payload.howDidYouHearAboutUs = howDidYouHearAboutUs;
+      }
+      if (todo) {
+        payload.todo = todo;
+      }
+
       if (selectedRole !== "Buyer") {
+        if (!companyName.trim()) {
+          toast.showToast("Company name is required", 2500, "error");
+          setSubmitting(false);
+          return;
+        }
         if (!phoneNumber.trim()) {
-          toast.showToast(
-            "Phone number is required for Agents and Developers",
-            2500,
-            "error"
-          );
+          toast.showToast("Phone number is required", 2500, "error");
           setSubmitting(false);
           return;
         }
@@ -141,7 +168,7 @@ const CompleteProfilePage: React.FC = () => {
           >
             <div>
               <p className="text-sm font-semibold text-gray-700 mb-3 text-center">
-                Account type
+                Account type <span className="text-red-500">*</span>
               </p>
               <div className="grid grid-cols-2 gap-4">
                 {[
@@ -179,9 +206,7 @@ const CompleteProfilePage: React.FC = () => {
                     <div className="font-bold text-base mb-1">
                       {option.title}
                     </div>
-                    <div className="text-xs text-gray-600">
-                      {option.desc}
-                    </div>
+                    <div className="text-xs text-gray-600">{option.desc}</div>
                   </button>
                 ))}
               </div>
@@ -189,26 +214,41 @@ const CompleteProfilePage: React.FC = () => {
 
             {selectedRole !== "Buyer" && (
               <div className="space-y-4 border-t border-gray-200 pt-6">
-                <p className="text-sm font-semibold text-gray-700">
-                  Professional details
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-semibold text-gray-700">
+                    Professional details
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    <span className="text-red-500">*</span> Required
+                  </p>
+                </div>
                 <div className="flex flex-col gap-2">
-                  <label className="text-sm text-gray-700">Company name</label>
+                  <label className="text-sm text-gray-700">
+                    Company name <span className="text-red-500">*</span>
+                  </label>
                   <Input
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
                     placeholder="Your company name"
                     className="bg-[#F9F9F9] border border-[#e0e0e0] rounded-xl"
+                    required
                   />
                 </div>
                 <div className="flex flex-col gap-2">
                   <label className="text-sm text-gray-700">Company type</label>
-                  <Input
-                    value={companyType}
-                    onChange={(e) => setCompanyType(e.target.value)}
-                    placeholder="e.g. Agency, Developer, Investor group"
-                    className="bg-[#F9F9F9] border border-[#e0e0e0] rounded-xl"
-                  />
+                  <div className="relative">
+                    <select
+                      value={companyType}
+                      onChange={(e) => setCompanyType(e.target.value)}
+                      className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] px-3 py-2.5 text-sm appearance-none focus:ring-2 focus:ring-[#4EA8A1] focus:border-[#4EA8A1]"
+                    >
+                      <option value="">Select company type</option>
+                      <option value="Real Estate Agency">Real Estate Agency</option>
+                      <option value="Property Developer">Property Developer</option>
+                      <option value="Investment Firm">Investment Firm</option>
+                    </select>
+                    <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" />
+                  </div>
                 </div>
                 <div className="flex flex-col gap-2">
                   <label className="text-sm text-gray-700">
@@ -223,13 +263,14 @@ const CompleteProfilePage: React.FC = () => {
                 </div>
                 <div className="flex flex-col gap-2">
                   <label className="text-sm text-gray-700">
-                    Phone number
+                    Phone number <span className="text-red-500">*</span>
                   </label>
                   <Input
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
                     placeholder="Phone number"
                     className="bg-[#F9F9F9] border border-[#e0e0e0] rounded-xl"
+                    required
                   />
                 </div>
               </div>
@@ -238,25 +279,43 @@ const CompleteProfilePage: React.FC = () => {
             <div className="space-y-4 border-t border-gray-200 pt-6">
               <div className="flex flex-col gap-2">
                 <label className="text-sm text-gray-700">
-                  How did you hear about Inda?
+                  What are you looking to do?
                 </label>
-                <Input
-                  value={howDidYouHearAboutUs}
-                  onChange={(e) => setHowDidYouHearAboutUs(e.target.value)}
-                  placeholder="e.g. Twitter, LinkedIn, a friend..."
-                  className="bg-[#F9F9F9] border border-[#e0e0e0] rounded-xl"
-                />
+                <div className="relative">
+                  <select
+                    value={todo}
+                    onChange={(e) => setTodo(e.target.value)}
+                    className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] px-3 py-2.5 text-sm appearance-none focus:ring-2 focus:ring-[#4EA8A1] focus:border-[#4EA8A1]"
+                  >
+                    <option value="">Select an option</option>
+                    {todoOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                  <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" />
+                </div>
               </div>
               <div className="flex flex-col gap-2">
                 <label className="text-sm text-gray-700">
-                  What should we help you with next?
+                  How did you hear about Inda?
                 </label>
-                <textarea
-                  value={todo}
-                  onChange={(e) => setTodo(e.target.value)}
-                  placeholder="Tell us what you want to achieve with Inda"
-                  className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] px-3 py-2 text-sm resize-none min-h-[80px]"
-                />
+                <div className="relative">
+                  <select
+                    value={howDidYouHearAboutUs}
+                    onChange={(e) => setHowDidYouHearAboutUs(e.target.value)}
+                    className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] px-3 py-2.5 text-sm appearance-none focus:ring-2 focus:ring-[#4EA8A1] focus:border-[#4EA8A1]"
+                  >
+                    <option value="">Select an option</option>
+                    {howDidYouHearAboutUsOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                  <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" />
+                </div>
               </div>
             </div>
 

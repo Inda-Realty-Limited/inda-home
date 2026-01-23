@@ -55,7 +55,20 @@ export function ReviewExtractedInfo({
   const isSectionExpanded = (sectionId: string) => expandedSections.includes(sectionId);
 
 
-  // Map real data to UI structure
+  // Calculate overall confidence from available AI data
+  const calculateOverallConfidence = () => {
+    const confidenceValues = [
+      aiData?.confidence?.propertyType,
+      aiData?.confidence?.ownerName,
+      aiData?.confidence?.landSize,
+      aiData?.confidence?.bedrooms,
+    ].filter(Boolean) as number[];
+
+    if (confidenceValues.length === 0) return 0;
+    return Math.round(confidenceValues.reduce((a, b) => a + b, 0) / confidenceValues.length);
+  };
+
+  // Map real data to UI structure - only use AI-extracted or user-confirmed data
   const displayData = {
     // PROPERTY IDENTIFICATION
     propertyIdentity: {
@@ -63,122 +76,122 @@ export function ReviewExtractedInfo({
       propertyType: confirmed?.propertyType || aiData?.propertyType || "Not detected",
       titleType: confirmed?.titleType || aiData?.documentAnalysis?.titleType || "Not detected",
       plotNumber: aiData?.location || "Not detected",
-      stateJurisdiction: "Nigeria", // Default for now
-      lgaJurisdiction: "Lagos", // Default for now
-      confidence: aiData?.confidence.propertyType || 75
+      stateJurisdiction: aiData?.documentAnalysis?.state || "Not detected",
+      lgaJurisdiction: aiData?.documentAnalysis?.lga || "Not detected",
+      confidence: aiData?.confidence?.propertyType || 0
     },
 
 
     // LEGAL & OWNERSHIP
     legalOwnership: {
       currentOwner: aiData?.ownerName || "Not detected",
-      registrationNumber: "Extracting...",
-      issueDate: aiData?.yearAcquired?.toString() || "Unknown",
-      titleNumber: "Extracting...",
-      previousOwner: aiData?.previousOwners?.[0] || "Unknown",
-      transferDate: "Unknown",
-      acquisitionType: aiData?.acquisitionMethod || "Unknown",
+      registrationNumber: aiData?.documentAnalysis?.registrationNumber || "Not detected",
+      issueDate: aiData?.yearAcquired?.toString() || "Not detected",
+      titleNumber: aiData?.documentAnalysis?.titleNumber || "Not detected",
+      previousOwner: aiData?.previousOwners?.[0] || "Not detected",
+      transferDate: aiData?.documentAnalysis?.transferDate || "Not detected",
+      acquisitionType: aiData?.acquisitionMethod || "Not detected",
       governorsConsent: {
-        status: "Checking...",
-        number: "N/A",
-        date: "N/A"
+        status: aiData?.documentAnalysis?.governorsConsent?.status || "Not detected",
+        number: aiData?.documentAnalysis?.governorsConsent?.number || "Not detected",
+        date: aiData?.documentAnalysis?.governorsConsent?.date || "Not detected"
       },
       powerOfAttorney: {
-        exists: false,
-        details: "No POA detected"
+        exists: aiData?.documentAnalysis?.powerOfAttorney?.exists || false,
+        details: aiData?.documentAnalysis?.powerOfAttorney?.details || "Not detected"
       },
-      confidence: aiData?.confidence.ownerName || 80
+      confidence: aiData?.confidence?.ownerName || 0
     },
 
 
     // LAND DETAILS
     landDetails: {
       landSize: confirmed?.landSize || aiData?.landSize || "Not detected",
-      landSizeSource: "Survey Plan (Most Accurate)",
-      surveyNumber: "LSD/2019/089763",
-      surveyDate: "November 20, 2019",
-      surveyorName: "Geo-Spatial Solutions Ltd",
-      surveyorLicense: "SURCON/L/2345",
-      gpsCoordinates: "6.4474° N, 3.4700° E",
-      boundaryDescriptions: "Boundary details extracted from survey plan.",
-      confidence: aiData?.confidence.landSize || 90
+      landSizeSource: aiData?.documentAnalysis?.landSizeSource || "Not detected",
+      surveyNumber: aiData?.documentAnalysis?.surveyNumber || "Not detected",
+      surveyDate: aiData?.documentAnalysis?.surveyDate || "Not detected",
+      surveyorName: aiData?.documentAnalysis?.surveyorName || "Not detected",
+      surveyorLicense: aiData?.documentAnalysis?.surveyorLicense || "Not detected",
+      gpsCoordinates: aiData?.documentAnalysis?.gpsCoordinates || "Not detected",
+      boundaryDescriptions: aiData?.documentAnalysis?.boundaryDescriptions || "Not detected",
+      confidence: aiData?.confidence?.landSize || 0
     },
 
 
     // LEASE DETAILS (if applicable)
     leaseDetails: {
-      leaseType: "99-Year Lease",
-      leaseStartDate: "Unknown",
-      leaseExpiryDate: "Unknown",
-      remainingYears: "Unknown",
-      groundRent: "Unknown",
-      groundRentStatus: "Paid",
-      confidence: 70
+      leaseType: aiData?.documentAnalysis?.leaseType || "Not detected",
+      leaseStartDate: aiData?.documentAnalysis?.leaseStartDate || "Not detected",
+      leaseExpiryDate: aiData?.documentAnalysis?.leaseExpiryDate || "Not detected",
+      remainingYears: aiData?.documentAnalysis?.remainingYears || "Not detected",
+      groundRent: aiData?.documentAnalysis?.groundRent || "Not detected",
+      groundRentStatus: aiData?.documentAnalysis?.groundRentStatus || "Not detected",
+      confidence: aiData?.confidence?.lease || 0
     },
 
 
     // FINANCIAL
     financial: {
-      purchasePrice: `₦${data.askingPrice.toLocaleString()}`,
-      purchaseDate: aiData?.yearAcquired?.toString() || "Unknown",
-      paymentTerms: "Outright Payment",
-      outstandingBalance: "₦0",
+      purchasePrice: data.askingPrice ? `₦${data.askingPrice.toLocaleString()}` : "Not set",
+      purchaseDate: aiData?.yearAcquired?.toString() || "Not detected",
+      paymentTerms: aiData?.documentAnalysis?.paymentTerms || "Not detected",
+      outstandingBalance: aiData?.documentAnalysis?.outstandingBalance || "Not detected",
       propertyTax: {
-        year: "2024",
-        amount: "₦50,000",
-        status: "Paid",
-        assessedValue: "₦75,000,000"
+        year: aiData?.documentAnalysis?.propertyTax?.year || "Not detected",
+        amount: aiData?.documentAnalysis?.propertyTax?.amount || "Not detected",
+        status: aiData?.documentAnalysis?.propertyTax?.status || "Not detected",
+        assessedValue: aiData?.documentAnalysis?.propertyTax?.assessedValue || "Not detected"
       },
-      confidence: 85
+      confidence: aiData?.confidence?.financial || 0
     },
 
 
     // REGULATORY
     regulatory: {
       buildingApproval: {
-        approvalNumber: "LA/BP/2020/3456",
-        approvedUse: confirmed?.propertyType || aiData?.propertyType || "Residential",
-        floors: "2",
-        buildingArea: confirmed?.landSize || aiData?.landSize || "450 sqm",
-        approvedBedrooms: (confirmed?.bedrooms || aiData?.bedrooms || 0).toString(),
-        zoningCompliance: "Compliant",
-        approvalDate: "January 10, 2020"
+        approvalNumber: aiData?.documentAnalysis?.buildingApproval?.approvalNumber || "Not detected",
+        approvedUse: confirmed?.propertyType || aiData?.propertyType || "Not detected",
+        floors: aiData?.documentAnalysis?.buildingApproval?.floors || "Not detected",
+        buildingArea: confirmed?.landSize || aiData?.landSize || "Not detected",
+        approvedBedrooms: aiData?.bedrooms ? aiData.bedrooms.toString() : "Not detected",
+        zoningCompliance: aiData?.documentAnalysis?.buildingApproval?.zoningCompliance || "Not detected",
+        approvalDate: aiData?.documentAnalysis?.buildingApproval?.approvalDate || "Not detected"
       },
-      confidence: 90
+      confidence: aiData?.confidence?.regulatory || 0
     },
 
 
     // UTILITIES
     utilities: {
       electricity: {
-        provider: "EKEDC",
-        meterNumber: "04527893421",
-        accountHolder: aiData?.ownerName || "Current Owner",
-        connectionStatus: "Active",
-        serviceAddress: data.address
+        provider: aiData?.documentAnalysis?.utilities?.electricity?.provider || "Not detected",
+        meterNumber: aiData?.documentAnalysis?.utilities?.electricity?.meterNumber || "Not detected",
+        accountHolder: aiData?.ownerName || "Not detected",
+        connectionStatus: aiData?.documentAnalysis?.utilities?.electricity?.connectionStatus || "Not detected",
+        serviceAddress: data.address || "Not detected"
       },
       water: {
-        provider: "Estate Borehole",
-        connectionStatus: "Active",
-        serviceAddress: data.address
+        provider: aiData?.documentAnalysis?.utilities?.water?.provider || "Not detected",
+        connectionStatus: aiData?.documentAnalysis?.utilities?.water?.connectionStatus || "Not detected",
+        serviceAddress: data.address || "Not detected"
       },
-      confidence: 80
+      confidence: aiData?.confidence?.utilities || 0
     },
 
 
     // CONSTRUCTION & PHYSICAL (from photos + documents)
     constructionPhysical: {
-      propertyType: confirmed?.propertyType || aiData?.propertyType || "Residential",
-      bedrooms: (confirmed?.bedrooms || aiData?.bedrooms || 0).toString(),
-      bathrooms: (confirmed?.bathrooms || aiData?.bathrooms || 0).toString(),
-      floors: "2",
-      roofType: "Concrete",
-      propertyCondition: "Excellent",
-      constructionStage: aiData?.constructionStatus || "Completed",
-      finishingQuality: "Premium",
-      occupancyStatus: aiData?.currentUse || "Vacant",
+      propertyType: confirmed?.propertyType || aiData?.propertyType || "Not detected",
+      bedrooms: confirmed?.bedrooms?.toString() || aiData?.bedrooms?.toString() || "Not detected",
+      bathrooms: confirmed?.bathrooms?.toString() || aiData?.bathrooms?.toString() || "Not detected",
+      floors: aiData?.documentAnalysis?.buildingApproval?.floors || "Not detected",
+      roofType: aiData?.photoAnalysis?.roofType || "Not detected",
+      propertyCondition: aiData?.photoAnalysis?.propertyCondition || "Not detected",
+      constructionStage: aiData?.constructionStatus || "Not detected",
+      finishingQuality: aiData?.photoAnalysis?.finishingQuality || "Not detected",
+      occupancyStatus: aiData?.currentUse || "Not detected",
       visibleAmenities: aiData?.amenities || [],
-      confidence: aiData?.confidence.bedrooms || 85
+      confidence: aiData?.confidence?.bedrooms || 0
     },
 
 
@@ -187,7 +200,7 @@ export function ReviewExtractedInfo({
       documentsVerified: data.documents.filter(d => d.type).length,
       totalDocuments: data.documents.length,
       photosAnalyzed: data.photos.length,
-      overallConfidence: 88,
+      overallConfidence: calculateOverallConfidence(),
       flaggedIssues: aiData?.flags || []
     }
   };
@@ -468,7 +481,7 @@ export function ReviewExtractedInfo({
                   <h4 className="text-sm font-bold text-gray-900 mb-3">Power of Attorney</h4>
                   <EditableField
                     label="POA Status"
-                    value={data.legalOwnership.powerOfAttorney.details}
+                    value={displayData.legalOwnership.powerOfAttorney.details}
                     fieldKey="poaStatus"
                   />
                 </div>
@@ -653,22 +666,22 @@ export function ReviewExtractedInfo({
                   <h4 className="text-sm font-bold text-gray-900 mb-3">Property Tax (Latest)</h4>
                   <EditableField
                     label="Tax Year"
-                    value={data.financial.propertyTax.year}
+                    value={displayData.financial.propertyTax.year}
                     fieldKey="taxYear"
                   />
                   <EditableField
                     label="Amount Paid"
-                    value={data.financial.propertyTax.amount}
+                    value={displayData.financial.propertyTax.amount}
                     fieldKey="taxAmount"
                   />
                   <EditableField
                     label="Payment Status"
-                    value={data.financial.propertyTax.status}
+                    value={displayData.financial.propertyTax.status}
                     fieldKey="taxStatus"
                   />
                   <EditableField
                     label="Assessed Value"
-                    value={data.financial.propertyTax.assessedValue}
+                    value={displayData.financial.propertyTax.assessedValue}
                     fieldKey="assessedValue"
                   />
                 </div>

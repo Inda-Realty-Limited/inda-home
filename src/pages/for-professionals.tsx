@@ -15,7 +15,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { startSubscription, verifySubscription } from "@/api/subscription";
-import { toast } from "react-hot-toast";
+import { useToast } from "@/components/ToastProvider";
 
 
 function VerificationPreview() {
@@ -104,6 +104,7 @@ function VerificationPreview() {
 const ForProfessionals: React.FC = () => {
   const router = useRouter();
   const { user, setUser } = useAuth();
+  const toast = useToast();
 
   const getButtonText = () => {
     if (!user) return "Start free";
@@ -143,7 +144,7 @@ const ForProfessionals: React.FC = () => {
 
     const allowedRoles = ["Agent", "Developer"];
     if (!user.role || !allowedRoles.includes(user.role)) {
-      toast.error("Only Agents and Developers can subscribe to professional plans.");
+      toast.showToast("Only Agents and Developers can subscribe to professional plans.", 3000, "error");
       return;
     }
 
@@ -156,11 +157,11 @@ const ForProfessionals: React.FC = () => {
         window.location.href = response.data.authorizationUrl;
       } else if (response.message.includes("successfully")) {
         // Free plan case
-        toast.success(response.message);
+        toast.showToast(response.message, 2000, "success");
         router.reload();
       }
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Failed to start subscription");
+      toast.showToast(error?.response?.data?.message || "Failed to start subscription", 3000, "error");
     } finally {
       setIsSubscribing(null);
     }
@@ -175,7 +176,7 @@ const ForProfessionals: React.FC = () => {
         try {
           const response = await verifySubscription(finalReference);
           if (response.status === "OK") {
-            toast.success(`Welcome to the ${plan} plan!`);
+            toast.showToast(`Welcome to the ${plan} plan!`, 2000, "success");
             // Sync user state
             if (response.data) {
               setUser(response.data);
@@ -183,12 +184,12 @@ const ForProfessionals: React.FC = () => {
             router.push("/dashboard");
           }
         } catch (_error) {
-          toast.error("Subscription verification failed");
+          toast.showToast("Subscription verification failed", 3000, "error");
         }
       };
       verifyPayment();
     }
-  }, [router.query, setUser]);
+  }, [router.query, setUser, toast, router]);
 
   return (
     <Container noPadding className="min-h-screen bg-white">
