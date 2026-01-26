@@ -2,7 +2,7 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import {
     FaPlus, FaEye, FaShareAlt, FaExternalLinkAlt,FaCheckCircle, FaSync, FaChevronLeft, FaChevronRight
 } from 'react-icons/fa';
-import { MessageCircle, Clock, Zap, TrendingUp, TrendingDown, FileText, Award, ChartColumnIncreasing, ChartColumnIncreasingIcon } from 'lucide-react';
+import { MessageCircle, Clock, Zap, TrendingUp, TrendingDown, FileText, Award, ChartColumnIncreasing, ChartColumnIncreasingIcon, CircleAlert } from 'lucide-react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
@@ -287,7 +287,7 @@ export default function DashboardPage() {
                             {/* Performance Summary */}
                             <div className="mt-6 p-4 bg-gray-50 rounded-xl border border-gray-100">
                                 <div className="flex items-center gap-2 mb-4">
-                                    <Clock size={16} className="text-gray-500" />
+                                    <CircleAlert size={16} className="text-gray-500" />
                                     <span className="font-bold text-gray-900 flex items-center gap-2">
                                         <span className="text-inda-teal">📊</span> Performance Summary
                                     </span>
