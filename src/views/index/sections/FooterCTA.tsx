@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from './ui/button';
-import { ArrowRight, Mail, Phone, MapPin, Linkedin, Instagram } from 'lucide-react';
+import { Mail, Phone, MapPin, Linkedin, Instagram } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,7 +12,7 @@ export function FooterCTA() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
 
-  const handleGetStarted = () => {
+  const _handleGetStarted = () => {
     if (!isAuthenticated) {
       router.push('/auth/signup');
     } else {
@@ -40,7 +40,7 @@ export function FooterCTA() {
         <div className="absolute inset-0 bg-gradient-to-br from-[#4ea8a1]/20 via-purple-900/10 to-transparent" />
         <div className="absolute top-0 right-0 w-96 h-96 bg-[#4ea8a1]/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl" />
-        
+
         <div className="max-w-4xl mx-auto text-center relative">
           <h2 className="text-white mb-8 text-5xl md:text-6xl leading-tight">
             The Future of Real Estate Moves Fast.{' '}
@@ -76,7 +76,7 @@ export function FooterCTA() {
                 <span className="text-2xl text-white">Inda</span>
               </div>
               <p className="text-gray-400 mb-6 leading-relaxed">
-              Inda verifies pricing, documents, and risk before listings go live, giving buyers, banks, and developers decision-ready deals.
+                Inda verifies pricing, documents, and risk before listings go live, giving buyers, banks, and developers decision-ready deals.
               </p>
               <div className="flex gap-4">
                 <a

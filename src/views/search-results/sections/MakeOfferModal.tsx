@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, DollarSign, User, Mail, Phone, MessageSquare } from 'lucide-react';
+import { X, User, Mail, Phone, MessageSquare } from 'lucide-react';
 
 interface MakeOfferModalProps {
   isOpen: boolean;
@@ -10,7 +10,7 @@ interface MakeOfferModalProps {
   propertyWhatsapp?: string;
 }
 
-export function MakeOfferModal({ isOpen, onClose, propertyId, propertyTitle, propertyPrice, propertyWhatsapp }: MakeOfferModalProps) {
+export function MakeOfferModal({ isOpen, onClose, propertyTitle, propertyPrice, propertyWhatsapp }: MakeOfferModalProps) {
   const [offerAmount, setOfferAmount] = useState('');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');

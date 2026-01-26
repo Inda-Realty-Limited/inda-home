@@ -19,7 +19,6 @@ type Props = {
     timeAgo?: string;
     location?: string;
   }>;
-  aiSummary?: string | null;
 };
 
 const FeedbackComplaints: React.FC<Props> = ({
@@ -29,17 +28,14 @@ const FeedbackComplaints: React.FC<Props> = ({
   total,
   breakdown,
   reviews: legacyReviews,
-  aiSummary,
 }) => {
   const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
   const [apiReviews, setApiReviews] = useState<Review[]>([]);
   const [reviewSummary, setReviewSummary] = useState<ReviewSummary | null>(null);
-  const [isLoadingReviews, setIsLoadingReviews] = useState(false);
 
   // Fetch reviews from API
   useEffect(() => {
     if (listingUrl) {
-      setIsLoadingReviews(true);
       getReviewsByListing(listingUrl, 1, 10, "recent")
         .then((response) => {
           setApiReviews(response.data.reviews);
@@ -47,22 +43,19 @@ const FeedbackComplaints: React.FC<Props> = ({
         })
         .catch((error) => {
           console.error("Failed to load reviews:", error);
-        })
-        .finally(() => {
-          setIsLoadingReviews(false);
         });
     }
   }, [listingUrl]);
 
   // Use API data if available, otherwise fall back to legacy props
-  const reviews = apiReviews.length > 0 ? apiReviews : legacyReviews;
+  const reviewsData = apiReviews.length > 0 ? apiReviews : legacyReviews;
   const avg = reviewSummary?.averageRating ?? average ?? 0;
   const count = reviewSummary?.totalReviews ?? total ?? 0;
   const bars = reviewSummary?.ratingBreakdown
     ? reviewSummary.ratingBreakdown.map((item) => ({
-        stars: item.stars,
-        percentage: item.percentage,
-      }))
+      stars: item.stars,
+      percentage: item.percentage,
+    }))
     : breakdown ?? [5, 4, 3, 2, 1].map((s) => ({ stars: s, percentage: 0 }));
 
   const handleReviewSuccess = () => {
@@ -141,10 +134,10 @@ const FeedbackComplaints: React.FC<Props> = ({
               <h1 className="font-bold text-xl sm:text-2xl text-[#0A1A22]">
                 Reviews
               </h1>
-            
+
             </div>
 
-            {!reviews || reviews.length === 0 ? (
+            {!reviewsData || reviewsData.length === 0 ? (
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-[#4EA8A1]/5 via-transparent to-[#4EA8A1]/10 rounded-3xl"></div>
                 <div className="relative w-full border-2 border-dashed border-[#4EA8A1]/30 rounded-3xl min-h-48 sm:min-h-56 md:min-h-64 flex flex-col items-center justify-center px-6 py-8">
@@ -168,104 +161,104 @@ const FeedbackComplaints: React.FC<Props> = ({
               </div>
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {reviews.map((r: any, index) => {
+                {reviewsData.map((r: any) => {
                   // Handle both API and legacy review formats
                   const isApiReview = 'ratings' in r && typeof r.ratings === 'object';
                   const reviewerName = isApiReview ? r.reviewer?.name : r.reviewer;
-                  const reviewerInitials = isApiReview ? r.reviewer?.initials : (reviewerName || "Rdf").charAt(0).toUpperCase();
+                  const reviewerInitials = isApiReview ? r.reviewer?.initials : (reviewerName || "R").charAt(0).toUpperCase();
                   const rating = isApiReview ? r.ratings?.averageRating : r.rating;
-                  const content = isApiReview ? r.content : r.content;
+                  const content = r.content;
                   const location = isApiReview ? undefined : r.location;
                   const timeAgo = r.timeAgo;
                   const title = isApiReview ? undefined : r.title;
                   const tags = isApiReview ? r.tags : [];
 
                   return (
-                  <div
-                    key={r.id}
-                    className="group relative bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
-                  >
-                    {/* Gradient accent */}
-                    <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#4EA8A1] via-[#6BB6B0] to-[#4EA8A1]"></div>
+                    <div
+                      key={r.id}
+                      className="group relative bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
+                    >
+                      {/* Gradient accent */}
+                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#4EA8A1] via-[#6BB6B0] to-[#4EA8A1]"></div>
 
-                    <div className="p-6">
-                      {/* Header */}
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-2">
-                            <div className="w-10 h-10 bg-gradient-to-br from-[#4EA8A1] to-[#0A655E] rounded-full flex items-center justify-center text-white font-bold text-sm">
+                      <div className="p-6">
+                        {/* Header */}
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <div className="w-10 h-10 bg-gradient-to-br from-[#4EA8A1] to-[#0A655E] rounded-full flex items-center justify-center text-white font-bold text-sm">
                                 {reviewerInitials}
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-[#0A1A22] text-base">
-                                  {reviewerName || "Anonymousdf"}
-                              </h4>
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-[#0A1A22] text-base">
+                                  {reviewerName || "Anonymous"}
+                                </h4>
                                 {location && (
-                                <p className="text-xs text-gray-500 flex items-center gap-1">
-                                  <svg
-                                    className="w-3 h-3"
-                                    fill="currentColor"
-                                    viewBox="0 0 20 20"
-                                  >
-                                    <path
-                                      fillRule="evenodd"
-                                      d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                                      clipRule="evenodd"
-                                    />
-                                  </svg>
+                                  <p className="text-xs text-gray-500 flex items-center gap-1">
+                                    <svg
+                                      className="w-3 h-3"
+                                      fill="currentColor"
+                                      viewBox="0 0 20 20"
+                                    >
+                                      <path
+                                        fillRule="evenodd"
+                                        d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                                        clipRule="evenodd"
+                                      />
+                                    </svg>
                                     {location}
-                                </p>
-                              )}
+                                  </p>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
                           {timeAgo && (
-                          <span className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
+                            <span className="text-xs text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
                               {timeAgo}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Rating */}
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="flex items-center gap-1">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <FaStar
-                              key={i}
-                              className={`text-lg ${
-                                  (rating ?? 0) > i
-                                  ? "text-yellow-400"
-                                  : "text-gray-200"
-                              }`}
-                            />
-                          ))}
+                            </span>
+                          )}
                         </div>
-                        <span className="text-sm font-medium text-gray-600">
+
+                        {/* Rating */}
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <FaStar
+                                key={i}
+                                className={`text-lg ${(rating ?? 0) > i
+                                    ? "text-yellow-400"
+                                    : "text-gray-200"
+                                  }`}
+                              />
+                            ))}
+                          </div>
+                          <span className="text-sm font-medium text-gray-600">
                             {rating?.toFixed(1) || 0}/5
-                        </span>
-                      </div>
-
-                      {/* Title */}
-                        {title && (
-                        <h5 className="font-semibold text-[#0A1A22] mb-3 text-base leading-tight">
-                            "{title}"
-                        </h5>
-                      )}
-
-                      {/* Content */}
-                        <div className="relative mb-4">
-                        <p className="text-gray-700 text-sm leading-relaxed">
-                            {content}
-                        </p>
-                        {/* Quote decoration */}
-                        <div className="absolute -top-2 -left-2 text-4xl text-[#4EA8A1]/20 font-serif leading-none">
-                          "
+                          </span>
                         </div>
-                      </div>
+
+                        {/* Title */}
+                        {title && (
+                          <h5 className="font-semibold text-[#0A1A22] mb-3 text-base leading-tight">
+                            &quot;{title}&quot;
+                          </h5>
+                        )}
+
+                        {/* Content */}
+                        <div className="relative mb-4">
+                          <p className="text-gray-700 text-sm leading-relaxed">
+                            {content}
+                          </p>
+                          {/* Quote decoration */}
+                          <div className="absolute -top-2 -left-2 text-4xl text-[#4EA8A1]/20 font-serif leading-none">
+                            &quot;
+                          </div>
+                        </div>
 
                         {/* Tags */}
                         {tags && tags.length > 0 && (
                           <div className="flex flex-wrap gap-2">
+                            {/* eslint-disable-next-line @typescript-eslint/no-unused-vars */}
                             {tags.map((tag: string, idx: number) => (
                               <span
                                 key={idx}
@@ -276,11 +269,11 @@ const FeedbackComplaints: React.FC<Props> = ({
                             ))}
                           </div>
                         )}
-                    </div>
+                      </div>
 
-                    {/* Hover effect overlay */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-[#4EA8A1]/0 via-transparent to-[#4EA8A1]/0 group-hover:from-[#4EA8A1]/5 group-hover:to-[#4EA8A1]/10 transition-all duration-300 pointer-events-none rounded-2xl"></div>
-                  </div>
+                      {/* Hover effect overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#4EA8A1]/0 via-transparent to-[#4EA8A1]/0 group-hover:from-[#4EA8A1]/5 group-hover:to-[#4EA8A1]/10 transition-all duration-300 pointer-events-none rounded-2xl"></div>
+                    </div>
                   );
                 })}
               </div>
@@ -308,15 +301,6 @@ const FeedbackComplaints: React.FC<Props> = ({
               </svg>
             </button>
           </div>
-
-          {/* <div className="mt-6 sm:mt-8 pt-6 border-top border-gray-200">
-            <h4 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-inda-teal">
-              AI Summary
-            </h4>
-            <p className="text-gray-700 text-sm sm:text-base leading-relaxed">
-              {aiSummary || "—"}
-            </p>
-          </div> */}
         </div>
       </div>
 

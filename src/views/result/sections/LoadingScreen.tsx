@@ -42,7 +42,7 @@ const LoadingScreen: React.FC<Props> = ({ currentStep }) => {
           </h1>
 
           <p className="text-base sm:text-lg lg:text-xl text-[#101820]/70 max-w-2xl mx-auto leading-relaxed mb-8">
-            We're verifying documents, checking market data, and running our AI
+            We&apos;re verifying documents, checking market data, and running our AI
             analysis to give you the most accurate insights.
           </p>
 
@@ -58,9 +58,8 @@ const LoadingScreen: React.FC<Props> = ({ currentStep }) => {
                 className="flex items-center justify-between text-sm"
               >
                 <span
-                  className={`font-medium ${
-                    currentStep >= idx ? "text-[#4EA8A1]" : "text-[#101820]/60"
-                  }`}
+                  className={`font-medium ${currentStep >= idx ? "text-[#4EA8A1]" : "text-[#101820]/60"
+                    }`}
                 >
                   {label}
                 </span>

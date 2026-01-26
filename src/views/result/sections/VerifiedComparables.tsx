@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import Image from "next/image";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 interface ComparableProperty {
@@ -100,7 +101,7 @@ const VerifiedComparables: React.FC<Props> = ({ comparables }) => {
     <div className="w-full px-6">
       <div className="bg-white/80 border border-gray-200 rounded-2xl p-6 sm:p-8 shadow-sm">
         <h3 className="text-2xl md:text-3xl font-bold text-inda-teal mb-6">
-          Verified Comparables
+          Comparable Properties
         </h3>
 
         <div className="relative">
@@ -140,10 +141,12 @@ const VerifiedComparables: React.FC<Props> = ({ comparables }) => {
               >
                 <div className="relative h-32 bg-gray-200 overflow-hidden">
                   {property.imageUrl ? (
-                    <img
+                    <Image
                       src={property.imageUrl}
                       alt={property.title}
-                      className="w-full h-full object-cover"
+                      fill
+                      unoptimized
+                      className="object-cover"
                     />
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-gray-300 to-gray-400" />

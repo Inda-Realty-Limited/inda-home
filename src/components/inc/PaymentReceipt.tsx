@@ -26,10 +26,14 @@ interface PaymentReceiptProps {
   onClose?: () => void;
 }
 
+import { useAuth } from "@/contexts/AuthContext";
+
 const PaymentReceipt: React.FC<PaymentReceiptProps> = ({
   payment,
   onClose,
 }) => {
+  const { user } = useAuth();
+
   const formatPrice = (amount: number) => {
     return new Intl.NumberFormat("en-NG", {
       style: "currency",
@@ -54,24 +58,16 @@ const PaymentReceipt: React.FC<PaymentReceiptProps> = ({
     });
   };
 
-  // Get logged-in user name from localStorage or context
+  // Get logged-in user name from context or payment response
   const getLoggedInUserName = () => {
-    if (typeof window !== "undefined") {
-      const userData = localStorage.getItem("user");
-      if (userData) {
-        try {
-          const user = JSON.parse(userData);
-          return (
-            user.name ||
-            user.firstName ||
+      if (user) {
+        return (
+            (user as any).name ||
+            (user as any).firstName ||
             user.email?.split("@")[0] ||
             "Valued Customer"
-          );
-        } catch (e) {
-          return "Valued Customer";
-        }
+        );
       }
-    }
     return payment.verifyResponse?.data?.customer?.name || "Valued Customer";
   };
 

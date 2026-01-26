@@ -20,7 +20,7 @@ interface InfrastructureData {
   percentage: number;
 }
 
-const MapInsights: React.FC<Props> = ({ isOpen, toggle, aiSummary }) => {
+const MapInsights: React.FC<Props> = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const propertyMix: PropertyMixData[] = [

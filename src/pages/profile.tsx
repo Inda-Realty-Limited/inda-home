@@ -3,7 +3,7 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { useAuth } from "@/contexts/AuthContext";
 import { StoredUser } from "@/types/auth";
 import Head from "next/head";
-import { useRouter } from "next/router";
+// import { useRouter } from "next/router";
 import React, { useCallback, useEffect, useState } from "react";
 import { FiCalendar, FiCheckCircle, FiXCircle } from "react-icons/fi";
 
@@ -69,7 +69,6 @@ const PreferenceHighlight: React.FC<{
 );
 
 const ProfilePage: React.FC = () => {
-  const router = useRouter();
   const { user: authUser, setUser: setAuthUser, isAuthenticated } = useAuth();
   const [loading, setLoading] = useState(true);
   const [formValues, setFormValues] = useState<Partial<StoredUser>>({});
@@ -132,7 +131,7 @@ const ProfilePage: React.FC = () => {
           type: "success",
           message: "Profile details updated successfully.",
         });
-      } catch (error) {
+      } catch (_error) {
         setFeedback({
           type: "error",
           message: "Unable to save your changes right now. Please try again.",
@@ -183,11 +182,10 @@ const ProfilePage: React.FC = () => {
                 </div>
                 {feedback && (
                   <div
-                    className={`mb-4 flex items-center gap-2 rounded-xl px-3 py-2 text-sm ${
-                      feedback.type === "success"
-                        ? "bg-emerald-50 text-emerald-700"
-                        : "bg-rose-50 text-rose-600"
-                    }`}
+                    className={`mb-4 flex items-center gap-2 rounded-xl px-3 py-2 text-sm ${feedback.type === "success"
+                      ? "bg-emerald-50 text-emerald-700"
+                      : "bg-rose-50 text-rose-600"
+                      }`}
                   >
                     {feedback.type === "success" ? (
                       <FiCheckCircle className="flex-shrink-0" size={18} />

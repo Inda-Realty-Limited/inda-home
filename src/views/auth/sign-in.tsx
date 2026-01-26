@@ -6,6 +6,8 @@ import { loginSchema, validateAndSanitize } from "@/utils/validation";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import { FiLock, FiMail } from "react-icons/fi";
+import CryptoJS from "crypto-js";
+import GoogleButton from "@/components/OAuth/GoogleButton";
 
 const SignIn: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -44,7 +46,7 @@ const SignIn: React.FC = () => {
     setErrors({});
 
     const validation = validateAndSanitize(loginSchema, { email, password });
-    
+
     if (!validation.success) {
       setErrors(validation.errors);
       return;
@@ -67,12 +69,36 @@ const SignIn: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      await authLogin(validation.data.email, validation.data.password);
-      
+      const _response = await authLogin(validation.data.email, validation.data.password);
+
       limiter.reset();
       toast.showToast("Sign in successful!", 2000, "success");
-      
+
       setTimeout(() => {
+        // Get user from localStorage to check role
+        const storedUser = localStorage.getItem('inda_user');
+        let userRole = null;
+
+        if (storedUser) {
+          try {
+            const decrypted = CryptoJS.AES.decrypt(storedUser, process.env.NEXT_PUBLIC_ENCRYPTION_SECRET || '').toString(CryptoJS.enc.Utf8);
+            const user = JSON.parse(decrypted);
+            userRole = user.role;
+          } catch (e) {
+            console.error('Failed to decrypt user data:', e);
+          }
+        }
+
+        // Role-based redirect
+        const isProRole = userRole === 'Agent' || userRole === 'Developer' || userRole === 'Admin';
+
+        if (isProRole) {
+          // Pro users go to dashboard
+          router.push('/dashboard');
+          return;
+        }
+
+        // Buyers follow normal redirect logic
         if (returnTo) {
           try {
             router.push(decodeURIComponent(returnTo));
@@ -110,6 +136,19 @@ const SignIn: React.FC = () => {
             <h1 className="text-center font-bold text-2xl sm:text-3xl mb-6 sm:mb-8">
               Welcome Back!
             </h1>
+
+            {/* Google Sign-In Button */}
+            <div className="w-full mb-6">
+              <GoogleButton returnTo={returnTo || (searchQuery ? `/${searchType === "ai" ? "search-results" : "result"}?q=${encodeURIComponent(searchQuery)}&type=${searchType}` : undefined)} />
+            </div>
+
+            {/* Divider */}
+            <div className="flex items-center gap-4 w-full mb-6">
+              <div className="flex-1 h-px bg-gray-300"></div>
+              <span className="text-gray-500 text-sm">or</span>
+              <div className="flex-1 h-px bg-gray-300"></div>
+            </div>
+
             <form
               className="w-full flex flex-col gap-4 sm:gap-6"
               onSubmit={handleSubmit}
@@ -134,9 +173,8 @@ const SignIn: React.FC = () => {
                       setEmail(e.target.value);
                       setErrors(prev => ({ ...prev, email: "" }));
                     }}
-                    className={`w-full rounded-xl bg-[#F9F9F9] border ${
-                      errors.email ? "border-red-500" : "border-[#e0e0e0]"
-                    } focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base`}
+                    className={`w-full rounded-xl bg-[#F9F9F9] border ${errors.email ? "border-red-500" : "border-[#e0e0e0]"
+                      } focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base`}
                   />
                 </div>
                 {errors.email && (
@@ -163,9 +201,8 @@ const SignIn: React.FC = () => {
                       setPassword(e.target.value);
                       setErrors(prev => ({ ...prev, password: "" }));
                     }}
-                    className={`w-full rounded-xl bg-[#F9F9F9] border ${
-                      errors.password ? "border-red-500" : "border-[#e0e0e0]"
-                    } focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base`}
+                    className={`w-full rounded-xl bg-[#F9F9F9] border ${errors.password ? "border-red-500" : "border-[#e0e0e0]"
+                      } focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base`}
                   />
                 </div>
                 {errors.password && (
@@ -174,15 +211,14 @@ const SignIn: React.FC = () => {
               </div>
               <div className="flex justify-end">
                 <a
-                  href={`/auth/forgot-password${
-                    returnTo
-                      ? `?returnTo=${encodeURIComponent(returnTo)}`
-                      : searchQuery
+                  href={`/auth/forgot-password${returnTo
+                    ? `?returnTo=${encodeURIComponent(returnTo)}`
+                    : searchQuery
                       ? `?q=${encodeURIComponent(
-                          searchQuery
-                        )}&type=${searchType}`
+                        searchQuery
+                      )}&type=${searchType}`
                       : ""
-                  }`}
+                    }`}
                   className="text-xs sm:text-sm text-[#4EA8A1] font-semibold hover:underline transition-all duration-200"
                 >
                   Forgot password?
@@ -202,15 +238,14 @@ const SignIn: React.FC = () => {
               </Button>
             </form>
             <span className="text-xs sm:text-sm text-gray-600 mt-4 sm:mt-6 text-center">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <a
-                href={`/auth/signup${
-                  returnTo
-                    ? `?returnTo=${encodeURIComponent(returnTo)}`
-                    : searchQuery
+                href={`/auth/signup${returnTo
+                  ? `?returnTo=${encodeURIComponent(returnTo)}`
+                  : searchQuery
                     ? `?q=${encodeURIComponent(searchQuery)}&type=${searchType}`
                     : ""
-                }`}
+                  }`}
                 className="text-[#4EA8A1] font-semibold hover:underline transition-all duration-200"
               >
                 Sign Up

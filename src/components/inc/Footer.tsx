@@ -50,7 +50,7 @@ const Footer: React.FC = () => {
         </a>
       </div>
       <div className="text-white text-sm sm:text-base md:text-lg text-center opacity-80 max-w-4xl px-4">
-        © 2025 Inda, Inc. All rights reserved. Inda provides market insights,
+        © 2026 Inda, Inc. All rights reserved. Inda provides market insights,
         not legal advice or licensed valuation.
       </div>
     </footer>

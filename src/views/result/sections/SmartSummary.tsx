@@ -1,6 +1,4 @@
 import React from "react";
-import { FaBuilding, FaClock, FaMapMarkerAlt } from "react-icons/fa";
-import BedroomIcon from "@/components/icons/BedroomIcon";
 import SellerIcon from "@/components/icons/SellerIcon";
 import DeliveryIcon from "@/components/icons/DeliveryIcon";
 import StatusIcon from "@/components/icons/StatusIcon";
@@ -20,15 +18,6 @@ const SmartSummary: React.FC<Props> = ({
 }) => {
   const sellerName =
     result?.snapshot?.agentCompanyName || result?.snapshot?.agentName || "—df";
-  const sellerProfileUrl =
-    (result?.snapshot as any)?.agentCompanyUrl ||
-    (result?.snapshot as any)?.agentUrl ||
-    null;
-  // Derive bedrooms/bathrooms strictly from available API/snapshot fields
-  const bedrooms: number | string | null =
-    (result?.snapshot as any)?.bedrooms ?? (result as any)?.bedrooms ?? null;
-  const bathrooms: number | string | null =
-    (result?.snapshot as any)?.bathrooms ?? (result as any)?.bathrooms ?? null;
   return (
     <div className="w-full px-6">
       <div className="">

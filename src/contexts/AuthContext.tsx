@@ -1,4 +1,5 @@
 import { login as loginApi, logout as logoutApi } from "@/api/auth";
+import { env } from "@/config/env";
 import { AuthContextType, AuthState, StoredUser } from "@/types/auth";
 import { useRouter } from "next/router";
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
@@ -8,8 +9,7 @@ const TOKEN_KEY = "inda_token";
 const USER_KEY = "inda_user";
 
 const getSecretKey = () => {
-  if (typeof window === "undefined") return "fallback_key";
-  return process.env.NEXT_PUBLIC_ENCRYPTION_SECRET || "inda_super_secret_key";
+  return env.security.encryptionSecret;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,16 +25,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const setUser = useCallback((user: StoredUser | null, token?: string) => {
     try {
-      if (user && token) {
-        // Store user in localStorage (encrypted)
+      if (!user) {
+        // Clear storage and logout
+        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(USER_KEY);
+
+        setState(prev => ({
+          ...prev,
+          user: null,
+          isAuthenticated: false,
+          isLoading: false,
+          error: null,
+        }));
+        return;
+      }
+
+      // If we have a user, we need a token (either provided or from storage)
+      let currentToken = token;
+      if (!currentToken) {
+        const encryptedToken = localStorage.getItem(TOKEN_KEY);
+        if (encryptedToken) {
+          try {
+            const bytes = CryptoJS.AES.decrypt(encryptedToken, getSecretKey());
+            currentToken = bytes.toString(CryptoJS.enc.Utf8);
+          } catch (e) {
+            console.error("Failed to decrypt current token:", e);
+          }
+        }
+      }
+
+      if (user && currentToken) {
+        const secret = getSecretKey();
+
         const userJson = JSON.stringify(user);
-        const encryptedUser = CryptoJS.AES.encrypt(userJson, getSecretKey()).toString();
+        const encryptedUser = CryptoJS.AES.encrypt(userJson, secret).toString();
         localStorage.setItem(USER_KEY, encryptedUser);
-        
-        // Store token (encrypted)
-        const encryptedToken = CryptoJS.AES.encrypt(token, getSecretKey()).toString();
-        localStorage.setItem(TOKEN_KEY, encryptedToken);
-        
+
+        if (token) {
+          const encryptedToken = CryptoJS.AES.encrypt(token, secret).toString();
+          localStorage.setItem(TOKEN_KEY, encryptedToken);
+        }
+
+        if (typeof window !== "undefined") {
+          (window as any).__INDA_TOKEN__ = currentToken;
+        }
+
         setState(prev => ({
           ...prev,
           user,
@@ -42,21 +77,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           isLoading: false,
           error: null,
         }));
-        
+
         if (typeof window !== "undefined") {
           window.dispatchEvent(new Event("inda:auth-changed"));
         }
       } else {
-        // Clear storage
+        // No token found, perform logout
         localStorage.removeItem(TOKEN_KEY);
         localStorage.removeItem(USER_KEY);
-        
         setState(prev => ({
           ...prev,
           user: null,
           isAuthenticated: false,
           isLoading: false,
-          error: null,
         }));
       }
     } catch (error) {
@@ -68,13 +101,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       const response = await loginApi({ email, password });
-      
+
       if (response?.user && response?.token) {
         setUser(response.user, response.token);
       } else {
         throw new Error("No user data or token returned from login");
       }
-      
+
       return response;
     } catch (error: any) {
       const errorMessage = error?.response?.data?.message || error?.message || "Login failed";
@@ -95,11 +128,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Clear storage and state
       setUser(null);
       setState(prev => ({ ...prev, isLoading: false }));
-      
+
       if (typeof window !== "undefined") {
         window.dispatchEvent(new Event("inda:logout"));
       }
-      
+
       router.push("/");
     }
   }, [setUser, router]);
@@ -151,7 +184,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Re-check authentication when storage changes (e.g., logout in another tab)
       const encryptedUser = localStorage.getItem(USER_KEY);
       const encryptedToken = localStorage.getItem(TOKEN_KEY);
-      
+
       if (!encryptedUser || !encryptedToken) {
         setUser(null);
       }

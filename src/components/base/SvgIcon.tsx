@@ -15,7 +15,14 @@ const SvgIcon: React.FC<SvgIconProps> = ({
   className = "",
   alt = "SVG Icon",
 }) => {
-  return <SvgComponent className={className} aria-label={alt} />;
+  return (
+    <SvgComponent
+      width={width}
+      height={height}
+      className={className}
+      aria-label={alt}
+    />
+  );
 };
 
 export default SvgIcon;

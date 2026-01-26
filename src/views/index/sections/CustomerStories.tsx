@@ -36,7 +36,7 @@ export function CustomerStories() {
       {/* Decorative elements */}
       <div className="absolute top-20 right-0 w-96 h-96 bg-gradient-to-br from-[#4ea8a1]/10 to-purple-200/20 rounded-full blur-3xl" />
       <div className="absolute bottom-20 left-0 w-80 h-80 bg-orange-200/20 rounded-full blur-3xl" />
-      
+
       <div className="max-w-7xl mx-auto relative">
         {/* Header */}
         <div className="text-center mb-20">
@@ -65,7 +65,7 @@ export function CustomerStories() {
             >
               {/* Quote icon */}
               <Quote className="absolute top-8 right-8 w-12 h-12 text-gray-200 group-hover:text-[#4ea8a1]/20 transition-colors" />
-              
+
               {/* Rating */}
               <div className="flex gap-1 mb-6">
                 {[...Array(story.rating)].map((_, i) => (
@@ -75,7 +75,7 @@ export function CustomerStories() {
 
               {/* Story */}
               <p className="text-gray-700 mb-8 leading-relaxed text-lg relative z-10">
-                "{story.story}"
+                &quot;{story.story}&quot;
               </p>
 
               {/* Author */}
@@ -98,7 +98,7 @@ export function CustomerStories() {
         </div>
 
         {/* Stats - More dynamic */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6 md:gap-8">
           {[
             { value: '2,000+', label: 'Active Users', gradient: 'from-[#4ea8a1] to-teal-600' },
             { value: '₦50B+', label: 'Properties Analyzed', gradient: 'from-purple-600 to-pink-600' },
@@ -107,12 +107,12 @@ export function CustomerStories() {
           ].map((stat, index) => (
             <div
               key={index}
-              className="text-center p-8 bg-gradient-to-br from-white to-gray-50/50 rounded-2xl border border-gray-200 hover:shadow-lg transition-all duration-300"
+              className="text-center p-3 sm:p-8 bg-gradient-to-br from-white to-gray-50/50 rounded-2xl border border-gray-200 hover:shadow-lg transition-all duration-300"
             >
-              <div className={`text-5xl mb-3 bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent`}>
+              <div className={`text-xl sm:text-4xl md:text-5xl mb-2 sm:mb-3 bg-gradient-to-r ${stat.gradient} bg-clip-text text-transparent font-bold`}>
                 {stat.value}
               </div>
-              <div className="text-gray-600">{stat.label}</div>
+              <div className="text-gray-600 text-[10px] sm:text-base font-medium leading-tight">{stat.label}</div>
             </div>
           ))}
         </div>

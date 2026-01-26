@@ -8,7 +8,6 @@ const OrderReceived: React.FC = () => {
   const { query } = router;
   // Read possible values from query string
   const reference = (query.reference as string) || (query.ref as string) || "";
-  const q = (query.q as string) || "";
   const plan = (query.plan as string) || "deepDive";
   const product = useMemo(() => {
     if (plan === "deeperDive") return "Deeper Dive";

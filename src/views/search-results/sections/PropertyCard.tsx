@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Bed, MapPin, Eye, Heart, BadgeCheck } from 'lucide-react';
+import Image from 'next/image';
+import { Bed, MapPin, Eye, BadgeCheck } from 'lucide-react';
 
 interface PropertyCardProps {
   id: string;
@@ -27,11 +28,9 @@ export function PropertyCard({
   price,
   fmv,
   verified,
-  onClick,
   onViewProperty,
   onMakeOffer
 }: PropertyCardProps) {
-  const [isFavorite, setIsFavorite] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
   const getTrustScoreColor = (score: number) => {
@@ -42,11 +41,11 @@ export function PropertyCard({
   };
 
   return (
-    <div 
+    <div
       className="group bg-white rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1"
       style={{
-        boxShadow: isHovered 
-          ? '0 20px 40px rgba(0,0,0,0.12)' 
+        boxShadow: isHovered
+          ? '0 20px 40px rgba(0,0,0,0.12)'
           : '0 2px 8px rgba(0,0,0,0.08)'
       }}
       onMouseEnter={() => setIsHovered(true)}
@@ -54,28 +53,14 @@ export function PropertyCard({
     >
       {/* Property Image */}
       <div className="relative h-56 overflow-hidden bg-gray-100">
-        <img 
-          src={image} 
+        <Image
+          src={image}
           alt={title}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          fill
+          unoptimized
+          className="object-cover transition-transform duration-500 group-hover:scale-110"
         />
-        
-        {/* Favorite Button */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsFavorite(!isFavorite);
-          }}
-          className="absolute top-3 right-3 w-9 h-9 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center transition-all hover:bg-white hover:scale-110 shadow-lg"
-        >
-          <Heart 
-            className={`w-5 h-5 transition-all ${
-              isFavorite 
-                ? 'fill-red-500 text-red-500' 
-                : 'text-gray-700'
-            }`}
-          />
-        </button>
+
 
 
         {/* FMV Badge */}
@@ -119,7 +104,7 @@ export function PropertyCard({
               <p className="text-[14px] font-medium">{beds}</p>
             </div>
           </div>
-          
+
           <div className="text-right">
             <p className="text-[11px] text-gray-500 uppercase tracking-wide">Inda Score</p>
             <p className="text-[14px] font-medium text-[#4ea8a1]">{trustScore}%</p>
@@ -133,9 +118,9 @@ export function PropertyCard({
             <span className="text-[13px] font-medium text-gray-900">{trustScore}/100</span>
           </div>
           <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-            <div 
+            <div
               className={`h-full bg-gradient-to-r ${getTrustScoreColor(trustScore)} rounded-full transition-all duration-700`}
-              style={{ 
+              style={{
                 width: `${trustScore}%`,
                 boxShadow: '0 0 8px rgba(78, 168, 161, 0.4)'
               }}
