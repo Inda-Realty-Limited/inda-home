@@ -28,7 +28,23 @@ export interface PublicListing {
 
 export const getChannelStats = async (): Promise<ChannelStatsItem[]> => {
     const res = await apiClient.get("/api/channels/stats");
-    return (res.data?.data || []) as ChannelStatsItem[];
+    const data = res.data?.data;
+
+    // Handle new object format: { channels: { whatsapp: { clicks, leads }, ... } }
+    if (data?.channels && typeof data.channels === 'object') {
+        return Object.entries(data.channels).map(([channel, stats]: [string, any]) => ({
+            _id: '',
+            userId: '',
+            channel,
+            clicks: stats?.clicks || 0,
+            leads: stats?.leads || 0,
+            createdAt: '',
+            updatedAt: '',
+        }));
+    }
+
+    // Fallback for old array format
+    return (data || []) as ChannelStatsItem[];
 };
 
 export const trackChannelClick = async (userId: string, channel: string): Promise<void> => {
