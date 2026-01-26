@@ -1,10 +1,16 @@
 import { useState } from "react";
+import { useRouter } from "next/router";
 import { CheckCircle2, TrendingUp, Eye, AlertTriangle, Info } from "lucide-react";
 import { PropertyUploadData } from "./types";
 
 
 export interface Phase5CompleteProps {
     uploadData: PropertyUploadData;
+    savedListing?: {
+        _id?: string;
+        indaTag?: string;
+        [key: string]: any;
+    };
     onViewProperty: () => void;
     onClose: () => void;
 }
@@ -12,13 +18,19 @@ export interface Phase5CompleteProps {
 
 export function Phase5Complete({
     uploadData,
+    savedListing,
     onViewProperty,
     onClose
 }: Phase5CompleteProps) {
+    const router = useRouter();
     const [copied, setCopied] = useState(false);
-    // Generate shareable link (in production, this would be the actual property URL)
-    const propertyId = `PROP-${Date.now().toString(36).toUpperCase()}`;
-    const shareableLink = `https://investinda.com/properties/${propertyId}`;
+
+    // Generate shareable link using the actual listing ID
+    const listingId = savedListing?._id || savedListing?.indaTag;
+    const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://investinda.com";
+    const shareableLink = listingId
+        ? `${baseUrl}/property/${listingId}`
+        : `${baseUrl}/listings`;
     const handleCopyLink = () => {
         navigator.clipboard.writeText(shareableLink);
         setCopied(true);
@@ -145,11 +157,17 @@ export function Phase5Complete({
             {/* Action Buttons */}
             <div className="flex items-center gap-3 pt-4 border-t border-gray-200">
                 <button
-                    onClick={onViewProperty}
+                    onClick={() => {
+                        if (listingId) {
+                            router.push(`/property/${listingId}`);
+                        } else {
+                            onViewProperty();
+                        }
+                    }}
                     className="flex-1 px-6 py-3 bg-[#4ea8a1] text-white rounded-lg hover:bg-[#3d9691] font-medium flex items-center justify-center gap-2"
                 >
                     <Eye className="w-5 h-5" />
-                    View Property Report
+                    View Property
                 </button>
                 <button
                     onClick={onClose}

@@ -14,7 +14,8 @@ import {
   ImageIcon,
   ChevronDown,
   ChevronUp,
-  Info
+  Info,
+  Loader2
 } from "lucide-react";
 import { AIInferredData, PropertyUploadData, UploadedDocument, UploadedPhoto } from "./types";
 
@@ -24,6 +25,8 @@ interface ReviewExtractedInfoProps {
   onEdit: (field: string, value: any) => void;
   onConfirm: () => void;
   onBack: () => void;
+  isLoading?: boolean;
+  error?: string;
 }
 
 
@@ -31,7 +34,9 @@ export function ReviewExtractedInfo({
   data,
   onEdit,
   onConfirm,
-  onBack
+  onBack,
+  isLoading = false,
+  error
 }: ReviewExtractedInfoProps) {
   const aiData = data.aiInferredData;
   const confirmed = data.confirmedData;
@@ -944,12 +949,27 @@ export function ReviewExtractedInfo({
             </div>
             <button
               onClick={onConfirm}
-              className="px-8 py-3 bg-[#4ea8a1] text-white rounded-lg hover:bg-[#3d9691] transition-colors font-bold flex items-center gap-2"
+              disabled={isLoading}
+              className="px-8 py-3 bg-[#4ea8a1] text-white rounded-lg hover:bg-[#3d9691] transition-colors font-bold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <CheckCircle2 className="w-5 h-5" />
-              Confirm & Generate Report
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-5 h-5" />
+                  Confirm & Generate Report
+                </>
+              )}
             </button>
           </div>
+          {error && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+              {error}
+            </div>
+          )}
         </div>
 
 

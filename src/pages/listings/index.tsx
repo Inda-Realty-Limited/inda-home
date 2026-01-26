@@ -5,7 +5,8 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import {
     FaBed, FaBath, FaRulerCombined, FaEye,
-    FaPen, FaComment, FaTrash, FaSpinner, FaPlusCircle, FaMapMarkerAlt
+    FaPen, FaComment, FaTrash, FaSpinner, FaPlusCircle, FaMapMarkerAlt,
+    FaExternalLinkAlt, FaShareAlt, FaCheck
 } from 'react-icons/fa';
 import { ProListingsService, Listing } from '@/api/pro-listings';
 import { PropertyUploadModal } from '@/components/listings/PropertyUploadModal';
@@ -18,6 +19,15 @@ export default function ListingsManagerPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+    const [copiedId, setCopiedId] = useState<string | null>(null);
+
+    const handleCopyLink = (listingId: string) => {
+        const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
+        const link = `${baseUrl}/property/${listingId}`;
+        navigator.clipboard.writeText(link);
+        setCopiedId(listingId);
+        setTimeout(() => setCopiedId(null), 2000);
+    };
 
     useEffect(() => {
         if (router.query.add === 'true') {
@@ -74,7 +84,7 @@ export default function ListingsManagerPage() {
         }
     }, [user]);
 
-    const handleDelete = async (indaTag: string) => {
+    const handleDelete = async (listingId: string) => {
         if (!window.confirm("Are you sure you want to delete this listing?")) return;
 
         if (!user) {
@@ -84,8 +94,12 @@ export default function ListingsManagerPage() {
 
         try {
             const userId = user.id || user._id || (user as any).user?.id;
-            await ProListingsService.deleteListing(indaTag, userId);
-            setListings(prev => prev.filter(l => l.indaTag !== indaTag && l.id !== indaTag));
+            await ProListingsService.deleteListing(listingId, userId);
+            setListings(prev => prev.filter(l =>
+                (l as any)._id !== listingId &&
+                l.indaTag !== listingId &&
+                l.id !== listingId
+            ));
         } catch (_err) {
             alert("Failed to delete listing.");
         }
@@ -140,7 +154,7 @@ export default function ListingsManagerPage() {
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {listings.map((item: any) => {
-                                    const displayImage = item.imageUrl || item.images?.[0] || 'https://placehold.co/600x400?text=No+Image';
+                                    const displayImage = item.imageUrls?.[0] || item.imageUrl || item.images?.[0] || 'https://placehold.co/600x400?text=No+Image';
                                     const rawPrice = item.price || item.purchasePrice || 0;
                                     const displayPrice = Number(rawPrice).toLocaleString();
                                     const displayLocation = item.address || item.microlocation || 'Location N/A';
@@ -149,7 +163,7 @@ export default function ListingsManagerPage() {
                                     const size = item.size || item.specs?.size || 'N/A';
 
                                     return (
-                                        <div key={item.id || item.indaTag} className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col h-full">
+                                        <div key={item._id || item.id || item.indaTag} className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-lg transition-all duration-300 flex flex-col h-full">
                                             <div className="h-48 bg-gray-200 relative group overflow-hidden">
                                                 <img
                                                     src={displayImage}
@@ -203,15 +217,34 @@ export default function ListingsManagerPage() {
                                                             <FaComment /> {item.leads || 0}
                                                         </span>
                                                     </div>
-                                                    <div className="flex gap-2">
-                                                        <Link href={`/listings/edit?id=${item.indaTag || item.id}`}>
-                                                            <button className="text-gray-400 hover:text-inda-teal transition-colors p-2 rounded-full hover:bg-gray-100">
+                                                    <div className="flex gap-1">
+                                                        <Link href={`/property/${item._id || item.id}`}>
+                                                            <button
+                                                                className="text-gray-400 hover:text-inda-teal transition-colors p-2 rounded-full hover:bg-gray-100"
+                                                                title="View Property"
+                                                            >
+                                                                <FaExternalLinkAlt size={12} />
+                                                            </button>
+                                                        </Link>
+                                                        <button
+                                                            onClick={() => handleCopyLink(item._id || item.id)}
+                                                            className="text-gray-400 hover:text-inda-teal transition-colors p-2 rounded-full hover:bg-gray-100"
+                                                            title={copiedId === (item._id || item.id) ? "Copied!" : "Copy Link"}
+                                                        >
+                                                            {copiedId === (item._id || item.id) ? <FaCheck size={12} className="text-green-500" /> : <FaShareAlt size={12} />}
+                                                        </button>
+                                                        <Link href={`/listings/edit?id=${item._id || item.indaTag || item.id}`}>
+                                                            <button
+                                                                className="text-gray-400 hover:text-inda-teal transition-colors p-2 rounded-full hover:bg-gray-100"
+                                                                title="Edit Listing"
+                                                            >
                                                                 <FaPen size={12} />
                                                             </button>
                                                         </Link>
                                                         <button
-                                                            onClick={() => handleDelete(item.indaTag || item.id)}
+                                                            onClick={() => handleDelete(item._id || item.indaTag || item.id)}
                                                             className="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-full hover:bg-gray-100"
+                                                            title="Delete Listing"
                                                         >
                                                             <FaTrash size={12} />
                                                         </button>

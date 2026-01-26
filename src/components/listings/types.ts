@@ -133,6 +133,39 @@ export interface AIInferredData {
     location?: string;
     documentAnalysis?: {
         titleType?: string;
+        state?: string;
+        lga?: string;
+        registrationNumber?: string;
+        titleNumber?: string;
+        transferDate?: string;
+        governorsConsent?: { status?: string; number?: string; date?: string };
+        powerOfAttorney?: { exists?: boolean; details?: string };
+        landSizeSource?: string;
+        surveyNumber?: string;
+        surveyDate?: string;
+        surveyorName?: string;
+        surveyorLicense?: string;
+        gpsCoordinates?: string;
+        boundaryDescriptions?: string;
+        leaseType?: string;
+        leaseStartDate?: string;
+        leaseExpiryDate?: string;
+        remainingYears?: string;
+        groundRent?: string;
+        groundRentStatus?: string;
+        paymentTerms?: string;
+        outstandingBalance?: string;
+        propertyTax?: { year?: string; amount?: string; status?: string; assessedValue?: string };
+        buildingApproval?: { approvalNumber?: string; floors?: string; zoningCompliance?: string; approvalDate?: string };
+        utilities?: {
+            electricity?: { provider?: string; meterNumber?: string; connectionStatus?: string };
+            water?: { provider?: string; connectionStatus?: string };
+        };
+    };
+    photoAnalysis?: {
+        roofType?: string;
+        propertyCondition?: string;
+        finishingQuality?: string;
     };
     confidence: {
         [key: string]: number;

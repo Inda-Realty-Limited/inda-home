@@ -6,7 +6,8 @@ import {
     User,
     Calendar,
     X,
-    CheckCircle2
+    CheckCircle2,
+    Loader2
 } from "lucide-react";
 import { PropertyUploadData } from "./types";
 
@@ -16,6 +17,8 @@ interface Phase4EnhancementProps {
     onAdd: (field: string, value: any) => void;
     onSkip: () => void;
     onComplete: () => void;
+    isLoading?: boolean;
+    error?: string;
 }
 
 export function Phase4Enhancement({
@@ -23,7 +26,9 @@ export function Phase4Enhancement({
     propertyType,
     onAdd,
     onSkip,
-    onComplete
+    onComplete,
+    isLoading,
+    error
 }: Phase4EnhancementProps) {
     const [virtualTour, setVirtualTour] = useState(enhancedData?.virtualTourUrl || "");
     const [paymentPlans, setPaymentPlans] = useState(enhancedData?.paymentPlans || "");
@@ -239,20 +244,38 @@ export function Phase4Enhancement({
                 )}
             </div>
 
+            {/* Error Message */}
+            {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                    {error}
+                </div>
+            )}
+
             {/* Action Buttons */}
             <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                 <button
                     onClick={onSkip}
-                    className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium"
+                    disabled={isLoading}
+                    className="px-6 py-3 text-gray-600 hover:text-gray-800 font-medium disabled:opacity-50"
                 >
                     Skip - Publish Now
                 </button>
                 <button
                     onClick={onComplete}
-                    className="px-6 py-3 bg-[#4ea8a1] text-white rounded-lg hover:bg-[#3d9691] font-medium flex items-center gap-2"
+                    disabled={isLoading}
+                    className="px-6 py-3 bg-[#4ea8a1] text-white rounded-lg hover:bg-[#3d9691] font-medium flex items-center gap-2 disabled:opacity-50"
                 >
-                    {hasAnyEnhancement ? "Save & Publish Property" : "Publish Property"}
-                    <CheckCircle2 className="w-5 h-5" />
+                    {isLoading ? (
+                        <>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            Saving...
+                        </>
+                    ) : (
+                        <>
+                            {hasAnyEnhancement ? "Save & Publish Property" : "Publish Property"}
+                            <CheckCircle2 className="w-5 h-5" />
+                        </>
+                    )}
                 </button>
             </div>
         </div>

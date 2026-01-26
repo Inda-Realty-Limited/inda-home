@@ -115,11 +115,11 @@ export default function DashboardPage() {
         currentPage * propertiesPerPage
     );
 
-    // Get top channel from stats or use default
-    const topChannel = stats?.metrics?.topChannel && stats.metrics.topChannel !== 'N/A'
-        ? stats.metrics.topChannel
-        : 'Instagram';
-    const topChannelLeads = stats?.metrics?.topChannelLeads || 2103;
+    // Get top channel from actual channel data (sorted by leads, descending)
+    const topChannelData = channelData.find(c => c.leads > 0 || c.clicks > 0);
+    const topChannel = topChannelData?.name || 'No data yet';
+    const topChannelLeads = topChannelData?.leads || 0;
+    const topChannelClicks = topChannelData?.clicks || 0;
 
     return (
         <ProtectedRoute>
@@ -206,7 +206,7 @@ export default function DashboardPage() {
                             </div>
 
                             {/* Top Performing Channel */}
-                            <div className="bg-[#67B148] rounded-2xl p-5 text-white relative overflow-hidden">
+                            <div className={`${topChannelLeads > 0 ? 'bg-[#67B148]' : 'bg-gray-400'} rounded-2xl p-5 text-white relative overflow-hidden`}>
                                 <div className="flex justify-between items-start mb-8">
                                     <div className="p-2 bg-white/20 rounded-lg">
                                         <Zap size={20} />
@@ -214,7 +214,13 @@ export default function DashboardPage() {
                                 </div>
                                 <div className="text-2xl font-bold mb-1">{topChannel}</div>
                                 <div className="text-white/80 text-xs font-medium">Top Performing Channel</div>
-                                <div className="text-white/60 text-xs mt-2">{topChannelLeads.toLocaleString()} clicks</div>
+                                {topChannelLeads > 0 ? (
+                                    <div className="text-white/60 text-xs mt-2">
+                                        {topChannelLeads.toLocaleString()} leads{topChannelClicks > 0 ? ` · ${topChannelClicks.toLocaleString()} clicks` : ''}
+                                    </div>
+                                ) : (
+                                    <div className="text-white/60 text-xs mt-2">Share listings to track channels</div>
+                                )}
                             </div>
                         </div>
                     </div>
