@@ -40,6 +40,11 @@ apiClient.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`;
     }
 
+    // Let axios set the correct Content-Type for FormData (multipart/form-data with boundary)
+    if (config.data instanceof FormData) {
+      delete config.headers["Content-Type"];
+    }
+
     if (env.isDevelopment) {
       console.log(
         `API Request: ${config.method?.toUpperCase() || "UNKNOWN"} ${config.url

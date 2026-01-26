@@ -48,6 +48,7 @@ import { Phase4Enhancement } from "./Phase4Enhancement";
 import { Phase5Complete } from "./Phase5Complete";
 import { ReviewExtractedInfo } from "./ReviewExtractedInfo";
 import { BuyerReportPreview } from "./BuyerReportPreview";
+import { ProListingsService } from "@/api/pro-listings";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -108,6 +109,9 @@ export function PropertyUploadWizard({
 
     // Validation state
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
+    const [isSaving, setIsSaving] = useState(false);
+    const [savedListingId, setSavedListingId] = useState<string | null>(null);
+    const [savedListing, setSavedListing] = useState<any>(null);
 
     // ============================================================================
     // PHASE 1: SMART UPLOAD HANDLERS
@@ -357,7 +361,7 @@ export function PropertyUploadWizard({
     };
 
 
-    const handlePhase3Submit = () => {
+    const handlePhase3Submit = async () => {
         const aiData = uploadData.aiInferredData;
         const propertyType = uploadData.confirmedData?.propertyType || aiData?.propertyType;
 
@@ -366,22 +370,74 @@ export function PropertyUploadWizard({
             return;
         }
 
-        if (!uploadData.confirmedData && aiData && propertyType) {
-            setUploadData(prev => ({
-                ...prev,
-                confirmedData: {
-                    propertyType: propertyType as string,
-                    bedrooms: aiData.bedrooms,
-                    bathrooms: aiData.bathrooms,
-                    landSize: aiData.landSize,
-                    titleType: aiData.documentAnalysis?.titleType,
-                    hasEncumbrances: false,
-                    hasDisputes: false
-                }
-            }));
-        }
+        // Update confirmed data if not already set
+        const confirmedData = uploadData.confirmedData || {
+            propertyType: propertyType as string,
+            bedrooms: aiData?.bedrooms,
+            bathrooms: aiData?.bathrooms,
+            landSize: aiData?.landSize,
+            titleType: aiData?.documentAnalysis?.titleType,
+            hasEncumbrances: false,
+            hasDisputes: false
+        };
 
-        setCurrentPhase("enhancement");
+        setUploadData(prev => ({
+            ...prev,
+            confirmedData
+        }));
+
+        // Save listing to backend
+        setIsSaving(true);
+        setErrors({});
+
+        try {
+            const formData = new FormData();
+
+            // Add basic listing data
+            formData.append("title", `${confirmedData.bedrooms || ""}BR ${propertyType} in ${addressCity}`);
+            formData.append("propertyType", propertyType);
+            formData.append("microlocation", addressCity);
+            formData.append("purchasePrice", askingPrice.toString());
+            formData.append("bedrooms", (confirmedData.bedrooms || 0).toString());
+            formData.append("bathrooms", (confirmedData.bathrooms || 0).toString());
+            formData.append("size", confirmedData.landSize || "");
+            formData.append("constructionStatus", aiData?.constructionStatus || "completed");
+
+            // Add AI-extracted data
+            if (aiData) {
+                formData.append("features", JSON.stringify(aiData.amenities || []));
+                formData.append("amenities", JSON.stringify(aiData.amenities || []));
+                if (aiData.yearBuilt) formData.append("buildYear", aiData.yearBuilt.toString());
+            }
+
+            // Add address
+            formData.append("address", address);
+
+            // Add documents as legalDocs
+            documents.forEach(doc => {
+                formData.append("legalDocs", doc.file);
+            });
+
+            // Add photos as images
+            photos.forEach(photo => {
+                formData.append("images", photo.file);
+            });
+
+            const response = await ProListingsService.create(formData);
+
+            if (response.success) {
+                setSavedListingId(response.data?.indaTag || response.data?._id);
+                setSavedListing(response.data);
+                setCurrentPhase("enhancement");
+            } else {
+                throw new Error(response.message || "Failed to save listing");
+            }
+        } catch (error: any) {
+            console.error("Failed to save listing:", error);
+            setErrors({ confirmation: error.message || "Failed to save listing. Please try again." });
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     // ============================================================================
@@ -389,7 +445,8 @@ export function PropertyUploadWizard({
     // ============================================================================
 
     const handleSkipEnhancement = () => {
-        finalizeListing();
+        // Skip directly to preview without saving enhancements
+        setCurrentPhase("preview");
     };
 
     const handleAddEnhancement = (field: string, value: any) => {
@@ -400,6 +457,43 @@ export function PropertyUploadWizard({
                 [field]: value
             }
         }));
+    };
+
+    const handleSaveEnhancements = async () => {
+        if (!savedListingId) {
+            // No listing to update, just go to preview
+            setCurrentPhase("preview");
+            return;
+        }
+
+        const enhanced = uploadData.enhancedData;
+        if (!enhanced || Object.keys(enhanced).length === 0) {
+            // No enhancements to save
+            setCurrentPhase("preview");
+            return;
+        }
+
+        setIsSaving(true);
+        setErrors({});
+
+        try {
+            const response = await ProListingsService.updateListing(savedListingId, {
+                virtualTourUrl: enhanced.virtualTourUrl,
+                paymentPlans: enhanced.paymentPlans,
+                developerInfo: enhanced.developerInfo,
+                expectedCompletion: enhanced.expectedCompletion,
+                constructionMilestones: enhanced.constructionMilestones,
+            });
+            if (response.data) {
+                setSavedListing(response.data);
+            }
+            setCurrentPhase("preview");
+        } catch (error: any) {
+            console.error("Failed to save enhancements:", error);
+            setErrors({ enhancement: error.message || "Failed to save enhancements" });
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const finalizeListing = () => {
@@ -545,6 +639,8 @@ export function PropertyUploadWizard({
                             onEdit={handleConfirmField}
                             onConfirm={handlePhase3Submit}
                             onBack={() => setCurrentPhase("upload")}
+                            isLoading={isSaving}
+                            error={errors.confirmation}
                         />
                     )}
 
@@ -554,7 +650,9 @@ export function PropertyUploadWizard({
                             propertyType={uploadData.confirmedData?.propertyType}
                             onAdd={handleAddEnhancement}
                             onSkip={handleSkipEnhancement}
-                            onComplete={finalizeListing}
+                            onComplete={handleSaveEnhancements}
+                            isLoading={isSaving}
+                            error={errors.enhancement}
                         />
                     )}
 
@@ -577,6 +675,7 @@ export function PropertyUploadWizard({
                             <div className="border border-gray-200 rounded-lg overflow-hidden">
                                 <BuyerReportPreview
                                     data={uploadData}
+                                    savedListing={savedListing}
                                     mode="preview"
                                 />
                             </div>
@@ -604,6 +703,7 @@ export function PropertyUploadWizard({
                     {currentPhase === "complete" && (
                         <Phase5Complete
                             uploadData={uploadData}
+                            savedListing={savedListing}
                             onViewProperty={handleViewProperty}
                             onClose={handleCloseComplete}
                         />
