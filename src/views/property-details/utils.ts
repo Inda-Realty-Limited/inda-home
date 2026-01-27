@@ -111,14 +111,18 @@ export const mapListingToPropertyDetail = (listing: any) => {
   return {
     id: listing._id || listing.id || String(Math.random()),
     name: snapshot.title || listing.title || `${snapshot.bedrooms || listing.bedrooms || 0}-Bed ${propertyType || 'Property'}`,
-    location: snapshot.microlocationStd || listing.microlocationStd || snapshot.microlocation || listing.microlocation || 
+    location: snapshot.microlocationStd || listing.microlocationStd || snapshot.microlocation || listing.microlocation ||
               snapshot.lga || listing.lga || snapshot.state || listing.state || 'Lagos',
     price: formatPrice(priceValue),
+    priceNumeric: priceValue,
     images: images.length > 0 ? images : ['https://images.unsplash.com/photo-1662454419736-de132ff75638?w=800'],
     bedrooms: snapshot.bedrooms || listing.bedrooms || 0,
     developerRating,
     isScanned,
     scannedFrom: listing.listingUrl || snapshot.listingUrl || null,
+    // For offer/inquiry submission
+    listingId: listing._id || listing.id || null,
+    agentUserId: listing.userId || snapshot.userId || null,
     dataQuality: {
       completeness,
       lastVerified: new Date(listing.updatedAt || listing.createdAt || snapshot.updatedAt || Date.now()).toLocaleDateString(),

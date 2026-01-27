@@ -4,11 +4,15 @@ export interface Property {
   name: string;
   location: string;
   price: string;
+  priceNumeric?: number;
   images: string[];
   bedrooms: number;
   developerRating: string;
   isScanned?: boolean;
   scannedFrom?: string | null;
+  // For offer/inquiry submission
+  listingId?: string;
+  agentUserId?: string;
   dataQuality?: {
     completeness: number;
     lastVerified: string;

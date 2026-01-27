@@ -699,6 +699,9 @@ export function PropertyDetail({ property, onBack }: PropertyDetailProps) {
         onClose={() => setShowMakeOffer(false)}
         propertyName={property.name}
         propertyPrice={property.price}
+        priceNumeric={property.priceNumeric}
+        listingId={property.listingId}
+        agentUserId={property.agentUserId}
       />
 
       {/* Due Diligence Modal */}
