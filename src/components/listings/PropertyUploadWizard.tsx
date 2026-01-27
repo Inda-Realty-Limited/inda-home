@@ -36,11 +36,14 @@
  */
 
 import { useState, useCallback } from "react";
+import { useRouter } from "next/router";
 import {
     CheckCircle2,
     Eye,
     X,
-    ArrowLeft
+    ArrowLeft,
+    AlertTriangle,
+    Info
 } from "lucide-react";
 import { Phase1Upload } from "./Phase1Upload";
 import { Phase2Processing } from "./Phase2Processing";
@@ -82,6 +85,7 @@ export function PropertyUploadWizard({
     initialData,
     mode = "create"
 }: PropertyUploadWizardProps) {
+    const router = useRouter();
     const [currentPhase, setCurrentPhase] = useState<UploadPhase>("upload");
     const [uploadData, setUploadData] = useState<PropertyUploadData>({
         address: initialData?.address || "",
@@ -94,6 +98,7 @@ export function PropertyUploadWizard({
     const [addressState, setAddressState] = useState("Lagos");
     const [addressCity, setAddressCity] = useState("");
     const [addressStreet, setAddressStreet] = useState("");
+    const [propertyFlowType, setPropertyFlowType] = useState<"completed" | "off-plan" | "land-only">("completed");
 
     // Computed legacy address for backward compatibility
     const [address, setAddress] = useState(initialData?.address || "");
@@ -112,6 +117,16 @@ export function PropertyUploadWizard({
     const [isSaving, setIsSaving] = useState(false);
     const [savedListingId, setSavedListingId] = useState<string | null>(null);
     const [savedListing, setSavedListing] = useState<any>(null);
+
+    // Listing limit state
+    const [showLimitModal, setShowLimitModal] = useState(false);
+    const [limitInfo, setLimitInfo] = useState<{ limit: number; plan: string } | null>(null);
+
+    // Price warning state
+    const [priceWarning, setPriceWarning] = useState<string | null>(null);
+
+    // Location intelligence warning state
+    const [showLocationWarning, setShowLocationWarning] = useState(false);
 
     // ============================================================================
     // PHASE 1: SMART UPLOAD HANDLERS
@@ -266,6 +281,13 @@ export function PropertyUploadWizard({
     const handlePriceChange = useCallback((value: number) => {
         setAskingPrice(value);
 
+        // Check for suspiciously round prices (exact millions >= 10M)
+        if (value >= 10_000_000 && value % 1_000_000 === 0) {
+            setPriceWarning("Round prices may seem less credible. Consider a specific price like ₦52,500,000 instead of ₦50,000,000");
+        } else {
+            setPriceWarning(null);
+        }
+
         // TODO: Fetch market comparables
         // fetch(`/api/market-data/comparable?address=${address}&price=${value}`)
         //   .then(res => res.json())
@@ -280,47 +302,111 @@ export function PropertyUploadWizard({
         setBathrooms(value);
     }, []);
 
+    const handlePropertyFlowTypeChange = useCallback((type: "completed" | "off-plan" | "land-only") => {
+        setPropertyFlowType(type);
+        // Auto-set bedrooms/bathrooms to 0 for land-only
+        if (type === "land-only") {
+            setBedrooms(0);
+            setBathrooms(0);
+        }
+    }, []);
+
     /**
      * Phase 1 Validation
-     * 
+     *
      * VALIDATION RULES:
-     * - Address: Required, minimum 10 characters
-     * - Price: Required, must be > 0
-     * - Documents: At least 1 document required
-     * - Photos: 
-     *   - Land: Min 2 exterior photos
-     *   - Completed: Min 2 exterior + 4 interior photos
-     *   - Off-plan: Min 2 exterior + 2 construction photos
+     * - Address: Required, street min 5 characters, blacklist check
+     * - Price: Required, ₦1M - ₦10B range
+     * - Documents: At least 2 documents, Title Doc or Survey Plan required
+     * - Photos: At least 3 photos, contextual validation by property type
      */
     const validatePhase1 = (): boolean => {
         const newErrors: { [key: string]: string } = {};
 
+        // ADDRESS VALIDATION
         if (!addressStreet || !addressCity || !addressState) {
             newErrors.address = "Please complete all address fields";
+        } else if (addressStreet.trim().length < 5) {
+            newErrors.address = "Street address must be at least 5 characters";
+        } else {
+            // Blacklist check (excluding "123" as requested)
+            const blacklistTerms = ["tbd", "n/a", "test", "xxx", "asdf", "sample"];
+            const streetLower = addressStreet.toLowerCase().trim();
+            if (blacklistTerms.some(term => streetLower === term || streetLower.includes(term))) {
+                newErrors.address = "Please enter a valid street address";
+            }
         }
 
+        // PRICE VALIDATION
+        const MIN_PRICE = 1_000_000; // ₦1M
+        const MAX_PRICE = 10_000_000_000; // ₦10B
         if (!askingPrice || askingPrice <= 0) {
             newErrors.askingPrice = "Please enter a valid price";
+        } else if (askingPrice < MIN_PRICE) {
+            newErrors.askingPrice = `Minimum price is ₦${MIN_PRICE.toLocaleString()}`;
+        } else if (askingPrice > MAX_PRICE) {
+            newErrors.askingPrice = `Maximum price is ₦${MAX_PRICE.toLocaleString()}`;
         }
 
-        if (documents.length === 0) {
-            newErrors.documents = "Please upload at least one document (Title Document, Survey Plan, etc.)";
+        // DOCUMENT VALIDATION
+        if (documents.length < 2) {
+            newErrors.documents = "Please upload at least 2 documents (e.g., Title Document and Survey Plan)";
+        } else {
+            // Check if all documents are labeled
+            const unlabeledDocs = documents.filter(d => !d.type);
+            if (unlabeledDocs.length > 0) {
+                newErrors.documents = `Please label all ${unlabeledDocs.length} document(s) using the dropdown`;
+            } else {
+                // Check for Title Document OR Survey Plan
+                const hasTitleDoc = documents.some(d => d.type === "Title Document (C of O, Deed, etc.)");
+                const hasSurveyPlan = documents.some(d => d.type === "Survey Plan");
+                if (!hasTitleDoc && !hasSurveyPlan) {
+                    newErrors.documents = "Please upload either a Title Document or Survey Plan";
+                }
+            }
         }
 
-        // Check if all documents are labeled
-        const unlabeledDocs = documents.filter(d => !d.type);
-        if (unlabeledDocs.length > 0) {
-            newErrors.documents = `Please label all ${unlabeledDocs.length} document(s) using the dropdown`;
-        }
+        // PHOTO VALIDATION
+        if (photos.length < 3) {
+            newErrors.photos = "Please upload at least 3 photos";
+        } else {
+            // Check if all photos are labeled
+            const unlabeledPhotos = photos.filter(p => !p.label);
+            if (unlabeledPhotos.length > 0) {
+                newErrors.photos = `Please label all ${unlabeledPhotos.length} photo(s) using the dropdown below each image`;
+            } else {
+                // CONTEXTUAL VALIDATION BY PROPERTY TYPE
+                const exteriorLabels = ["Exterior Front", "Exterior Back", "Exterior Side", "Street View", "Estate/Development View", "Neighborhood", "Access Road", "Compound Entrance"];
+                const interiorLabels = ["Bedroom", "Master Bedroom", "Bathroom", "Living Room", "Kitchen", "Dining Room"];
+                const constructionLabels = ["Construction Progress"];
+                const landLabels = ["Land/Plot", "Site Plan"];
 
-        if (photos.length < 2) {
-            newErrors.photos = "Please upload at least 2 photos";
-        }
+                const exteriorPhotos = photos.filter(p => p.label && exteriorLabels.includes(p.label));
+                const interiorPhotos = photos.filter(p => p.label && interiorLabels.includes(p.label));
+                const constructionPhotos = photos.filter(p => p.label && constructionLabels.includes(p.label));
+                const landPhotos = photos.filter(p => p.label && landLabels.includes(p.label));
 
-        // Check if all photos are labeled
-        const unlabeledPhotos = photos.filter(p => !p.label);
-        if (unlabeledPhotos.length > 0) {
-            newErrors.photos = `Please label all ${unlabeledPhotos.length} photo(s) using the dropdown below each image`;
+                if (propertyFlowType === "completed") {
+                    if (exteriorPhotos.length < 2) {
+                        newErrors.photos = "Completed properties require at least 2 exterior photos";
+                    } else if (interiorPhotos.length < 4) {
+                        newErrors.photos = "Completed properties require at least 4 interior photos (bedrooms, bathrooms, living areas)";
+                    }
+                } else if (propertyFlowType === "off-plan") {
+                    if (constructionPhotos.length < 1) {
+                        newErrors.photos = "Off-plan properties require at least 1 construction progress photo";
+                    }
+                } else if (propertyFlowType === "land-only") {
+                    if (landPhotos.length < 2 && exteriorPhotos.length < 2) {
+                        newErrors.photos = "Land listings require at least 2 photos of the land/plot";
+                    }
+                    // Warn about survey plan for land
+                    const hasSurveyPlan = documents.some(d => d.type === "Survey Plan");
+                    if (!hasSurveyPlan && !newErrors.documents) {
+                        newErrors.documents = "Survey Plan is strongly recommended for land listings";
+                    }
+                }
+            }
         }
 
         setErrors(newErrors);
@@ -428,13 +514,29 @@ export function PropertyUploadWizard({
             if (response.success) {
                 setSavedListingId(response.data?.indaTag || response.data?._id);
                 setSavedListing(response.data);
+
+                // Check if location intelligence failed
+                if (response.locationIntelligenceStatus === "failed") {
+                    setShowLocationWarning(true);
+                }
+
                 setCurrentPhase("enhancement");
             } else {
                 throw new Error(response.message || "Failed to save listing");
             }
         } catch (error: any) {
             console.error("Failed to save listing:", error);
-            setErrors({ confirmation: error.message || "Failed to save listing. Please try again." });
+            const errorData = error.response?.data;
+
+            // Check for listing limit error
+            if (errorData?.code === "LISTING_LIMIT_REACHED") {
+                setLimitInfo({ limit: errorData.limit, plan: errorData.plan });
+                setShowLimitModal(true);
+            } else {
+                setErrors({
+                    confirmation: errorData?.message || error.message || "Failed to save listing. Please try again."
+                });
+            }
         } finally {
             setIsSaving(false);
         }
@@ -534,7 +636,66 @@ export function PropertyUploadWizard({
     // ============================================================================
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <>
+            {/* Listing Limit Modal */}
+            {showLimitModal && (
+                <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[60] p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
+                        <div className="flex items-center justify-center w-16 h-16 bg-amber-100 rounded-full mx-auto mb-4">
+                            <AlertTriangle className="w-8 h-8 text-amber-600" />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 text-center mb-2">
+                            Listing Limit Reached
+                        </h3>
+                        <p className="text-gray-600 text-center mb-6">
+                            You&apos;ve reached your {limitInfo?.plan ? limitInfo.plan.charAt(0).toUpperCase() + limitInfo.plan.slice(1) : "current"} plan limit of {limitInfo?.limit || 1} property listing{limitInfo?.limit === 1 ? "" : "s"}.
+                            Upgrade your plan to add more properties and unlock additional features.
+                        </p>
+                        <div className="space-y-3">
+                            <button
+                                onClick={() => {
+                                    setShowLimitModal(false);
+                                    router.push("/for-professionals#pricing");
+                                }}
+                                className="w-full py-3 bg-[#4ea8a1] text-white rounded-lg font-semibold hover:bg-[#3d9691] transition-colors"
+                            >
+                                View Upgrade Options
+                            </button>
+                            <button
+                                onClick={() => setShowLimitModal(false)}
+                                className="w-full py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+                            >
+                                Maybe Later
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Location Intelligence Warning Toast */}
+            {showLocationWarning && (
+                <div className="fixed top-4 right-4 z-[70] max-w-md animate-in slide-in-from-top-2 duration-300">
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg shadow-lg p-4">
+                        <div className="flex items-start gap-3">
+                            <Info className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                            <div className="flex-1">
+                                <p className="font-medium text-amber-900 text-sm">Location insights unavailable right now</p>
+                                <p className="text-amber-700 text-xs mt-1">
+                                    Your listing was saved successfully. Location data will be added automatically when available.
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setShowLocationWarning(false)}
+                                className="text-amber-600 hover:text-amber-800"
+                            >
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
                 {/* Header */}
                 <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
@@ -611,6 +772,9 @@ export function PropertyUploadWizard({
                             documents={documents}
                             photos={photos}
                             errors={errors}
+                            priceWarning={priceWarning}
+                            propertyFlowType={propertyFlowType}
+                            onPropertyFlowTypeChange={handlePropertyFlowTypeChange}
                             onPriceChange={handlePriceChange}
                             onBedroomsChange={handleBedroomsChange}
                             onBathroomsChange={handleBathroomsChange}
@@ -630,6 +794,7 @@ export function PropertyUploadWizard({
                             photos={photos}
                             onComplete={handleAnalysisComplete}
                             onError={handleAnalysisError}
+                            onBack={() => setCurrentPhase("upload")}
                         />
                     )}
 
@@ -711,6 +876,7 @@ export function PropertyUploadWizard({
                 </div>
             </div>
         </div>
+        </>
     );
 }
 

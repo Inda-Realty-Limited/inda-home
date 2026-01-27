@@ -70,5 +70,10 @@ export const ProListingsService = {
   updateListing: async (id: string, data: any) => {
     const response = await apiClient.put(`/api/listings/${id}`, data);
     return response.data;
+  },
+
+  refreshLocationIntelligence: async (indaTag: string) => {
+    const response = await apiClient.post(`/api/listings/${indaTag}/refresh-location`);
+    return response.data;
   }
 };
