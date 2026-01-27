@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import { FaArrowLeft, FaChevronDown } from 'react-icons/fa';
+import { FaArrowLeft, FaChevronDown, FaMapMarkerAlt, FaSync, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 import { ProListingsService } from '@/api/pro-listings';
 
 interface ListingFormData {
@@ -33,6 +33,9 @@ export default function EditListingPage() {
 
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [locationStatus, setLocationStatus] = useState<'success' | 'failed' | 'pending' | null>(null);
+    const [isRefreshingLocation, setIsRefreshingLocation] = useState(false);
+    const [locationRefreshResult, setLocationRefreshResult] = useState<{ success: boolean; message: string } | null>(null);
 
     const [formData, setFormData] = useState<ListingFormData>({
         title: '', type: '', location: '', price: '',
@@ -66,6 +69,15 @@ export default function EditListingPage() {
                         titleType: '', serviceCharge: '', furnishing: '', buildingPlan: '',
                         parking: '', power: '', water: '', encumbrances: '', estateName: ''
                     });
+                    // Track location intelligence status
+                    if (listing.locationIntelligenceStatus) {
+                        setLocationStatus(listing.locationIntelligenceStatus);
+                    } else if (listing.microlocationStd || listing.lga || listing.stateStd) {
+                        // If we have location data but no status, assume success
+                        setLocationStatus('success');
+                    } else {
+                        setLocationStatus('failed');
+                    }
                 }
             } catch (_error) {
                 console.error("Failed to fetch listing", _error);
@@ -79,6 +91,38 @@ export default function EditListingPage() {
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
         const { name, value } = e.target;
         setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleRefreshLocation = async () => {
+        if (!id || isRefreshingLocation) return;
+
+        setIsRefreshingLocation(true);
+        setLocationRefreshResult(null);
+
+        try {
+            const response = await ProListingsService.refreshLocationIntelligence(id as string);
+            if (response.success) {
+                setLocationStatus('success');
+                setLocationRefreshResult({
+                    success: true,
+                    message: 'Location data refreshed successfully!'
+                });
+            } else {
+                setLocationStatus('failed');
+                setLocationRefreshResult({
+                    success: false,
+                    message: response.message || 'Failed to refresh location data'
+                });
+            }
+        } catch (error: any) {
+            setLocationStatus('failed');
+            setLocationRefreshResult({
+                success: false,
+                message: error.response?.data?.message || 'Failed to refresh location data. Please try again.'
+            });
+        } finally {
+            setIsRefreshingLocation(false);
+        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -172,6 +216,64 @@ export default function EditListingPage() {
                                 <SelectGroup label="Status" name="status" value={formData.status} onChange={handleInputChange} options={['Active', 'Pending', 'Sold']} required />
                                 <SelectGroup label="Construction" name="constructionStatus" value={formData.constructionStatus} onChange={handleInputChange} options={['Completed', 'Under Construction', 'Off Plan']} required />
                             </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3 className="text-sm uppercase tracking-wide text-gray-400 font-bold mb-4 border-b pb-2">Location Intelligence</h3>
+                        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                    <div className={`p-2 rounded-full ${
+                                        locationStatus === 'success' ? 'bg-green-100' :
+                                        locationStatus === 'failed' ? 'bg-red-100' :
+                                        'bg-yellow-100'
+                                    }`}>
+                                        {locationStatus === 'success' ? (
+                                            <FaCheckCircle className="text-green-600" />
+                                        ) : locationStatus === 'failed' ? (
+                                            <FaExclamationTriangle className="text-red-500" />
+                                        ) : (
+                                            <FaMapMarkerAlt className="text-yellow-600" />
+                                        )}
+                                    </div>
+                                    <div>
+                                        <p className="font-medium text-gray-800">
+                                            {locationStatus === 'success' ? 'Location data available' :
+                                             locationStatus === 'failed' ? 'Location data unavailable' :
+                                             'Processing location data...'}
+                                        </p>
+                                        <p className="text-sm text-gray-500">
+                                            {locationStatus === 'success' ? 'Market insights and area data are enriched.' :
+                                             locationStatus === 'failed' ? 'Click refresh to try fetching location data again.' :
+                                             'Location intelligence is being processed.'}
+                                        </p>
+                                    </div>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={handleRefreshLocation}
+                                    disabled={isRefreshingLocation}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                                        isRefreshingLocation
+                                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                            : 'bg-inda-teal text-white hover:bg-teal-700'
+                                    }`}
+                                >
+                                    <FaSync className={isRefreshingLocation ? 'animate-spin' : ''} />
+                                    {isRefreshingLocation ? 'Refreshing...' : 'Refresh Location Data'}
+                                </button>
+                            </div>
+
+                            {locationRefreshResult && (
+                                <div className={`mt-3 p-3 rounded-lg text-sm ${
+                                    locationRefreshResult.success
+                                        ? 'bg-green-50 text-green-700 border border-green-200'
+                                        : 'bg-red-50 text-red-700 border border-red-200'
+                                }`}>
+                                    {locationRefreshResult.message}
+                                </div>
+                            )}
                         </div>
                     </div>
 

@@ -9,6 +9,8 @@ interface SimplePhotoUploadProps {
     onPhotoLabelChange: (photoId: string, label: PhotoLabel, customLabel?: string) => void;
     onPhotoRemove: (id: string) => void;
     error?: string;
+    propertyType: PropertyFlowType;
+    onPropertyTypeChange: (type: PropertyFlowType) => void;
 }
 
 
@@ -17,10 +19,11 @@ export function SimplePhotoUpload({
     onPhotoUpload,
     onPhotoLabelChange,
     onPhotoRemove,
-    error
+    error,
+    propertyType,
+    onPropertyTypeChange
 }: SimplePhotoUploadProps) {
     const [customLabels, setCustomLabels] = useState<Record<string, string>>({});
-    const [propertyType, setPropertyType] = useState<PropertyFlowType>("completed");
 
 
     const photoLabels: PhotoLabel[] = [
@@ -85,7 +88,7 @@ export function SimplePhotoUpload({
                 <div className="grid grid-cols-3 gap-3">
                     <button
                         type="button"
-                        onClick={() => setPropertyType("completed")}
+                        onClick={() => onPropertyTypeChange("completed")}
                         className={`p-3 rounded-lg border-2 transition-all ${propertyType === "completed"
                             ? "border-[#4ea8a1] bg-[#4ea8a1]/10"
                             : "border-gray-300 hover:border-gray-400"
@@ -101,7 +104,7 @@ export function SimplePhotoUpload({
 
                     <button
                         type="button"
-                        onClick={() => setPropertyType("off-plan")}
+                        onClick={() => onPropertyTypeChange("off-plan")}
                         className={`p-3 rounded-lg border-2 transition-all ${propertyType === "off-plan"
                             ? "border-[#f59e0b] bg-[#f59e0b]/10"
                             : "border-gray-300 hover:border-gray-400"
@@ -117,7 +120,7 @@ export function SimplePhotoUpload({
 
                     <button
                         type="button"
-                        onClick={() => setPropertyType("land-only")}
+                        onClick={() => onPropertyTypeChange("land-only")}
                         className={`p-3 rounded-lg border-2 transition-all ${propertyType === "land-only"
                             ? "border-green-600 bg-green-50"
                             : "border-gray-300 hover:border-gray-400"

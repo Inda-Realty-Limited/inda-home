@@ -1,11 +1,12 @@
-import { MapPin, Bed, Bath, ChevronRight, Building, Home } from "lucide-react";
+import { MapPin, Bed, Bath, ChevronRight, Building, Home, AlertTriangle } from "lucide-react";
 import { SimpleDocumentUpload } from "./SimpleDocumentUpload";
 import { SimplePhotoUpload } from "./SimplePhotoUpload";
 import {
     UploadedDocument,
     UploadedPhoto,
     DocumentType,
-    PhotoLabel
+    PhotoLabel,
+    PropertyFlowType
 } from "./types";
 
 const LAGOS_CITIES = [
@@ -28,6 +29,9 @@ interface Phase1UploadProps {
     documents: UploadedDocument[];
     photos: UploadedPhoto[];
     errors: { [key: string]: string };
+    priceWarning: string | null;
+    propertyFlowType: PropertyFlowType;
+    onPropertyFlowTypeChange: (type: PropertyFlowType) => void;
 
     onPriceChange: (value: number) => void;
     onDocumentUpload: (files: FileList | null) => void;
@@ -54,6 +58,9 @@ export function Phase1Upload({
     documents,
     photos,
     errors,
+    priceWarning,
+    propertyFlowType,
+    onPropertyFlowTypeChange,
     onPriceChange,
     onDocumentUpload,
     onDocumentTypeChange,
@@ -86,6 +93,8 @@ export function Phase1Upload({
                 onPhotoLabelChange={onPhotoLabelChange}
                 onPhotoRemove={onPhotoRemove}
                 error={errors.photos}
+                propertyType={propertyFlowType}
+                onPropertyTypeChange={onPropertyFlowTypeChange}
             />
 
             {/* Property Address */}
@@ -167,6 +176,12 @@ export function Phase1Upload({
                 </div>
                 {errors.askingPrice && (
                     <p className="text-sm text-red-600 mt-2">{errors.askingPrice}</p>
+                )}
+                {priceWarning && !errors.askingPrice && (
+                    <div className="flex items-start gap-2 mt-2 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+                        <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <p className="text-sm text-amber-700">{priceWarning}</p>
+                    </div>
                 )}
                 {askingPrice > 0 && (
                     <p className="text-sm text-gray-600 mt-2">

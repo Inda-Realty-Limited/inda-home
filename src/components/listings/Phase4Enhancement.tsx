@@ -91,7 +91,7 @@ export function Phase4Enhancement({
                 {/* Payment Plans */}
                 <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                     <div className="flex items-center gap-2 mb-3">
-                        <DollarSign className="w-5 h-5 text-[#4ea8a1]" />
+                        <span>₦</span>
                         <span className="font-medium text-gray-900">Payment Plans</span>
                         <span className="text-xs text-gray-500 bg-green-100 text-green-700 px-2 py-1 rounded">+35% inquiries</span>
                     </div>
