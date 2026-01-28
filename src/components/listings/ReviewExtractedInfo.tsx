@@ -46,6 +46,21 @@ export function ReviewExtractedInfo({
     "land-details"
   ]);
   const [editingField, setEditingField] = useState<string | null>(null);
+  const [editedValues, setEditedValues] = useState<Record<string, string>>({});
+
+  // Handle field edits - store locally and propagate to parent
+  const handleFieldEdit = (fieldKey: string, value: string) => {
+    setEditedValues(prev => ({ ...prev, [fieldKey]: value }));
+    onEdit(fieldKey, value);
+  };
+
+  // Get value with priority: edited > original, treating "Not detected" as empty
+  const getEditableValue = (fieldKey: string, originalValue: string | undefined | null): string => {
+    if (editedValues[fieldKey] !== undefined) {
+      return editedValues[fieldKey];
+    }
+    return originalValue || "Not detected";
+  };
 
 
   const toggleSection = (sectionId: string) => {
@@ -213,7 +228,7 @@ export function ReviewExtractedInfo({
 
   const EditableField = ({
     label,
-    value,
+    value: originalValue,
     fieldKey,
     multiline = false
   }: {
@@ -223,6 +238,12 @@ export function ReviewExtractedInfo({
     multiline?: boolean;
   }) => {
     const isEditing = editingField === fieldKey;
+    // Use edited value if available, otherwise use original
+    const displayValue = editedValues[fieldKey] !== undefined ? editedValues[fieldKey] : originalValue;
+    // For input, start with empty string if "Not detected", otherwise use current value
+    const inputValue = editedValues[fieldKey] !== undefined
+      ? editedValues[fieldKey]
+      : (originalValue === "Not detected" ? "" : originalValue);
 
 
     return (
@@ -233,24 +254,28 @@ export function ReviewExtractedInfo({
             multiline ? (
               <textarea
                 className="w-full px-3 py-2 border border-[#4ea8a1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4ea8a1]"
-                value={value}
-                onChange={(e) => onEdit(fieldKey, e.target.value)}
+                value={inputValue}
+                onChange={(e) => handleFieldEdit(fieldKey, e.target.value)}
                 onBlur={() => setEditingField(null)}
                 autoFocus
                 rows={3}
+                placeholder="Enter value..."
               />
             ) : (
               <input
                 type="text"
                 className="w-full px-3 py-2 border border-[#4ea8a1] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4ea8a1]"
-                value={value}
-                onChange={(e) => onEdit(fieldKey, e.target.value)}
+                value={inputValue}
+                onChange={(e) => handleFieldEdit(fieldKey, e.target.value)}
                 onBlur={() => setEditingField(null)}
                 autoFocus
+                placeholder="Enter value..."
               />
             )
           ) : (
-            <div className="text-base font-semibold text-gray-900">{value}</div>
+            <div className={`text-base font-semibold ${displayValue === "Not detected" ? "text-gray-400 italic" : "text-gray-900"}`}>
+              {displayValue || "Not detected"}
+            </div>
           )}
         </div>
         {!isEditing && (
