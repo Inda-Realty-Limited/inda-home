@@ -77,8 +77,94 @@ export function Phase2Processing({ documents, photos, onComplete, onError, onBac
                 setProgress(100);
                 setStep("Analysis complete!");
                 setStatus("success");
+
+                // Transform API response to match AIInferredData interface
+                const apiData = response.data.data;
+                const transformedData: AIInferredData = {
+                    // Map aggregated property data
+                    propertyType: apiData.aggregatedData?.propertyType,
+                    bedrooms: apiData.aggregatedData?.bedrooms,
+                    bathrooms: apiData.aggregatedData?.bathrooms,
+                    yearBuilt: apiData.aggregatedData?.yearBuilt,
+                    landSize: apiData.aggregatedData?.landSize,
+                    ownerName: apiData.aggregatedData?.ownerName,
+                    yearAcquired: apiData.aggregatedData?.yearAcquired,
+                    acquisitionMethod: apiData.aggregatedData?.acquisitionMethod,
+                    previousOwners: apiData.aggregatedData?.previousOwners,
+                    amenities: apiData.aggregatedData?.amenities,
+                    constructionStatus: apiData.aggregatedData?.constructionStatus,
+                    completionPercentage: apiData.aggregatedData?.completionPercentage,
+                    currentUse: apiData.aggregatedData?.currentUse,
+                    hasEncumbrances: apiData.aggregatedData?.hasEncumbrances,
+                    hasDisputes: apiData.aggregatedData?.hasDisputes,
+                    location: apiData.aggregatedData?.location,
+
+                    // Map document analysis data
+                    documentAnalysis: apiData.aggregatedData?.documentAnalysis || {
+                        titleType: apiData.aggregatedData?.titleType,
+                        state: apiData.aggregatedData?.state,
+                        lga: apiData.aggregatedData?.lga,
+                    },
+
+                    // Map photo analysis
+                    photoAnalysis: apiData.aggregatedData?.photoAnalysis,
+
+                    // Transform confidence - API returns flat overallConfidence, we need nested structure
+                    confidence: {
+                        propertyType: apiData.overallConfidence || 0,
+                        ownerName: apiData.overallConfidence || 0,
+                        landSize: apiData.overallConfidence || 0,
+                        bedrooms: apiData.overallConfidence || 0,
+                        overall: apiData.overallConfidence || 0,
+                    },
+
+                    // Transform flagsAndWarnings to flags array with proper structure
+                    // Handle both string and object formats from API
+                    flags: (apiData.flagsAndWarnings || []).map((warning: any) => {
+                        // If warning is already an object with message property
+                        if (typeof warning === 'object' && warning !== null) {
+                            const msg = (warning.message || warning.warning || JSON.stringify(warning)).toLowerCase();
+                            return {
+                                type: warning.type || (msg.includes('error') ? 'error' as const :
+                                      msg.includes('warning') ? 'warning' as const : 'info' as const),
+                                field: warning.field || warning.category || 'general',
+                                message: warning.message || warning.warning || JSON.stringify(warning),
+                                requiresVerification: warning.requiresVerification ||
+                                                     msg.includes('verification') ||
+                                                     msg.includes('unknown') ||
+                                                     msg.includes('refused'),
+                                sourceType: warning.sourceType as "document" | "photo" | undefined,
+                            };
+                        }
+                        // If warning is a string
+                        const warningStr = String(warning).toLowerCase();
+                        return {
+                            type: warningStr.includes('error') ? 'error' as const :
+                                  warningStr.includes('warning') ? 'warning' as const : 'info' as const,
+                            field: 'general',
+                            message: String(warning),
+                            requiresVerification: warningStr.includes('verification') ||
+                                                 warningStr.includes('unknown') ||
+                                                 warningStr.includes('refused'),
+                            sourceType: undefined,
+                        };
+                    }),
+
+                    // Store raw API response data for additional context
+                    _rawApiResponse: {
+                        documentCount: apiData.documentCount,
+                        documentTypes: apiData.documentTypes,
+                        riskScore: apiData.riskScore,
+                        riskLevel: apiData.riskLevel,
+                        verificationStatus: apiData.verificationStatus,
+                        crossValidationResults: apiData.crossValidationResults,
+                        recommendations: apiData.recommendations,
+                        extractions: apiData.extractions,
+                    }
+                };
+
                 setTimeout(() => {
-                    onComplete(response.data.data);
+                    onComplete(transformedData);
                 }, 500);
             } else {
                 throw new Error(response.data.message || "Analysis failed");
@@ -106,9 +192,9 @@ export function Phase2Processing({ documents, photos, onComplete, onError, onBac
                 const serverMessage = err.response?.data?.message || "";
                 if (serverMessage.includes("refused") || serverMessage.includes("policy")) {
                     errorInfo = {
-                        message: "Our AI couldn't process these documents. Please ensure no sensitive personal information is visible in photos.",
+                        message: "Document analysis encountered an issue. Try uploading a clearer scan or taking a new photo of the document with better lighting.",
                         type: "refusal",
-                        retryable: false
+                        retryable: true
                     };
                 } else {
                     errorInfo = {
@@ -204,8 +290,8 @@ export function Phase2Processing({ documents, photos, onComplete, onError, onBac
                 {!error.retryable && (
                     <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg max-w-md">
                         <p className="text-sm text-blue-800">
-                            <strong>Tip:</strong> Try removing any documents with visible personal information
-                            (ID cards, signatures) and upload again.
+                            <strong>Tip:</strong> Try uploading clearer photos or scans of your documents.
+                            Make sure the entire document is visible and the text is readable.
                         </p>
                     </div>
                 )}

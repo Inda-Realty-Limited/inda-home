@@ -175,7 +175,20 @@ export interface AIInferredData {
         field: string;
         message: string;
         requiresVerification: boolean;
+        sourceType?: "document" | "photo";
     }>;
+
+    // Raw API response data for additional context
+    _rawApiResponse?: {
+        documentCount?: number;
+        documentTypes?: string[];
+        riskScore?: number;
+        riskLevel?: string;
+        verificationStatus?: string;
+        crossValidationResults?: any;
+        recommendations?: any;
+        extractions?: any[];
+    };
 }
 
 export interface PropertyUploadData {

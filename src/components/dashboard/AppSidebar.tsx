@@ -21,11 +21,11 @@ interface MenuItem {
 const MENU_ITEMS: MenuItem[] = [
     { name: 'Home', icon: FaHome, href: '/dashboard' },
     { name: 'Channel Setup', icon: FaComment, href: '/channels' },
-    { name: 'Listings Manager', icon: FaListAlt, href: '/listings' },
+    // { name: 'Listings Manager', icon: FaListAlt, href: '/listings' },
     // { name: 'Insights', icon: FaLightbulb, href: '/insights' },
     // { name: 'Advertisement', icon: FaBullhorn, href: '/advertisement' },
     // { name: 'Portfolio Manager', icon: FaBriefcase, href: '/portfolio' },
-    { name: 'Reports Hub', icon: FaFileAlt, href: '/reports' },
+    // { name: 'Reports Hub', icon: FaFileAlt, href: '/reports' },
     // { name: 'Source', icon: FaSearch, href: '/source' },
     { name: 'Data Contribution', icon: FaUsers, href: '/contribute' },
     { name: 'Perks Hub', icon: FaGift, href: '/perks' },

@@ -7,6 +7,7 @@ import {
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import DashboardButton from '@/components/dashboard/DashboardButton';
 import { useAuth } from '@/contexts/AuthContext';
+import { PricingModal } from '@/components/dashboard/PricingModal';
 
 import { getProfile, updateProfile } from '@/api/profile';
 
@@ -102,6 +103,7 @@ const SettingsContent = () => {
     const [loading, setLoading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [status, setStatus] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+    const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
 
     // Notification preferences state
     const [prefs, setPrefs] = useState({
@@ -312,7 +314,7 @@ const SettingsContent = () => {
                                 <div className="mt-4">
                                     <DashboardButton
                                         variant="secondary"
-                                        onClick={() => window.location.href = '/for-professionals'}
+                                        onClick={() => setIsPricingModalOpen(true)}
                                     >
                                         View Pricing Plans
                                     </DashboardButton>
@@ -344,6 +346,11 @@ const SettingsContent = () => {
                     </div>
                 </div>
             </div>
+
+            <PricingModal
+                isOpen={isPricingModalOpen}
+                onClose={() => setIsPricingModalOpen(false)}
+            />
         </div>
     );
 };

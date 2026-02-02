@@ -297,6 +297,14 @@ export default function PublicPortfolio() {
                 ) : (
                     /* Main Portfolio View */
                     <>
+                        <button
+                            onClick={() => router.back()}
+                            className="flex items-center gap-2 text-[#4EA8A1] font-semibold mb-8 hover:underline group"
+                        >
+                            <FaArrowLeft className="group-hover:-translate-x-1 transition-transform" />
+                            Back
+                        </button>
+
                         <div className="mb-12 text-center">
                             <div className="w-20 h-20 rounded-full bg-[#4EA8A1]/10 flex items-center justify-center mx-auto mb-6">
                                 <FaBuilding className="text-3xl text-[#4EA8A1]" />

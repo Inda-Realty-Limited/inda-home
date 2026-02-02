@@ -7,6 +7,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 import { PlanGuard } from '@/components/dashboard/PlanGuard';
+import { PricingModal } from '@/components/dashboard/PricingModal';
 import { useState, useEffect } from 'react';
 import apiClient from '@/api';
 
@@ -35,6 +36,7 @@ export default function DashboardPage() {
     const [properties, setProperties] = useState<any[]>([]);
     const [channelData, setChannelData] = useState<any[]>(DEFAULT_CHANNEL_DATA);
     const [currentPage, setCurrentPage] = useState(1);
+    const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
     const propertiesPerPage = 5;
 
     const fetchStats = async () => {
@@ -137,17 +139,25 @@ export default function DashboardPage() {
 
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                                 {actions.map((action, idx) => (
-                                    <Link
-                                        key={idx}
-                                        href={action.href}
-                                        className={`flex flex-col gap-3 p-4 rounded-xl font-medium transition-all hover:scale-[1.02] active:scale-95 ${action.isSpecial
-                                            ? 'bg-[#E2E689] text-gray-900'
-                                            : 'bg-white/10 hover:bg-white/20'
-                                            }`}
-                                    >
-                                        <action.icon size={20} className={action.isSpecial ? 'text-gray-700' : ''} />
-                                        <span className="text-sm">{action.name}</span>
-                                    </Link>
+                                    action.isSpecial ? (
+                                        <button
+                                            key={idx}
+                                            onClick={() => setIsPricingModalOpen(true)}
+                                            className="flex flex-col gap-3 p-4 rounded-xl font-medium transition-all hover:scale-[1.02] active:scale-95 bg-[#E2E689] text-gray-900 text-left"
+                                        >
+                                            <action.icon size={20} className="text-gray-700" />
+                                            <span className="text-sm">{action.name}</span>
+                                        </button>
+                                    ) : (
+                                        <Link
+                                            key={idx}
+                                            href={action.href}
+                                            className="flex flex-col gap-3 p-4 rounded-xl font-medium transition-all hover:scale-[1.02] active:scale-95 bg-white/10 hover:bg-white/20"
+                                        >
+                                            <action.icon size={20} />
+                                            <span className="text-sm">{action.name}</span>
+                                        </Link>
+                                    )
                                 ))}
                             </div>
                         </div>
@@ -547,6 +557,11 @@ export default function DashboardPage() {
 
                     </div>
                 </div>
+
+                <PricingModal
+                    isOpen={isPricingModalOpen}
+                    onClose={() => setIsPricingModalOpen(false)}
+                />
             </DashboardLayout>
         </ProtectedRoute>
     );

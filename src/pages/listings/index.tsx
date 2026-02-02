@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
@@ -6,10 +6,18 @@ import { useAuth } from '@/contexts/AuthContext';
 import {
     FaBed, FaBath, FaRulerCombined, FaEye,
     FaPen, FaComment, FaTrash, FaSpinner, FaPlusCircle, FaMapMarkerAlt,
-    FaExternalLinkAlt, FaShareAlt, FaCheck
+    FaExternalLinkAlt, FaShareAlt, FaCheck, FaLock, FaRocket
 } from 'react-icons/fa';
 import { ProListingsService, Listing } from '@/api/pro-listings';
 import { PropertyUploadModal } from '@/components/listings/PropertyUploadModal';
+import { PricingModal } from '@/components/dashboard/PricingModal';
+
+// Plan listing limits
+const PLAN_LIMITS: Record<string, number> = {
+    free: 1,
+    pro: 20,
+    enterprise: Infinity,
+};
 
 
 export default function ListingsManagerPage() {
@@ -19,7 +27,21 @@ export default function ListingsManagerPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+    const [isLimitModalOpen, setIsLimitModalOpen] = useState(false);
+    const [isPricingModalOpen, setIsPricingModalOpen] = useState(false);
     const [copiedId, setCopiedId] = useState<string | null>(null);
+
+    const userPlan = user?.subscriptionPlan || 'free';
+    const listingLimit = PLAN_LIMITS[userPlan] || 1;
+    const hasReachedLimit = listings.length >= listingLimit;
+
+    const handleOpenUploadModal = useCallback(() => {
+        if (hasReachedLimit) {
+            setIsLimitModalOpen(true);
+        } else {
+            setIsUploadModalOpen(true);
+        }
+    }, [hasReachedLimit]);
 
     const handleCopyLink = (listingId: string) => {
         const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
@@ -30,12 +52,12 @@ export default function ListingsManagerPage() {
     };
 
     useEffect(() => {
-        if (router.query.add === 'true') {
-            setIsUploadModalOpen(true);
+        if (router.query.add === 'true' && !loading) {
+            handleOpenUploadModal();
             // Clear the query param to avoid re-opening on refresh
             router.replace('/listings', undefined, { shallow: true });
         }
-    }, [router.query.add, router]);
+    }, [router.query.add, router, loading, handleOpenUploadModal]);
 
     useEffect(() => {
         const fetchListings = async () => {
@@ -119,7 +141,7 @@ export default function ListingsManagerPage() {
                         <p className="text-sm text-gray-500 mt-1">Manage and track your property portfolio</p>
                     </div>
                     <button
-                        onClick={() => setIsUploadModalOpen(true)}
+                        onClick={handleOpenUploadModal}
                         className="bg-inda-teal text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-md hover:bg-teal-700 transition-all flex items-center gap-2"
                     >
                         <FaPlusCircle /> Create New Listing
@@ -145,7 +167,7 @@ export default function ListingsManagerPage() {
                                     You haven&apos;t created any listings yet. Start adding your properties to track them here.
                                 </p>
                                 <button
-                                    onClick={() => setIsUploadModalOpen(true)}
+                                    onClick={handleOpenUploadModal}
                                     className="bg-inda-teal text-white px-6 py-2 rounded-lg font-bold text-sm hover:bg-teal-700 transition-colors"
                                 >
                                     Create your first listing
@@ -267,6 +289,47 @@ export default function ListingsManagerPage() {
                     onPropertyAdded={handlePropertyAdded}
                 />
             )}
+
+            {isLimitModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 p-8 text-center">
+                        <div className="w-16 h-16 bg-inda-teal/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <FaLock className="text-inda-teal text-2xl" />
+                        </div>
+                        <h3 className="text-xl font-bold text-inda-dark mb-2">
+                            Listing Limit Reached
+                        </h3>
+                        <p className="text-gray-500 text-sm mb-2">
+                            You&apos;ve reached the maximum of <strong>{listingLimit} listing{listingLimit !== 1 ? 's' : ''}</strong> on the <strong className="capitalize">{userPlan}</strong> plan.
+                        </p>
+                        <p className="text-gray-500 text-sm mb-6">
+                            Upgrade your plan to add more properties and unlock advanced features.
+                        </p>
+                        <div className="flex flex-col gap-3">
+                            <button
+                                onClick={() => {
+                                    setIsLimitModalOpen(false);
+                                    setIsPricingModalOpen(true);
+                                }}
+                                className="inline-flex items-center justify-center gap-2 bg-inda-teal text-white px-8 py-3 rounded-xl font-bold hover:bg-teal-700 transition-all shadow-lg"
+                            >
+                                <FaRocket /> Upgrade Now
+                            </button>
+                            <button
+                                onClick={() => setIsLimitModalOpen(false)}
+                                className="text-gray-500 hover:text-gray-700 text-sm font-medium"
+                            >
+                                Maybe later
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <PricingModal
+                isOpen={isPricingModalOpen}
+                onClose={() => setIsPricingModalOpen(false)}
+            />
         </DashboardLayout>
     );
 }

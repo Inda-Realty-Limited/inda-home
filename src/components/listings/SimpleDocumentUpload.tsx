@@ -75,7 +75,7 @@ export function SimpleDocumentUpload({
                 <label htmlFor="documents" className="cursor-pointer">
                     <div className="flex flex-col items-center">
                         <FileText className="w-12 h-12 text-gray-400 mb-2" />
-                        <p className="text-sm font-medium text-gray-700">Click to upload documents</p>
+                        <p className="text-sm font-medium text-gray-700">Click to upload documents (title documents, survey plans etc.)</p>
                         <p className="text-xs text-gray-500 mt-1">PDF, JPG, PNG up to 10MB each</p>
                     </div>
                 </label>
