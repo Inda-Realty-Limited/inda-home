@@ -226,7 +226,7 @@ const ForProfessionals: React.FC = () => {
               className="text-lg md:text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed"
             >
               Buyers ask about flood risk, neighborhood growth, and legal history you don&apos;t have.
-              Deals die in 52 days of back-and-forth. We verify everything upfront.
+              Deals die in 52 days of back and forth. We verify everything upfront.
             </motion.p>
 
             <motion.div
@@ -346,7 +346,7 @@ const ForProfessionals: React.FC = () => {
                     <span className="text-red-400">18 days</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Back-and-forth on uncertainties</span>
+                    <span>Back and forth on uncertainties</span>
                     <span className="text-red-400">13 days</span>
                   </div>
                   <div className="pt-2 border-t border-red-500/20 flex justify-between font-medium">
@@ -477,16 +477,15 @@ const ForProfessionals: React.FC = () => {
             <div className="mb-8">
               <div className="text-6xl mb-6">"</div>
               <p className="text-2xl md:text-3xl lg:text-4xl text-gray-900 leading-snug mb-8">
-                We closed ₦340M in properties{" "}
-                <span className="text-[#50b8b1]">17 days faster</span> than our usual timeline.
-                Buyers trust the verified reports.
+                Buyers used to show up extremely skeptical. Now they come to viewings already 80% convinced, they've
+                    read the verified report, checked the scores, seen the analysis.
               </p>
             </div>
             <div className="flex items-center justify-center gap-3">
               <div className="w-12 h-12 bg-gradient-to-br from-[#50b8b1] to-[#3a9892] rounded-full" />
               <div className="text-left">
-                <div className="font-medium text-gray-900">Development Director</div>
-                <div className="text-sm text-gray-500">Developer, Ajah</div>
+                <div className="font-medium text-gray-900">Tunde Lawal</div>
+                <div className="text-sm text-gray-500">Oceanic Developers</div>
               </div>
             </div>
           </motion.div>
@@ -638,7 +637,7 @@ const ForProfessionals: React.FC = () => {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-[#50b8b1] mt-1">✓</span>
-                  <span>White-label reports</span>
+                  <span>White label reports</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-[#50b8b1] mt-1">✓</span>

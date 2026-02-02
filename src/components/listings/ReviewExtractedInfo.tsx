@@ -88,6 +88,24 @@ export function ReviewExtractedInfo({
     return Math.round(confidenceValues.reduce((a, b) => a + b, 0) / confidenceValues.length);
   };
 
+  // Get actual document types from uploaded documents
+  const getActualDocumentTypes = (): string[] => {
+    const uploadedTypes = data.documents
+      .map(d => d.type)
+      .filter((t): t is string => !!t && t !== 'Other');
+
+    // If we have API-detected types, merge them
+    const apiTypes = aiData?._rawApiResponse?.documentTypes?.filter(
+      (t: string) => t && t.toLowerCase() !== 'unknown'
+    ) || [];
+
+    // Combine and deduplicate
+    const allTypes = [...new Set([...uploadedTypes, ...apiTypes])];
+    return allTypes.length > 0 ? allTypes : ['No documents classified'];
+  };
+
+  const actualDocumentTypes = getActualDocumentTypes();
+
   // Map real data to UI structure - only use AI-extracted or user-confirmed data
   const displayData = {
     // PROPERTY IDENTIFICATION
@@ -217,11 +235,18 @@ export function ReviewExtractedInfo({
 
     // VERIFICATION STATUS
     verificationStatus: {
+      // Documents count - use uploaded documents array (legal docs only, not photos)
       documentsVerified: data.documents.filter(d => d.type).length,
       totalDocuments: data.documents.length,
+      // Photos count - use uploaded photos array
       photosAnalyzed: data.photos.length,
-      overallConfidence: calculateOverallConfidence(),
-      flaggedIssues: aiData?.flags || []
+      // Use transformed confidence or calculated confidence
+      overallConfidence: aiData?.confidence?.overall ?? calculateOverallConfidence(),
+      flaggedIssues: aiData?.flags || [],
+      // Additional risk info from API
+      riskScore: aiData?._rawApiResponse?.riskScore,
+      riskLevel: aiData?._rawApiResponse?.riskLevel,
+      documentTypes: aiData?._rawApiResponse?.documentTypes || data.documents.map(d => d.type).filter(Boolean),
     }
   };
 
@@ -357,15 +382,25 @@ export function ReviewExtractedInfo({
 
 
           {/* Overall Status */}
-          <div className="bg-gradient-to-br from-green-50 to-white border border-green-200 rounded-xl p-6">
+          <div className={`bg-gradient-to-br ${
+            displayData.verificationStatus.flaggedIssues.length > 0 || displayData.verificationStatus.riskLevel === 'high'
+              ? 'from-amber-50 to-white border-amber-200'
+              : 'from-green-50 to-white border-green-200'
+          } border rounded-xl p-6`}>
             <div className="grid md:grid-cols-4 gap-6">
               <div>
                 <div className="text-sm text-gray-600 mb-1">Overall Confidence</div>
-                <div className="text-3xl font-bold text-green-600">{displayData.verificationStatus.overallConfidence}%</div>
+                <div className={`text-3xl font-bold ${
+                  displayData.verificationStatus.overallConfidence >= 70 ? 'text-green-600' :
+                  displayData.verificationStatus.overallConfidence >= 40 ? 'text-amber-600' : 'text-red-600'
+                }`}>{displayData.verificationStatus.overallConfidence}%</div>
               </div>
               <div>
                 <div className="text-sm text-gray-600 mb-1">Documents Verified</div>
-                <div className="text-3xl font-bold text-gray-900">
+                <div className={`text-3xl font-bold ${
+                  displayData.verificationStatus.documentsVerified === displayData.verificationStatus.totalDocuments
+                    ? 'text-green-600' : 'text-amber-600'
+                }`}>
                   {displayData.verificationStatus.documentsVerified}/{displayData.verificationStatus.totalDocuments}
                 </div>
               </div>
@@ -375,17 +410,94 @@ export function ReviewExtractedInfo({
               </div>
               <div>
                 <div className="text-sm text-gray-600 mb-1">Flagged Issues</div>
-                <div className="text-3xl font-bold text-gray-900">{displayData.verificationStatus.flaggedIssues.length}</div>
+                <div className={`text-3xl font-bold ${
+                  displayData.verificationStatus.flaggedIssues.length > 0 ? 'text-amber-600' : 'text-green-600'
+                }`}>{displayData.verificationStatus.flaggedIssues.length}</div>
               </div>
             </div>
 
-
-            {displayData.verificationStatus.flaggedIssues.length === 0 && (
+            {displayData.verificationStatus.flaggedIssues.length === 0 ? (
               <div className="mt-4 flex items-center gap-2 text-green-700">
                 <CheckCircle2 className="w-5 h-5" />
                 <span className="text-sm font-semibold">All data looks good! No issues detected.</span>
               </div>
-            )}
+            ) : (() => {
+              // Group issues by source type
+              const documentIssues = displayData.verificationStatus.flaggedIssues.filter(
+                (f: any) => f.sourceType === 'document'
+              );
+              const photoIssues = displayData.verificationStatus.flaggedIssues.filter(
+                (f: any) => f.sourceType === 'photo'
+              );
+              const otherIssues = displayData.verificationStatus.flaggedIssues.filter(
+                (f: any) => !f.sourceType || (f.sourceType !== 'document' && f.sourceType !== 'photo')
+              );
+
+              return (
+                <div className="mt-4 space-y-3">
+                  <div className="flex items-center gap-2 text-amber-700">
+                    <AlertTriangle className="w-5 h-5" />
+                    <span className="text-sm font-semibold">
+                      {displayData.verificationStatus.flaggedIssues.length} issue{displayData.verificationStatus.flaggedIssues.length !== 1 ? 's' : ''} detected - please review
+                    </span>
+                  </div>
+                  <div className="mt-2 max-h-48 overflow-y-auto space-y-3">
+                    {/* Document Issues */}
+                    {documentIssues.length > 0 && (
+                      <div>
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <FileText className="w-3.5 h-3.5 text-gray-500" />
+                          <span className="text-xs font-medium text-gray-600">Document Issues ({documentIssues.length})</span>
+                        </div>
+                        <div className="space-y-1">
+                          {documentIssues.map((flag: any, idx: number) => (
+                            <div key={`doc-${idx}`} className="text-xs text-amber-800 bg-amber-100 rounded px-2 py-1">
+                              {typeof flag === 'string' ? flag : flag.message}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Photo Issues */}
+                    {photoIssues.length > 0 && (
+                      <div>
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <ImageIcon className="w-3.5 h-3.5 text-gray-500" />
+                          <span className="text-xs font-medium text-gray-600">Photo Issues ({photoIssues.length})</span>
+                        </div>
+                        <div className="space-y-1">
+                          {photoIssues.map((flag: any, idx: number) => (
+                            <div key={`photo-${idx}`} className="text-xs text-amber-800 bg-amber-100 rounded px-2 py-1">
+                              {typeof flag === 'string' ? flag : flag.message}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Other/General Issues */}
+                    {otherIssues.length > 0 && (
+                      <div>
+                        {(documentIssues.length > 0 || photoIssues.length > 0) && (
+                          <div className="flex items-center gap-1.5 mb-1.5">
+                            <Info className="w-3.5 h-3.5 text-gray-500" />
+                            <span className="text-xs font-medium text-gray-600">General Issues ({otherIssues.length})</span>
+                          </div>
+                        )}
+                        <div className="space-y-1">
+                          {otherIssues.map((flag: any, idx: number) => (
+                            <div key={`other-${idx}`} className="text-xs text-amber-800 bg-amber-100 rounded px-2 py-1">
+                              {typeof flag === 'string' ? flag : flag.message}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
 
@@ -439,7 +551,7 @@ export function ReviewExtractedInfo({
                     <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-sm font-semibold text-blue-900 mb-1">Source Documents</p>
-                      <p className="text-xs text-blue-800">Certificate of Occupancy, Building Approval, Utility Bills</p>
+                      <p className="text-xs text-blue-800">{actualDocumentTypes.join(', ')}</p>
                     </div>
                   </div>
                 </div>
@@ -522,7 +634,7 @@ export function ReviewExtractedInfo({
                     <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-sm font-semibold text-blue-900 mb-1">Source Documents</p>
-                      <p className="text-xs text-blue-800">Certificate of Occupancy, Deed of Assignment, Governor's Consent, Power of Attorney</p>
+                      <p className="text-xs text-blue-800">{actualDocumentTypes.join(', ')}</p>
                     </div>
                   </div>
                 </div>
@@ -592,7 +704,7 @@ export function ReviewExtractedInfo({
                     <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-sm font-semibold text-blue-900 mb-1">Source Documents</p>
-                      <p className="text-xs text-blue-800">Survey Plan (Primary), Certificate of Occupancy</p>
+                      <p className="text-xs text-blue-800">{actualDocumentTypes.join(', ')}</p>
                     </div>
                   </div>
                 </div>
@@ -649,7 +761,7 @@ export function ReviewExtractedInfo({
                     <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-sm font-semibold text-blue-900 mb-1">Source Documents</p>
-                      <p className="text-xs text-blue-800">Certificate of Occupancy, Deed of Sublease, Ground Rent Receipt</p>
+                      <p className="text-xs text-blue-800">{actualDocumentTypes.join(', ')}</p>
                     </div>
                   </div>
                 </div>
@@ -722,7 +834,7 @@ export function ReviewExtractedInfo({
                     <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-sm font-semibold text-blue-900 mb-1">Source Documents</p>
-                      <p className="text-xs text-blue-800">Purchase Receipt, Deed of Assignment, Tax Receipt</p>
+                      <p className="text-xs text-blue-800">{actualDocumentTypes.join(', ')}</p>
                     </div>
                   </div>
                 </div>
@@ -785,7 +897,7 @@ export function ReviewExtractedInfo({
                     <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-sm font-semibold text-blue-900 mb-1">Source Documents</p>
-                      <p className="text-xs text-blue-800">Building Approval, Development Permit</p>
+                      <p className="text-xs text-blue-800">{actualDocumentTypes.join(', ')}</p>
                     </div>
                   </div>
                 </div>
@@ -852,7 +964,7 @@ export function ReviewExtractedInfo({
                     <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-sm font-semibold text-blue-900 mb-1">Source Documents</p>
-                      <p className="text-xs text-blue-800">Utility Bills (NEPA/EKEDC), Water Bills</p>
+                      <p className="text-xs text-blue-800">{actualDocumentTypes.join(', ')}</p>
                     </div>
                   </div>
                 </div>
@@ -947,7 +1059,12 @@ export function ReviewExtractedInfo({
                     <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                     <div>
                       <p className="text-sm font-semibold text-blue-900 mb-1">Source</p>
-                      <p className="text-xs text-blue-800">Computer Vision Analysis of Property Photos + Building Approval Cross-Verification</p>
+                      <p className="text-xs text-blue-800">
+                        Computer Vision Analysis of {displayData.verificationStatus.photosAnalyzed} Property Photos
+                        {actualDocumentTypes.length > 0 && actualDocumentTypes[0] !== 'No documents classified' &&
+                          ` + ${actualDocumentTypes.join(', ')} Cross-Verification`
+                        }
+                      </p>
                     </div>
                   </div>
                 </div>

@@ -41,9 +41,64 @@ export function Phase5Complete({
     const missingFields = uploadData.aiInferredData?.flags
         ?.filter((f: any) => f.requiresVerification)
         .map((f: any) => f.field) || [];
-    const completeness = Math.round(
-        ((uploadData.confirmedData ? Object.keys(uploadData.confirmedData).length : 0) / 8) * 100
-    );
+
+    // Get data from savedListing (actual saved data) with fallback to uploadData
+    const displayPrice = savedListing?.purchasePrice
+        || savedListing?.priceNGN
+        || uploadData.askingPrice
+        || 0;
+    const displayLocation = savedListing?.fullAddress
+        || savedListing?.address
+        || savedListing?.microlocation
+        || uploadData.address
+        || "N/A";
+    const displayPropertyType = savedListing?.propertyType
+        || uploadData.confirmedData?.propertyType
+        || "N/A";
+
+    // Calculate tiered completeness with weighted categories
+    const calculateCompleteness = () => {
+        const isFilled = (value: any) => value !== undefined && value !== null && value !== "" && value !== 0;
+        const hasItems = (arr: any[] | undefined) => Array.isArray(arr) && arr.length > 0;
+
+        // ESSENTIAL (40% weight) - Property type, Price, Address, Photos
+        const essentialFields = [
+            isFilled(savedListing?.propertyType || uploadData.confirmedData?.propertyType),
+            isFilled(savedListing?.purchasePrice || savedListing?.priceNGN || uploadData.askingPrice),
+            isFilled(savedListing?.fullAddress || savedListing?.address || uploadData.address),
+            hasItems(savedListing?.images) || hasItems(uploadData.photos),
+        ];
+        const essentialScore = (essentialFields.filter(Boolean).length / essentialFields.length) * 40;
+
+        // PROPERTY DETAILS (25% weight) - Bedrooms, Bathrooms, Size, Year built, Features
+        const detailFields = [
+            isFilled(savedListing?.bedrooms || uploadData.confirmedData?.bedrooms),
+            isFilled(savedListing?.bathrooms || uploadData.confirmedData?.bathrooms),
+            isFilled(savedListing?.size || uploadData.confirmedData?.landSize),
+            isFilled(savedListing?.buildYear || uploadData.aiInferredData?.yearBuilt),
+            hasItems(savedListing?.features) || hasItems(savedListing?.amenities) || hasItems(uploadData.aiInferredData?.amenities),
+        ];
+        const detailScore = (detailFields.filter(Boolean).length / detailFields.length) * 25;
+
+        // LEGAL/DOCUMENTS (20% weight) - Documents uploaded, Title type, Owner name
+        const legalFields = [
+            hasItems(savedListing?.legalDocs) || hasItems(uploadData.documents),
+            isFilled(savedListing?.titleType || uploadData.confirmedData?.titleType || uploadData.aiInferredData?.documentAnalysis?.titleType),
+            isFilled(savedListing?.ownerName || uploadData.aiInferredData?.ownerName),
+        ];
+        const legalScore = (legalFields.filter(Boolean).length / legalFields.length) * 20;
+
+        // ENHANCED (15% weight) - Virtual tour, Description, Construction status
+        const enhancedFields = [
+            isFilled(savedListing?.virtualTourUrl || uploadData.enhancedData?.virtualTourUrl),
+            isFilled(savedListing?.description),
+            isFilled(savedListing?.constructionStatus || uploadData.aiInferredData?.constructionStatus),
+        ];
+        const enhancedScore = (enhancedFields.filter(Boolean).length / enhancedFields.length) * 15;
+
+        return Math.round(essentialScore + detailScore + legalScore + enhancedScore);
+    };
+    const completeness = calculateCompleteness();
 
 
     return (
@@ -114,22 +169,27 @@ export function Phase5Complete({
                 <div className="grid grid-cols-2 gap-4 mb-4">
                     <div>
                         <p className="text-xs text-gray-500 mb-1">Property Type</p>
-                        <p className="font-medium text-gray-900">{uploadData.confirmedData?.propertyType || "N/A"}</p>
+                        <p className="font-medium text-gray-900">{displayPropertyType}</p>
                     </div>
                     <div>
                         <p className="text-xs text-gray-500 mb-1">Price</p>
-                        <p className="font-medium text-gray-900">₦{uploadData.askingPrice.toLocaleString()}</p>
+                        <p className="font-medium text-gray-900">
+                            ₦{typeof displayPrice === 'string'
+                                ? parseInt(displayPrice.replace(/[^0-9]/g, '') || '0').toLocaleString()
+                                : displayPrice.toLocaleString()}
+                        </p>
                     </div>
                     <div>
                         <p className="text-xs text-gray-500 mb-1">Location</p>
-                        <p className="font-medium text-gray-900">{uploadData.address}</p>
+                        <p className="font-medium text-gray-900">{displayLocation}</p>
                     </div>
                     <div>
                         <p className="text-xs text-gray-500 mb-1">Completeness</p>
-                        <p className="font-medium text-gray-900">{completeness}%</p>
+                        <p className={`font-medium ${completeness >= 80 ? 'text-green-600' : completeness >= 60 ? 'text-amber-600' : 'text-red-600'}`}>
+                            {completeness}%
+                        </p>
                     </div>
                 </div>
-
 
                 {missingFields.length > 0 && (
                     <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">

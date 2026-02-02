@@ -14,3 +14,5 @@ Automated tests are not yet wired. When adding coverage, colocate React Testing 
 
 ## Commit & Pull Request Guidelines
 Use conventional commits (`feat:`, `fix:`, `chore:`) as seen in history, keeping messages imperative and referencing tickets when available (`feat: add receipt modal (INDA-123)`). Each PR should outline the change set, list verification steps (`npm run lint`, manual QA), and attach visual diffs for UI updates. Request reviews from the relevant owner and confirm CI passes before merging
+
+this is a greenfiled project, give eme clean code that works, no need for backwards compatibility

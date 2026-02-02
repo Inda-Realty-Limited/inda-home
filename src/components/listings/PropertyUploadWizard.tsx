@@ -43,7 +43,9 @@ import {
     X,
     ArrowLeft,
     AlertTriangle,
-    Info
+    Info,
+    Save,
+    Loader2
 } from "lucide-react";
 import { Phase1Upload } from "./Phase1Upload";
 import { Phase2Processing } from "./Phase2Processing";
@@ -415,6 +417,12 @@ export function PropertyUploadWizard({
 
     const handlePhase1Submit = () => {
         if (validatePhase1()) {
+            // Sync the entered address and price to uploadData before proceeding
+            setUploadData(prev => ({
+                ...prev,
+                address: address,
+                askingPrice: askingPrice
+            }));
             setCurrentPhase("processing");
         }
     };
@@ -602,8 +610,44 @@ export function PropertyUploadWizard({
         setCurrentPhase("preview");
     };
 
-    const handlePublishFromPreview = () => {
-        setCurrentPhase("complete");
+    const handlePublishFromPreview = async () => {
+        if (!savedListingId) {
+            setCurrentPhase("complete");
+            return;
+        }
+
+        setIsSaving(true);
+        try {
+            // Update listing status to published
+            await ProListingsService.updateListing(savedListingId, { status: "published" });
+            setCurrentPhase("complete");
+        } catch (error: any) {
+            console.error("Failed to publish listing:", error);
+            setErrors({ preview: error.message || "Failed to publish listing" });
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleSaveAsDraft = async () => {
+        if (!savedListingId) {
+            // No listing saved yet, just close
+            onComplete(uploadData);
+            return;
+        }
+
+        setIsSaving(true);
+        try {
+            // Ensure listing status is draft
+            await ProListingsService.updateListing(savedListingId, { status: "draft" });
+            // Navigate to listings page or close
+            router.push("/listings");
+        } catch (error: any) {
+            console.error("Failed to save as draft:", error);
+            setErrors({ preview: error.message || "Failed to save draft" });
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     const handleEditFromPreview = () => {
@@ -800,7 +844,11 @@ export function PropertyUploadWizard({
 
                     {currentPhase === "confirmation" && uploadData.aiInferredData && (
                         <ReviewExtractedInfo
-                            data={uploadData}
+                            data={{
+                                ...uploadData,
+                                documents,  // Use actual uploaded documents from state
+                                photos,     // Use actual uploaded photos from state
+                            }}
                             onEdit={handleConfirmField}
                             onConfirm={handlePhase3Submit}
                             onBack={() => setCurrentPhase("upload")}
@@ -845,21 +893,46 @@ export function PropertyUploadWizard({
                                 />
                             </div>
 
+                            {/* Error Message */}
+                            {errors.preview && (
+                                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                                    {errors.preview}
+                                </div>
+                            )}
+
                             {/* Action Buttons */}
                             <div className="flex items-center gap-3 pt-4 border-t border-gray-200">
                                 <button
                                     onClick={handleEditFromPreview}
-                                    className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium flex items-center gap-2"
+                                    disabled={isSaving}
+                                    className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium flex items-center gap-2 disabled:opacity-50"
                                 >
                                     <ArrowLeft className="w-5 h-5" />
                                     Edit & Improve
                                 </button>
                                 <button
-                                    onClick={handlePublishFromPreview}
-                                    className="flex-1 px-6 py-3 bg-[#4ea8a1] text-white rounded-lg hover:bg-[#3d9691] font-medium flex items-center justify-center gap-2"
+                                    onClick={handleSaveAsDraft}
+                                    disabled={isSaving}
+                                    className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium flex items-center gap-2 disabled:opacity-50"
                                 >
-                                    <CheckCircle2 className="w-5 h-5" />
-                                    Looks Good - Publish Property
+                                    {isSaving ? (
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                    ) : (
+                                        <Save className="w-5 h-5" />
+                                    )}
+                                    Save as Draft
+                                </button>
+                                <button
+                                    onClick={handlePublishFromPreview}
+                                    disabled={isSaving}
+                                    className="flex-1 px-6 py-3 bg-[#4ea8a1] text-white rounded-lg hover:bg-[#3d9691] font-medium flex items-center justify-center gap-2 disabled:opacity-50"
+                                >
+                                    {isSaving ? (
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                    ) : (
+                                        <CheckCircle2 className="w-5 h-5" />
+                                    )}
+                                    Publish Now
                                 </button>
                             </div>
                         </div>
