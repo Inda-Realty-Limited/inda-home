@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { useRouter } from 'next/router';
 import { Card } from "@/components/ui/card";
 import {
   Eye,
@@ -7,8 +8,13 @@ import {
   Lock,
   EyeOff,
   Check,
-  Phone
+  Phone,
+  ExternalLink,
+  Copy,
+  Loader2,
+  CheckCircle2
 } from "lucide-react";
+import { ListingSettingsService } from "@/api/listing-hub";
 
 // ============================================================================
 // TYPES
@@ -40,7 +46,11 @@ export interface BuyerPreviewMetrics {
 }
 
 interface BuyerPreviewTabProps {
-  property: any;
+  property: {
+    id: string;
+    address?: string;
+    [key: string]: any;
+  };
   settings: BuyerPreviewSettings;
   metrics: BuyerPreviewMetrics;
   onSettingsChange: (updates: Partial<BuyerPreviewSettings>) => void;
@@ -141,19 +151,21 @@ interface VisibilityModeCardProps {
   mode: typeof visibilityModes[number];
   isSelected: boolean;
   onSelect: () => void;
+  isSaving?: boolean;
 }
 
-function VisibilityModeCard({ mode, isSelected, onSelect }: VisibilityModeCardProps) {
+function VisibilityModeCard({ mode, isSelected, onSelect, isSaving }: VisibilityModeCardProps) {
   const IconComponent = mode.icon;
 
   return (
     <button
       onClick={onSelect}
+      disabled={isSaving}
       className={`w-full text-left p-5 rounded-xl border-2 transition-all ${
         isSelected
           ? 'border-[#4ea8a1] bg-teal-50/30'
           : 'border-gray-200 bg-white hover:border-gray-300'
-      }`}
+      } ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
@@ -213,10 +225,83 @@ function VisibilityModeCard({ mode, isSelected, onSelect }: VisibilityModeCardPr
 // ============================================================================
 
 export function BuyerPreviewTab({ property, settings, metrics, onSettingsChange }: BuyerPreviewTabProps) {
+  const router = useRouter();
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [copied, setCopied] = useState(false);
+
   const selectedMode = visibilityModes.find(m => m.id === settings.visibilityMode) || visibilityModes[1];
+
+  // Generate preview URL
+  const previewUrl = typeof window !== 'undefined'
+    ? `${window.location.origin}/property/${property.id}`
+    : `/property/${property.id}`;
+
+  const handleSettingsChange = async (updates: Partial<BuyerPreviewSettings>) => {
+    setIsSaving(true);
+    setSaveSuccess(false);
+
+    try {
+      // Update local state immediately for responsiveness
+      onSettingsChange(updates);
+
+      // Save to backend
+      const success = await ListingSettingsService.saveSettings(property.id, updates);
+
+      if (success) {
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 2000);
+      }
+    } catch (error) {
+      console.error('Failed to save settings:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(previewUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      // Fallback for browsers that don't support clipboard API
+      const textArea = document.createElement('textarea');
+      textArea.value = previewUrl;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handlePreview = () => {
+    window.open(previewUrl, '_blank');
+  };
 
   return (
     <div className="space-y-6">
+      {/* Save Status Indicator */}
+      {(isSaving || saveSuccess) && (
+        <div className={`fixed top-4 right-4 z-50 px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 transition-all ${
+          saveSuccess ? 'bg-green-500 text-white' : 'bg-gray-800 text-white'
+        }`}>
+          {isSaving ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Saving...</span>
+            </>
+          ) : (
+            <>
+              <CheckCircle2 className="w-4 h-4" />
+              <span>Saved!</span>
+            </>
+          )}
+        </div>
+      )}
+
       {/* Current Mode Banner */}
       <Card className="overflow-hidden">
         <div className="bg-gradient-to-r from-teal-50 to-teal-100/50 p-5">
@@ -237,31 +322,65 @@ export function BuyerPreviewTab({ property, settings, metrics, onSettingsChange 
                 <p className="text-sm text-gray-600">{selectedMode.description}</p>
               </div>
             </div>
-            <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
-              <Eye className="w-4 h-4" />
-              Preview
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleCopyLink}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                {copied ? (
+                  <>
+                    <CheckCircle2 className="w-4 h-4 text-green-500" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-4 h-4" />
+                    Copy Link
+                  </>
+                )}
+              </button>
+              <button
+                onClick={handlePreview}
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                <Eye className="w-4 h-4" />
+                Preview
+                <ExternalLink className="w-3 h-3" />
+              </button>
+            </div>
           </div>
 
           {/* Metrics Row */}
           <div className="grid grid-cols-4 gap-6 mt-6">
             <div>
-              <div className="text-2xl font-bold text-gray-900">{metrics.uniqueViewers}</div>
+              <div className="text-2xl font-bold text-gray-900">{metrics.uniqueViewers.toLocaleString()}</div>
               <div className="text-sm text-gray-600">Unique Viewers</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-gray-900">{metrics.leadsCaptured}</div>
+              <div className="text-2xl font-bold text-gray-900">{metrics.leadsCaptured.toLocaleString()}</div>
               <div className="text-sm text-gray-600">Leads Captured</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-gray-900">{metrics.reportUnlocks}</div>
+              <div className="text-2xl font-bold text-gray-900">{metrics.reportUnlocks.toLocaleString()}</div>
               <div className="text-sm text-gray-600">Reports Unlocked</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-[#4ea8a1]">{metrics.conversionRate}%</div>
+              <div className="text-2xl font-bold text-[#4ea8a1]">{metrics.conversionRate.toFixed(1)}%</div>
               <div className="text-sm text-gray-600">Conversion Rate</div>
             </div>
           </div>
+
+          {/* Share URL */}
+          {settings.visibilityMode !== 'hidden' && (
+            <div className="mt-4 p-3 bg-white/60 rounded-lg">
+              <p className="text-xs text-gray-500 mb-1">Share URL:</p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 text-sm text-gray-700 bg-white px-3 py-1.5 rounded border border-gray-200 truncate">
+                  {previewUrl}
+                </code>
+              </div>
+            </div>
+          )}
         </div>
       </Card>
 
@@ -278,7 +397,8 @@ export function BuyerPreviewTab({ property, settings, metrics, onSettingsChange 
               key={mode.id}
               mode={mode}
               isSelected={settings.visibilityMode === mode.id}
-              onSelect={() => onSettingsChange({ visibilityMode: mode.id })}
+              onSelect={() => handleSettingsChange({ visibilityMode: mode.id })}
+              isSaving={isSaving}
             />
           ))}
         </div>
@@ -300,10 +420,11 @@ export function BuyerPreviewTab({ property, settings, metrics, onSettingsChange 
               </div>
             </div>
             <button
-              onClick={() => onSettingsChange({ requirePhone: !settings.requirePhone })}
+              onClick={() => handleSettingsChange({ requirePhone: !settings.requirePhone })}
+              disabled={isSaving}
               className={`relative w-12 h-6 rounded-full transition-colors ${
                 settings.requirePhone ? 'bg-[#4ea8a1]' : 'bg-gray-300'
-              }`}
+              } ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <span
                 className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-transform shadow-sm ${
@@ -314,6 +435,33 @@ export function BuyerPreviewTab({ property, settings, metrics, onSettingsChange 
           </div>
         </Card>
       )}
+
+      {/* Quick Stats Summary */}
+      <Card className="p-5 bg-gray-50">
+        <h4 className="font-medium text-gray-900 mb-3">Performance Summary</h4>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <div className="text-sm text-gray-600">Total Views</div>
+            <div className="text-lg font-bold text-gray-900">{metrics.totalViews.toLocaleString()}</div>
+          </div>
+          <div>
+            <div className="text-sm text-gray-600">Avg. Engagement</div>
+            <div className="text-lg font-bold text-gray-900">{Math.floor(metrics.averageEngagement / 60)}m {metrics.averageEngagement % 60}s</div>
+          </div>
+          <div>
+            <div className="text-sm text-gray-600">Lead Rate</div>
+            <div className="text-lg font-bold text-gray-900">
+              {metrics.uniqueViewers > 0 ? ((metrics.leadsCaptured / metrics.uniqueViewers) * 100).toFixed(1) : 0}%
+            </div>
+          </div>
+          <div>
+            <div className="text-sm text-gray-600">Unlock Rate</div>
+            <div className="text-lg font-bold text-gray-900">
+              {metrics.leadsCaptured > 0 ? ((metrics.reportUnlocks / metrics.leadsCaptured) * 100).toFixed(1) : 0}%
+            </div>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 }

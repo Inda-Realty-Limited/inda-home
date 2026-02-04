@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
-import { AlertCircle, Send } from "lucide-react";
+import { AlertCircle, Send, CheckCircle2 } from "lucide-react";
+import { DisputeService } from "@/api/listing-hub";
 
 const DISPUTE_CATEGORIES = [
   { value: '', label: '-- Select a category --' },
@@ -15,14 +16,24 @@ const DISPUTE_CATEGORIES = [
 ];
 
 interface DisputeReportSectionProps {
-  onSubmit?: (data: { category: string; explanation: string }) => void;
+  listingId: string;
+  userId?: string;
+  onSubmitSuccess?: (disputeId: string) => void;
+  onSubmitError?: (error: string) => void;
 }
 
-export function DisputeReportSection({ onSubmit }: DisputeReportSectionProps) {
+export function DisputeReportSection({
+  listingId,
+  userId,
+  onSubmitSuccess,
+  onSubmitError
+}: DisputeReportSectionProps) {
   const [category, setCategory] = useState('');
   const [explanation, setExplanation] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [disputeId, setDisputeId] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,24 +43,41 @@ export function DisputeReportSection({ onSubmit }: DisputeReportSectionProps) {
     }
 
     setIsSubmitting(true);
+    setError(null);
 
     try {
-      if (onSubmit) {
-        await onSubmit({ category, explanation });
+      const response = await DisputeService.submit({
+        listingId,
+        category,
+        explanation: explanation.trim(),
+        userId
+      });
+
+      if (response.success) {
+        setIsSubmitted(true);
+        setDisputeId(response.data?.id || null);
+        setCategory('');
+        setExplanation('');
+
+        if (onSubmitSuccess && response.data?.id) {
+          onSubmitSuccess(response.data.id);
+        }
+
+        // Reset success message after 10 seconds
+        setTimeout(() => {
+          setIsSubmitted(false);
+          setDisputeId(null);
+        }, 10000);
       } else {
-        // Mock submission
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        console.log('Dispute submitted:', { category, explanation });
+        throw new Error(response.message || 'Failed to submit dispute');
       }
-
-      setIsSubmitted(true);
-      setCategory('');
-      setExplanation('');
-
-      // Reset success message after 5 seconds
-      setTimeout(() => setIsSubmitted(false), 5000);
-    } catch (error) {
-      console.error('Error submitting dispute:', error);
+    } catch (err: any) {
+      console.error('Error submitting dispute:', err);
+      const errorMessage = err.message || 'Failed to submit dispute. Please try again.';
+      setError(errorMessage);
+      if (onSubmitError) {
+        onSubmitError(errorMessage);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -71,12 +99,31 @@ export function DisputeReportSection({ onSubmit }: DisputeReportSectionProps) {
       </div>
 
       {isSubmitted ? (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
-          <p className="text-green-800 font-medium">Your dispute has been submitted successfully.</p>
-          <p className="text-green-600 text-sm mt-1">We'll review it within 24-48 hours.</p>
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+          <div className="flex items-start gap-3">
+            <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-green-800 font-medium">Your dispute has been submitted successfully.</p>
+              <p className="text-green-600 text-sm mt-1">
+                Our team will review it within 24-48 hours and you'll be notified of any updates.
+              </p>
+              {disputeId && (
+                <p className="text-green-600 text-xs mt-2">
+                  Reference ID: <span className="font-mono">{disputeId}</span>
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-100 border border-red-300 rounded-lg p-3 text-red-700 text-sm">
+              {error}
+            </div>
+          )}
+
           {/* Category Select */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
@@ -107,6 +154,9 @@ export function DisputeReportSection({ onSubmit }: DisputeReportSectionProps) {
               rows={4}
               className="w-full px-3 py-2.5 bg-white border border-gray-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 transition-colors placeholder:text-gray-400"
             />
+            <p className="text-xs text-gray-500 mt-1">
+              Please be as specific as possible to help us resolve your dispute quickly.
+            </p>
           </div>
 
           {/* Submit Button & Response Time */}

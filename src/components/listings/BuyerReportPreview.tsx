@@ -45,7 +45,7 @@ export function BuyerReportPreview({ data, savedListing, mode = "preview" }: Buy
   const bathrooms = listing.bathrooms || data.confirmedData?.bathrooms || data.aiInferredData?.bathrooms;
   const displayAddress = listing.fullAddress || listing.microlocation || data.address || "";
   const displayPrice = Number(listing.purchasePrice) || data.askingPrice || 0;
-  const displayTitle = listing.title || `${bedrooms || ""}BR ${propertyType} in ${displayAddress.split(",")[0]}`;
+  const displayTitle = listing.title || `${bedrooms || ""}${propertyType} in ${displayAddress.split(",")[0]}`;
   const size = listing.size || data.confirmedData?.landSize || "";
   const isOffPlan = propertyType.toLowerCase().includes("off-plan");
 

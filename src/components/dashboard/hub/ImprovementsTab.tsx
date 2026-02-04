@@ -61,6 +61,8 @@ interface ImprovementsTabProps {
     enableAIInsights: boolean;
   };
   onActionClick: (improvement: { category: string }) => void;
+  listingId: string;
+  userId?: string;
 }
 
 // ============================================================================
@@ -70,11 +72,13 @@ interface ImprovementsTabProps {
 function getRecommendations(property: PropertyData, metrics: PropertyMetrics): Recommendation[] {
   const recommendations: Recommendation[] = [];
 
-  // Check for title document
-  const hasTitle = property.documents.some(d =>
+  // Check for title document - check both label and URL
+  const hasTitle = property.documents?.some(d =>
     d.label?.toLowerCase().includes("title") ||
     d.label?.toLowerCase().includes("c of o") ||
-    d.label?.toLowerCase().includes("governor")
+    d.label?.toLowerCase().includes("governor") ||
+    d.label?.toLowerCase().includes("deed") ||
+    d.url?.toLowerCase().includes("title")
   );
 
   if (!hasTitle) {
@@ -97,9 +101,10 @@ function getRecommendations(property: PropertyData, metrics: PropertyMetrics): R
     });
   }
 
-  // Check for survey plan
-  const hasSurvey = property.documents.some(d =>
-    d.label?.toLowerCase().includes("survey")
+  // Check for survey plan - check both label and URL
+  const hasSurvey = property.documents?.some(d =>
+    d.label?.toLowerCase().includes("survey") ||
+    d.url?.toLowerCase().includes("survey")
   );
 
   if (!hasSurvey) {
@@ -123,12 +128,13 @@ function getRecommendations(property: PropertyData, metrics: PropertyMetrics): R
   }
 
   // Check for photos
-  if (property.photos.length < 10) {
+  const photoCount = property.photos?.length || 0;
+  if (photoCount < 10) {
     recommendations.push({
       id: 'add-photos',
       priority: 'high',
       title: 'Add More Photos',
-      description: `You have ${property.photos.length} photos. Properties with 10+ photos get 2x more views and 41% higher engagement`,
+      description: `You have ${photoCount} photos. Properties with 10+ photos get 2x more views and 41% higher engagement`,
       icon: 'camera',
       metrics: {
         completionBoost: '+14% completion',
@@ -363,7 +369,7 @@ function PrioritySection({ priority, recommendations, onAction, defaultExpanded 
 // MAIN COMPONENT
 // ============================================================================
 
-export function ImprovementsTab({ property, metrics, config, onActionClick }: ImprovementsTabProps) {
+export function ImprovementsTab({ property, metrics, config, onActionClick, listingId, userId }: ImprovementsTabProps) {
   const recommendations = getRecommendations(property, metrics);
 
   // Group by priority
@@ -372,7 +378,9 @@ export function ImprovementsTab({ property, metrics, config, onActionClick }: Im
   const mediumRecs = recommendations.filter(r => r.priority === 'medium');
 
   const totalRecs = recommendations.length;
-  const avgROI = recommendations.length > 0 ? 118 : 0; // Mock calculation
+
+  // Calculate potential improvement based on what's missing
+  const potentialImprovement = 100 - metrics.completenessScore;
 
   const handleAction = (recommendation: Recommendation) => {
     onActionClick({ category: recommendation.category });
@@ -381,14 +389,32 @@ export function ImprovementsTab({ property, metrics, config, onActionClick }: Im
   return (
     <div className="space-y-6">
       {/* Optimization Potential Banner */}
-      <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-xl p-5 flex items-center justify-between">
+      <div className={`rounded-xl p-5 flex items-center justify-between ${
+        totalRecs === 0
+          ? 'bg-gradient-to-r from-green-50 to-teal-50'
+          : totalRecs <= 2
+          ? 'bg-gradient-to-r from-yellow-50 to-orange-50'
+          : 'bg-gradient-to-r from-red-50 to-orange-50'
+      }`}>
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">Optimization Potential</h3>
-          <p className="text-sm text-gray-600">{totalRecs} active recommendations</p>
+          <h3 className="text-lg font-semibold text-gray-900">
+            {totalRecs === 0 ? 'Listing Optimized' : 'Optimization Potential'}
+          </h3>
+          <p className="text-sm text-gray-600">
+            {totalRecs === 0
+              ? 'Your listing is complete and optimized'
+              : `${totalRecs} active recommendation${totalRecs > 1 ? 's' : ''}`}
+          </p>
         </div>
         <div className="text-right">
-          <div className="text-2xl font-bold text-red-600">{avgROI}%</div>
-          <div className="text-xs text-gray-500">Avg ROI</div>
+          <div className={`text-2xl font-bold ${
+            totalRecs === 0 ? 'text-green-600' : totalRecs <= 2 ? 'text-orange-600' : 'text-red-600'
+          }`}>
+            {totalRecs === 0 ? metrics.completenessScore : `+${potentialImprovement}`}%
+          </div>
+          <div className="text-xs text-gray-500">
+            {totalRecs === 0 ? 'Completeness' : 'Potential Gain'}
+          </div>
         </div>
       </div>
 
@@ -425,7 +451,16 @@ export function ImprovementsTab({ property, metrics, config, onActionClick }: Im
       )}
 
       {/* Dispute Report Section */}
-      <DisputeReportSection />
+      <DisputeReportSection
+        listingId={listingId}
+        userId={userId}
+        onSubmitSuccess={(disputeId) => {
+          console.log('Dispute submitted successfully:', disputeId);
+        }}
+        onSubmitError={(error) => {
+          console.error('Dispute submission failed:', error);
+        }}
+      />
     </div>
   );
 }
