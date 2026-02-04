@@ -12,7 +12,7 @@ export function PropertyUploadModal({ onClose, onPropertyAdded }: PropertyUpload
         // Transform wizard data to property format
         const property = {
             id: `prop-${Date.now()}`,
-            name: `${data.confirmedData?.bedrooms || ""}BR ${data.confirmedData?.propertyType || "Property"}`,
+            name: `${data.confirmedData?.bedrooms || ""}${data.confirmedData?.propertyType || "Property"}`,
             location: data.address,
             price: `₦${data.askingPrice.toLocaleString()}`,
             priceValue: data.askingPrice,

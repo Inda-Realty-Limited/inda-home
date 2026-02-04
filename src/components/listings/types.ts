@@ -191,12 +191,124 @@ export interface AIInferredData {
     };
 }
 
+// Investment Analysis Data from Real Estate Engine API
+export interface PropertyIntelligenceData {
+    property_details: {
+        price: number;
+        location: string;
+        specs: {
+            bed: number;
+            bath: number;
+            size: string;
+        };
+        userId: string;
+        title: string;
+        features: string;
+    };
+    location_intelligence: {
+        coordinates: {
+            lat: number;
+            lng: number;
+        };
+        district: string;
+        accessibility: {
+            to_victoria_island_minutes: number;
+            to_airport_minutes: number;
+            to_lekki_ftz_minutes: number;
+            to_ikeja_mall_minutes: number;
+            to_marina_minutes: number;
+            to_third_mainland_bridge_minutes: number;
+        };
+        nearby_schools: {
+            count: number;
+            distance_km: number;
+            names: string[];
+        };
+        nearby_hospitals: {
+            count: number;
+            distance_km: number;
+            names: string[];
+        };
+        nearby_shopping: {
+            count: number;
+            distance_km: number;
+            names: string[];
+        };
+        infrastructure_projects: {
+            [key: string]: {
+                distance_km: number;
+                expected_value_increase_pct: string;
+            };
+        };
+    };
+    investment_analysis: {
+        total_investment_breakdown: {
+            purchase_price: number;
+            legal_fees: number;
+            legal_fees_pct: number;
+            agency_fees: number;
+            agency_fees_pct: number;
+            survey_fees: number;
+            survey_fees_pct: number;
+            stamp_duty: number;
+            stamp_duty_pct: number;
+            land_registration: number;
+            governors_consent: number;
+            governors_consent_pct: number;
+            total_investment: number;
+            additional_costs_pct: number;
+        };
+        annual_rental_income: {
+            net_rental_income: number;
+            gross_yield_pct: number;
+            net_yield_pct: number;
+            rental_range_min: number;
+            rental_range_max: number;
+        };
+        meta: {
+            rent_source: string;
+        };
+    };
+    value_projection: {
+        annual_appreciation_pct: number;
+        historical_avg_pct: number;
+        year_1: { value: number; gain_pct: number };
+        year_2: { value: number; gain_pct: number };
+        year_3: { value: number; gain_pct: number };
+        year_4: { value: number; gain_pct: number };
+        year_5: { value: number; gain_pct: number };
+        projected_gain_5_year: number;
+    };
+    cash_flow_forecast: {
+        year_1: { rental_income: number; expenses: number; net_cash_flow: number };
+        year_2: { rental_income: number; expenses: number; net_cash_flow: number };
+        year_3: { rental_income: number; expenses: number; net_cash_flow: number };
+        year_4: { rental_income: number; expenses: number; net_cash_flow: number };
+        year_5: { rental_income: number; expenses: number; net_cash_flow: number };
+    };
+}
+
+// Request payload for analysis API
+export interface AnalysisRequest {
+    price: number;
+    location: string;
+    specs: {
+        bed: number;
+        bath: number;
+        size: string;
+    };
+    userId: string;
+    title: string;
+    features: string;
+}
+
 export interface PropertyUploadData {
     address: string;
     askingPrice: number;
     documents: UploadedDocument[];
     photos: UploadedPhoto[];
     aiInferredData?: AIInferredData;
+    intelligenceData?: PropertyIntelligenceData; // Investment analysis data
     confirmedData?: {
         propertyType: string;
         bedrooms?: number;

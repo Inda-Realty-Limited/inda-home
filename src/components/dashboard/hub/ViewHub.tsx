@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Edit3,
   Eye,
@@ -11,7 +11,8 @@ import {
   ArrowLeft,
   X,
   CheckCircle,
-  AlertTriangle
+  AlertTriangle,
+  Loader2
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
@@ -21,6 +22,11 @@ import {
   type BuyerPreviewSettings,
   type BuyerPreviewMetrics
 } from "@/components/dashboard/hub/BuyerPreviewTab";
+import {
+  ListingSettingsService,
+  ListingAnalyticsService,
+  type ListingAnalytics
+} from "@/api/listing-hub";
 
 // ============================================================================
 // TYPES
@@ -72,28 +78,38 @@ export interface ViewHubProps {
 function calculateCompletenessScore(property: PropertyData): number {
   let score = 0;
   let total = 0;
-  
+
   // Basic info (40%)
   total += 40;
-  if (property.address) score += 10;
-  if (property.price) score += 10;
-  if (property.bedrooms) score += 10;
-  if (property.bathrooms) score += 10;
-  
+  if (property.address && property.address !== 'Unknown Location') score += 10;
+  if (property.price && property.price !== '0') score += 10;
+  if (property.bedrooms && property.bedrooms !== '0' && property.bedrooms !== '') score += 10;
+  if (property.bathrooms && property.bathrooms !== '0' && property.bathrooms !== '') score += 10;
+
   // Documents (40%)
   total += 40;
-  const hasTitle = property.documents.some(d => d.label?.toLowerCase().includes("title"));
-  const hasSurvey = property.documents.some(d => d.label?.toLowerCase().includes("survey"));
+  const hasTitle = property.documents?.some(d =>
+    d.label?.toLowerCase().includes("title") ||
+    d.label?.toLowerCase().includes("c of o") ||
+    d.label?.toLowerCase().includes("governor") ||
+    d.label?.toLowerCase().includes("deed") ||
+    d.url?.toLowerCase().includes("title")
+  );
+  const hasSurvey = property.documents?.some(d =>
+    d.label?.toLowerCase().includes("survey") ||
+    d.url?.toLowerCase().includes("survey")
+  );
   if (hasTitle) score += 20;
   if (hasSurvey) score += 20;
-  
+
   // Photos (20%)
   total += 20;
-  if (property.photos.length >= 10) score += 20;
-  else if (property.photos.length >= 5) score += 15;
-  else if (property.photos.length >= 3) score += 10;
-  else if (property.photos.length >= 1) score += 5;
-  
+  const photoCount = property.photos?.length || 0;
+  if (photoCount >= 10) score += 20;
+  else if (photoCount >= 5) score += 15;
+  else if (photoCount >= 3) score += 10;
+  else if (photoCount >= 1) score += 5;
+
   return Math.round((score / total) * 100);
 }
 
@@ -113,27 +129,15 @@ function getReportStrength(score: number) {
 
 export function ViewHub({ property, intelligenceData, daysOnMarket = 0, onEdit, onBack }: ViewHubProps) {
   const [activeTab, setActiveTab] = useState("improvements");
-  
+  const [isLoadingData, setIsLoadingData] = useState(true);
+  const [analytics, setAnalytics] = useState<ListingAnalytics | null>(null);
+
   // Calculate metrics
   const completenessScore = calculateCompletenessScore(property);
   const strength = getReportStrength(completenessScore);
-  
-  // Mock metrics (replace with real data where available)
-  const propertyMetrics: PropertyMetrics = {
-    completenessScore,
-    daysOnMarket: daysOnMarket || 89,
-    viewCount: property.views || 0,
-    viewingConversion: 23, // Still mock
-    offerConversion: 13, // Still mock
-    averageEngagementTime: 514, // Still mock
-    dropOffRate: 34, // Still mock
-    areaDaysToSell: 64, // Still mock
-    areaViewingConversion: 18, // Still mock
-    areaOfferConversion: 22 // Still mock
-  };
-  
-  // Buyer Preview Settings
-  const [buyerPreviewSettings, setBuyerPreviewSettings] = useState<BuyerPreviewSettings>({
+
+  // Default buyer preview settings
+  const defaultSettings: BuyerPreviewSettings = {
     visibilityMode: "gated" as const,
     requirePhone: false,
     badgeStyle: "full",
@@ -160,20 +164,72 @@ export function ViewHub({ property, intelligenceData, daysOnMarket = 0, onEdit, 
       minTimeOnPage: 60,
       minInteractions: 3
     }
-  });
-  
-  const buyerPreviewMetrics: BuyerPreviewMetrics = {
-    totalViews: property.views || 147,
-    uniqueViewers: Math.floor((property.views || 147) * 0.6), // Estimated
-    leadsCaptured: property.questions || 23,
-    reportUnlocks: 18, // Mock
-    averageEngagement: 324, // Mock
-    conversionRate: 20.2 // Mock
   };
-  
+
+  const [buyerPreviewSettings, setBuyerPreviewSettings] = useState<BuyerPreviewSettings>(defaultSettings);
+
+  // Fetch settings and analytics on mount
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoadingData(true);
+
+      try {
+        // Fetch both settings and analytics in parallel
+        const [savedSettings, analyticsData] = await Promise.all([
+          ListingSettingsService.getSettings(property.id),
+          ListingAnalyticsService.getAnalytics(property.id)
+        ]);
+
+        // Apply saved settings if available
+        if (savedSettings) {
+          setBuyerPreviewSettings(prev => ({
+            ...prev,
+            ...savedSettings
+          }));
+        }
+
+        // Store analytics data
+        if (analyticsData) {
+          setAnalytics(analyticsData);
+        }
+      } catch (error) {
+        console.error('Failed to fetch hub data:', error);
+      } finally {
+        setIsLoadingData(false);
+      }
+    };
+
+    if (property.id) {
+      fetchData();
+    }
+  }, [property.id]);
+
+  // Build property metrics from real analytics data
+  const propertyMetrics: PropertyMetrics = {
+    completenessScore,
+    daysOnMarket: daysOnMarket || 0,
+    viewCount: analytics?.views || property.views || 0,
+    viewingConversion: analytics?.conversionRate || 23,
+    offerConversion: analytics?.offers ? Math.round((analytics.offers / Math.max(analytics.leads, 1)) * 100) : 13,
+    averageEngagementTime: analytics?.averageEngagement || 514,
+    dropOffRate: 34, // Would need additional tracking
+    areaDaysToSell: 64, // Would need area comparison data
+    areaViewingConversion: 18, // Would need area comparison data
+    areaOfferConversion: 22 // Would need area comparison data
+  };
+
+  // Build buyer preview metrics from real analytics data
+  const buyerPreviewMetrics: BuyerPreviewMetrics = {
+    totalViews: analytics?.views || property.views || 0,
+    uniqueViewers: analytics?.uniqueViewers || Math.floor((property.views || 0) * 0.6),
+    leadsCaptured: analytics?.leads || property.questions || 0,
+    reportUnlocks: analytics?.reportUnlocks || 0,
+    averageEngagement: analytics?.averageEngagement || 0,
+    conversionRate: analytics?.conversionRate || 0
+  };
+
   const handleBuyerPreviewSettingsChange = (updates: Partial<BuyerPreviewSettings>) => {
     setBuyerPreviewSettings(prev => ({ ...prev, ...updates }));
-    console.log("Buyer preview settings updated:", updates);
   };
 
   return (
@@ -237,46 +293,62 @@ export function ViewHub({ property, intelligenceData, daysOnMarket = 0, onEdit, 
             <Card className="p-4 bg-white">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs text-gray-600">Views</span>
-                <Eye className="w-4 h-4 text-gray-400" />
+                {isLoadingData ? (
+                  <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
+                ) : (
+                  <Eye className="w-4 h-4 text-gray-400" />
+                )}
               </div>
               <div className="text-2xl font-bold text-gray-900">
-                {property.views || 0}
+                {isLoadingData ? '...' : (analytics?.views || property.views || 0).toLocaleString()}
               </div>
-              <div className="text-xs text-gray-600 mt-1">Last 7 days</div>
+              <div className="text-xs text-gray-600 mt-1">Total views</div>
             </Card>
-            
+
             {/* Engaged */}
             <Card className="p-4 bg-white">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs text-gray-600">Engaged</span>
-                <Users className="w-4 h-4 text-gray-400" />
+                {isLoadingData ? (
+                  <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
+                ) : (
+                  <Users className="w-4 h-4 text-gray-400" />
+                )}
               </div>
               <div className="text-2xl font-bold text-gray-900">
-                {property.engaged || 0}
+                {isLoadingData ? '...' : (analytics?.engaged || property.engaged || 0).toLocaleString()}
               </div>
               <div className="text-xs text-gray-600 mt-1">Buyers</div>
             </Card>
-            
-            {/* Questions */}
+
+            {/* Questions/Leads */}
             <Card className="p-4 bg-white">
               <div className="flex items-center justify-between mb-1">
-                <span className="text-xs text-gray-600">Questions</span>
-                <MessageSquare className="w-4 h-4 text-gray-400" />
+                <span className="text-xs text-gray-600">Leads</span>
+                {isLoadingData ? (
+                  <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
+                ) : (
+                  <MessageSquare className="w-4 h-4 text-gray-400" />
+                )}
               </div>
               <div className="text-2xl font-bold text-gray-900">
-                {property.questions || 0}
+                {isLoadingData ? '...' : (analytics?.leads || property.questions || 0).toLocaleString()}
               </div>
-              <div className="text-xs text-gray-600 mt-1">Asked</div>
+              <div className="text-xs text-gray-600 mt-1">Captured</div>
             </Card>
-            
+
             {/* Offers */}
             <Card className="p-4 bg-white border-2 border-[#4ea8a1]">
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs text-gray-600">Offers</span>
-                <Star className="w-4 h-4 text-[#4ea8a1]" />
+                {isLoadingData ? (
+                  <Loader2 className="w-4 h-4 text-[#4ea8a1] animate-spin" />
+                ) : (
+                  <Star className="w-4 h-4 text-[#4ea8a1]" />
+                )}
               </div>
               <div className="text-2xl font-bold text-[#4ea8a1]">
-                {property.offers || 0}
+                {isLoadingData ? '...' : (analytics?.offers || property.offers || 0).toLocaleString()}
               </div>
               <div className="text-xs text-gray-600 mt-1">Received</div>
             </Card>
@@ -303,6 +375,7 @@ export function ViewHub({ property, intelligenceData, daysOnMarket = 0, onEdit, 
             <ImprovementsTab
               property={property}
               metrics={propertyMetrics}
+              listingId={property.id}
               config={{
                 showROI: true,
                 showBenchmarks: true,
@@ -310,10 +383,9 @@ export function ViewHub({ property, intelligenceData, daysOnMarket = 0, onEdit, 
                 enableAIInsights: true
               }}
               onActionClick={(improvement) => {
-                console.log("Action clicked:", improvement);
                 // Handle improvement action (e.g., navigate to edit page)
-                if (improvement.category === "documentation" || 
-                    improvement.category === "photos" || 
+                if (improvement.category === "documentation" ||
+                    improvement.category === "photos" ||
                     improvement.category === "details") {
                   onEdit();
                 }

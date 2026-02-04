@@ -25,37 +25,134 @@ export default function PropertyHubPage() {
             try {
                 const res = await ProListingsService.getListing(id as string);
                 const rawData = res.data || res;
-                
+
+                console.log('Raw listing data:', rawData); // Debug log
+
                 // Calculate days on market
                 const createdDate = rawData.createdAt || rawData.snapshot?.createdAt;
-                const dom = createdDate 
+                const dom = createdDate
                     ? Math.floor((new Date().getTime() - new Date(createdDate).getTime()) / (1000 * 60 * 60 * 24))
                     : 0;
                 setDaysOnMarket(dom);
-                
+
+                // Get address from multiple possible fields
+                const address = rawData.fullAddress || rawData.microlocation || rawData.microlocationStd ||
+                               rawData.address || rawData.location || 'Unknown Location';
+
+                // Combine all document types into a single array with labels
+                const allDocuments: Array<{ url?: string; label: string }> = [];
+
+                // First, use documentsWithMeta if available (new structured format)
+                if (rawData.documentsWithMeta?.length) {
+                    rawData.documentsWithMeta.forEach((doc: { url: string; type: string }) => {
+                        allDocuments.push({ url: doc.url, label: doc.type });
+                    });
+                } else {
+                    // Fallback to legacy format
+
+                    // Add title docs
+                    if (rawData.titleDocs?.length) {
+                        rawData.titleDocs.forEach((url: string) => {
+                            allDocuments.push({ url, label: 'Title Document' });
+                        });
+                    }
+
+                    // Add legal docs (may include survey)
+                    if (rawData.legalDocs?.length) {
+                        rawData.legalDocs.forEach((url: string, index: number) => {
+                            // Try to determine if it's a survey based on filename or just label generically
+                            const isSurvey = url.toLowerCase().includes('survey');
+                            allDocuments.push({
+                                url,
+                                label: isSurvey ? 'Survey Plan' : `Legal Document ${index + 1}`
+                            });
+                        });
+                    }
+
+                    // Add general documents
+                    if (rawData.documents?.length) {
+                        rawData.documents.forEach((doc: any, index: number) => {
+                            if (typeof doc === 'string') {
+                                allDocuments.push({ url: doc, label: `Document ${index + 1}` });
+                            } else if (doc.url) {
+                                allDocuments.push({ url: doc.url, label: doc.label || `Document ${index + 1}` });
+                            }
+                        });
+                    }
+                }
+
+                // Combine all photo types
+                const allPhotos: Array<{ url: string; label: string; category: string }> = [];
+
+                // First, use photosWithMeta if available (new structured format)
+                if (rawData.photosWithMeta?.length) {
+                    rawData.photosWithMeta.forEach((photo: { url: string; label: string; category?: string }) => {
+                        allPhotos.push({
+                            url: photo.url,
+                            label: photo.label,
+                            category: photo.category || 'general'
+                        });
+                    });
+                } else {
+                    // Fallback to legacy format
+
+                    // Add property images
+                    if (rawData.propertyImages?.length) {
+                        rawData.propertyImages.forEach((url: string) => {
+                            allPhotos.push({ url, label: 'Property Photo', category: 'property' });
+                        });
+                    }
+
+                    // Add amenity images
+                    if (rawData.amenityImages?.length) {
+                        rawData.amenityImages.forEach((url: string) => {
+                            allPhotos.push({ url, label: 'Amenity Photo', category: 'amenity' });
+                        });
+                    }
+
+                    // Add general images
+                    if (rawData.imageUrls?.length) {
+                        rawData.imageUrls.forEach((url: string) => {
+                            allPhotos.push({ url, label: 'Photo', category: 'general' });
+                        });
+                    }
+
+                    // Fallback to images array
+                    if (allPhotos.length === 0 && rawData.images?.length) {
+                        rawData.images.forEach((img: any) => {
+                            const url = typeof img === 'string' ? img : img.url;
+                            if (url) {
+                                allPhotos.push({ url, label: 'Photo', category: 'general' });
+                            }
+                        });
+                    }
+                }
+
                 // Map API response to ViewHub PropertyData interface
                 const mappedProperty: PropertyData = {
                     id: rawData._id || rawData.id,
-                    propertyType: rawData.propertyType || rawData.type || 'Property',
-                    address: rawData.microlocationStd || rawData.address || rawData.location || 'Unknown Location',
-                    price: (rawData.purchasePrice || rawData.price || 0).toString(),
-                    bedrooms: (rawData.bedrooms || rawData.specs?.bed || 0).toString(),
-                    bathrooms: (rawData.bathrooms || rawData.specs?.bath || 0).toString(),
-                    documents: rawData.documents || [],
-                    photos: (rawData.images || []).map((img: any) => ({
-                        url: typeof img === 'string' ? img : img.url,
-                        label: 'Photo',
-                        category: 'general'
-                    })),
+                    propertyType: rawData.propertyType || rawData.propertyTypeStd || rawData.type || 'Property',
+                    address,
+                    price: (rawData.purchasePrice || rawData.priceNGN || rawData.price || 0).toString(),
+                    bedrooms: (rawData.bedrooms || rawData.specs?.bed || '').toString(),
+                    bathrooms: (rawData.bathrooms || rawData.specs?.bath || '').toString(),
+                    documents: allDocuments,
+                    photos: allPhotos,
                     views: rawData.views || 0,
                     questions: rawData.leads || 0,
                     offers: rawData.offers || 0,
                     engaged: rawData.engaged || 0,
                     createdAt: createdDate
                 };
+
+                console.log('Mapped property:', mappedProperty); // Debug log
                 
-                // Map Intelligence Data from analytics if available
-                if (rawData.analytics || rawData.snapshot?.analytics) {
+                // Use intelligenceData directly if available from the analysis API
+                if (rawData.intelligenceData) {
+                    setIntelligenceData(rawData.intelligenceData);
+                }
+                // Fallback: Map Intelligence Data from legacy analytics if available
+                else if (rawData.analytics || rawData.snapshot?.analytics) {
                     const analytics = rawData.analytics || rawData.snapshot?.analytics;
                     const mappedIntelligence = {
                         property_details: {
@@ -88,7 +185,6 @@ export default function PropertyHubPage() {
                         investment_analysis: {
                             total_investment_breakdown: {
                                 purchase_price: parseInt(mappedProperty.price.replace(/[^\d]/g, '')) || 0,
-                                // ... other calculations can be done here or in component
                                 total_investment: (parseInt(mappedProperty.price.replace(/[^\d]/g, '')) || 0) * 1.15
                             },
                             annual_rental_income: {
@@ -100,11 +196,8 @@ export default function PropertyHubPage() {
                         },
                         value_projection: {
                             annual_appreciation_pct: analytics.appreciation?.nominalPct || 0,
-                            // Map projection years if available
                         },
-                        cash_flow_forecast: {
-                            // Map forecast if available
-                        }
+                        cash_flow_forecast: {}
                     };
                     setIntelligenceData(mappedIntelligence);
                 }
