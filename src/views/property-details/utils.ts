@@ -47,66 +47,104 @@ export const mapListingToPropertyDetail = (listing: any) => {
   const indaScore = listing.indaScore?.finalScore || analytics.indaScore?.finalScore || null;
   const developerRating = indaScore ? `${Math.round(indaScore)}/100` : 'N/A';
 
-  // Data quality completeness (use analytics presence as indicator)
-  const hasAnalytics = !!(listing.analytics || analytics);
-  const completeness = hasAnalytics ? 85 : 60;
-  const missingFields = hasAnalytics ? [] : ['Title verification', 'Developer credentials'];
+  // Calculate data quality completeness based on actual fields
+  const calculateCompleteness = () => {
+    let score = 0;
+    let total = 0;
 
-  // Social proof (dummy data for now)
+    // Basic info (40%)
+    total += 40;
+    if (priceValue > 0) score += 10;
+    if (snapshot.bedrooms || listing.bedrooms) score += 10;
+    if (snapshot.bathrooms || listing.bathrooms) score += 10;
+    if (snapshot.microlocationStd || listing.microlocationStd || snapshot.microlocation || listing.microlocation) score += 10;
+
+    // Documents (30%)
+    total += 30;
+    const docs = listing.documentsWithMeta || listing.legalDocs || listing.titleDocs || [];
+    const hasTitle = Array.isArray(docs) && docs.some((d: any) =>
+      (d.type || d.label || d || '').toString().toLowerCase().includes('title') ||
+      (d.type || d.label || d || '').toString().toLowerCase().includes('c of o') ||
+      (d.type || d.label || d || '').toString().toLowerCase().includes('deed')
+    );
+    const hasSurvey = Array.isArray(docs) && docs.some((d: any) =>
+      (d.type || d.label || d || '').toString().toLowerCase().includes('survey')
+    );
+    if (hasTitle) score += 15;
+    if (hasSurvey) score += 15;
+
+    // Photos (20%)
+    total += 20;
+    const photoCount = images.length;
+    if (photoCount >= 10) score += 20;
+    else if (photoCount >= 5) score += 15;
+    else if (photoCount >= 3) score += 10;
+    else if (photoCount >= 1) score += 5;
+
+    // Intelligence data (10%)
+    total += 10;
+    if (listing.intelligenceData || snapshot.intelligenceData) score += 10;
+
+    return Math.round((score / total) * 100);
+  };
+
+  const completeness = calculateCompleteness();
+  const missingFields: string[] = [];
+  if (completeness < 80) {
+    if (!listing.documentsWithMeta?.length && !listing.legalDocs?.length && !listing.titleDocs?.length) {
+      missingFields.push('Legal documents');
+    }
+    if (images.length < 5) {
+      missingFields.push('More photos');
+    }
+    if (!listing.intelligenceData && !snapshot.intelligenceData) {
+      missingFields.push('Location intelligence');
+    }
+  }
+
+  // Social proof - use real data from listing
   const socialProof = {
-    views: Math.floor(Math.random() * 500) + 100,
-    interestedBuyers: Math.floor(Math.random() * 50) + 10,
+    views: listing.views || snapshot.views || 0,
+    interestedBuyers: listing.leads || listing.engaged || snapshot.leads || 0,
     lastUpdated: new Date(listing.updatedAt || listing.createdAt || snapshot.updatedAt || Date.now()).toLocaleDateString()
   };
 
-  // Off-plan data (dummy for now, will be supplied later)
-  const offPlanData = isOffPlan ? {
-    developerClaimedCompletion: 85, // Dummy - will come from backend
-    indaVerifiedCompletion: 82, // Dummy - will come from backend
-    lastVerificationDate: new Date().toLocaleDateString(), // Dummy
-    expectedHandoverDate: 'Q2 2025', // Dummy - will come from backend
-    milestones: [
-      {
-        number: 1,
-        name: "Foundation Complete",
-        status: "Complete" as const,
-        developerClaimed: 100,
-        indaVerified: 100,
-        paymentPercentage: 20,
-        paymentReleased: true,
-        verificationDate: new Date().toLocaleDateString()
-      },
-      {
-        number: 2,
-        name: "Superstructure 50%",
-        status: "Complete" as const,
-        developerClaimed: 100,
-        indaVerified: 100,
-        paymentPercentage: 30,
-        paymentReleased: true,
-        verificationDate: new Date().toLocaleDateString()
-      },
-      {
-        number: 3,
-        name: "Superstructure 100%",
-        status: "In Progress" as const,
-        developerClaimed: 90,
-        indaVerified: 85,
-        paymentPercentage: 30,
-        paymentReleased: false,
-        discrepancy: true
-      },
-      {
-        number: 4,
-        name: "Finishing & Handover",
-        status: "Not Started" as const,
-        developerClaimed: 0,
-        indaVerified: 0,
-        paymentPercentage: 20,
-        paymentReleased: false
-      }
-    ]
-  } : undefined;
+  // Off-plan data - use real data from backend if available
+  const backendOffPlanData = listing.offPlanData || snapshot.offPlanData;
+  const constructionMilestones = listing.constructionMilestones || snapshot.constructionMilestones;
+
+  const offPlanData = isOffPlan ? (backendOffPlanData ? {
+    developerClaimedCompletion: backendOffPlanData.developerClaimedCompletion || 0,
+    indaVerifiedCompletion: backendOffPlanData.indaVerifiedCompletion || 0,
+    lastVerificationDate: backendOffPlanData.lastVerificationDate || 'Not verified',
+    expectedHandoverDate: listing.expectedCompletion || snapshot.expectedCompletion || backendOffPlanData.expectedHandoverDate || 'TBD',
+    milestones: backendOffPlanData.milestones || constructionMilestones?.map((m: any, i: number) => ({
+      number: i + 1,
+      name: m.name,
+      status: m.status === 'complete' ? 'Complete' : m.status === 'in-progress' ? 'In Progress' : 'Not Started',
+      developerClaimed: 0,
+      indaVerified: 0,
+      paymentPercentage: 0,
+      paymentReleased: false,
+      verificationDate: m.expectedDate
+    })) || []
+  } : {
+    // Minimal off-plan info when no detailed data available
+    developerClaimedCompletion: 0,
+    indaVerifiedCompletion: 0,
+    lastVerificationDate: 'Not verified',
+    expectedHandoverDate: listing.expectedCompletion || snapshot.expectedCompletion || 'TBD',
+    milestones: constructionMilestones?.map((m: any, i: number) => ({
+      number: i + 1,
+      name: m.name,
+      status: m.status === 'complete' ? 'Complete' : m.status === 'in-progress' ? 'In Progress' : 'Not Started',
+      developerClaimed: 0,
+      indaVerified: 0,
+      paymentPercentage: 0,
+      paymentReleased: false,
+      verificationDate: m.expectedDate
+    })) || []
+  }) : undefined;
 
   return {
     id: listing._id || listing.id || String(Math.random()),
@@ -115,7 +153,7 @@ export const mapListingToPropertyDetail = (listing: any) => {
               snapshot.lga || listing.lga || snapshot.state || listing.state || 'Lagos',
     price: formatPrice(priceValue),
     priceNumeric: priceValue,
-    images: images.length > 0 ? images : ['https://images.unsplash.com/photo-1662454419736-de132ff75638?w=800'],
+    images: images.length > 0 ? images : [], // Empty array - UI should handle "no images" state
     bedrooms: snapshot.bedrooms || listing.bedrooms || 0,
     developerRating,
     isScanned,
