@@ -224,15 +224,39 @@ export function PropertyDetail({
   const isExpanded = (title: string) => expandedSections.has(title);
 
   // Helper function to format currency
-  const formatCurrency = (amount: number): string => {
+  const formatCurrency = (amount: number | undefined | null): string => {
+    if (amount === undefined || amount === null || isNaN(amount)) {
+      return '₦0';
+    }
     if (amount >= 1000000) {
       return `₦${(amount / 1000000).toFixed(1)}M`;
     }
     return `₦${amount.toLocaleString()}`;
   };
 
-  // Generate Q&A data from intelligence data if available, otherwise use mock data
-  const qaData: QASection[] = intelligenceData ? [
+  // Helper function to check if intelligence data has all required fields
+  const isIntelligenceDataComplete = (data: PropertyIntelligenceData | undefined): boolean => {
+    if (!data) return false;
+    try {
+      // Check required nested properties exist
+      return !!(
+        data.investment_analysis?.total_investment_breakdown?.purchase_price !== undefined &&
+        data.investment_analysis?.annual_rental_income &&
+        data.value_projection?.year_1?.value !== undefined &&
+        data.value_projection?.year_5?.value !== undefined &&
+        data.location_intelligence?.district &&
+        data.location_intelligence?.accessibility &&
+        data.location_intelligence?.nearby_schools?.names &&
+        data.cash_flow_forecast?.year_1 &&
+        data.cash_flow_forecast?.year_5
+      );
+    } catch {
+      return false;
+    }
+  };
+
+  // Generate Q&A data from intelligence data if available and complete, otherwise use mock data
+  const qaData: QASection[] = (intelligenceData && isIntelligenceDataComplete(intelligenceData)) ? [
     // Financial Section with Real Data
     {
       title: "Fair Market Value & Pricing",
@@ -340,13 +364,13 @@ export function PropertyDetail({
           dataSource: "Geospatial mapping data",
           details: `Shopping nearby:\n${intelligenceData.location_intelligence.nearby_shopping.names.slice(0, 5).map(shop => `• ${shop}`).join('\n')}`
         },
-        ...(Object.keys(intelligenceData.location_intelligence.infrastructure_projects).length > 0 ? [{
+        ...(Object.keys(intelligenceData.location_intelligence?.infrastructure_projects || {}).length > 0 ? [{
           question: "Are there any major infrastructure projects nearby?",
           answer: `Yes, ${Object.keys(intelligenceData.location_intelligence.infrastructure_projects).length} major infrastructure project(s) identified.`,
           confidence: "high" as const,
           dataSource: "Infrastructure development tracking",
-          details: Object.entries(intelligenceData.location_intelligence.infrastructure_projects).map(([name, project]) =>
-            `• ${name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}: ${project.distance_km}km away - Expected impact: ${project.expected_value_increase_pct}`
+          details: Object.entries(intelligenceData.location_intelligence.infrastructure_projects).map(([name, project]: [string, any]) =>
+            `• ${name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}: ${project?.distance_km || 'N/A'}km away - Expected impact: ${project?.expected_value_increase_pct || 'TBD'}`
           ).join('\n')
         }] : [])
       ]

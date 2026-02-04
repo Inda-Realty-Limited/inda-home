@@ -488,7 +488,7 @@ export function PropertyUploadWizard({
             const formData = new FormData();
 
             // Add basic listing data
-            formData.append("title", `${confirmedData.bedrooms || ""}BR ${propertyType} in ${addressCity}`);
+            formData.append("title", `${confirmedData.bedrooms || ""}${propertyType} in ${addressCity}`);
             formData.append("propertyType", propertyType);
             formData.append("microlocation", addressCity);
             formData.append("purchasePrice", askingPrice.toString());
@@ -507,25 +507,72 @@ export function PropertyUploadWizard({
             // Add address
             formData.append("address", address);
 
-            // Add documents as legalDocs
-            documents.forEach(doc => {
+            // Add documents with metadata
+            documents.forEach((doc, index) => {
                 formData.append("legalDocs", doc.file);
             });
 
-            // Add photos as images
-            photos.forEach(photo => {
+            // Send document metadata as JSON
+            const documentsMeta = documents.map(doc => ({
+                type: doc.type || "Other",
+                originalName: doc.file.name
+            }));
+            formData.append("documentsMeta", JSON.stringify(documentsMeta));
+
+            // Add photos with metadata
+            photos.forEach((photo, index) => {
                 formData.append("images", photo.file);
             });
+
+            // Send photo metadata as JSON
+            const photosMeta = photos.map(photo => ({
+                label: photo.label || photo.customLabel || "Other",
+                category: photo.category || "general",
+                originalName: photo.file.name
+            }));
+            formData.append("photosMeta", JSON.stringify(photosMeta));
 
             const response = await ProListingsService.create(formData);
 
             if (response.success) {
-                setSavedListingId(response.data?.indaTag || response.data?._id);
+                const listingId = response.data?.indaTag || response.data?._id;
+                setSavedListingId(listingId);
                 setSavedListing(response.data);
 
                 // Check if location intelligence failed
                 if (response.locationIntelligenceStatus === "failed") {
                     setShowLocationWarning(true);
+                }
+
+                // Call the investment analysis API and save results
+                try {
+                    const analysisResult = await ProListingsService.analyzeAndSave(listingId, {
+                        price: askingPrice,
+                        location: address,
+                        specs: {
+                            bed: confirmedData.bedrooms || 0,
+                            bath: confirmedData.bathrooms || 0,
+                            size: confirmedData.landSize || ""
+                        },
+                        userId: response.data?.userId || "",
+                        title: `${confirmedData.bedrooms || ""}${propertyType} in ${addressCity}`,
+                        features: (aiData?.amenities || []).join(", ")
+                    });
+
+                    if (analysisResult.success && analysisResult.intelligenceData) {
+                        // Update local state with intelligence data
+                        setUploadData(prev => ({
+                            ...prev,
+                            intelligenceData: analysisResult.intelligenceData
+                        }));
+                        setSavedListing((prev: any) => ({
+                            ...prev,
+                            intelligenceData: analysisResult.intelligenceData
+                        }));
+                    }
+                } catch (analysisError) {
+                    console.warn("Investment analysis failed, continuing without it:", analysisError);
+                    // Don't block the flow if analysis fails - it can be retried later
                 }
 
                 setCurrentPhase("enhancement");

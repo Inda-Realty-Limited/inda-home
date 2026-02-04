@@ -88,14 +88,15 @@ const PropertyDetailsPage: React.FC = () => {
     return <NotFoundScreen searchQuery={id as string} searchType="id" />;
   }
 
-  const property = mapListingToPropertyDetail(listing);
+  const mappedData = mapListingToPropertyDetail(listing);
+  const { intelligenceData, ...property } = mappedData;
 
   return (
     <Container noPadding className="min-h-screen bg-gray-50">
-      <PropertyDetail 
+      <PropertyDetail
         property={property}
         onBack={() => router.back()}
-        onReserve={() => {}}
+        intelligenceData={intelligenceData}
       />
     </Container>
   );

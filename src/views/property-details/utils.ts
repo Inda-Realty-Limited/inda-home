@@ -145,7 +145,54 @@ export const mapListingToPropertyDetail = (listing: any) => {
       verified: listing.verified || snapshot.verified || false
     } : null,
     isOffPlan,
-    offPlanData
+    offPlanData,
+    // Include intelligence data if available
+    intelligenceData: listing.intelligenceData || snapshot.intelligenceData || null
   };
 };
+
+// Export type for the mapped property
+export interface MappedProperty {
+  id: string;
+  name: string;
+  location: string;
+  price: string;
+  priceNumeric: number;
+  images: string[];
+  bedrooms: number;
+  developerRating: string;
+  isScanned: boolean;
+  scannedFrom: string | null;
+  listingId: string | null;
+  agentUserId: string | null;
+  dataQuality: {
+    completeness: number;
+    lastVerified: string;
+    missingFields: string[];
+  };
+  socialProof: {
+    views: number;
+    interestedBuyers: number;
+    lastUpdated: string;
+    recentActivity?: string;
+  };
+  scannedData: {
+    bathrooms: number | null;
+    parkingSpaces: number | null;
+    propertyType: string | null;
+    description: string | null;
+    features: string[];
+    landSize: string | null;
+    builtUpArea: string | null;
+    listedDate: string | null;
+  };
+  listedBy: {
+    name: string;
+    company: string;
+    verified: boolean;
+  } | null;
+  isOffPlan: boolean;
+  offPlanData?: any;
+  intelligenceData?: any;
+}
 
