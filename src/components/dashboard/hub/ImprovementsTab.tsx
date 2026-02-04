@@ -1,7 +1,23 @@
-import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Lightbulb, ArrowRight, CheckCircle, TrendingUp, AlertTriangle } from "lucide-react";
+import React, { useState } from 'react';
+import { Card } from "@/components/ui/card";
+import {
+  Lightbulb,
+  Sparkles,
+  FileText,
+  Camera,
+  DollarSign,
+  Clock,
+  ChevronDown,
+  ChevronUp,
+  TrendingUp,
+  ExternalLink
+} from "lucide-react";
 import { type PropertyData } from "@/components/dashboard/hub/ViewHub";
+import { DisputeReportSection } from "@/components/dashboard/hub/DisputeReportSection";
+
+// ============================================================================
+// TYPES
+// ============================================================================
 
 export interface PropertyMetrics {
   completenessScore: number;
@@ -16,194 +32,400 @@ export interface PropertyMetrics {
   areaOfferConversion: number;
 }
 
+export interface Recommendation {
+  id: string;
+  priority: 'critical' | 'high' | 'medium';
+  title: string;
+  description: string;
+  icon: 'document' | 'camera' | 'dollar' | 'survey';
+  metrics: {
+    completionBoost: string;
+    impactStat: string;
+    impactLabel: string;
+    timeEstimate: string;
+    roi?: string;
+  };
+  tip: string;
+  aiInsight: string;
+  actionLabel: string;
+  category: 'photos' | 'documentation' | 'details' | 'price';
+}
+
 interface ImprovementsTabProps {
   property: PropertyData;
   metrics: PropertyMetrics;
-  config: any;
-  onActionClick: (improvement: any) => void;
+  config: {
+    showROI: boolean;
+    showBenchmarks: boolean;
+    groupByPriority: boolean;
+    enableAIInsights: boolean;
+  };
+  onActionClick: (improvement: { category: string }) => void;
 }
 
-interface Improvement {
-  id: string;
-  title: string;
-  description: string;
-  category: 'photos' | 'documentation' | 'details' | 'price';
-  impact: 'high' | 'medium' | 'low';
-  actionLabel: string;
-  color: 'yellow' | 'blue' | 'red' | 'green';
-}
+// ============================================================================
+// RECOMMENDATION GENERATION
+// ============================================================================
 
-function getImprovements(property: PropertyData, metrics: PropertyMetrics): Improvement[] {
-  const improvements: Improvement[] = [];
+function getRecommendations(property: PropertyData, metrics: PropertyMetrics): Recommendation[] {
+  const recommendations: Recommendation[] = [];
 
-  // Photos Check
-  if (property.photos.length < 5) {
-    improvements.push({
-      id: 'photos-count',
-      title: 'Add Professional Photos',
-      description: `You only have ${property.photos.length} photos. Listings with 10+ photos get 145% more views.`,
-      category: 'photos',
-      impact: 'high',
-      actionLabel: 'Upload Photos',
-      color: 'yellow'
-    });
-  }
+  // Check for title document
+  const hasTitle = property.documents.some(d =>
+    d.label?.toLowerCase().includes("title") ||
+    d.label?.toLowerCase().includes("c of o") ||
+    d.label?.toLowerCase().includes("governor")
+  );
 
-  // Documents Check
-  const hasTitle = property.documents.some(d => d.label?.toLowerCase().includes("title") || d.label?.toLowerCase().includes("c of o"));
   if (!hasTitle) {
-    improvements.push({
-      id: 'docs-title',
-      title: 'Verify Property Title',
-      description: 'Upload a C of O or Governor\'s Consent to build trust and sell 2x faster.',
-      category: 'documentation',
-      impact: 'high',
-      actionLabel: 'Verify Now',
-      color: 'blue'
+    recommendations.push({
+      id: 'upload-title',
+      priority: 'critical',
+      title: 'Upload Title Document',
+      description: 'Properties with verified title documents get 3x more inquiries and build immediate buyer trust',
+      icon: 'document',
+      metrics: {
+        completionBoost: '+25% completion',
+        impactStat: '+67% buyer confidence',
+        impactLabel: '',
+        timeEstimate: '5 minutes'
+      },
+      tip: '89% of sold properties had title docs uploaded',
+      aiInsight: 'Title verification is the #1 factor buyers look for. Missing this creates immediate doubt.',
+      actionLabel: 'Upload Title Document',
+      category: 'documentation'
     });
   }
 
-  // Completeness Check
+  // Check for survey plan
+  const hasSurvey = property.documents.some(d =>
+    d.label?.toLowerCase().includes("survey")
+  );
+
+  if (!hasSurvey) {
+    recommendations.push({
+      id: 'upload-survey',
+      priority: 'critical',
+      title: 'Upload Survey Plan',
+      description: 'Buyers need this to verify property boundaries and validate land dimensions',
+      icon: 'survey',
+      metrics: {
+        completionBoost: '+20% completion',
+        impactStat: 'Required for 78% of mortgage approvals',
+        impactLabel: '',
+        timeEstimate: '5 minutes'
+      },
+      tip: 'Properties with surveys sell 23% faster',
+      aiInsight: 'Banks require surveys <5 years old. Missing this blocks financing options.',
+      actionLabel: 'Upload Survey Plan',
+      category: 'documentation'
+    });
+  }
+
+  // Check for photos
+  if (property.photos.length < 10) {
+    recommendations.push({
+      id: 'add-photos',
+      priority: 'high',
+      title: 'Add More Photos',
+      description: `You have ${property.photos.length} photos. Properties with 10+ photos get 2x more views and 41% higher engagement`,
+      icon: 'camera',
+      metrics: {
+        completionBoost: '+14% completion',
+        impactStat: '+156% viewing requests',
+        impactLabel: '',
+        timeEstimate: '10 minutes'
+      },
+      tip: 'Top-selling properties average 28 photos',
+      aiInsight: 'Photo count directly correlates with buyer engagement. Each additional photo increases time-on-listing by 12 seconds.',
+      actionLabel: 'Upload Photos',
+      category: 'photos'
+    });
+  }
+
+  // Check for pricing optimization (based on days on market)
+  if (metrics.daysOnMarket > metrics.areaDaysToSell) {
+    recommendations.push({
+      id: 'review-pricing',
+      priority: 'high',
+      title: 'Review Pricing Strategy',
+      description: `Property has been on market for ${metrics.daysOnMarket} days vs. ${metrics.areaDaysToSell} day area average. Price may be limiting buyer interest`,
+      icon: 'dollar',
+      metrics: {
+        completionBoost: 'Faster sale velocity',
+        impactStat: `-${metrics.daysOnMarket - metrics.areaDaysToSell} days to sell`,
+        impactLabel: 'Immediate',
+        timeEstimate: '',
+        roi: 'ROI: 588%'
+      },
+      tip: 'Competitive pricing increases viewing requests by 3x',
+      aiInsight: `${metrics.dropOffRate}% of viewers drop off after seeing price. Market is signaling resistance at current level.`,
+      actionLabel: 'View Pricing Scenarios',
+      category: 'price'
+    });
+  }
+
+  // Check completeness
   if (metrics.completenessScore < 80) {
-    improvements.push({
-      id: 'details-completeness',
-      title: 'Complete Listing Details',
-      description: 'Your listing is missing key details. Complete listings rank higher in search results.',
-      category: 'details',
-      impact: 'medium',
+    recommendations.push({
+      id: 'complete-details',
+      priority: 'medium',
+      title: 'Complete Property Details',
+      description: 'Adding more details helps buyers make faster decisions and increases search visibility',
+      icon: 'document',
+      metrics: {
+        completionBoost: '+15% completion',
+        impactStat: '+30% search visibility',
+        impactLabel: '',
+        timeEstimate: '8 minutes'
+      },
+      tip: 'Complete listings get 2x more inquiries',
+      aiInsight: 'Buyers spend 40% more time on listings with complete information.',
       actionLabel: 'Edit Details',
-      color: 'red'
+      category: 'details'
     });
   }
 
-  // Price Check (Simple logic for now, could be based on market data)
-  // Example: If we had a market price comparison
-  
-  return improvements;
+  return recommendations;
 }
 
-const colorStyles = {
-  yellow: { 
-    bg: 'bg-yellow-50', 
-    border: 'border-yellow-100', 
-    badge: 'bg-white border-yellow-200 text-yellow-700',
-    button: 'bg-white border-yellow-200 text-yellow-700 hover:bg-yellow-50'
+// ============================================================================
+// SUB-COMPONENTS
+// ============================================================================
+
+const priorityConfig = {
+  critical: {
+    dot: 'bg-red-500',
+    badge: 'bg-red-100 text-red-700 border-red-200',
+    button: 'bg-red-500 hover:bg-red-600',
+    label: 'Critical'
   },
-  blue: { 
-    bg: 'bg-blue-50', 
-    border: 'border-blue-100', 
-    badge: 'bg-white border-blue-200 text-blue-700',
-    button: 'bg-white border-blue-200 text-blue-700 hover:bg-blue-50'
+  high: {
+    dot: 'bg-orange-500',
+    badge: 'bg-orange-100 text-orange-700 border-orange-200',
+    button: 'bg-[#4ea8a1] hover:bg-[#3d8580]',
+    label: 'High Impact'
   },
-  red: { 
-    bg: 'bg-red-50', 
-    border: 'border-red-100', 
-    badge: 'bg-white border-red-200 text-red-700',
-    button: 'bg-white border-red-200 text-red-700 hover:bg-red-50'
-  },
-  green: { 
-    bg: 'bg-green-50', 
-    border: 'border-green-100', 
-    badge: 'bg-white border-green-200 text-green-700',
-    button: 'bg-white border-green-200 text-green-700 hover:bg-green-50'
+  medium: {
+    dot: 'bg-blue-500',
+    badge: 'bg-blue-100 text-blue-700 border-blue-200',
+    button: 'bg-[#4ea8a1] hover:bg-[#3d8580]',
+    label: 'Medium'
   }
 };
 
+const iconMap = {
+  document: FileText,
+  camera: Camera,
+  dollar: DollarSign,
+  survey: FileText
+};
+
+interface RecommendationCardProps {
+  recommendation: Recommendation;
+  onAction: () => void;
+  onDismiss?: () => void;
+}
+
+function RecommendationCard({ recommendation, onAction, onDismiss }: RecommendationCardProps) {
+  const config = priorityConfig[recommendation.priority];
+  const IconComponent = iconMap[recommendation.icon];
+
+  return (
+    <Card className="p-5 bg-white border border-gray-200 mb-4">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex items-center gap-3">
+          <div className="p-2 bg-gray-100 rounded-lg">
+            <IconComponent className="w-5 h-5 text-gray-600" />
+          </div>
+          <div>
+            <h4 className="font-semibold text-gray-900">{recommendation.title}</h4>
+          </div>
+        </div>
+        <span className={`text-xs px-2 py-1 rounded border font-medium ${config.badge}`}>
+          {config.label}
+        </span>
+      </div>
+
+      {/* Description */}
+      <p className="text-sm text-gray-600 mb-3">{recommendation.description}</p>
+
+      {/* Metrics Row */}
+      <div className="flex flex-wrap items-center gap-3 mb-3">
+        <span className="inline-flex items-center gap-1 text-xs text-green-700 bg-green-50 px-2 py-1 rounded-full">
+          <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
+          {recommendation.metrics.completionBoost}
+        </span>
+        <span className="inline-flex items-center gap-1 text-xs text-blue-700 bg-blue-50 px-2 py-1 rounded-full">
+          <TrendingUp className="w-3 h-3" />
+          {recommendation.metrics.impactStat}
+        </span>
+        {recommendation.metrics.timeEstimate && (
+          <span className="inline-flex items-center gap-1 text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-full">
+            <Clock className="w-3 h-3" />
+            {recommendation.metrics.timeEstimate}
+          </span>
+        )}
+        {recommendation.metrics.roi && (
+          <span className="inline-flex items-center gap-1 text-xs text-purple-700 bg-purple-50 px-2 py-1 rounded-full">
+            <TrendingUp className="w-3 h-3" />
+            {recommendation.metrics.roi}
+          </span>
+        )}
+      </div>
+
+      {/* Tip */}
+      <div className="flex items-start gap-2 p-3 bg-amber-50 rounded-lg mb-3">
+        <Lightbulb className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+        <p className="text-xs text-amber-800">{recommendation.tip}</p>
+      </div>
+
+      {/* AI Insight */}
+      <div className="flex items-start gap-2 p-3 bg-purple-50 rounded-lg mb-4">
+        <Sparkles className="w-4 h-4 text-purple-600 mt-0.5 flex-shrink-0" />
+        <p className="text-xs text-purple-800">
+          <span className="font-medium">AI Insight:</span> {recommendation.aiInsight}
+        </p>
+      </div>
+
+      {/* Action Button */}
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onAction}
+          className={`flex-1 py-3 px-4 text-white font-medium rounded-lg transition-colors flex items-center justify-center gap-2 ${config.button}`}
+        >
+          {recommendation.actionLabel}
+          <ExternalLink className="w-4 h-4" />
+        </button>
+        {onDismiss && (
+          <button
+            onClick={onDismiss}
+            className="p-3 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+            title="Dismiss for now"
+          >
+            <Clock className="w-5 h-5" />
+          </button>
+        )}
+      </div>
+    </Card>
+  );
+}
+
+interface PrioritySectionProps {
+  priority: 'critical' | 'high' | 'medium';
+  recommendations: Recommendation[];
+  onAction: (recommendation: Recommendation) => void;
+  defaultExpanded?: boolean;
+}
+
+function PrioritySection({ priority, recommendations, onAction, defaultExpanded = false }: PrioritySectionProps) {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+  const config = priorityConfig[priority];
+
+  if (recommendations.length === 0) return null;
+
+  return (
+    <div className="mb-4">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full flex items-center justify-between py-3 px-1 hover:bg-gray-50 rounded-lg transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <span className={`w-2.5 h-2.5 rounded-full ${config.dot}`}></span>
+          <span className="font-medium text-gray-900">
+            {config.label} ({recommendations.length})
+          </span>
+        </div>
+        {isExpanded ? (
+          <ChevronUp className="w-5 h-5 text-gray-400" />
+        ) : (
+          <ChevronDown className="w-5 h-5 text-gray-400" />
+        )}
+      </button>
+
+      {isExpanded && (
+        <div className="mt-3">
+          {recommendations.map((rec) => (
+            <RecommendationCard
+              key={rec.id}
+              recommendation={rec}
+              onAction={() => onAction(rec)}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================================
+// MAIN COMPONENT
+// ============================================================================
+
 export function ImprovementsTab({ property, metrics, config, onActionClick }: ImprovementsTabProps) {
-  const improvements = getImprovements(property, metrics);
+  const recommendations = getRecommendations(property, metrics);
+
+  // Group by priority
+  const criticalRecs = recommendations.filter(r => r.priority === 'critical');
+  const highRecs = recommendations.filter(r => r.priority === 'high');
+  const mediumRecs = recommendations.filter(r => r.priority === 'medium');
+
+  const totalRecs = recommendations.length;
+  const avgROI = recommendations.length > 0 ? 118 : 0; // Mock calculation
+
+  const handleAction = (recommendation: Recommendation) => {
+    onActionClick({ category: recommendation.category });
+  };
 
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Lightbulb className="w-5 h-5 text-yellow-500" />
-            Recommended Improvements
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {improvements.length > 0 ? (
-            <div className="space-y-4">
-              {improvements.map((improvement) => {
-                const styles = colorStyles[improvement.color];
-                return (
-                  <div 
-                    key={improvement.id} 
-                    className={`border rounded-lg p-4 ${styles.bg} ${styles.border}`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h4 className="font-semibold text-gray-900">{improvement.title}</h4>
-                        <p className="text-sm text-gray-600 mt-1">{improvement.description}</p>
-                        <div className="flex items-center gap-2 mt-2">
-                           <span className={`text-xs px-2 py-0.5 rounded-full border font-medium capitalize ${styles.badge}`}>
-                             {improvement.impact} Impact
-                           </span>
-                        </div>
-                      </div>
-                      <button 
-                        onClick={() => onActionClick({ category: improvement.category })}
-                        className={`px-3 py-1.5 border text-sm font-medium rounded-md whitespace-nowrap ml-4 ${styles.button}`}
-                      >
-                        {improvement.actionLabel}
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-             <div className="text-center py-8">
-                <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
-                <h3 className="text-lg font-medium text-gray-900">Great Job!</h3>
-                <p className="text-gray-500">Your listing is well-optimized. Keep monitoring your engagement metrics.</p>
-             </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Market Comparison</CardTitle>
-          </CardHeader>
-          <CardContent>
-             <div className="space-y-3">
-               <div className="flex justify-between items-center">
-                 <span className="text-sm text-gray-500">Days on Market</span>
-                 <div className="flex items-center gap-2">
-                   <span className="font-bold">{metrics.daysOnMarket}</span>
-                   <span className="text-xs text-red-500">(Avg: {metrics.areaDaysToSell})</span>
-                 </div>
-               </div>
-               <div className="flex justify-between items-center">
-                 <span className="text-sm text-gray-500">Viewing Conversion</span>
-                 <div className="flex items-center gap-2">
-                   <span className="font-bold">{metrics.viewingConversion}%</span>
-                   <span className="text-xs text-green-500">(Avg: {metrics.areaViewingConversion}%)</span>
-                 </div>
-               </div>
-             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">ROI Potential</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center gap-3">
-              <div className="p-3 bg-green-100 rounded-full">
-                <TrendingUp className="w-6 h-6 text-green-600" />
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-gray-900">High</div>
-                <p className="text-xs text-gray-500">Based on location trends</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Optimization Potential Banner */}
+      <div className="bg-gradient-to-r from-red-50 to-orange-50 rounded-xl p-5 flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold text-gray-900">Optimization Potential</h3>
+          <p className="text-sm text-gray-600">{totalRecs} active recommendations</p>
+        </div>
+        <div className="text-right">
+          <div className="text-2xl font-bold text-red-600">{avgROI}%</div>
+          <div className="text-xs text-gray-500">Avg ROI</div>
+        </div>
       </div>
+
+      {/* Priority Sections */}
+      {totalRecs > 0 ? (
+        <div>
+          <PrioritySection
+            priority="critical"
+            recommendations={criticalRecs}
+            onAction={handleAction}
+            defaultExpanded={true}
+          />
+          <PrioritySection
+            priority="high"
+            recommendations={highRecs}
+            onAction={handleAction}
+            defaultExpanded={true}
+          />
+          <PrioritySection
+            priority="medium"
+            recommendations={mediumRecs}
+            onAction={handleAction}
+            defaultExpanded={false}
+          />
+        </div>
+      ) : (
+        <Card className="p-8 text-center">
+          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Sparkles className="w-8 h-8 text-green-600" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">Great Job!</h3>
+          <p className="text-gray-600">Your listing is well-optimized. Keep monitoring your engagement metrics.</p>
+        </Card>
+      )}
+
+      {/* Dispute Report Section */}
+      <DisputeReportSection />
     </div>
   );
 }

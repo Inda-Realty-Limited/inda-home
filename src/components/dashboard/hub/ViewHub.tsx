@@ -1,24 +1,26 @@
 import { useState } from "react";
-import { 
-  Edit3, 
-  Eye, 
-  Users, 
-  MessageSquare, 
+import {
+  Edit3,
+  Eye,
+  Users,
+  MessageSquare,
   Star,
   FileText,
   ExternalLink,
   Lightbulb,
-  ArrowLeft
+  ArrowLeft,
+  X,
+  CheckCircle,
+  AlertTriangle
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { ImprovementsTab, type PropertyMetrics } from "@/components/dashboard/hub/ImprovementsTab";
-import { 
-  BuyerPreviewTab, 
-  type BuyerPreviewSettings, 
-  type BuyerPreviewMetrics 
+import {
+  BuyerPreviewTab,
+  type BuyerPreviewSettings,
+  type BuyerPreviewMetrics
 } from "@/components/dashboard/hub/BuyerPreviewTab";
-import { ComprehensiveBalancedReport } from "@/components/dashboard/hub/ComprehensiveBalancedReport";
 
 // ============================================================================
 // TYPES
@@ -97,11 +99,11 @@ function calculateCompletenessScore(property: PropertyData): number {
 
 function getReportStrength(score: number) {
   if (score >= 80) {
-    return { label: "Excellent", color: "green", emoji: "🔥" };
+    return { label: "Excellent", color: "green", icon: "check" as const };
   } else if (score >= 60) {
-    return { label: "Good", color: "yellow", emoji: "⚠️" };
+    return { label: "Good", color: "yellow", icon: "warning" as const };
   } else {
-    return { label: "Needs Work", color: "red", emoji: "❌" };
+    return { label: "Needs Work", color: "red", icon: "x" as const };
   }
 }
 
@@ -111,7 +113,6 @@ function getReportStrength(score: number) {
 
 export function ViewHub({ property, intelligenceData, daysOnMarket = 0, onEdit, onBack }: ViewHubProps) {
   const [activeTab, setActiveTab] = useState("improvements");
-  const [showFullReport, setShowFullReport] = useState(false);
   
   // Calculate metrics
   const completenessScore = calculateCompletenessScore(property);
@@ -133,7 +134,7 @@ export function ViewHub({ property, intelligenceData, daysOnMarket = 0, onEdit, 
   
   // Buyer Preview Settings
   const [buyerPreviewSettings, setBuyerPreviewSettings] = useState<BuyerPreviewSettings>({
-    visibilityMode: "gated",
+    visibilityMode: "gated" as const,
     requirePhone: false,
     badgeStyle: "full",
     showConfidenceScore: true,
@@ -174,130 +175,7 @@ export function ViewHub({ property, intelligenceData, daysOnMarket = 0, onEdit, 
     setBuyerPreviewSettings(prev => ({ ...prev, ...updates }));
     console.log("Buyer preview settings updated:", updates);
   };
-  
-  // Use passed intelligence data or fallback to sample
-  const displayIntelligenceData = intelligenceData || {
-    property_details: {
-      price: parseInt(property.price.replace(/[^\d]/g, '')) || 90000000,
-      location: property.address,
-      specs: {
-        bed: parseInt(property.bedrooms || '4'),
-        bath: parseInt(property.bathrooms || '4'),
-        size: "500sqm"
-      },
-      userId: "test_user_001",
-      title: property.propertyType,
-      features: "Swimming pool, 24/7 Power"
-    },
-    location_intelligence: {
-      coordinates: {
-        lat: 6.535498,
-        lng: 3.3086778
-      },
-      district: property.address.split(',')[0] || "Oshodi",
-      accessibility: {
-        to_victoria_island_minutes: 48,
-        to_airport_minutes: 21,
-        to_lekki_ftz_minutes: 122,
-        to_ikeja_mall_minutes: 40,
-        to_marina_minutes: 45,
-        to_third_mainland_bridge_minutes: 39
-      },
-      nearby_schools: {
-        count: 20,
-        distance_km: 3.0,
-        names: ["Effortswill Schools", "Seed Of Messiah Schools", "Top Highflyer Schools"]
-      },
-      nearby_hospitals: {
-        count: 20,
-        distance_km: 2.5,
-        names: ["Ati - Gab Medical", "Kola Christ wealth"]
-      },
-      nearby_shopping: {
-        count: 20,
-        distance_km: 2.0,
-        names: ["Divine Grace Shopping Plaza", "Arena Shopping Complex"]
-      },
-      infrastructure_projects: {
-        oshodi_transport_interchange: {
-          distance_km: 4.4,
-          expected_value_increase_pct: "High Commercial Traffic"
-        }
-      }
-    },
-    investment_analysis: {
-      total_investment_breakdown: {
-        purchase_price: parseInt(property.price.replace(/[^\d]/g, '')) || 90000000,
-        legal_fees: (parseInt(property.price.replace(/[^\d]/g, '')) || 90000000) * 0.05,
-        legal_fees_pct: 5,
-        agency_fees: (parseInt(property.price.replace(/[^\d]/g, '')) || 90000000) * 0.05,
-        agency_fees_pct: 5,
-        survey_fees: (parseInt(property.price.replace(/[^\d]/g, '')) || 90000000) * 0.005,
-        survey_fees_pct: 0.5,
-        stamp_duty: (parseInt(property.price.replace(/[^\d]/g, '')) || 90000000) * 0.015,
-        stamp_duty_pct: 1.5,
-        land_registration: 115000,
-        governors_consent: (parseInt(property.price.replace(/[^\d]/g, '')) || 90000000) * 0.015,
-        governors_consent_pct: 1.5,
-        total_investment: (parseInt(property.price.replace(/[^\d]/g, '')) || 90000000) * 1.136,
-        additional_costs_pct: 13.6
-      },
-      annual_rental_income: {
-        net_rental_income: 3000000,
-        gross_yield_pct: 4.44,
-        net_yield_pct: 3.33,
-        rental_range_min: 3600000,
-        rental_range_max: 4600000
-      },
-      meta: {
-        rent_source: "bigquery"
-      }
-    },
-    value_projection: {
-      annual_appreciation_pct: 36,
-      historical_avg_pct: 12,
-      year_1: { value: 122399999, gain_pct: 36.0 },
-      year_2: { value: 166463999, gain_pct: 85.0 },
-      year_3: { value: 226391039, gain_pct: 151.5 },
-      year_4: { value: 307891814, gain_pct: 242.1 },
-      year_5: { value: 418732867, gain_pct: 365.3 },
-      projected_gain_5_year: 328732867
-    },
-    cash_flow_forecast: {
-      year_1: { rental_income: 4000000, expenses: 1000000, net_cash_flow: 3000000 },
-      year_2: { rental_income: 4400000, expenses: 1100000, net_cash_flow: 3300000 },
-      year_3: { rental_income: 4840000, expenses: 1210000, net_cash_flow: 3630000 },
-      year_4: { rental_income: 5324000, expenses: 1331000, net_cash_flow: 3993000 },
-      year_5: { rental_income: 5856400, expenses: 1464100, net_cash_flow: 4392300 }
-    }
-  };
-  
-  // If showing full report, render it in a modal
-  if (showFullReport) {
-    return (
-      <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl w-full max-w-7xl max-h-[90vh] overflow-auto">
-          <ComprehensiveBalancedReport
-            property={{
-                id: property.id,
-                name: property.propertyType,
-                location: property.address,
-                price: property.price,
-                priceValue: parseInt(property.price.replace(/[^\d]/g, '')) || 0,
-                bedrooms: parseInt(property.bedrooms || '0'),
-                images: property.photos.map(p => p.url || '').filter(Boolean),
-                developerRating: 4.8,
-                listingType: "developer" as const
-            }}
-            onBack={() => setShowFullReport(false)}
-            accessLevel="full"
-            intelligenceData={displayIntelligenceData}
-          />
-        </div>
-      </div>
-    );
-  }
-  
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -314,14 +192,14 @@ export function ViewHub({ property, intelligenceData, daysOnMarket = 0, onEdit, 
               <h1 className="text-2xl font-bold text-gray-900">Property Hub</h1>
               <p className="text-sm text-gray-600">{property.address}</p>
             </div>
-            <button
-              onClick={() => setShowFullReport(true)}
+            <a
+              href={`/property/${property.id}`}
               className="px-6 py-3 bg-gradient-to-r from-[#4ea8a1] to-[#3d8580] text-white rounded-lg hover:shadow-lg transition-all font-semibold flex items-center gap-2"
             >
               <FileText className="w-5 h-5" />
               View Full Report
               <ExternalLink className="w-4 h-4" />
-            </button>
+            </a>
             <button
               onClick={onEdit}
               className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-medium flex items-center gap-2"
@@ -341,7 +219,9 @@ export function ViewHub({ property, intelligenceData, daysOnMarket = 0, onEdit, 
             }`}>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-xs text-gray-600">Completeness</span>
-                <span className="text-lg">{strength.emoji}</span>
+                {strength.icon === "check" && <CheckCircle className="w-5 h-5 text-green-600" />}
+                {strength.icon === "warning" && <AlertTriangle className="w-5 h-5 text-yellow-600" />}
+                {strength.icon === "x" && <X className="w-5 h-5 text-red-600" />}
               </div>
               <div className={`text-2xl font-bold ${
                 strength.color === "green" ? "text-green-700" :

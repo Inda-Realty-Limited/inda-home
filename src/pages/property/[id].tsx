@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
-import { Container, Navbar } from '@/components';
+import { Container } from '@/components';
 import { PropertyDetail } from '@/views/property-details/PropertyDetail';
 import apiClient from '@/api';
 import LoadingScreen from '@/views/result/sections/LoadingScreen';
@@ -81,21 +81,11 @@ const PropertyDetailsPage: React.FC = () => {
   }, [router.isReady, id]);
 
   if (loading) {
-    return (
-      <Container noPadding className="min-h-screen bg-[#F9F9F9]">
-        <Navbar />
-        <LoadingScreen currentStep={0} />
-      </Container>
-    );
+    return <LoadingScreen currentStep={0} />;
   }
 
   if (error || !listing) {
-    return (
-      <Container noPadding className="min-h-screen bg-[#F9F9F9]">
-        <Navbar />
-        <NotFoundScreen searchQuery={id as string} searchType="id" />
-      </Container>
-    );
+    return <NotFoundScreen searchQuery={id as string} searchType="id" />;
   }
 
   const property = mapListingToPropertyDetail(listing);
