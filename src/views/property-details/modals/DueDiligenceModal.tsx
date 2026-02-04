@@ -1,21 +1,194 @@
-import { X, Shield, CheckCircle2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
+import { X, Shield, CheckCircle2, Loader2 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { startListingPayment } from "@/api/payments";
+import { PaymentPlan } from "@/types/questionnaire";
 
 interface DueDiligenceModalProps {
   isOpen: boolean;
   onClose: () => void;
   propertyName: string;
   propertyPrice: string;
+  propertyAddress?: string;
+  listingId?: string;
+  listingUrl?: string;
   tier: 'deep' | 'deeper';
   onTierChange: (tier: 'deep' | 'deeper') => void;
 }
 
-export function DueDiligenceModal({ isOpen, onClose, propertyName, propertyPrice, tier, onTierChange }: DueDiligenceModalProps) {
+export function DueDiligenceModal({
+  isOpen,
+  onClose,
+  propertyName,
+  propertyPrice,
+  propertyAddress,
+  listingId,
+  listingUrl,
+  tier,
+  onTierChange
+}: DueDiligenceModalProps) {
+  const router = useRouter();
+  const { user } = useAuth();
+
+  const [formData, setFormData] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    notes: ""
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Pre-fill form with user data
+  useEffect(() => {
+    if (user) {
+      setFormData(prev => ({
+        ...prev,
+        fullName: prev.fullName || [user.firstName, user.lastName].filter(Boolean).join(" ").trim(),
+        email: prev.email || user.email || "",
+        phone: prev.phone || (user as any).phoneNumber || (user as any).phone || ""
+      }));
+    }
+  }, [user]);
+
+  // Reset form when modal opens/closes
+  useEffect(() => {
+    if (!isOpen) {
+      setError(null);
+      setIsSubmitting(false);
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+    setError(null);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    alert(`${tier === 'deep' ? 'Deep' : 'Deeper'} Dive report order submitted! Our team will contact you within 24 hours.`);
-    onClose();
+    setError(null);
+
+    // Validation
+    if (!formData.fullName.trim()) {
+      setError("Please enter your full name");
+      return;
+    }
+    if (!formData.email.trim()) {
+      setError("Please enter your email address");
+      return;
+    }
+    const emailPattern = /[^\s@]+@[^\s@]+\.[^\s@]+/;
+    if (!emailPattern.test(formData.email.trim())) {
+      setError("Please enter a valid email address");
+      return;
+    }
+    if (!formData.phone.trim()) {
+      setError("Please enter your phone number");
+      return;
+    }
+
+    // Check if user is logged in
+    if (!user) {
+      const returnPath = encodeURIComponent(router.asPath || "/");
+      router.push(`/auth/signin?returnTo=${returnPath}`);
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const plan: PaymentPlan = tier === 'deep' ? 'deepDive' : 'deeperDive';
+
+      // Build callback URL
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
+      const callbackPath = `/order/received?plan=${plan}&q=${encodeURIComponent(listingUrl || propertyName)}`;
+      const callbackUrl = origin ? `${origin}${callbackPath}` : undefined;
+
+      // Build payload
+      const payload = {
+        plan,
+        listingId: listingId || undefined,
+        listingUrl: listingUrl || undefined,
+        callbackUrl,
+        questionnaire: {
+          propertyBasics: {
+            propertyAddress: propertyAddress || propertyName,
+            propertyDescription: `${tier === 'deep' ? 'Deep' : 'Deeper'} Dive verification request for ${propertyName}`,
+            propertyCategory: "residential",
+            propertyType: "property",
+            propertyStatus: "existing",
+            listingUrl: listingUrl || undefined
+          },
+          legalDocuments: {},
+          buyerInformation: {
+            fullName: formData.fullName.trim(),
+            email: formData.email.trim(),
+            phoneNumber: formData.phone.trim(),
+            notes: formData.notes.trim() || undefined
+          },
+          metadata: {
+            formVersion: "due-diligence-modal-v1",
+            uiPath: "property-details/DueDiligenceModal",
+            propertyName,
+            propertyPrice,
+            ...(listingId && { listingId }),
+            ...(listingUrl && { listingUrl })
+          }
+        }
+      };
+
+      const response = await startListingPayment(payload);
+
+      // Check if already paid
+      if (response.alreadyPaid) {
+        const reference = response.reference || response.payment?.reference || "";
+        const params = new URLSearchParams({ plan, q: listingUrl || propertyName });
+        if (reference) params.set("reference", reference);
+        router.push(`/order/received?${params.toString()}`);
+        return;
+      }
+
+      // Redirect to payment
+      const redirectUrl =
+        response.authorizationUrl ||
+        response.payment?.authorizationUrl ||
+        response.payment?.initResponse?.data?.link;
+
+      if (redirectUrl) {
+        window.location.href = redirectUrl;
+        return;
+      }
+
+      // Fallback if no redirect URL
+      setError("Payment initialization failed. Please try again or contact support.");
+    } catch (err: any) {
+      console.error("Payment error:", err);
+      console.error("Payment error details:", {
+        status: err?.response?.status,
+        statusText: err?.response?.statusText,
+        url: err?.config?.url,
+        baseURL: err?.config?.baseURL,
+        data: err?.response?.data
+      });
+
+      let message = "Something went wrong. Please try again.";
+      if (err?.response?.status === 404) {
+        message = "Payment service unavailable. Please try again later or contact support.";
+      } else if (err?.response?.status === 401) {
+        message = "Please sign in to continue.";
+      } else if (err?.response?.data?.message) {
+        message = err.response.data.message;
+      } else if (err?.message) {
+        message = err.message;
+      }
+      setError(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const isDeepDive = tier === 'deep';
@@ -138,14 +311,24 @@ export function DueDiligenceModal({ isOpen, onClose, propertyName, propertyPrice
             </p>
           </div>
 
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+              {error}
+            </div>
+          )}
+
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm text-gray-700 mb-2">Full Name *</label>
               <input
                 type="text"
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#50b8b1] focus:border-transparent"
+                name="fullName"
+                value={formData.fullName}
+                onChange={handleInputChange}
+                disabled={isSubmitting}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#50b8b1] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                 placeholder="Enter your full name"
               />
             </div>
@@ -154,8 +337,11 @@ export function DueDiligenceModal({ isOpen, onClose, propertyName, propertyPrice
               <label className="block text-sm text-gray-700 mb-2">Email Address *</label>
               <input
                 type="email"
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#50b8b1] focus:border-transparent"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                disabled={isSubmitting}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#50b8b1] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                 placeholder="your.email@example.com"
               />
             </div>
@@ -164,8 +350,11 @@ export function DueDiligenceModal({ isOpen, onClose, propertyName, propertyPrice
               <label className="block text-sm text-gray-700 mb-2">Phone Number *</label>
               <input
                 type="tel"
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#50b8b1] focus:border-transparent"
+                name="phone"
+                value={formData.phone}
+                onChange={handleInputChange}
+                disabled={isSubmitting}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#50b8b1] focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                 placeholder="+234 800 000 0000"
               />
             </div>
@@ -175,8 +364,12 @@ export function DueDiligenceModal({ isOpen, onClose, propertyName, propertyPrice
                 Additional Notes (Optional)
               </label>
               <textarea
+                name="notes"
+                value={formData.notes}
+                onChange={handleInputChange}
+                disabled={isSubmitting}
                 rows={3}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#50b8b1] focus:border-transparent resize-none"
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#50b8b1] focus:border-transparent resize-none disabled:bg-gray-100 disabled:cursor-not-allowed"
                 placeholder="Any specific concerns or areas you'd like us to focus on?"
               />
             </div>
@@ -185,22 +378,33 @@ export function DueDiligenceModal({ isOpen, onClose, propertyName, propertyPrice
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                disabled={isSubmitting}
+                className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="flex-1 px-6 py-3 bg-[#50b8b1] text-white rounded-lg hover:bg-[#45a69f] transition-colors flex items-center justify-center gap-2"
+                disabled={isSubmitting}
+                className="flex-1 px-6 py-3 bg-[#50b8b1] text-white rounded-lg hover:bg-[#45a69f] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Shield className="w-5 h-5" />
-                Order Report - {price}
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Shield className="w-5 h-5" />
+                    Order Report - {price}
+                  </>
+                )}
               </button>
             </div>
           </form>
 
           <p className="text-xs text-gray-500 mt-4 text-center">
-            💡 Payment via bank transfer or card • Full refund if we can&apos;t complete the report • Secure & confidential
+            Payment via card or bank transfer - Full refund if we can&apos;t complete the report - Secure &amp; confidential
           </p>
         </div>
       </div>

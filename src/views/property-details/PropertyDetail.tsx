@@ -441,234 +441,93 @@ export function PropertyDetail({
       ]
     }
   ] : [
-    // Default mock data when no intelligence data is available
+    // Fallback when full intelligence data is not available - use actual property data
     {
-      title: "Fair Market Value & Pricing",
-      type: "price",
+      title: "Property Overview",
+      type: "standard",
       confidence: "high",
       questions: [
         {
-          question: "Is this property priced fairly?",
-          answer: "Yes, the asking price of ₦45M is within 5% of estimated Fair Market Value (₦43.2M - ₦46.8M).",
+          question: "What is the asking price?",
+          answer: `This property is listed at ${property.price}${property.location ? ` in ${property.location}` : ''}.`,
           confidence: "high",
-          dataSource: "Analysis of 47 comparable properties in Lekki Phase 1",
-          details: "Price per sqm: ₦285K (Area avg: ₦270K-₦300K)"
+          dataSource: "Listing data"
         },
         {
-          question: "How does this compare to similar properties?",
-          answer: "This property is priced at the median for similar 3-bedroom units in the area.",
+          question: "What are the specifications?",
+          answer: `${property.bedrooms || 0} bedroom${property.bedrooms !== 1 ? 's' : ''}${property.scannedData?.bathrooms ? `, ${property.scannedData.bathrooms} bathroom${property.scannedData.bathrooms !== 1 ? 's' : ''}` : ''}${property.scannedData?.propertyType ? `. Property type: ${property.scannedData.propertyType}` : ''}.`,
           confidence: "high",
-          dataSource: "Last 6 months of sales data"
+          dataSource: "Listing data"
         }
       ]
     },
     {
-      title: "Financial Performance & ROI",
+      title: "Investment Analysis",
       type: "financial",
-      confidence: "medium",
+      confidence: "preliminary",
       questions: [
         {
-          question: "What rental income can I expect?",
-          answer: "Estimated rental income: ₦2.7M - ₦3.2M annually (6-8% gross yield).",
-          confidence: "medium",
-          dataSource: "Current rental listings in area",
-          details: "Area average yield: 5.2%. This property is above average due to amenities."
-        },
-        {
-          question: "What are the total ownership costs?",
-          answer: "Estimated ₦680K/year including service charge (₦420K), insurance (₦180K), and maintenance (₦80K).",
-          confidence: "medium",
-          dataSource: "Estate management data"
-        }
-      ]
-    },
-    {
-      title: "Risk Assessment",
-      type: "risk",
-      confidence: "medium",
-      questions: [
-        {
-          question: "What are the main risks with this property?",
-          answer: "Low overall risk. Primary consideration: Title verification recommended before purchase.",
-          confidence: "medium",
-          dataSource: "Based on location, developer track record, and market conditions",
-          details: "Location risk: Low • Developer risk: Low • Market risk: Medium • Legal risk: Pending verification"
-        },
-        {
-          question: "Are there any red flags?",
-          answer: "No major red flags identified. Developer has 4.5/5 rating and completed 12 projects.",
-          confidence: "high",
-          dataSource: "Developer track record analysis"
-        }
-      ]
-    },
-    {
-      title: "Exit Strategy & Liquidity",
-      type: "exit",
-      confidence: "high",
-      questions: [
-        {
-          question: "How easy is it to resell this property?",
-          answer: "High liquidity. Lekki Phase 1 properties typically sell within 60-90 days.",
-          confidence: "high",
-          dataSource: "Transaction velocity analysis",
-          details: "Liquidity score: 8.2/10 (Above area average of 6.5/10)"
-        },
-        {
-          question: "What's the expected appreciation?",
-          answer: "Historical appreciation: 8-12% annually for this area over past 5 years.",
-          confidence: "medium",
-          dataSource: "Price index data"
-        }
-      ]
-    },
-    {
-      title: "Location & Infrastructure",
-      type: "standard",
-      confidence: "high",
-      questions: [
-        {
-          question: "What's nearby?",
-          answer: "Within 5km: Lekki Expressway (2km), Shoprite (3km), International School (1.5km)",
-          confidence: "high",
-          dataSource: "Verified location data"
-        },
-        {
-          question: "How's the infrastructure?",
-          answer: "24/7 power (estate generator), borehole water, good road access, security.",
-          confidence: "high",
-          dataSource: "Estate amenities verification"
-        }
-      ]
-    },
-    {
-      title: "Amenities & Features",
-      type: "standard",
-      confidence: "high",
-      questions: [
-        {
-          question: "What amenities does the estate offer?",
-          answer: "Swimming pool, gym, children's play area, 24/7 security, estate management office.",
-          confidence: "high",
-          dataSource: "Estate amenities list"
-        },
-        {
-          question: "What about parking and storage?",
-          answer: "2 dedicated parking spaces, additional visitor parking available. No separate storage unit.",
-          confidence: "high",
-          dataSource: "Property specifications"
-        },
-        {
-          question: "Are pets allowed?",
-          answer: "Yes, pets are allowed with estate management approval. Weight/breed restrictions may apply.",
-          confidence: "medium",
-          dataSource: "Estate by-laws"
-        }
-      ]
-    },
-    {
-      title: "Utilities & Running Costs",
-      type: "financial",
-      confidence: "medium",
-      questions: [
-        {
-          question: "What are the monthly/annual fees?",
-          answer: "Service charge: ₦35K/month (₦420K/year), Estate security levy: ₦15K/quarter.",
-          confidence: "high",
-          dataSource: "Estate management fee schedule",
-          details: "Covers: 24/7 security, estate maintenance, waste management, amenities upkeep"
-        },
-        {
-          question: "How reliable is power and water?",
-          answer: "Power: Estate generator provides 20 hours daily backup. Water: Borehole + treatment plant, constant supply.",
-          confidence: "high",
-          dataSource: "Estate infrastructure report"
-        },
-        {
-          question: "What about internet connectivity?",
-          answer: "Fiber optic available from multiple ISPs (MTN, Airtel, Smile). Speeds up to 100Mbps reported.",
-          confidence: "medium",
-          dataSource: "Resident surveys"
-        }
-      ]
-    },
-    {
-      title: "Neighborhood & Lifestyle",
-      type: "standard",
-      confidence: "high",
-      questions: [
-        {
-          question: "What schools are nearby?",
-          answer: "Top-rated schools within 5km: Greensprings (1.2km), Corona (2.5km), Lagoon (3km).",
-          confidence: "high",
-          dataSource: "Location mapping"
-        },
-        {
-          question: "How long is the commute to key areas?",
-          answer: "VI: 25-40min, Lekki Phase 1: 10min, Ajah: 15min, Ikoyi: 30-45min (traffic dependent).",
-          confidence: "medium",
-          dataSource: "Google Maps + resident reports",
-          details: "Times assume moderate traffic conditions"
-        },
-        {
-          question: "What's the neighborhood like?",
-          answer: "Quiet, family-friendly estate. Mix of young professionals and families. Low crime area.",
-          confidence: "medium",
-          dataSource: "Area demographics analysis"
-        }
-      ]
-    },
-    {
-      title: "Construction & Property Condition",
-      type: "standard",
-      confidence: "medium",
-      questions: [
-        {
-          question: "What's the construction quality?",
-          answer: "Solid concrete structure, ceramic tiles, aluminum windows, modern fittings. Built in 2020.",
-          confidence: "medium",
-          dataSource: "Property inspection photos",
-          details: "Professional inspection recommended before purchase"
-        },
-        {
-          question: "Any known defects or issues?",
-          answer: "No major structural issues reported. Minor wear typical for 4-year-old property.",
+          question: "What's the investment potential?",
+          answer: "Full investment analysis is not yet available for this property. Use the 'Ask AI' feature to get estimates based on the location and property type.",
           confidence: "preliminary",
-          dataSource: "Visual assessment",
-          needsVerification: true
-        },
-        {
-          question: "What's included in the sale?",
-          answer: "All fixed fittings, kitchen cabinets, wardrobes. Air conditioners negotiable.",
-          confidence: "medium",
-          dataSource: "Listing details"
+          dataSource: "Analysis pending",
+          details: "Request a full property report for detailed investment projections."
         }
       ]
     },
     {
-      title: "Legal & Documentation",
+      title: "Location & Amenities",
       type: "standard",
       confidence: "preliminary",
       questions: [
         {
-          question: "What's the title status?",
-          answer: "Title type: Certificate of Occupancy (C of O). Verification recommended.",
+          question: "What's in the area?",
+          answer: property.location
+            ? `This property is located in ${property.location}. Use the 'Ask AI' feature to learn about nearby schools, hospitals, and shopping centers.`
+            : "Location details are pending. Check back later for area information.",
           confidence: "preliminary",
-          dataSource: "Developer provided",
-          needsVerification: true,
-          details: "Tip: Request independent title verification (₦50K-₦150K) before purchase"
-        },
+          dataSource: "Location analysis pending"
+        }
+      ]
+    },
+    {
+      title: "Features & Description",
+      type: "standard",
+      confidence: "high",
+      questions: property.scannedData?.description ? [
         {
-          question: "Are there any encumbrances?",
-          answer: "Developer claims no encumbrances. Independent verification recommended.",
+          question: "Property description",
+          answer: property.scannedData.description,
+          confidence: "high",
+          dataSource: "Listing description"
+        },
+        ...(property.scannedData?.features?.length ? [{
+          question: "What features does this property have?",
+          answer: property.scannedData.features.join(", "),
+          confidence: "high",
+          dataSource: "Listing data"
+        }] : [])
+      ] : [
+        {
+          question: "What features does this property have?",
+          answer: property.scannedData?.features?.length
+            ? property.scannedData.features.join(", ")
+            : "Detailed features are not yet available. Contact the listing agent for more information.",
+          confidence: property.scannedData?.features?.length ? "high" : "preliminary",
+          dataSource: "Listing data"
+        }
+      ]
+    },
+    {
+      title: "Get Full Analysis",
+      type: "standard",
+      confidence: "preliminary",
+      questions: [
+        {
+          question: "How can I get more detailed information?",
+          answer: "This property doesn't have full intelligence data yet. You can: 1) Use the 'Ask AI' button to ask specific questions, 2) Request a full property report, or 3) Contact the listing agent directly.",
           confidence: "preliminary",
-          dataSource: "Developer disclosure"
-        },
-        {
-          question: "What's the property tax situation?",
-          answer: "Annual land use charge: Estimated ₦45K-₦65K based on property value and location.",
-          confidence: "medium",
-          dataSource: "Lagos State tax calculator"
+          dataSource: "INDA recommendation"
         }
       ]
     }
@@ -750,13 +609,21 @@ export function PropertyDetail({
         <div className="mb-6 space-y-3">
           {/* Main Selected Image - Square */}
           <div className="relative rounded-xl overflow-hidden aspect-square">
-            <Image
-              src={property.images?.[currentImageIndex] || property.images?.[0] || "https://images.unsplash.com/photo-1568605114967-8130f3a36994"}
-              alt={property.name}
-              fill
-              unoptimized
-              className="object-cover"
-            />
+            {property.images && property.images.length > 0 ? (
+              <Image
+                src={property.images[currentImageIndex] || property.images[0]}
+                alt={property.name}
+                fill
+                unoptimized
+                className="object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gray-100 flex flex-col items-center justify-center">
+                <Home className="w-16 h-16 text-gray-300 mb-3" />
+                <p className="text-gray-400 text-sm">No photos available</p>
+                <p className="text-gray-400 text-xs mt-1">Contact agent for images</p>
+              </div>
+            )}
           </div>
 
           {/* Thumbnail Grid - Square thumbnails */}
@@ -1179,6 +1046,8 @@ export function PropertyDetail({
         isOpen={showAskAI}
         onClose={() => setShowAskAI(false)}
         propertyName={property.name}
+        propertyData={property}
+        intelligenceData={intelligenceData}
       />
 
       <DueDiligenceModal
@@ -1186,6 +1055,9 @@ export function PropertyDetail({
         onClose={() => setShowExtraVerification(false)}
         propertyName={property.name}
         propertyPrice={property.price}
+        propertyAddress={property.location}
+        listingId={property.listingId}
+        listingUrl={property.scannedFrom || undefined}
         tier={verificationTier}
         onTierChange={setVerificationTier}
       />
