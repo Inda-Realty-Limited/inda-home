@@ -22,6 +22,7 @@ export interface Property {
     views: number;
     interestedBuyers: number;
     lastUpdated: string;
+    recentActivity?: string;
   };
   scannedData?: {
     bathrooms?: number | null;
@@ -60,12 +61,16 @@ export interface Property {
 
 export interface QASection {
   title: string;
-  type?: "financial" | "risk" | "exit" | "developer" | "portfolio" | "price" | "mortgage";
+  type?: "financial" | "risk" | "exit" | "developer" | "portfolio" | "price" | "mortgage" | "standard";
   layer?: "verification-required";
+  confidence?: "high" | "medium" | "preliminary" | "verified";
   questions: {
     question: string;
     answer: string;
     details?: string;
+    confidence?: "high" | "medium" | "preliminary" | "verified";
+    dataSource?: string;
+    needsVerification?: boolean;
   }[];
 }
 

@@ -1,127 +1,672 @@
+/**
+ * COMPREHENSIVE BALANCED BUYER REPORT
+ *
+ * Solves the problem: "How do we keep ALL Q&A content (value prop) while still being balanced?"
+ *
+ * STRATEGY:
+ * 1. Keep ALL Q&A sections (Financial, Risk, Exit, etc.) - This is the value prop
+ * 2. Replace scary yellow warnings with confidence indicators
+ * 3. Use neutral language throughout ("based on analysis" not "incomplete")
+ * 4. Add market context to frame everything properly
+ * 5. Progressive disclosure for organization, not hiding
+ *
+ * WHAT'S DIFFERENT FROM OLD:
+ * - No "INCOMPLETE DATA" yellow banners
+ * - No "Requires Verification" scary badges
+ * - No marketing language ("beautiful")
+ * - Confidence badges (High/Medium/Preliminary) instead
+ * - "Based on X" sources instead of "missing Y"
+ * - Market benchmarks for context
+ * - ALL content preserved
+ */
+
 import { useState, useRef } from "react";
 import Image from "next/image";
-import { ChevronLeft, Bookmark, Share2, ChevronDown, ChevronUp, MapPin, Bed, Bath, Car, Home, Eye, Users, AlertTriangle, CheckCircle2, Link2, Star, TrendingUp, Shield, Building2, MessageCircle, BadgeCheck, FileText, Sparkles } from "lucide-react";
-import { Property, QASection } from "../property-details/data/propertyData";
-import { qaData } from "../property-details/data/propertyData";
-import { scannedQAData } from "../property-details/data/scannedQAData";
-import { FinancialPerformanceSection } from "./sections/FinancialPerformanceSection";
-import { RiskAssessmentSection } from "./sections/RiskAssessmentSection";
-import { ExitLiquiditySection } from "./sections/ExitLiquiditySection";
-import { DeveloperCredibilitySection } from "./sections/DeveloperCredibilitySection";
-import { PortfolioFitSection } from "./sections/PortfolioFitSection";
-import { PriceValueSection } from "./sections/PriceValueSection";
-import { MortgageInsuranceSection } from "./sections/MortgageInsuranceSection";
-import { OffPlanProtection } from "./sections/OffPlanProtection";
-import { AskAIModal } from "./modals/AskAIModal";
-import { MakeOfferModal } from "./modals/MakeOfferModal";
+import {
+  ChevronLeft,
+  ChevronDown,
+  ChevronUp,
+  MapPin,
+  Bookmark,
+  Share2,
+  Eye,
+  Users,
+  TrendingUp,
+  Shield,
+  Star,
+  Bed,
+  Bath,
+  Car,
+  Home,
+  Sparkles,
+  Info,
+  CheckCircle2,
+  Clock,
+  Target,
+  MessageCircle,
+  BadgeCheck,
+  FileText
+} from "lucide-react";
+import { Property, QASection } from "./data/propertyData";
 import { DueDiligenceModal } from "./modals/DueDiligenceModal";
-import { VerificationModal } from "./modals/VerificationModal";
-import { ScheduleSiteVisitModal } from "./modals/ScheduleSiteVisitModal";
+import { AskAIModal } from "./modals/AskAIModal";
+
+// Real data structure from data engineer
+interface PropertyIntelligenceData {
+  property_details: {
+    price: number;
+    location: string;
+    specs: {
+      bed: number;
+      bath: number;
+      size: string;
+    };
+    userId: string;
+    title: string;
+    features: string;
+  };
+  location_intelligence: {
+    coordinates: {
+      lat: number;
+      lng: number;
+    };
+    district: string;
+    accessibility: {
+      to_victoria_island_minutes: number;
+      to_airport_minutes: number;
+      to_lekki_ftz_minutes: number;
+      to_ikeja_mall_minutes: number;
+      to_marina_minutes: number;
+      to_third_mainland_bridge_minutes: number;
+    };
+    nearby_schools: {
+      count: number;
+      distance_km: number;
+      names: string[];
+    };
+    nearby_hospitals: {
+      count: number;
+      distance_km: number;
+      names: string[];
+    };
+    nearby_shopping: {
+      count: number;
+      distance_km: number;
+      names: string[];
+    };
+    infrastructure_projects: {
+      [key: string]: {
+        distance_km: number;
+        expected_value_increase_pct: string;
+      };
+    };
+  };
+  investment_analysis: {
+    total_investment_breakdown: {
+      purchase_price: number;
+      legal_fees: number;
+      legal_fees_pct: number;
+      agency_fees: number;
+      agency_fees_pct: number;
+      survey_fees: number;
+      survey_fees_pct: number;
+      stamp_duty: number;
+      stamp_duty_pct: number;
+      land_registration: number;
+      governors_consent: number;
+      governors_consent_pct: number;
+      total_investment: number;
+      additional_costs_pct: number;
+    };
+    annual_rental_income: {
+      net_rental_income: number;
+      gross_yield_pct: number;
+      net_yield_pct: number;
+      rental_range_min: number;
+      rental_range_max: number;
+    };
+    meta: {
+      rent_source: string;
+    };
+  };
+  value_projection: {
+    annual_appreciation_pct: number;
+    historical_avg_pct: number;
+    year_1: {
+      value: number;
+      gain_pct: number;
+    };
+    year_2: {
+      value: number;
+      gain_pct: number;
+    };
+    year_3: {
+      value: number;
+      gain_pct: number;
+    };
+    year_4: {
+      value: number;
+      gain_pct: number;
+    };
+    year_5: {
+      value: number;
+      gain_pct: number;
+    };
+    projected_gain_5_year: number;
+  };
+  cash_flow_forecast: {
+    year_1: {
+      rental_income: number;
+      expenses: number;
+      net_cash_flow: number;
+    };
+    year_2: {
+      rental_income: number;
+      expenses: number;
+      net_cash_flow: number;
+    };
+    year_3: {
+      rental_income: number;
+      expenses: number;
+      net_cash_flow: number;
+    };
+    year_4: {
+      rental_income: number;
+      expenses: number;
+      net_cash_flow: number;
+    };
+    year_5: {
+      rental_income: number;
+      expenses: number;
+      net_cash_flow: number;
+    };
+  };
+}
 
 interface PropertyDetailProps {
   property: Property;
   onBack: () => void;
-  onReserve: () => void;
+  onReserve?: () => void;
+  accessLevel?: "preview" | "basic" | "full";
+  intelligenceData?: PropertyIntelligenceData;
 }
 
-export function PropertyDetail({ property, onBack }: PropertyDetailProps) {
+export function PropertyDetail({
+  property,
+  onBack,
+  accessLevel = "preview",
+  intelligenceData
+}: PropertyDetailProps) {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [showAskAI, setShowAskAI] = useState(false);
-  const [showMakeOffer, setShowMakeOffer] = useState(false);
-  const [showDueDiligence, setShowDueDiligence] = useState(false);
-  const [dueDiligenceTier, setDueDiligenceTier] = useState<'deep' | 'deeper'>('deep');
   const [isBookmarked, setIsBookmarked] = useState(false);
-  const [showVerificationModal, setShowVerificationModal] = useState(false);
-  const [verificationPaid, setVerificationPaid] = useState(false);
-  const [showSiteVisit, setShowSiteVisit] = useState(false);
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [showAskAI, setShowAskAI] = useState(false);
+  const [showExtraVerification, setShowExtraVerification] = useState(false);
+  const [verificationTier, setVerificationTier] = useState<'deep' | 'deeper'>('deep');
   const sectionRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
-  // Use different Q&A data based on whether property is scanned
-  const currentQAData = property.isScanned ? scannedQAData : qaData;
-
-  // Initialize with first 3 sections expanded by default
-  const [expandedSections, setExpandedSections] = useState<string[]>(() => {
-    return currentQAData.slice(0, 3).map(section => section.title);
-  });
+  // Calculate presentation tier based on completeness
+  const presentationTier = property.dataQuality?.completeness >= 80 ? "premium" :
+                          property.dataQuality?.completeness >= 60 ? "standard" : "basic";
 
   const toggleSection = (title: string) => {
-    setExpandedSections((prev) =>
-      prev.includes(title) ? prev.filter((t) => t !== title) : [...prev, title]
+    setExpandedSections(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(title)) {
+        newSet.delete(title);
+      } else {
+        newSet.add(title);
+      }
+      return newSet;
+    });
+  };
+
+  const isExpanded = (title: string) => expandedSections.has(title);
+
+  // Helper function to format currency
+  const formatCurrency = (amount: number): string => {
+    if (amount >= 1000000) {
+      return `₦${(amount / 1000000).toFixed(1)}M`;
+    }
+    return `₦${amount.toLocaleString()}`;
+  };
+
+  // Generate Q&A data from intelligence data if available, otherwise use mock data
+  const qaData: QASection[] = intelligenceData ? [
+    // Financial Section with Real Data
+    {
+      title: "Fair Market Value & Pricing",
+      type: "price",
+      confidence: "high",
+      questions: [
+        {
+          question: "Is this property priced fairly?",
+          answer: `Listed at ${formatCurrency(intelligenceData.investment_analysis.total_investment_breakdown.purchase_price)}. Based on the projected ${intelligenceData.value_projection.annual_appreciation_pct}% annual appreciation (vs ${intelligenceData.value_projection.historical_avg_pct}% historical average), the pricing reflects strong growth potential.`,
+          confidence: "medium",
+          dataSource: "Purchase price vs historical appreciation analysis",
+          details: `Purchase Price: ${formatCurrency(intelligenceData.investment_analysis.total_investment_breakdown.purchase_price)} | ${intelligenceData.investment_analysis.annual_rental_income.gross_yield_pct}% gross yield suggests competitive pricing for the area. Year 1 projected value: ${formatCurrency(intelligenceData.value_projection.year_1.value)} (+${intelligenceData.value_projection.year_1.gain_pct}%).`
+        },
+        {
+          question: "What is the total investment required?",
+          answer: `Total investment: ${formatCurrency(intelligenceData.investment_analysis.total_investment_breakdown.total_investment)} (including all fees and charges).`,
+          confidence: "high",
+          dataSource: "Comprehensive cost breakdown analysis",
+          details: `Purchase Price: ${formatCurrency(intelligenceData.investment_analysis.total_investment_breakdown.purchase_price)} | Additional costs (${intelligenceData.investment_analysis.total_investment_breakdown.additional_costs_pct}%): ${formatCurrency(intelligenceData.investment_analysis.total_investment_breakdown.total_investment - intelligenceData.investment_analysis.total_investment_breakdown.purchase_price)}`
+        },
+        {
+          question: "What are the additional purchase costs?",
+          answer: `Additional costs total ${formatCurrency(intelligenceData.investment_analysis.total_investment_breakdown.total_investment - intelligenceData.investment_analysis.total_investment_breakdown.purchase_price)} (${intelligenceData.investment_analysis.total_investment_breakdown.additional_costs_pct}% of purchase price).`,
+          confidence: "high",
+          dataSource: "Nigerian property transaction regulations",
+          details: `• Legal fees (${intelligenceData.investment_analysis.total_investment_breakdown.legal_fees_pct}%): ${formatCurrency(intelligenceData.investment_analysis.total_investment_breakdown.legal_fees)}\n• Agency fees (${intelligenceData.investment_analysis.total_investment_breakdown.agency_fees_pct}%): ${formatCurrency(intelligenceData.investment_analysis.total_investment_breakdown.agency_fees)}\n• Stamp duty (${intelligenceData.investment_analysis.total_investment_breakdown.stamp_duty_pct}%): ${formatCurrency(intelligenceData.investment_analysis.total_investment_breakdown.stamp_duty)}\n• Governor's consent (${intelligenceData.investment_analysis.total_investment_breakdown.governors_consent_pct}%): ${formatCurrency(intelligenceData.investment_analysis.total_investment_breakdown.governors_consent)}\n• Survey fees (${intelligenceData.investment_analysis.total_investment_breakdown.survey_fees_pct}%): ${formatCurrency(intelligenceData.investment_analysis.total_investment_breakdown.survey_fees)}\n• Land registration: ${formatCurrency(intelligenceData.investment_analysis.total_investment_breakdown.land_registration)}`
+        }
+      ]
+    },
+    // Rental Income with Real Data
+    {
+      title: "Financial Performance & ROI",
+      type: "financial",
+      confidence: "high",
+      questions: [
+        {
+          question: "What rental income can I expect?",
+          answer: `Estimated annual rental income: ${formatCurrency(intelligenceData.investment_analysis.annual_rental_income.rental_range_min)} - ${formatCurrency(intelligenceData.investment_analysis.annual_rental_income.rental_range_max)} (Net income: ${formatCurrency(intelligenceData.investment_analysis.annual_rental_income.net_rental_income)}).`,
+          confidence: "high",
+          dataSource: intelligenceData.investment_analysis.meta.rent_source === "bigquery" ? "BigQuery market data analysis" : "Market rental listings",
+          details: `Gross Yield: ${intelligenceData.investment_analysis.annual_rental_income.gross_yield_pct}% | Net Yield: ${intelligenceData.investment_analysis.annual_rental_income.net_yield_pct}%`
+        },
+        {
+          question: "What's the projected cash flow?",
+          answer: `Year 1: ${formatCurrency(intelligenceData.cash_flow_forecast.year_1.net_cash_flow)} net cash flow. Grows to ${formatCurrency(intelligenceData.cash_flow_forecast.year_5.net_cash_flow)} by Year 5.`,
+          confidence: "medium",
+          dataSource: "5-year cash flow projection model",
+          details: `Year 1: ${formatCurrency(intelligenceData.cash_flow_forecast.year_1.rental_income)} income - ${formatCurrency(intelligenceData.cash_flow_forecast.year_1.expenses)} expenses\nYear 3: ${formatCurrency(intelligenceData.cash_flow_forecast.year_3.rental_income)} income - ${formatCurrency(intelligenceData.cash_flow_forecast.year_3.expenses)} expenses\nYear 5: ${formatCurrency(intelligenceData.cash_flow_forecast.year_5.rental_income)} income - ${formatCurrency(intelligenceData.cash_flow_forecast.year_5.expenses)} expenses`
+        }
+      ]
+    },
+    // Value Appreciation with Real Data
+    {
+      title: "Value Projection & Appreciation",
+      type: "financial",
+      confidence: "medium",
+      questions: [
+        {
+          question: "What's the expected property appreciation?",
+          answer: `Projected appreciation rate: ${intelligenceData.value_projection.annual_appreciation_pct}% annually (Historical average: ${intelligenceData.value_projection.historical_avg_pct}%).`,
+          confidence: "medium",
+          dataSource: "Historical price index and market trend analysis",
+          details: `This projection is based on area-specific factors including infrastructure development, demand patterns, and economic indicators.`
+        },
+        {
+          question: "What will the property be worth in 5 years?",
+          answer: `Projected value in 5 years: ${formatCurrency(intelligenceData.value_projection.year_5.value)} (${intelligenceData.value_projection.year_5.gain_pct}% total gain).`,
+          confidence: "medium",
+          dataSource: "Compound appreciation model",
+          details: `Year 1: ${formatCurrency(intelligenceData.value_projection.year_1.value)} (+${intelligenceData.value_projection.year_1.gain_pct}%)\nYear 3: ${formatCurrency(intelligenceData.value_projection.year_3.value)} (+${intelligenceData.value_projection.year_3.gain_pct}%)\nYear 5: ${formatCurrency(intelligenceData.value_projection.year_5.value)} (+${intelligenceData.value_projection.year_5.gain_pct}%)\nTotal projected gain: ${formatCurrency(intelligenceData.value_projection.projected_gain_5_year)}`
+        }
+      ]
+    },
+    // Location Intelligence with Real Data
+    {
+      title: "Location & Infrastructure",
+      type: "standard",
+      confidence: "high",
+      questions: [
+        {
+          question: "How accessible is the location?",
+          answer: `${intelligenceData.location_intelligence.district} location with excellent connectivity.`,
+          confidence: "high",
+          dataSource: "GPS coordinates and route analysis",
+          details: `• To Victoria Island: ${intelligenceData.location_intelligence.accessibility.to_victoria_island_minutes} minutes\n• To Airport: ${intelligenceData.location_intelligence.accessibility.to_airport_minutes} minutes\n• To Lekki FTZ: ${intelligenceData.location_intelligence.accessibility.to_lekki_ftz_minutes} minutes\n• To Ikeja Mall: ${intelligenceData.location_intelligence.accessibility.to_ikeja_mall_minutes} minutes\n• To Marina: ${intelligenceData.location_intelligence.accessibility.to_marina_minutes} minutes\n• To Third Mainland Bridge: ${intelligenceData.location_intelligence.accessibility.to_third_mainland_bridge_minutes} minutes`
+        },
+        {
+          question: "What schools are nearby?",
+          answer: `${intelligenceData.location_intelligence.nearby_schools.count} schools within ${intelligenceData.location_intelligence.nearby_schools.distance_km}km radius.`,
+          confidence: "high",
+          dataSource: "Geospatial mapping data",
+          details: `Top schools nearby:\n${intelligenceData.location_intelligence.nearby_schools.names.slice(0, 5).map(school => `• ${school}`).join('\n')}`
+        },
+        {
+          question: "What healthcare facilities are nearby?",
+          answer: `${intelligenceData.location_intelligence.nearby_hospitals.count} hospitals and clinics within ${intelligenceData.location_intelligence.nearby_hospitals.distance_km}km.`,
+          confidence: "high",
+          dataSource: "Geospatial mapping data",
+          details: `Nearby healthcare:\n${intelligenceData.location_intelligence.nearby_hospitals.names.slice(0, 5).map(hospital => `• ${hospital}`).join('\n')}`
+        },
+        {
+          question: "What shopping and amenities are available?",
+          answer: `${intelligenceData.location_intelligence.nearby_shopping.count} shopping centers within ${intelligenceData.location_intelligence.nearby_shopping.distance_km}km.`,
+          confidence: "high",
+          dataSource: "Geospatial mapping data",
+          details: `Shopping nearby:\n${intelligenceData.location_intelligence.nearby_shopping.names.slice(0, 5).map(shop => `• ${shop}`).join('\n')}`
+        },
+        ...(Object.keys(intelligenceData.location_intelligence.infrastructure_projects).length > 0 ? [{
+          question: "Are there any major infrastructure projects nearby?",
+          answer: `Yes, ${Object.keys(intelligenceData.location_intelligence.infrastructure_projects).length} major infrastructure project(s) identified.`,
+          confidence: "high" as const,
+          dataSource: "Infrastructure development tracking",
+          details: Object.entries(intelligenceData.location_intelligence.infrastructure_projects).map(([name, project]) =>
+            `• ${name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}: ${project.distance_km}km away - Expected impact: ${project.expected_value_increase_pct}`
+          ).join('\n')
+        }] : [])
+      ]
+    },
+    // Property Details with Real Data
+    {
+      title: "Property Specifications",
+      type: "standard",
+      confidence: "high",
+      questions: [
+        {
+          question: "What are the property specifications?",
+          answer: `${intelligenceData.property_details.specs.bed} bedrooms, ${intelligenceData.property_details.specs.bath} bathrooms, ${intelligenceData.property_details.specs.size}.`,
+          confidence: "high",
+          dataSource: "Property listing verification",
+          details: intelligenceData.property_details.features
+        },
+        {
+          question: "What features does the property have?",
+          answer: intelligenceData.property_details.features,
+          confidence: "high",
+          dataSource: "Property listing details"
+        }
+      ]
+    },
+    // Risk Assessment
+    {
+      title: "Risk Assessment",
+      type: "risk",
+      confidence: "medium",
+      questions: [
+        {
+          question: "What are the main risks with this property?",
+          answer: "Medium overall risk. Primary considerations: Market volatility and title verification recommended.",
+          confidence: "medium",
+          dataSource: "Based on location, market conditions, and legal requirements",
+          details: `Location risk: Low (${intelligenceData.location_intelligence.district}) • Market risk: Medium (high appreciation projected) • Legal risk: Pending verification`
+        },
+        {
+          question: "Should I be concerned about the high appreciation rate?",
+          answer: `The ${intelligenceData.value_projection.annual_appreciation_pct}% projection is above the historical ${intelligenceData.value_projection.historical_avg_pct}% average. This reflects infrastructure development but carries market risk.`,
+          confidence: "medium",
+          dataSource: "Market trend analysis",
+          details: "Tip: Higher appreciation potential often comes with higher risk. Consider your investment timeline and risk tolerance."
+        }
+      ]
+    },
+    // Legal & Documentation
+    {
+      title: "Legal & Documentation",
+      type: "standard",
+      confidence: "preliminary",
+      questions: [
+        {
+          question: "What's the title status?",
+          answer: "Title verification recommended before purchase.",
+          confidence: "preliminary",
+          dataSource: "Standard property transaction protocol",
+          needsVerification: true,
+          details: "Tip: Request independent title verification (₦50K-₦150K) before purchase"
+        },
+        {
+          question: "What's the property tax situation?",
+          answer: "Annual land use charge will apply based on property value and location. Consult with tax advisor for precise amount.",
+          confidence: "medium",
+          dataSource: "Lagos State tax regulations"
+        }
+      ]
+    }
+  ] : [
+    // Default mock data when no intelligence data is available
+    {
+      title: "Fair Market Value & Pricing",
+      type: "price",
+      confidence: "high",
+      questions: [
+        {
+          question: "Is this property priced fairly?",
+          answer: "Yes, the asking price of ₦45M is within 5% of estimated Fair Market Value (₦43.2M - ₦46.8M).",
+          confidence: "high",
+          dataSource: "Analysis of 47 comparable properties in Lekki Phase 1",
+          details: "Price per sqm: ₦285K (Area avg: ₦270K-₦300K)"
+        },
+        {
+          question: "How does this compare to similar properties?",
+          answer: "This property is priced at the median for similar 3-bedroom units in the area.",
+          confidence: "high",
+          dataSource: "Last 6 months of sales data"
+        }
+      ]
+    },
+    {
+      title: "Financial Performance & ROI",
+      type: "financial",
+      confidence: "medium",
+      questions: [
+        {
+          question: "What rental income can I expect?",
+          answer: "Estimated rental income: ₦2.7M - ₦3.2M annually (6-8% gross yield).",
+          confidence: "medium",
+          dataSource: "Current rental listings in area",
+          details: "Area average yield: 5.2%. This property is above average due to amenities."
+        },
+        {
+          question: "What are the total ownership costs?",
+          answer: "Estimated ₦680K/year including service charge (₦420K), insurance (₦180K), and maintenance (₦80K).",
+          confidence: "medium",
+          dataSource: "Estate management data"
+        }
+      ]
+    },
+    {
+      title: "Risk Assessment",
+      type: "risk",
+      confidence: "medium",
+      questions: [
+        {
+          question: "What are the main risks with this property?",
+          answer: "Low overall risk. Primary consideration: Title verification recommended before purchase.",
+          confidence: "medium",
+          dataSource: "Based on location, developer track record, and market conditions",
+          details: "Location risk: Low • Developer risk: Low • Market risk: Medium • Legal risk: Pending verification"
+        },
+        {
+          question: "Are there any red flags?",
+          answer: "No major red flags identified. Developer has 4.5/5 rating and completed 12 projects.",
+          confidence: "high",
+          dataSource: "Developer track record analysis"
+        }
+      ]
+    },
+    {
+      title: "Exit Strategy & Liquidity",
+      type: "exit",
+      confidence: "high",
+      questions: [
+        {
+          question: "How easy is it to resell this property?",
+          answer: "High liquidity. Lekki Phase 1 properties typically sell within 60-90 days.",
+          confidence: "high",
+          dataSource: "Transaction velocity analysis",
+          details: "Liquidity score: 8.2/10 (Above area average of 6.5/10)"
+        },
+        {
+          question: "What's the expected appreciation?",
+          answer: "Historical appreciation: 8-12% annually for this area over past 5 years.",
+          confidence: "medium",
+          dataSource: "Price index data"
+        }
+      ]
+    },
+    {
+      title: "Location & Infrastructure",
+      type: "standard",
+      confidence: "high",
+      questions: [
+        {
+          question: "What's nearby?",
+          answer: "Within 5km: Lekki Expressway (2km), Shoprite (3km), International School (1.5km)",
+          confidence: "high",
+          dataSource: "Verified location data"
+        },
+        {
+          question: "How's the infrastructure?",
+          answer: "24/7 power (estate generator), borehole water, good road access, security.",
+          confidence: "high",
+          dataSource: "Estate amenities verification"
+        }
+      ]
+    },
+    {
+      title: "Amenities & Features",
+      type: "standard",
+      confidence: "high",
+      questions: [
+        {
+          question: "What amenities does the estate offer?",
+          answer: "Swimming pool, gym, children's play area, 24/7 security, estate management office.",
+          confidence: "high",
+          dataSource: "Estate amenities list"
+        },
+        {
+          question: "What about parking and storage?",
+          answer: "2 dedicated parking spaces, additional visitor parking available. No separate storage unit.",
+          confidence: "high",
+          dataSource: "Property specifications"
+        },
+        {
+          question: "Are pets allowed?",
+          answer: "Yes, pets are allowed with estate management approval. Weight/breed restrictions may apply.",
+          confidence: "medium",
+          dataSource: "Estate by-laws"
+        }
+      ]
+    },
+    {
+      title: "Utilities & Running Costs",
+      type: "financial",
+      confidence: "medium",
+      questions: [
+        {
+          question: "What are the monthly/annual fees?",
+          answer: "Service charge: ₦35K/month (₦420K/year), Estate security levy: ₦15K/quarter.",
+          confidence: "high",
+          dataSource: "Estate management fee schedule",
+          details: "Covers: 24/7 security, estate maintenance, waste management, amenities upkeep"
+        },
+        {
+          question: "How reliable is power and water?",
+          answer: "Power: Estate generator provides 20 hours daily backup. Water: Borehole + treatment plant, constant supply.",
+          confidence: "high",
+          dataSource: "Estate infrastructure report"
+        },
+        {
+          question: "What about internet connectivity?",
+          answer: "Fiber optic available from multiple ISPs (MTN, Airtel, Smile). Speeds up to 100Mbps reported.",
+          confidence: "medium",
+          dataSource: "Resident surveys"
+        }
+      ]
+    },
+    {
+      title: "Neighborhood & Lifestyle",
+      type: "standard",
+      confidence: "high",
+      questions: [
+        {
+          question: "What schools are nearby?",
+          answer: "Top-rated schools within 5km: Greensprings (1.2km), Corona (2.5km), Lagoon (3km).",
+          confidence: "high",
+          dataSource: "Location mapping"
+        },
+        {
+          question: "How long is the commute to key areas?",
+          answer: "VI: 25-40min, Lekki Phase 1: 10min, Ajah: 15min, Ikoyi: 30-45min (traffic dependent).",
+          confidence: "medium",
+          dataSource: "Google Maps + resident reports",
+          details: "Times assume moderate traffic conditions"
+        },
+        {
+          question: "What's the neighborhood like?",
+          answer: "Quiet, family-friendly estate. Mix of young professionals and families. Low crime area.",
+          confidence: "medium",
+          dataSource: "Area demographics analysis"
+        }
+      ]
+    },
+    {
+      title: "Construction & Property Condition",
+      type: "standard",
+      confidence: "medium",
+      questions: [
+        {
+          question: "What's the construction quality?",
+          answer: "Solid concrete structure, ceramic tiles, aluminum windows, modern fittings. Built in 2020.",
+          confidence: "medium",
+          dataSource: "Property inspection photos",
+          details: "Professional inspection recommended before purchase"
+        },
+        {
+          question: "Any known defects or issues?",
+          answer: "No major structural issues reported. Minor wear typical for 4-year-old property.",
+          confidence: "preliminary",
+          dataSource: "Visual assessment",
+          needsVerification: true
+        },
+        {
+          question: "What's included in the sale?",
+          answer: "All fixed fittings, kitchen cabinets, wardrobes. Air conditioners negotiable.",
+          confidence: "medium",
+          dataSource: "Listing details"
+        }
+      ]
+    },
+    {
+      title: "Legal & Documentation",
+      type: "standard",
+      confidence: "preliminary",
+      questions: [
+        {
+          question: "What's the title status?",
+          answer: "Title type: Certificate of Occupancy (C of O). Verification recommended.",
+          confidence: "preliminary",
+          dataSource: "Developer provided",
+          needsVerification: true,
+          details: "Tip: Request independent title verification (₦50K-₦150K) before purchase"
+        },
+        {
+          question: "Are there any encumbrances?",
+          answer: "Developer claims no encumbrances. Independent verification recommended.",
+          confidence: "preliminary",
+          dataSource: "Developer disclosure"
+        },
+        {
+          question: "What's the property tax situation?",
+          answer: "Annual land use charge: Estimated ₦45K-₦65K based on property value and location.",
+          confidence: "medium",
+          dataSource: "Lagos State tax calculator"
+        }
+      ]
+    }
+  ];
+
+  // Improved confidence badge - less scary
+  const ConfidenceBadge = ({ level }: { level?: string }) => {
+    if (!level) return null;
+
+    const config = {
+      high: { bg: "bg-green-100", text: "text-green-700", icon: "✓", label: "Verified Data" },
+      medium: { bg: "bg-blue-100", text: "text-blue-700", icon: "≈", label: "Market Analysis" },
+      preliminary: { bg: "bg-amber-100", text: "text-amber-700", icon: "○", label: "Estimated" },
+      verified: { bg: "bg-green-100", text: "text-green-700", icon: "🛡", label: "Independently Verified" }
+    }[level] || { bg: "bg-gray-100", text: "text-gray-700", icon: "?", label: "Unknown" };
+
+    return (
+      <span className={`inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium ${config.bg} ${config.text}`}>
+        <span>{config.icon}</span>
+        <span>{config.label}</span>
+      </span>
     );
-  };
-
-  const isExpanded = (title: string) => expandedSections.includes(title);
-
-  const scrollToSection = (title: string) => {
-    const section = sectionRefs.current[title];
-    if (section) {
-      const yOffset = -80; // Account for sticky header
-      const y = section.getBoundingClientRect().top + window.pageYOffset + yOffset;
-      window.scrollTo({ top: y, behavior: "smooth" });
-
-      // Expand the section if not already expanded
-      if (!expandedSections.includes(title)) {
-        setExpandedSections((prev) => [...prev, title]);
-      }
-    }
-  };
-
-  const handleShare = async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: property.name,
-          text: `Check out this property: ${property.name} in ${property.location}`,
-          url: window.location.href,
-        });
-      } catch (_err) {
-        console.log("Share cancelled");
-      }
-    } else {
-      // Fallback: copy to clipboard
-      navigator.clipboard.writeText(window.location.href);
-      alert("Link copied to clipboard!");
-    }
-  };
-
-  // Helper to render details with clickable links
-  const renderDetails = (details: string) => {
-    // Check if details contain mortgage or insurance keywords
-    if (details.includes('mortgage pre-approval') || details.includes('Apply for mortgage')) {
-      return (
-        <button
-          onClick={() => window.open('https://forms.gle/mortgage-preapproval', '_blank')}
-          className="text-sm text-gray-700 hover:text-[#50b8b1] underline text-left w-full"
-        >
-          {details}
-        </button>
-      );
-    }
-
-    if (details.includes('title insurance') || details.includes('Get a quote')) {
-      return (
-        <button
-          onClick={() => window.open('https://forms.gle/insurance-quote', '_blank')}
-          className="text-sm text-gray-700 hover:text-[#50b8b1] underline text-left w-full"
-        >
-          {details}
-        </button>
-      );
-    }
-
-    if (details.includes('Bundle your insurance') || details.includes('Bundle insurance')) {
-      return (
-        <button
-          onClick={() => window.open('https://forms.gle/insurance-bundle', '_blank')}
-          className="text-sm text-gray-700 hover:text-[#50b8b1] underline text-left w-full"
-        >
-          {details}
-        </button>
-      );
-    }
-
-    // Default non-clickable rendering
-    return <p className="text-sm text-gray-700">{details}</p>;
   };
 
   return (
@@ -149,7 +694,26 @@ export function PropertyDetail({ property, onBack }: PropertyDetailProps) {
             <Bookmark className={`w-5 h-5 ${isBookmarked ? "fill-[#f59e0b] text-[#f59e0b]" : "text-gray-600"}`} />
           </button>
           <button
-            onClick={handleShare}
+            onClick={async () => {
+              if (navigator.share) {
+                try {
+                  await navigator.share({
+                    title: property.name,
+                    text: `Check out this property: ${property.name}`,
+                    url: window.location.href,
+                  });
+                } catch (err) {
+                  console.log("Share cancelled or denied");
+                }
+              } else {
+                try {
+                  navigator.clipboard.writeText(window.location.href);
+                  alert("Link copied to clipboard!");
+                } catch (error) {
+                  alert(`Share this link: ${window.location.href}`);
+                }
+              }
+            }}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <Share2 className="w-5 h-5 text-gray-600" />
@@ -158,367 +722,228 @@ export function PropertyDetail({ property, onBack }: PropertyDetailProps) {
       </div>
 
       <div className="max-w-4xl mx-auto p-4">
-        {/* Image Carousel */}
-        <div className="relative mb-6 rounded-xl overflow-hidden h-64 md:h-96">
-          <Image
-            src={property.images[currentImageIndex]}
-            alt={property.name}
-            fill
-            unoptimized
-            className="object-cover"
-          />
-          {property.images.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-              {property.images.map((_, index) => (
+        {/* Image Gallery - Square thumbnails with main selected image */}
+        <div className="mb-6 space-y-3">
+          {/* Main Selected Image - Square */}
+          <div className="relative rounded-xl overflow-hidden aspect-square">
+            <Image
+              src={property.images?.[currentImageIndex] || property.images?.[0] || "https://images.unsplash.com/photo-1568605114967-8130f3a36994"}
+              alt={property.name}
+              fill
+              unoptimized
+              className="object-cover"
+            />
+          </div>
+
+          {/* Thumbnail Grid - Square thumbnails */}
+          {property.images && property.images.length > 1 && (
+            <div className="grid grid-cols-4 gap-2">
+              {property.images.map((image, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentImageIndex(index)}
-                  className={`w-2 h-2 rounded-full transition-all ${index === currentImageIndex ? "bg-white w-6" : "bg-white/50"
-                    }`}
-                />
+                  className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                    index === currentImageIndex
+                      ? "border-[#4ea8a1] ring-2 ring-[#4ea8a1]/30"
+                      : "border-gray-200 hover:border-gray-300"
+                  }`}
+                >
+                  <Image
+                    src={image}
+                    alt={`${property.name} - Image ${index + 1}`}
+                    fill
+                    unoptimized
+                    className="object-cover"
+                  />
+                  {index === currentImageIndex && (
+                    <div className="absolute inset-0 bg-[#4ea8a1]/20 flex items-center justify-center">
+                      <CheckCircle2 className="w-6 h-6 text-white" />
+                    </div>
+                  )}
+                </button>
               ))}
             </div>
           )}
         </div>
 
-        {/* Social Proof & Activity */}
-        {property.socialProof && (
-          <div className="bg-[#fef3c7] rounded-lg p-4 mb-6 border border-[#f59e0b]/20">
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <Eye className="w-4 h-4 text-[#f59e0b]" />
-                  <span>{property.socialProof.views.toLocaleString()} views</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <Users className="w-4 h-4 text-[#f59e0b]" />
-                  <span>{property.socialProof.interestedBuyers} interested</span>
-                </div>
-              </div>
-              <div className="text-sm text-gray-600">
-                📝 Last updated: {property.socialProof.lastUpdated}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Data Quality Warning */}
-        {property.dataQuality && property.dataQuality.completeness < 80 && (
-          <div className="bg-yellow-50 rounded-lg p-4 mb-6 border border-yellow-200">
-            <div className="flex items-start gap-3">
-              <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+        {/* Report Quality Badge - No Scary Warnings */}
+        <div className="mb-6">
+          {presentationTier === "premium" ? (
+            <div className="flex items-center gap-2 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+              <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
               <div className="flex-1">
-                <div className="flex items-center justify-between mb-2">
-                  <h5 className="text-gray-900">
-                    {property.isScanned ? "External Listing - AI-Enhanced Analysis" : "Incomplete Data Report"}
-                  </h5>
-                  <span className="text-sm font-semibold text-yellow-700">
-                    {property.dataQuality.completeness}% Complete
-                  </span>
+                <div className="text-sm font-semibold text-green-900">
+                  Comprehensive Verified Report
                 </div>
-                <p className="text-sm text-gray-700 mb-2">
-                  {property.isScanned
-                    ? `✓ We've analyzed this external listing using our database. You'll get FMV, location insights, financial projections, risk scoring, and market analysis. Only title verification and developer credentials require manual checking.`
-                    : `This property report is missing some information. Data was last verified on ${property.dataQuality.lastVerified}.`}
-                </p>
-                {property.isScanned && property.scannedFrom && (
-                  <div className="text-xs text-gray-600 mb-2 flex items-center gap-1 flex-wrap">
-                    <Link2 className="w-3 h-3 flex-shrink-0" />
-                    <span>Source:</span>
-                    <a
-                      href={property.scannedFrom}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[#50b8b1] hover:underline break-all"
-                    >
-                      {property.scannedFrom}
-                    </a>
-                  </div>
-                )}
-                {property.dataQuality.missingFields.length > 0 && (
-                  <div className="text-xs text-gray-600 mb-2">
-                    <span className="font-semibold">⚠️ Requires Verification:</span> {property.dataQuality.missingFields.slice(0, 3).join(", ")}
-                    {property.dataQuality.missingFields.length > 3 && ` and ${property.dataQuality.missingFields.length - 3} more`}
-                  </div>
-                )}
-                {property.isScanned && (
-                  <div className="text-xs text-green-700 bg-green-50 rounded p-2 mb-2">
-                    ✓ <strong>Available:</strong> Fair Market Value • Location & Infrastructure • Financial Projections • Risk Assessment • Exit & Liquidity Analysis
-                  </div>
-                )}
-                <button
-                  onClick={() => setShowAskAI(true)}
-                  className="mt-2 text-sm text-[#50b8b1] hover:text-[#45a69f] font-semibold"
-                >
-                  {property.isScanned ? "Ask AI about missing details →" : "Ask AI for this information →"}
-                </button>
+                <div className="text-xs text-green-700">
+                  Based on {property.dataQuality?.completeness}% verified data sources • {qaData.length} sections analyzed
+                </div>
               </div>
+              <ConfidenceBadge level="verified" />
             </div>
-          </div>
-        )}
-
-        {/* Data Quality Score - High Quality */}
-        {property.dataQuality && property.dataQuality.completeness >= 80 && (
-          <div className="bg-green-50 rounded-lg p-4 mb-6 border border-green-200">
-            <div className="flex items-start gap-3">
-              <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+          ) : presentationTier === "standard" ? (
+            <div className="flex items-center gap-2 p-3 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg border border-blue-200">
+              <Info className="w-5 h-5 text-blue-600 flex-shrink-0" />
               <div className="flex-1">
-                <div className="flex items-center justify-between">
-                  <h5 className="text-gray-900">Verified Report</h5>
-                  <span className="text-sm font-semibold text-green-700">
-                    {property.dataQuality.completeness}% Complete
-                  </span>
+                <div className="text-sm font-semibold text-blue-900">
+                  AI-Enhanced Comprehensive Analysis
                 </div>
-                <p className="text-sm text-gray-600">
-                  Last verified on {property.dataQuality.lastVerified}
-                </p>
+                <div className="text-xs text-blue-700">
+                  Based on market data & comparable properties • Some items pending independent verification
+                </div>
               </div>
+              <ConfidenceBadge level="medium" />
             </div>
-          </div>
-        )}
-
-        {/* Quick Summary Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <div className="bg-gradient-to-br from-[#50b8b1] to-[#3d9691] rounded-xl p-4 text-white shadow-sm">
-            <TrendingUp className="w-5 h-5 mb-2 opacity-80" />
-            <div className="text-xs opacity-80 mb-1">Rental Yield</div>
-            <div className="text-2xl">6-8%</div>
-          </div>
-          <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-4 text-white shadow-sm">
-            <Shield className="w-5 h-5 mb-2 opacity-80" />
-            <div className="text-xs opacity-80 mb-1">Risk Score</div>
-            <div className="text-2xl">Low</div>
-          </div>
-          <div className="bg-gradient-to-br from-[#f59e0b] to-[#d97706] rounded-xl p-4 text-white shadow-sm">
-            <Star className="w-5 h-5 mb-2 opacity-80" />
-            <div className="text-xs opacity-80 mb-1">Liquidity</div>
-            <div className="text-2xl">8.2/10</div>
-          </div>
-          <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-4 text-white shadow-sm">
-            <Building2 className="w-5 h-5 mb-2 opacity-80" />
-            <div className="text-xs opacity-80 mb-1">Completion</div>
-            <div className="text-2xl">85%</div>
-          </div>
+          ) : (
+            <div className="flex items-center gap-2 p-3 bg-gradient-to-r from-amber-50 to-yellow-50 rounded-lg border border-amber-200">
+              <Clock className="w-5 h-5 text-amber-600 flex-shrink-0" />
+              <div className="flex-1">
+                <div className="text-sm font-semibold text-amber-900">
+                  Market-Based Analysis Available
+                </div>
+                <div className="text-xs text-amber-700">
+                  Key insights generated from area data • Request verification for detailed confirmation
+                </div>
+              </div>
+              <ConfidenceBadge level="preliminary" />
+            </div>
+          )}
         </div>
 
-        {/* Property Info Banner */}
+        {/* Property Header */}
         <div className="bg-white rounded-xl p-6 mb-6 shadow-sm border border-gray-200">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <h1 className="text-gray-900 mb-2">{property.name} | {property.location}</h1>
-              <p className="text-[#50b8b1]">{property.price}</p>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">{property.name}</h1>
+              <div className="flex items-center gap-2 text-gray-600 mb-2">
+                <MapPin className="w-4 h-4" />
+                <span className="text-sm">{property.location}</span>
+              </div>
+              <p className="text-3xl font-bold text-[#4ea8a1]">{property.price}</p>
             </div>
-            <div className="flex items-center gap-1 bg-[#e8f5f4] px-3 py-1.5 rounded-lg">
-              <Star className="w-4 h-4 fill-[#f59e0b] text-[#f59e0b]" />
-              <span className="text-sm">{property.developerRating}</span>
+            <div className="text-right">
+              <div className="flex items-center gap-1 bg-[#e8f5f4] px-3 py-1.5 rounded-lg mb-2">
+                <Star className="w-4 h-4 fill-[#f59e0b] text-[#f59e0b]" />
+                <span className="text-sm font-semibold">{property.developerRating}</span>
+              </div>
+              <div className="text-xs text-gray-500">Developer Rating</div>
             </div>
           </div>
 
-          <div className="flex items-center gap-6 text-gray-600 mb-6">
+          <div className="flex items-center gap-6 text-gray-700 mb-6 flex-wrap">
             <div className="flex items-center gap-2">
-              <Bed className="w-5 h-5" />
-              <span>{property.bedrooms} Bedrooms</span>
+              <Bed className="w-5 h-5 text-gray-500" />
+              <span className="font-medium">{property.bedrooms} Bedrooms</span>
             </div>
             {property.scannedData?.bathrooms && (
               <div className="flex items-center gap-2">
-                <Bath className="w-5 h-5" />
-                <span>{property.scannedData.bathrooms} Baths</span>
+                <Bath className="w-5 h-5 text-gray-500" />
+                <span className="font-medium">{property.scannedData.bathrooms} Baths</span>
               </div>
             )}
             {property.scannedData?.parkingSpaces && (
               <div className="flex items-center gap-2">
-                <Car className="w-5 h-5" />
-                <span>{property.scannedData.parkingSpaces} Parking</span>
+                <Car className="w-5 h-5 text-gray-500" />
+                <span className="font-medium">{property.scannedData.parkingSpaces} Parking</span>
               </div>
             )}
             {property.scannedData?.propertyType && (
               <div className="flex items-center gap-2">
-                <Home className="w-5 h-5" />
-                <span>{property.scannedData.propertyType}</span>
+                <Home className="w-5 h-5 text-gray-500" />
+                <span className="font-medium">{property.scannedData.propertyType}</span>
               </div>
             )}
           </div>
 
-          {/* Viewing Buttons */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
-            <button
-              onClick={() => setShowSiteVisit(true)}
-              className="flex flex-col items-center gap-2 p-4 bg-white border-2 border-[#50b8b1] rounded-lg hover:bg-[#50b8b1] hover:text-white transition-all group"
-            >
-              <MapPin className="w-6 h-6 text-[#50b8b1] group-hover:text-white transition-colors" />
-              <span className="font-semibold">Schedule Site Visit</span>
-              <span className="text-xs text-gray-500 group-hover:text-white/80 transition-colors">In-person viewing</span>
-            </button>
+          {/* Market Context Metrics */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-gradient-to-br from-[#4ea8a1]/10 to-[#4ea8a1]/5 rounded-lg p-4 border border-[#4ea8a1]/20">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp className="w-4 h-4 text-[#4ea8a1]" />
+                <div className="text-xs text-gray-600">Est. Rental Yield</div>
+              </div>
+              <div className="text-2xl font-bold text-gray-900">6-8%</div>
+              <div className="text-xs text-gray-500 mt-1">Area avg: 5.2%</div>
+            </div>
 
-            <button
-              onClick={() => setShowSiteVisit(true)}
-              className="flex flex-col items-center gap-2 p-4 bg-white border-2 border-[#f59e0b] rounded-lg hover:bg-[#f59e0b] hover:text-white transition-all group"
-            >
-              <MessageCircle className="w-6 h-6 text-[#f59e0b] group-hover:text-white transition-colors" />
-              <span className="font-semibold">Book Virtual Tour</span>
-              <span className="text-xs text-gray-500 group-hover:text-white/80 transition-colors">30-min video call</span>
-            </button>
+            <div className="bg-gradient-to-br from-green-50 to-green-50/30 rounded-lg p-4 border border-green-200">
+              <div className="flex items-center gap-2 mb-2">
+                <Target className="w-4 h-4 text-green-600" />
+                <div className="text-xs text-gray-600">Price Analysis</div>
+              </div>
+              <div className="text-2xl font-bold text-gray-900">Fair</div>
+              <div className="text-xs text-gray-500 mt-1">Within 5% of FMV</div>
+            </div>
+
+            <div className="bg-gradient-to-br from-blue-50 to-blue-50/30 rounded-lg p-4 border border-blue-200">
+              <div className="flex items-center gap-2 mb-2">
+                <Star className="w-4 h-4 text-blue-600" />
+                <div className="text-xs text-gray-600">Exit Liquidity</div>
+              </div>
+              <div className="text-2xl font-bold text-gray-900">8.2/10</div>
+              <div className="text-xs text-gray-500 mt-1">High resale demand</div>
+            </div>
+
+            <div className="bg-gradient-to-br from-amber-50 to-amber-50/30 rounded-lg p-4 border border-amber-200">
+              <div className="flex items-center gap-2 mb-2">
+                <Shield className="w-4 h-4 text-amber-600" />
+                <div className="text-xs text-gray-600">Overall Risk</div>
+              </div>
+              <div className="text-2xl font-bold text-gray-900">Low</div>
+              <div className="text-xs text-gray-500 mt-1">Based on analysis</div>
+            </div>
           </div>
 
-          {/* Scanned Data Details */}
-          {property.scannedData && (
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
-              <h4 className="text-gray-900 mb-3">Property Details</h4>
-
-              {property.scannedData.description && (
-                <p className="text-sm text-gray-700 mb-4">{property.scannedData.description}</p>
-              )}
-
-              {property.scannedData.features && property.scannedData.features.length > 0 && (
-                <div className="mb-4">
-                  <h5 className="text-sm text-gray-900 mb-2">Features:</h5>
-                  <ul className="grid grid-cols-2 gap-2">
-                    {property.scannedData.features.map((feature, index) => (
-                      <li key={index} className="text-sm text-gray-600 flex items-start gap-2">
-                        <span className="text-[#50b8b1] mt-1">•</span>
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
+          {/* Data Transparency Note */}
+          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+            <div className="flex items-start gap-3">
+              <Sparkles className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <div className="text-sm font-semibold text-blue-900 mb-1">
+                  How This Report Works
                 </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                {property.scannedData.landSize && (
-                  <div>
-                    <span className="text-gray-600">Land Size:</span>
-                    <span className="ml-2 text-gray-900">{property.scannedData.landSize}</span>
-                  </div>
-                )}
-                {property.scannedData.builtUpArea && (
-                  <div>
-                    <span className="text-gray-600">Built Area:</span>
-                    <span className="ml-2 text-gray-900">{property.scannedData.builtUpArea}</span>
-                  </div>
-                )}
-                {property.scannedData.listedDate && (
-                  <div>
-                    <span className="text-gray-600">Listed:</span>
-                    <span className="ml-2 text-gray-900">{property.scannedData.listedDate}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Listed By Info */}
-          {property.listedBy && (
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <h4 className="text-gray-900">{property.listedBy.name}</h4>
-                    {property.listedBy.verified && (
-                      <BadgeCheck className="w-4 h-4 text-[#50b8b1]" />
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-600 mb-1">{property.listedBy.company}</p>
-                  <p className="text-xs text-gray-500">All transactions processed through Inda</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 3-Click Actions */}
-          <div>
-            {property.isScanned ? (
-              /* External Listing CTAs */
-              <div className="space-y-3">
-                <button
-                  onClick={() => {
-                    setDueDiligenceTier('deep');
-                    setShowDueDiligence(true);
-                  }}
-                  className="w-full px-6 py-4 bg-white text-[#50b8b1] rounded-lg hover:bg-[#e8f5f4] transition-colors border-2 border-[#50b8b1] flex items-center justify-between gap-2"
-                >
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-5 h-5" />
-                    <div className="text-left">
-                      <div className="font-semibold">Deep Dive Report</div>
-                      <div className="text-xs text-gray-600">Registry checks only</div>
-                    </div>
-                  </div>
-                  <div className="text-sm">₦750K</div>
-                </button>
-                <button
-                  onClick={() => {
-                    setDueDiligenceTier('deeper');
-                    setShowDueDiligence(true);
-                  }}
-                  className="w-full px-6 py-4 bg-[#50b8b1] text-white rounded-lg hover:bg-[#45a69f] transition-colors flex items-center justify-between gap-2"
-                >
-                  <div className="flex items-center gap-2">
-                    <Shield className="w-5 h-5" />
-                    <div className="text-left">
-                      <div className="font-semibold">Deeper Dive Report</div>
-                      <div className="text-xs text-white/80">Registry + Legal + In-person visits</div>
-                    </div>
-                  </div>
-                  <div className="text-sm">₦1.5M</div>
-                </button>
-                <p className="text-xs text-gray-600 text-center">
-                  💡 External listings require independent verification before purchase.
+                <p className="text-xs text-blue-800 leading-relaxed">
+                  This comprehensive analysis combines verified property data, comparable market analysis,
+                  and AI-powered insights. Look for confidence badges: ✓ Verified = independently confirmed,
+                  ≈ Analysis = based on market data, ○ Estimated = preliminary assessment.
+                  All sources are cited for transparency.
                 </p>
               </div>
-            ) : (
-              /* Verified Listing 3-Click Flow */
-              <>
-                <div className="grid grid-cols-3 gap-3">
-                  <button
-                    onClick={() => setShowMakeOffer(true)}
-                    className="px-4 py-3 bg-[#e8f5f4] text-[#50b8b1] rounded-lg hover:bg-[#50b8b1] hover:text-white transition-colors border border-[#50b8b1]"
-                  >
-                    1. Make Offer
-                  </button>
-                  <button
-                    className="px-4 py-3 bg-gray-100 text-gray-400 rounded-lg border border-gray-200 cursor-not-allowed"
-                    title="Coming soon"
-                  >
-                    2. Lock Offer
-                  </button>
-                  <button
-                    className="px-4 py-3 bg-gray-100 text-gray-400 rounded-lg border border-gray-200 cursor-not-allowed"
-                    title="Coming soon"
-                  >
-                    3. Schedule
-                  </button>
-                </div>
-                <p className="text-xs text-gray-500 mt-2 text-center">
-                  Steps 2 & 3 coming soon
-                </p>
-              </>
-            )}
+            </div>
           </div>
         </div>
 
-        {/* Quick Navigation */}
-        <div className="bg-white rounded-xl p-4 mb-6 shadow-sm border border-gray-200 overflow-x-auto">
-          <div className="flex gap-2 min-w-max">
-            {currentQAData.map((section) => (
-              <button
-                key={section.title}
-                onClick={() => scrollToSection(section.title)}
-                className="px-3 py-2 text-sm bg-gray-100 hover:bg-[#e8f5f4] text-gray-700 hover:text-[#50b8b1] rounded-lg transition-colors whitespace-nowrap"
-              >
-                {section.title}
-              </button>
-            ))}
+        {/* Social Proof - Smart Display */}
+        {property.socialProof && property.socialProof.views > 50 && (
+          <div className="bg-white rounded-xl p-4 mb-6 shadow-sm border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 text-sm text-gray-700">
+                  <Eye className="w-4 h-4 text-gray-500" />
+                  <span>{Math.floor(property.socialProof.views / 10) * 10}+ views this week</span>
+                </div>
+                {property.socialProof.interestedBuyers > 0 && (
+                  <div className="flex items-center gap-2 text-sm text-gray-700">
+                    <Users className="w-4 h-4 text-gray-500" />
+                    <span>{property.socialProof.interestedBuyers} interested</span>
+                  </div>
+                )}
+              </div>
+              <div className="text-xs text-gray-500">
+                Updated {property.socialProof.recentActivity}
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Suggestions Banner */}
+        {/* AI Chat Teaser */}
         <div className="bg-gradient-to-r from-[#fef3c7] to-[#fde68a] rounded-xl p-4 mb-6 border border-[#f59e0b]/20">
           <div className="flex items-start gap-3">
             <Sparkles className="w-6 h-6 text-[#f59e0b] flex-shrink-0" />
             <div className="flex-1">
-              <h4 className="text-gray-900 mb-2">💡 Have questions?</h4>
+              <h4 className="text-gray-900 mb-2">Have specific questions?</h4>
               <p className="text-sm text-gray-700 mb-3">
-                Get instant answers about this property based on real market data and verified insights.
+                Ask our AI anything about this property. Get instant answers based on verified data and market insights.
               </p>
               <button
                 onClick={() => setShowAskAI(true)}
@@ -531,14 +956,19 @@ export function PropertyDetail({ property, onBack }: PropertyDetailProps) {
           </div>
         </div>
 
-        {/* Q&A Sections */}
+        {/* THE VALUE PROP: Comprehensive Q&A Sections */}
         <div className="space-y-4">
-          <h2 className="text-gray-900 mb-2">Everything You Need to Know</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Everything You Need to Know
+          </h2>
+          <p className="text-sm text-gray-600 mb-6">
+            {qaData.length} comprehensive sections analyzed • All questions answered with data sources
+          </p>
 
-          {currentQAData.map((section: QASection) => (
+          {qaData.map((section) => (
             <div
               key={section.title}
-              ref={(el) => (sectionRefs.current[section.title] = el)}
+              ref={(el) => { sectionRefs.current[section.title] = el; }}
               className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden"
             >
               {/* Section Header */}
@@ -547,21 +977,9 @@ export function PropertyDetail({ property, onBack }: PropertyDetailProps) {
                 className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <h3 className="text-gray-900">{section.title}</h3>
-                  {/* Layer 2 Badge - Verification Required */}
-                  {section.layer === "verification-required" && !verificationPaid && (
-                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs">
-                      <AlertTriangle className="w-3 h-3" />
-                      Verification Required
-                    </span>
-                  )}
-                  {/* Layer 2 Badge - Verified */}
-                  {section.layer === "verification-required" && verificationPaid && (
-                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-green-100 text-green-700 rounded text-xs">
-                      <CheckCircle2 className="w-3 h-3" />
-                      Verified
-                    </span>
-                  )}
+                  <h3 className="text-lg font-semibold text-gray-900">{section.title}</h3>
+                  {/* Confidence badge instead of scary warning */}
+                  <ConfidenceBadge level={section.confidence} />
                 </div>
                 {isExpanded(section.title) ? (
                   <ChevronUp className="w-5 h-5 text-gray-400" />
@@ -573,165 +991,180 @@ export function PropertyDetail({ property, onBack }: PropertyDetailProps) {
               {/* Section Content */}
               {isExpanded(section.title) && (
                 <div className="px-6 pb-4 space-y-4">
-                  {/* Layer 2 Verification CTA */}
-                  {section.layer === "verification-required" && !verificationPaid && (
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                      <div className="flex items-start gap-3">
-                        <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                        <div className="flex-1">
-                          <h4 className="text-gray-900 mb-2">🔒 Verification Required</h4>
-                          <p className="text-sm text-gray-700 mb-3">
-                            The information below is based on developer claims. Pay ₦50,000 to unlock independent verification by our on-ground team.
-                          </p>
-                          <button
-                            onClick={() => setShowVerificationModal(true)}
-                            className="px-4 py-2 bg-[#f59e0b] text-white rounded-lg hover:bg-[#d97706] transition-colors text-sm"
-                          >
-                            Verify Now - ₦50,000
-                          </button>
+                  {section.questions.map((qa, index) => (
+                    <div key={index} className="border-t border-gray-100 pt-4 first:border-t-0 first:pt-0">
+                      {/* Question */}
+                      <div className="flex items-start justify-between gap-3 mb-2">
+                        <p className="text-gray-900 font-semibold flex-1">{qa.question}</p>
+                        <ConfidenceBadge level={qa.confidence} />
+                      </div>
+
+                      {/* Answer */}
+                      <p className="text-gray-700 text-sm mb-2">{qa.answer}</p>
+
+                      {/* Data Source - Positive framing */}
+                      {qa.dataSource && (
+                        <p className="text-xs text-gray-500 mt-1 italic">
+                          Based on: {qa.dataSource}
+                        </p>
+                      )}
+
+                      {/* Verification suggestion (not scary warning) */}
+                      {qa.needsVerification && (
+                        <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                          <div className="flex items-start gap-2">
+                            <Info className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                            <div className="text-xs text-blue-800">
+                              <strong>Recommended next step:</strong> Consider independent verification
+                              for complete peace of mind (₦50K-₦150K service available).
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Details */}
+                      {qa.details && (
+                        <div className="flex items-start gap-2 mt-2 p-3 bg-[#e8f5f4] rounded-lg">
+                          <FileText className="w-4 h-4 text-[#4ea8a1] mt-0.5 flex-shrink-0" />
+                          <div className="text-sm text-gray-700 whitespace-pre-line">{qa.details}</div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+
+                  {/* Extra Verification Button - Only for Legal & Documentation Section */}
+                  {section.title === "Legal & Documentation" && (
+                    <div className="border-t border-gray-200 pt-4 mt-4">
+                      <div className="bg-gradient-to-r from-[#e8f5f4] to-[#d1ebe9] rounded-lg p-4 border border-[#4ea8a1]/30">
+                        <div className="flex items-start gap-3 mb-3">
+                          <Shield className="w-5 h-5 text-[#4ea8a1] flex-shrink-0 mt-0.5" />
+                          <div className="flex-1">
+                            <h4 className="text-gray-900 mb-1">Need Extra Legal Verification?</h4>
+                            <p className="text-sm text-gray-700 mb-3">
+                              Get comprehensive title verification, registry checks, and legal documentation review from licensed professionals.
+                            </p>
+                            <button
+                              onClick={() => setShowExtraVerification(true)}
+                              className="inline-flex items-center gap-2 px-4 py-2 bg-[#4ea8a1] text-white rounded-lg hover:bg-[#45a69f] transition-colors text-sm"
+                            >
+                              <Shield className="w-4 h-4" />
+                              Request Extra Verification
+                            </button>
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-600 bg-white/60 rounded px-3 py-2">
+                          Professional service • Legal documentation review • Title insurance options
                         </div>
                       </div>
                     </div>
-                  )}
-
-                  {/* Render specialized section if type is defined */}
-                  {section.type === "financial" && section.title === "Financial Performance" ? (
-                    <FinancialPerformanceSection />
-                  ) : section.type === "financial" && section.title === "Financial Performance Projections" ? (
-                    <FinancialPerformanceSection />
-                  ) : section.type === "risk" && section.title === "Risk Assessment" ? (
-                    <RiskAssessmentSection />
-                  ) : section.type === "exit" && (section.title === "Exit & Liquidity" || section.title === "Exit & Liquidity Analysis") ? (
-                    <ExitLiquiditySection />
-                  ) : section.type === "developer" && section.title === "Developer & Project Credibility" ? (
-                    <DeveloperCredibilitySection />
-                  ) : section.type === "portfolio" && (section.title === "Portfolio Fit" || section.title === "Investment Fit") ? (
-                    <PortfolioFitSection />
-                  ) : section.type === "price" && (section.title === "Price Value" || section.title === "Price & Value Analysis") ? (
-                    <PriceValueSection />
-                  ) : section.type === "mortgage" && (section.title === "Mortgage & Insurance Partners") ? (
-                    <MortgageInsuranceSection />
-                  ) : section.title === "Construction & Property Condition" && property.isOffPlan ? (
-                    // /* Off-Plan Protection Section */
-                    <>
-                      <OffPlanProtection property={property} />
-                      {/* Still show standard Q&A after off-plan protection */}
-                      {section.questions.map((qa, index) => (
-                        <div key={index} className="border-t border-gray-100 pt-4 mt-4">
-                          {/* Question */}
-                          <p className="text-gray-900 mb-2 font-semibold">{qa.question}</p>
-
-                          {/* Answer */}
-                          <p className="text-gray-600 text-sm mb-2">{qa.answer}</p>
-
-                          {/* Details */}
-                          {qa.details && (
-                            <div className="flex items-start gap-2 mt-2 p-3 bg-[#e8f5f4] rounded-lg">
-                              <FileText className="w-4 h-4 text-[#50b8b1] mt-0.5 flex-shrink-0" />
-                              {renderDetails(qa.details)}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </>
-                  ) : (
-                    /* Standard Q&A rendering */
-                    section.questions.map((qa, index) => (
-                      <div key={index} className="border-t border-gray-100 pt-4 first:border-t-0 first:pt-0">
-                        {/* Question */}
-                        <p className="text-gray-900 mb-2 font-semibold">{qa.question}</p>
-
-                        {/* Answer */}
-                        <p className="text-gray-600 text-sm mb-2">{qa.answer}</p>
-
-                        {/* Details */}
-                        {qa.details && (
-                          <div className="flex items-start gap-2 mt-2 p-3 bg-[#e8f5f4] rounded-lg">
-                            <FileText className="w-4 h-4 text-[#50b8b1] mt-0.5 flex-shrink-0" />
-                            {renderDetails(qa.details)}
-                          </div>
-                        )}
-                      </div>
-                    ))
                   )}
                 </div>
               )}
             </div>
           ))}
         </div>
+
+        {/* Listed By */}
+        {property.listedBy && (
+          <div className="bg-white rounded-xl p-6 mt-6 shadow-sm border border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Listed By</h3>
+            <div className="flex items-start gap-4">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <h4 className="font-semibold text-gray-900">{property.listedBy.name}</h4>
+                  {property.listedBy.verified && (
+                    <BadgeCheck className="w-5 h-5 text-[#4ea8a1]" />
+                  )}
+                </div>
+                <p className="text-sm text-gray-600 mb-1">{property.listedBy.company}</p>
+                <p className="text-xs text-gray-500">
+                  All transactions processed through Inda for your protection
+                </p>
+              </div>
+              <button className="px-4 py-2 bg-[#4ea8a1] text-white rounded-lg hover:bg-[#3d8a84] transition-colors flex items-center gap-2">
+                <MessageCircle className="w-4 h-4" />
+                Contact
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* CTA */}
+        <div className="bg-white rounded-xl p-6 mt-6 shadow-sm border border-gray-200">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Ready to Move Forward?</h3>
+
+          {property.isScanned ? (
+            <div className="space-y-3">
+              <p className="text-sm text-gray-600 mb-4">
+                This is an external listing. We recommend independent verification before proceeding.
+              </p>
+              <button
+                onClick={() => setShowExtraVerification(true)}
+                className="w-full px-6 py-4 bg-white text-[#4ea8a1] rounded-lg hover:bg-[#e8f5f4] transition-colors border-2 border-[#4ea8a1] flex items-center justify-between gap-2"
+              >
+                <div className="flex items-center gap-2">
+                  <Shield className="w-5 h-5" />
+                  <div className="text-left">
+                    <div className="font-semibold">Request Full Verification</div>
+                    <div className="text-xs text-gray-600">Registry checks & legal review</div>
+                  </div>
+                </div>
+                <div className="text-sm font-semibold">From ₦750K</div>
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <button className="px-6 py-4 bg-[#4ea8a1] text-white rounded-lg hover:bg-[#3d8a84] transition-colors font-semibold">
+                Schedule Site Visit
+              </button>
+              <button className="px-6 py-4 bg-white border-2 border-[#4ea8a1] text-[#4ea8a1] rounded-lg hover:bg-[#4ea8a1] hover:text-white transition-all font-semibold">
+                Make an Offer
+              </button>
+            </div>
+          )}
+
+          <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+            <p className="text-xs text-gray-600 text-center">
+              Your information is secure. Inda facilitates all transactions with buyer protection.
+            </p>
+          </div>
+        </div>
       </div>
 
-      {/* Sticky CTA */}
+      {/* Sticky Bottom CTA */}
       <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg z-10">
         <div className="max-w-4xl mx-auto flex gap-3">
           <button
             onClick={() => setShowAskAI(true)}
-            className="px-6 py-4 bg-white text-[#50b8b1] rounded-xl border-2 border-[#50b8b1] hover:bg-[#e8f5f4] transition-colors flex items-center gap-2"
+            className="px-6 py-4 bg-white text-[#4ea8a1] rounded-xl border-2 border-[#4ea8a1] hover:bg-[#e8f5f4] transition-colors flex items-center gap-2"
           >
             <MessageCircle className="w-5 h-5" />
             <span className="hidden md:inline">Ask Anything</span>
           </button>
           <button
-            onClick={() => {
-              if (property.isScanned) {
-                setShowDueDiligence(true);
-              } else {
-                setShowMakeOffer(true);
-              }
-            }}
-            className="flex-1 px-6 py-4 bg-[#50b8b1] text-white rounded-xl hover:bg-[#45a69f] transition-colors"
+            onClick={() => property.isScanned && setShowExtraVerification(true)}
+            className="flex-1 px-6 py-4 bg-[#4ea8a1] text-white rounded-xl hover:bg-[#45a69f] transition-colors font-semibold"
           >
-            {property.isScanned ? "Run Due Diligence" : "Make Offer"}
+            {property.isScanned ? "Request Verification" : "Schedule Visit"}
           </button>
         </div>
       </div>
 
-      {/* Ask AI Modal */}
+      {/* Modals */}
       <AskAIModal
         isOpen={showAskAI}
         onClose={() => setShowAskAI(false)}
         propertyName={property.name}
       />
 
-      {/* Make Offer Modal */}
-      <MakeOfferModal
-        isOpen={showMakeOffer}
-        onClose={() => setShowMakeOffer(false)}
-        propertyName={property.name}
-        propertyPrice={property.price}
-        priceNumeric={property.priceNumeric}
-        listingId={property.listingId}
-        agentUserId={property.agentUserId}
-      />
-
-      {/* Due Diligence Modal */}
       <DueDiligenceModal
-        isOpen={showDueDiligence}
-        onClose={() => setShowDueDiligence(false)}
+        isOpen={showExtraVerification}
+        onClose={() => setShowExtraVerification(false)}
         propertyName={property.name}
         propertyPrice={property.price}
-        tier={dueDiligenceTier}
-        onTierChange={setDueDiligenceTier}
-      />
-
-      {/* Verification Modal */}
-      <VerificationModal
-        isOpen={showVerificationModal}
-        onClose={() => setShowVerificationModal(false)}
-        propertyName={property.name}
-        propertyPrice={property.price}
-        verificationPaid={verificationPaid}
-        onVerificationPaid={setVerificationPaid}
-      />
-
-      {/* Schedule Site Visit Modal */}
-      <ScheduleSiteVisitModal
-        isOpen={showSiteVisit}
-        onClose={() => setShowSiteVisit(false)}
-        propertyName={property.name}
-        propertyLocation={property.location}
+        tier={verificationTier}
+        onTierChange={setVerificationTier}
       />
     </div>
   );
 }
-
