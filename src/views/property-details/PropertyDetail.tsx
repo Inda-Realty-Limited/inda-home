@@ -50,6 +50,8 @@ import {
 import { Property, QASection } from "./data/propertyData";
 import { DueDiligenceModal } from "./modals/DueDiligenceModal";
 import { AskAIModal } from "./modals/AskAIModal";
+import { ScheduleSiteVisitModal } from "./modals/ScheduleSiteVisitModal";
+import { MakeOfferModal } from "./modals/MakeOfferModal";
 
 // Real data structure from data engineer
 interface PropertyIntelligenceData {
@@ -202,6 +204,8 @@ export function PropertyDetail({
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [showAskAI, setShowAskAI] = useState(false);
   const [showExtraVerification, setShowExtraVerification] = useState(false);
+  const [showSiteVisit, setShowSiteVisit] = useState(false);
+  const [showMakeOffer, setShowMakeOffer] = useState(false);
   const [verificationTier, setVerificationTier] = useState<'deep' | 'deeper'>('deep');
   const sectionRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
 
@@ -1005,10 +1009,16 @@ export function PropertyDetail({
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <button className="px-6 py-4 bg-[#4ea8a1] text-white rounded-lg hover:bg-[#3d8a84] transition-colors font-semibold">
+              <button
+                onClick={() => setShowSiteVisit(true)}
+                className="px-6 py-4 bg-[#4ea8a1] text-white rounded-lg hover:bg-[#3d8a84] transition-colors font-semibold"
+              >
                 Schedule Site Visit
               </button>
-              <button className="px-6 py-4 bg-white border-2 border-[#4ea8a1] text-[#4ea8a1] rounded-lg hover:bg-[#4ea8a1] hover:text-white transition-all font-semibold">
+              <button
+                onClick={() => setShowMakeOffer(true)}
+                className="px-6 py-4 bg-white border-2 border-[#4ea8a1] text-[#4ea8a1] rounded-lg hover:bg-[#4ea8a1] hover:text-white transition-all font-semibold"
+              >
                 Make an Offer
               </button>
             </div>
@@ -1033,7 +1043,7 @@ export function PropertyDetail({
             <span className="hidden md:inline">Ask Anything</span>
           </button>
           <button
-            onClick={() => property.isScanned && setShowExtraVerification(true)}
+            onClick={() => property.isScanned ? setShowExtraVerification(true) : setShowSiteVisit(true)}
             className="flex-1 px-6 py-4 bg-[#4ea8a1] text-white rounded-xl hover:bg-[#45a69f] transition-colors font-semibold"
           >
             {property.isScanned ? "Request Verification" : "Schedule Visit"}
@@ -1060,6 +1070,25 @@ export function PropertyDetail({
         listingUrl={property.scannedFrom || undefined}
         tier={verificationTier}
         onTierChange={setVerificationTier}
+      />
+
+      <ScheduleSiteVisitModal
+        isOpen={showSiteVisit}
+        onClose={() => setShowSiteVisit(false)}
+        propertyName={property.name}
+        propertyLocation={property.location}
+        listingId={property.listingId}
+        agentUserId={property.agentUserId}
+      />
+
+      <MakeOfferModal
+        isOpen={showMakeOffer}
+        onClose={() => setShowMakeOffer(false)}
+        propertyName={property.name}
+        propertyPrice={property.price}
+        priceNumeric={property.priceNumeric}
+        listingId={property.listingId}
+        agentUserId={property.agentUserId}
       />
     </div>
   );

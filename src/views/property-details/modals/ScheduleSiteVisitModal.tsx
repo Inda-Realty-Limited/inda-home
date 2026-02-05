@@ -1,11 +1,14 @@
-import { X, Calendar, Clock, User, Phone, Mail, AlertCircle } from "lucide-react";
+import { X, Calendar, Clock, User, Phone, Mail, AlertCircle, Loader2 } from "lucide-react";
 import { useState } from "react";
+import { submitInquiry } from "../../../api/channels";
 
 interface ScheduleSiteVisitModalProps {
   isOpen: boolean;
   onClose: () => void;
   propertyName: string;
   propertyLocation: string;
+  listingId?: string;
+  agentUserId?: string;
 }
 
 export function ScheduleSiteVisitModal({
@@ -13,6 +16,8 @@ export function ScheduleSiteVisitModal({
   onClose,
   propertyName,
   propertyLocation,
+  listingId,
+  agentUserId,
 }: ScheduleSiteVisitModalProps) {
   const [formData, setFormData] = useState({
     fullName: "",
@@ -27,6 +32,9 @@ export function ScheduleSiteVisitModal({
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [agentInfo, setAgentInfo] = useState<{ phone: string | null; name: string } | null>(null);
 
   // Get minimum date (tomorrow)
   const getMinDate = () => {
@@ -35,11 +43,51 @@ export function ScheduleSiteVisitModal({
     return tomorrow.toISOString().split('T')[0];
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In production, this would submit to backend
-    console.log("Site visit request:", formData);
-    setSubmitted(true);
+    setError(null);
+
+    // Validate we have agent info to submit to
+    if (!agentUserId) {
+      setError("Unable to submit request - property agent information not available. Please try again later.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Build the message with visit details
+      const visitDetails = [
+        `SITE VISIT REQUEST for ${propertyName}`,
+        `Date: ${formData.preferredDate}`,
+        `Time: ${formData.preferredTime}`,
+        `Visit Type: ${formData.visitType}`,
+        formData.visitType !== "individual" ? `Number of People: ${formData.numberOfPeople}` : null,
+        formData.specificQuestions ? `Questions/Focus Areas: ${formData.specificQuestions}` : null,
+        `How they heard about property: ${formData.howDidYouHear}`,
+      ].filter(Boolean).join("\n");
+
+      const response = await submitInquiry({
+        agentUserId,
+        channel: "site_visit",
+        name: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        message: visitDetails,
+        listingId,
+      });
+
+      setAgentInfo({
+        phone: response.agentPhone,
+        name: response.agentName
+      });
+      setSubmitted(true);
+    } catch (err: any) {
+      console.error("Failed to submit site visit request:", err);
+      setError(err?.response?.data?.message || "Failed to submit request. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -47,6 +95,37 @@ export function ScheduleSiteVisitModal({
       ...formData,
       [e.target.name]: e.target.value,
     });
+  };
+
+  const resetForm = () => {
+    setFormData({
+      fullName: "",
+      phone: "",
+      email: "",
+      preferredDate: "",
+      preferredTime: "",
+      visitType: "individual",
+      numberOfPeople: "1",
+      specificQuestions: "",
+      howDidYouHear: "",
+    });
+    setSubmitted(false);
+    setIsSubmitting(false);
+    setError(null);
+    setAgentInfo(null);
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onClose();
+  };
+
+  const getWhatsAppLink = () => {
+    if (!agentInfo?.phone) return null;
+    const whatsappMessage = encodeURIComponent(
+      `Hi ${agentInfo.name}, I just submitted a site visit request for ${propertyName} on Inda for ${formData.preferredDate} at ${formData.preferredTime}. Looking forward to confirming the appointment.`
+    );
+    return `https://wa.me/${agentInfo.phone.replace(/[^0-9]/g, "")}?text=${whatsappMessage}`;
   };
 
   if (!isOpen) return null;
@@ -61,17 +140,29 @@ export function ScheduleSiteVisitModal({
             </div>
             <h2 className="text-gray-900 mb-2">Visit Request Submitted!</h2>
             <p className="text-gray-600 mb-6">
-              We&apos;ll contact you within 24 hours to confirm your site visit appointment at {propertyName}.
+              {agentInfo?.name || "The agent"} will contact you within 24 hours to confirm your site visit at {propertyName}.
             </p>
             <p className="text-sm text-gray-500 mb-6">
               Check your email ({formData.email}) for confirmation details.
             </p>
+
+            {agentInfo?.phone && (
+              <a
+                href={getWhatsAppLink() || "#"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center gap-2 w-full py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors mb-3"
+              >
+                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                </svg>
+                Chat on WhatsApp
+              </a>
+            )}
+
             <button
-              onClick={() => {
-                setSubmitted(false);
-                onClose();
-              }}
-              className="w-full px-6 py-3 bg-[#50b8b1] text-white rounded-lg hover:bg-[#45a69f] transition-colors"
+              onClick={handleClose}
+              className="w-full px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
             >
               Close
             </button>
@@ -113,6 +204,13 @@ export function ScheduleSiteVisitModal({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+
           {/* Contact Information */}
           <div>
             <h3 className="text-gray-900 mb-4">Your Contact Information</h3>
@@ -304,16 +402,25 @@ export function ScheduleSiteVisitModal({
           <div className="flex gap-3">
             <button
               type="button"
-              onClick={onClose}
-              className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              onClick={handleClose}
+              disabled={isSubmitting}
+              className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="flex-1 px-6 py-3 bg-[#50b8b1] text-white rounded-lg hover:bg-[#45a69f] transition-colors"
+              disabled={isSubmitting}
+              className="flex-1 px-6 py-3 bg-[#50b8b1] text-white rounded-lg hover:bg-[#45a69f] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              Submit Request
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                "Submit Request"
+              )}
             </button>
           </div>
         </form>

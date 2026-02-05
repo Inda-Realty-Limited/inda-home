@@ -1,12 +1,11 @@
 /**
-* BUYER REPORT PREVIEW
-*
-* Shows what the verification report will look like to buyers.
-* Used in:
-* 1. Upload wizard preview (before publishing)
-* 2. Seller dashboard (to see what buyers see)
-*/
-
+ * BUYER REPORT PREVIEW
+ *
+ * Shows what the verification report will look like to buyers.
+ * Used in:
+ * 1. Upload wizard preview (before publishing)
+ * 2. Seller dashboard (to see what buyers see)
+ */
 
 import {
   CheckCircle2,
@@ -23,10 +22,9 @@ import {
   Shield,
   Info,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
 } from "lucide-react";
 import { PropertyUploadData } from "./types";
-
 
 interface BuyerReportPreviewProps {
   data: PropertyUploadData;
@@ -34,32 +32,59 @@ interface BuyerReportPreviewProps {
   mode?: "preview" | "published"; // Preview = draft, Published = live
 }
 
-
-export function BuyerReportPreview({ data, savedListing, mode = "preview" }: BuyerReportPreviewProps) {
+export function BuyerReportPreview({
+  data,
+  savedListing,
+  mode = "preview",
+}: BuyerReportPreviewProps) {
   // Use saved listing data if available, otherwise fall back to local data
   const listing = savedListing || {};
 
   // Extract data with fallbacks - prefer saved listing data
-  const propertyType = listing.propertyType || data.confirmedData?.propertyType || data.aiInferredData?.propertyType || "";
-  const bedrooms = listing.bedrooms || data.confirmedData?.bedrooms || data.aiInferredData?.bedrooms;
-  const bathrooms = listing.bathrooms || data.confirmedData?.bathrooms || data.aiInferredData?.bathrooms;
-  const displayAddress = listing.fullAddress || listing.microlocation || data.address || "";
+  const propertyType =
+    listing.propertyType ||
+    data.confirmedData?.propertyType ||
+    data.aiInferredData?.propertyType ||
+    "";
+  const bedrooms =
+    listing.bedrooms ||
+    data.confirmedData?.bedrooms ||
+    data.aiInferredData?.bedrooms;
+  const bathrooms =
+    listing.bathrooms ||
+    data.confirmedData?.bathrooms ||
+    data.aiInferredData?.bathrooms;
+  const displayAddress =
+    listing.fullAddress || listing.microlocation || data.address || "";
   const displayPrice = Number(listing.purchasePrice) || data.askingPrice || 0;
-  const displayTitle = listing.title || `${bedrooms || ""}${propertyType} in ${displayAddress.split(",")[0]}`;
+  const displayTitle =
+    listing.title ||
+    `${bedrooms || ""}${propertyType} in ${displayAddress.split(",")[0]}`;
   const size = listing.size || data.confirmedData?.landSize || "";
   const isOffPlan = propertyType.toLowerCase().includes("off-plan");
 
   // Get image URLs from saved listing or local previews
-  const backendImageUrls: string[] = listing.imageUrls || [];
+  // Use photosWithMeta (new structure) with fallback to imageUrls (legacy)
+  const backendImageUrls: string[] =
+    listing.photosWithMeta?.map((p: any) => p.url) || listing.imageUrls || [];
   const hasBackendImages = backendImageUrls.length > 0;
+
+  // Get documents from saved listing
+  // Use documentsWithMeta (new structure) with fallback to legalDocs (legacy)
+  const backendDocuments = listing.documentsWithMeta || [];
+  const backendDocCount =
+    backendDocuments.length || listing.legalDocs?.length || 0;
 
   // Get enhancement data from saved listing or local state
   const enhancedData = {
     virtualTourUrl: listing.virtualTourUrl || data.enhancedData?.virtualTourUrl,
     paymentPlans: listing.paymentPlans || data.enhancedData?.paymentPlans,
     developerInfo: listing.developerInfo || data.enhancedData?.developerInfo,
-    expectedCompletion: listing.expectedCompletion || data.enhancedData?.expectedCompletion,
-    constructionMilestones: listing.constructionMilestones || data.enhancedData?.constructionMilestones,
+    expectedCompletion:
+      listing.expectedCompletion || data.enhancedData?.expectedCompletion,
+    constructionMilestones:
+      listing.constructionMilestones ||
+      data.enhancedData?.constructionMilestones,
     lastConstructionUpdate: data.enhancedData?.lastConstructionUpdate,
   };
 
@@ -77,13 +102,15 @@ export function BuyerReportPreview({ data, savedListing, mode = "preview" }: Buy
 
     // Documents (40%)
     total += 40;
-    const docCount = listing.legalDocs?.length || data.documents?.length || 0;
+    const docCount = backendDocCount || data.documents?.length || 0;
     if (docCount >= 2) score += 40;
     else if (docCount >= 1) score += 20;
 
     // Photos (20%)
     total += 20;
-    const photoCount = hasBackendImages ? backendImageUrls.length : (data.photos?.length || 0);
+    const photoCount = hasBackendImages
+      ? backendImageUrls.length
+      : data.photos?.length || 0;
     if (photoCount >= 5) score += 20;
     else if (photoCount >= 3) score += 10;
     else if (photoCount >= 1) score += 5;
@@ -92,9 +119,22 @@ export function BuyerReportPreview({ data, savedListing, mode = "preview" }: Buy
   };
 
   const completenessScore = calculateCompletenessScore();
-  const docCount = listing.legalDocs?.length || data.documents?.length || 0;
-  const hasTitle = data.documents?.some(d => d?.type?.includes("Title") || d?.type?.includes("Certificate")) || docCount > 0;
-  const hasSurvey = data.documents?.some(d => d?.type?.includes("Survey")) || docCount > 1;
+  const totalDocCount = backendDocCount || data.documents?.length || 0;
+
+  // Check for title and survey documents in both backend and local data
+  const hasTitle =
+    backendDocuments.some(
+      (d: any) =>
+        d?.type?.includes("Title") || d?.type?.includes("Certificate"),
+    ) ||
+    data.documents?.some(
+      (d) => d?.type?.includes("Title") || d?.type?.includes("Certificate"),
+    ) ||
+    totalDocCount > 0;
+  const hasSurvey =
+    backendDocuments.some((d: any) => d?.type?.includes("Survey")) ||
+    data.documents?.some((d) => d?.type?.includes("Survey")) ||
+    totalDocCount > 1;
 
   // Determine verification status
   const getVerificationStatus = () => {
@@ -103,21 +143,21 @@ export function BuyerReportPreview({ data, savedListing, mode = "preview" }: Buy
         level: "high",
         label: "High Confidence",
         color: "green",
-        icon: CheckCircle2
+        icon: CheckCircle2,
       };
     } else if (completenessScore >= 50) {
       return {
         level: "medium",
         label: "Preliminary Analysis",
         color: "yellow",
-        icon: AlertTriangle
+        icon: AlertTriangle,
       };
     } else {
       return {
         level: "low",
         label: "Incomplete Information",
         color: "red",
-        icon: AlertTriangle
+        icon: AlertTriangle,
       };
     }
   };
@@ -127,7 +167,6 @@ export function BuyerReportPreview({ data, savedListing, mode = "preview" }: Buy
 
   return (
     <div className="min-h-screen bg-gray-50">
-
       {/* Header */}
       <div className="bg-white border-b border-gray-200 p-6">
         <div className="max-w-4xl mx-auto">
@@ -139,7 +178,9 @@ export function BuyerReportPreview({ data, savedListing, mode = "preview" }: Buy
               <div className="flex items-center gap-4 text-gray-600">
                 <div className="flex items-center gap-1">
                   <MapPin className="w-4 h-4" />
-                  <span className="text-sm">{displayAddress || "Location"}</span>
+                  <span className="text-sm">
+                    {displayAddress || "Location"}
+                  </span>
                 </div>
                 {bedrooms && (
                   <div className="flex items-center gap-1">
@@ -165,18 +206,27 @@ export function BuyerReportPreview({ data, savedListing, mode = "preview" }: Buy
               <p className="text-2xl font-bold text-[#4ea8a1]">
                 ₦{displayPrice ? displayPrice.toLocaleString() : "0"}
               </p>
-              <p className="text-sm text-gray-500">{propertyType || "Property Type"}</p>
+              <p className="text-sm text-gray-500">
+                {propertyType || "Property Type"}
+              </p>
             </div>
           </div>
 
           {/* Verification Status Badge */}
-          <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg ${status.color === "green" ? "bg-green-50 text-green-700" :
-              status.color === "yellow" ? "bg-yellow-50 text-yellow-700" :
-                "bg-red-50 text-red-700"
-            }`}>
+          <div
+            className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg ${
+              status.color === "green"
+                ? "bg-green-50 text-green-700"
+                : status.color === "yellow"
+                  ? "bg-yellow-50 text-yellow-700"
+                  : "bg-red-50 text-red-700"
+            }`}
+          >
             <StatusIcon className="w-5 h-5" />
             <span className="font-medium">{status.label}</span>
-            <span className="text-sm opacity-75">• {completenessScore}% Complete</span>
+            <span className="text-sm opacity-75">
+              • {completenessScore}% Complete
+            </span>
           </div>
         </div>
       </div>
@@ -184,12 +234,17 @@ export function BuyerReportPreview({ data, savedListing, mode = "preview" }: Buy
       {/* Photos */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-4xl mx-auto p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Property Photos</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Property Photos
+          </h2>
           {hasBackendImages ? (
             // Show images from backend (GCS URLs)
             <div className="grid grid-cols-3 gap-4">
               {backendImageUrls.slice(0, 6).map((url, idx) => (
-                <div key={idx} className="aspect-video bg-gray-100 rounded-lg overflow-hidden relative">
+                <div
+                  key={idx}
+                  className="aspect-video bg-gray-100 rounded-lg overflow-hidden relative"
+                >
                   <img
                     src={url}
                     alt={`Property photo ${idx + 1}`}
@@ -202,7 +257,10 @@ export function BuyerReportPreview({ data, savedListing, mode = "preview" }: Buy
             // Fallback to local previews
             <div className="grid grid-cols-3 gap-4">
               {data.photos.slice(0, 6).map((photo, idx) => (
-                <div key={idx} className="aspect-video bg-gray-100 rounded-lg overflow-hidden relative">
+                <div
+                  key={idx}
+                  className="aspect-video bg-gray-100 rounded-lg overflow-hidden relative"
+                >
                   <img
                     src={photo.preview}
                     alt={photo.label}
@@ -222,8 +280,15 @@ export function BuyerReportPreview({ data, savedListing, mode = "preview" }: Buy
               </div>
             </div>
           )}
-          {(hasBackendImages ? backendImageUrls.length : data.photos.length) > 6 && (
-            <p className="text-sm text-gray-500 mt-2">+ {(hasBackendImages ? backendImageUrls.length : data.photos.length) - 6} more photos</p>
+          {(hasBackendImages ? backendImageUrls.length : data.photos.length) >
+            6 && (
+            <p className="text-sm text-gray-500 mt-2">
+              +{" "}
+              {(hasBackendImages
+                ? backendImageUrls.length
+                : data.photos.length) - 6}{" "}
+              more photos
+            </p>
           )}
         </div>
       </div>
@@ -233,51 +298,85 @@ export function BuyerReportPreview({ data, savedListing, mode = "preview" }: Buy
         <div className="bg-white border-b border-gray-200">
           <div className="max-w-4xl mx-auto p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Construction Progress</h2>
+              <h2 className="text-lg font-semibold text-gray-900">
+                Construction Progress
+              </h2>
               {enhancedData.lastConstructionUpdate && (
                 <div className="flex items-center gap-2 text-sm text-gray-600">
                   <Clock className="w-4 h-4" />
-                  <span>Last Updated: {new Date(enhancedData.lastConstructionUpdate).toLocaleDateString()}</span>
+                  <span>
+                    Last Updated:{" "}
+                    {new Date(
+                      enhancedData.lastConstructionUpdate,
+                    ).toLocaleDateString()}
+                  </span>
                 </div>
               )}
             </div>
 
             {/* Milestones */}
-            {enhancedData.constructionMilestones && enhancedData.constructionMilestones.length > 0 && (
-              <div className="space-y-3">
-                {enhancedData.constructionMilestones.map((milestone: any, idx: number) => (
-                  <div key={idx} className="flex items-center gap-4">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${milestone.status === "complete" ? "bg-green-100 text-green-600" :
-                        milestone.status === "in-progress" ? "bg-blue-100 text-blue-600" :
-                          "bg-gray-100 text-gray-400"
-                      }`}>
-                      {milestone.status === "complete" ? <CheckCircle2 className="w-5 h-5" /> : <Clock className="w-5 h-5" />}
-                    </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-900">{milestone.name}</p>
-                      {milestone.expectedDate && (
-                        <p className="text-sm text-gray-500">
-                          Expected: {new Date(milestone.expectedDate).toLocaleDateString()}
-                        </p>
-                      )}
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${milestone.status === "complete" ? "bg-green-100 text-green-700" :
-                        milestone.status === "in-progress" ? "bg-blue-100 text-blue-700" :
-                          "bg-gray-100 text-gray-600"
-                      }`}>
-                      {milestone.status?.replace("-", " ") || "pending"}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
+            {enhancedData.constructionMilestones &&
+              enhancedData.constructionMilestones.length > 0 && (
+                <div className="space-y-3">
+                  {enhancedData.constructionMilestones.map(
+                    (milestone: any, idx: number) => (
+                      <div key={idx} className="flex items-center gap-4">
+                        <div
+                          className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            milestone.status === "complete"
+                              ? "bg-green-100 text-green-600"
+                              : milestone.status === "in-progress"
+                                ? "bg-blue-100 text-blue-600"
+                                : "bg-gray-100 text-gray-400"
+                          }`}
+                        >
+                          {milestone.status === "complete" ? (
+                            <CheckCircle2 className="w-5 h-5" />
+                          ) : (
+                            <Clock className="w-5 h-5" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-medium text-gray-900">
+                            {milestone.name}
+                          </p>
+                          {milestone.expectedDate && (
+                            <p className="text-sm text-gray-500">
+                              Expected:{" "}
+                              {new Date(
+                                milestone.expectedDate,
+                              ).toLocaleDateString()}
+                            </p>
+                          )}
+                        </div>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            milestone.status === "complete"
+                              ? "bg-green-100 text-green-700"
+                              : milestone.status === "in-progress"
+                                ? "bg-blue-100 text-blue-700"
+                                : "bg-gray-100 text-gray-600"
+                          }`}
+                        >
+                          {milestone.status?.replace("-", " ") || "pending"}
+                        </span>
+                      </div>
+                    ),
+                  )}
+                </div>
+              )}
 
             {/* Expected Completion */}
             {enhancedData.expectedCompletion && (
               <div className="mt-4 p-4 bg-blue-50 rounded-lg">
                 <div className="flex items-center gap-2 text-blue-800">
                   <Calendar className="w-5 h-5" />
-                  <span className="font-medium">Expected Completion: {new Date(enhancedData.expectedCompletion).toLocaleDateString()}</span>
+                  <span className="font-medium">
+                    Expected Completion:{" "}
+                    {new Date(
+                      enhancedData.expectedCompletion,
+                    ).toLocaleDateString()}
+                  </span>
                 </div>
               </div>
             )}
@@ -286,29 +385,46 @@ export function BuyerReportPreview({ data, savedListing, mode = "preview" }: Buy
       )}
 
       {/* Enhancement Info (Virtual Tour, Payment Plans, Developer Info) */}
-      {(enhancedData.virtualTourUrl || enhancedData.paymentPlans || enhancedData.developerInfo) && (
+      {(enhancedData.virtualTourUrl ||
+        enhancedData.paymentPlans ||
+        enhancedData.developerInfo) && (
         <div className="bg-white border-b border-gray-200">
           <div className="max-w-4xl mx-auto p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Additional Information</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Additional Information
+            </h2>
             <div className="space-y-4">
               {enhancedData.virtualTourUrl && (
                 <div className="p-4 bg-gray-50 rounded-lg">
                   <p className="font-medium text-gray-900 mb-1">Virtual Tour</p>
-                  <a href={enhancedData.virtualTourUrl} target="_blank" rel="noopener noreferrer" className="text-[#4ea8a1] hover:underline text-sm">
+                  <a
+                    href={enhancedData.virtualTourUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#4ea8a1] hover:underline text-sm"
+                  >
                     {enhancedData.virtualTourUrl}
                   </a>
                 </div>
               )}
               {enhancedData.paymentPlans && (
                 <div className="p-4 bg-gray-50 rounded-lg">
-                  <p className="font-medium text-gray-900 mb-1">Payment Plans</p>
-                  <p className="text-sm text-gray-600">{enhancedData.paymentPlans}</p>
+                  <p className="font-medium text-gray-900 mb-1">
+                    Payment Plans
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    {enhancedData.paymentPlans}
+                  </p>
                 </div>
               )}
               {enhancedData.developerInfo && (
                 <div className="p-4 bg-gray-50 rounded-lg">
-                  <p className="font-medium text-gray-900 mb-1">Developer Information</p>
-                  <p className="text-sm text-gray-600">{enhancedData.developerInfo}</p>
+                  <p className="font-medium text-gray-900 mb-1">
+                    Developer Information
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    {enhancedData.developerInfo}
+                  </p>
                 </div>
               )}
             </div>
@@ -319,7 +435,9 @@ export function BuyerReportPreview({ data, savedListing, mode = "preview" }: Buy
       {/* Document Verification */}
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-4xl mx-auto p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Document Verification</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Document Verification
+          </h2>
 
           {/* Disclaimer */}
           {status.level !== "high" && (
@@ -327,8 +445,13 @@ export function BuyerReportPreview({ data, savedListing, mode = "preview" }: Buy
               <div className="flex items-start gap-3">
                 <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
                 <div className="text-sm text-yellow-800">
-                  <p className="font-medium mb-1">⚠️ Preliminary Analysis - Based on uploaded documents only.</p>
-                  <p>Full verification with market comparables and registry checks available for ₦50,000</p>
+                  <p className="font-medium mb-1">
+                    ⚠️ Preliminary Analysis - Based on uploaded documents only.
+                  </p>
+                  <p>
+                    Full verification with market comparables and registry
+                    checks available for ₦50,000
+                  </p>
                 </div>
               </div>
             </div>
@@ -367,9 +490,11 @@ export function BuyerReportPreview({ data, savedListing, mode = "preview" }: Buy
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
               <FileText className="w-5 h-5 text-gray-400 flex-shrink-0" />
               <div className="flex-1">
-                <p className="font-medium text-gray-900">Additional Documents</p>
+                <p className="font-medium text-gray-900">
+                  Additional Documents
+                </p>
                 <p className="text-sm text-gray-600">
-                  {data.documents.length} document(s) uploaded
+                  {totalDocCount || data.documents.length} document(s) uploaded
                 </p>
               </div>
             </div>
@@ -383,7 +508,9 @@ export function BuyerReportPreview({ data, savedListing, mode = "preview" }: Buy
           <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-[#4ea8a1]/10 to-[#f59e0b]/10 rounded-lg">
             <Shield className="w-6 h-6 text-[#4ea8a1]" />
             <div>
-              <p className="font-medium text-gray-900">AI Analysis Confidence: {completenessScore}%</p>
+              <p className="font-medium text-gray-900">
+                AI Analysis Confidence: {completenessScore}%
+              </p>
               <p className="text-sm text-gray-600">
                 {status.level === "high"
                   ? "High confidence in property details. Ready for buyer inquiries."
@@ -396,4 +523,3 @@ export function BuyerReportPreview({ data, savedListing, mode = "preview" }: Buy
     </div>
   );
 }
-
