@@ -1,14 +1,40 @@
-import { Button } from '../views/index/sections/ui/button';
-import { Search, SlidersHorizontal, ChevronDown, MapPin, Home, Check, Loader2, ArrowLeft, FileText, Brain, TrendingUp, ClipboardCheck, Lightbulb, ExternalLink } from 'lucide-react';
-import { Navbar } from '@/components';
-import { useRouter } from 'next/router';
-import { useAuth } from '@/contexts/AuthContext';
-import React, { useCallback, useEffect, useMemo, useState, useRef } from 'react';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../views/index/sections/ui/tabs';
-import { PropertyCard } from '../views/search-results/sections/PropertyCard';
-import { MakeOfferModal } from '../views/search-results/sections/MakeOfferModal';
-import { useDebounce } from '@/hooks/useDebounce';
-import apiClient from '@/api';
+import { Button } from "../views/index/sections/ui/button";
+import {
+  Search,
+  SlidersHorizontal,
+  ChevronDown,
+  MapPin,
+  Home,
+  Check,
+  Loader2,
+  ArrowLeft,
+  FileText,
+  Brain,
+  TrendingUp,
+  ClipboardCheck,
+  Lightbulb,
+  ExternalLink,
+} from "lucide-react";
+import { Navbar } from "@/components";
+import { useRouter } from "next/router";
+import { useAuth } from "@/contexts/AuthContext";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useRef,
+} from "react";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "../views/index/sections/ui/tabs";
+import { PropertyCard } from "../views/search-results/sections/PropertyCard";
+import { MakeOfferModal } from "../views/search-results/sections/MakeOfferModal";
+import { useDebounce } from "@/hooks/useDebounce";
+import apiClient from "@/api";
 
 interface Property {
   id: string;
@@ -27,28 +53,28 @@ interface Property {
 }
 
 const filterOptions = [
-  'Price Range',
-  'Bedrooms',
-  'Inda Score',
-  'Location',
-  'Property Type'
+  "Price Range",
+  "Bedrooms",
+  "Inda Score",
+  "Location",
+  "Property Type",
 ];
 
-const bedroomOptions = ['1 Bed', '2 Beds', '3 Beds', '4 Beds', '5+ Beds'];
+const bedroomOptions = ["1 Bed", "2 Beds", "3 Beds", "4 Beds", "5+ Beds"];
 
 const propertyTypes = [
-  'Apartment',
-  'Duplex',
-  'Terrace',
-  'Semi-Detached',
-  'Detached House',
-  'Penthouse',
-  'Studio',
-  'Land'
+  "Apartment",
+  "Duplex",
+  "Terrace",
+  "Semi-Detached",
+  "Detached House",
+  "Penthouse",
+  "Studio",
+  "Land",
 ];
 
 const formatPriceDisplay = (priceNGN: number | null | undefined): string => {
-  if (!priceNGN) return '₦0';
+  if (!priceNGN) return "₦0";
   if (priceNGN >= 1000000000) {
     return `₦${(priceNGN / 1000000000).toFixed(1)}B`;
   }
@@ -61,35 +87,57 @@ const formatPriceDisplay = (priceNGN: number | null | undefined): string => {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const getFmvStatus = (listing: any): string => {
   const price = Number(listing.purchasePrice) || listing.priceNGN || 0;
-  const fmv = Number(listing.fmv) || listing.fmvNGN || listing.analytics?.fmvNGN || 0;
-  if (!fmv || !price) return 'Unknown';
+  const fmv =
+    Number(listing.fmv) || listing.fmvNGN || listing.analytics?.fmvNGN || 0;
+  if (!fmv || !price) return "Unknown";
   const diff = ((price - fmv) / fmv) * 100;
-  if (diff < -5) return 'Below FMV';
-  if (diff > 5) return 'Above FMV';
-  return 'At FMV';
+  if (diff < -5) return "Below FMV";
+  if (diff > 5) return "Above FMV";
+  return "At FMV";
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mapListingToProperty = (listing: any): Property => {
-  const images = listing.imageUrls || listing.images || listing.propertyImages || [];
-  const firstImage = images.length > 0 ? images[0] : 'https://images.unsplash.com/photo-1662454419736-de132ff75638?w=800';
+  // Use photosWithMeta (new structure) with fallback to legacy fields
+  const photosWithMeta = listing.photosWithMeta || [];
+  const images =
+    photosWithMeta.length > 0
+      ? photosWithMeta.map((p: any) => p.url)
+      : listing.imageUrls || listing.images || listing.propertyImages || [];
+  const firstImage =
+    images.length > 0
+      ? images[0]
+      : "https://images.unsplash.com/photo-1662454419736-de132ff75638?w=800";
   const bedroomCount = parseInt(listing.bedrooms) || listing.bedrooms || 0;
   const priceValue = Number(listing.purchasePrice) || listing.priceNGN || 0;
-  
+
   return {
     id: listing._id || listing.id || listing.indaTag || String(Math.random()),
     image: firstImage,
-    title: listing.title || `${bedroomCount}-Bed ${listing.propertyType || listing.propertyTypeStd || 'Property'}`,
-    location: listing.microlocation || listing.microlocationStd || listing.lga || listing.state || 'Lagos',
+    title:
+      listing.title ||
+      `${bedroomCount}-Bed ${listing.propertyType || listing.propertyTypeStd || "Property"}`,
+    location:
+      listing.microlocation ||
+      listing.microlocationStd ||
+      listing.lga ||
+      listing.state ||
+      "Lagos",
     latitude: listing.latitude,
     longitude: listing.longitude,
-    beds: typeof bedroomCount === 'number' ? bedroomCount : parseInt(bedroomCount) || 0,
-    trustScore: listing.indaScore || listing.analytics?.indaScore || Math.floor(Math.random() * 20) + 70,
+    beds:
+      typeof bedroomCount === "number"
+        ? bedroomCount
+        : parseInt(bedroomCount) || 0,
+    trustScore:
+      listing.indaScore ||
+      listing.analytics?.indaScore ||
+      Math.floor(Math.random() * 20) + 70,
     price: formatPriceDisplay(priceValue),
     priceValue: priceValue,
     fmv: getFmvStatus(listing),
-    verified: listing.verified !== false && listing.status === 'Active',
-    whatsapp: listing.sellerPhone || '2347084960775'
+    verified: listing.verified !== false && listing.status === "Active",
+    whatsapp: listing.sellerPhone || "2347084960775",
   };
 };
 
@@ -99,42 +147,52 @@ export function ForBuyers() {
   const [search, setSearch] = useState("");
   const [searchMode, setSearchMode] = useState<"link" | "ai">("ai");
   const [searchPending, setSearchPending] = useState(false);
-  
+
   const [properties, setProperties] = useState<Property[]>([]);
-  const [suggestedProperties, setSuggestedProperties] = useState<Property[]>([]);
+  const [suggestedProperties, setSuggestedProperties] = useState<Property[]>(
+    [],
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState('Highest Inda Score');
+  const [sortBy, setSortBy] = useState("Highest Inda Score");
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000000000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([
+    0, 5000000000,
+  ]);
   const [selectedBedrooms, setSelectedBedrooms] = useState<string[]>([]);
-  const [selectedPropertyTypes, setSelectedPropertyTypes] = useState<string[]>([]);
-  const [locationSearch, setLocationSearch] = useState('');
-  
+  const [selectedPropertyTypes, setSelectedPropertyTypes] = useState<string[]>(
+    [],
+  );
+  const [locationSearch, setLocationSearch] = useState("");
+
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const observer = useRef<IntersectionObserver | null>(null);
   const isResettingRef = useRef(false);
-  
+
   const debouncedPriceRange = useDebounce(priceRange, 500);
   const debouncedLocationSearch = useDebounce(locationSearch, 500);
 
   const [showMakeOfferModal, setShowMakeOfferModal] = useState(false);
-  const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
-  const [selectedPropertyTitle, setSelectedPropertyTitle] = useState<string>('');
-  const [selectedPropertyPrice, setSelectedPropertyPrice] = useState<string>('');
-  const [selectedPropertyWhatsapp, setSelectedPropertyWhatsapp] = useState<string>('');
+  const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(
+    null,
+  );
+  const [selectedPropertyTitle, setSelectedPropertyTitle] =
+    useState<string>("");
+  const [selectedPropertyPrice, setSelectedPropertyPrice] =
+    useState<string>("");
+  const [selectedPropertyWhatsapp, setSelectedPropertyWhatsapp] =
+    useState<string>("");
 
   const isValidUrl = useMemo(
-    () =>
-      (value: string) => {
-        try {
-          const url = new URL(value.trim());
-          return ["http:", "https:"].includes(url.protocol);
-        } catch {
-          return false;
-        }
-      },
+    () => (value: string) => {
+      try {
+        const url = new URL(value.trim());
+        return ["http:", "https:"].includes(url.protocol);
+      } catch {
+        return false;
+      }
+    },
     [],
   );
 
@@ -166,22 +224,32 @@ export function ForBuyers() {
     }
   }, [handleSearch, isLoading, searchPending]);
 
-  const lastPropertyElementRef = useCallback((node: HTMLDivElement | null) => {
-    if (loading) return;
-    if (observer.current) observer.current.disconnect();
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore && searchMode === "ai") {
-        setPage(prevPage => prevPage + 1);
-      }
-    });
-    if (node) observer.current.observe(node);
-  }, [loading, hasMore, searchMode]);
+  const lastPropertyElementRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (loading) return;
+      if (observer.current) observer.current.disconnect();
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore && searchMode === "ai") {
+          setPage((prevPage) => prevPage + 1);
+        }
+      });
+      if (node) observer.current.observe(node);
+    },
+    [loading, hasMore, searchMode],
+  );
 
   useEffect(() => {
     isResettingRef.current = true;
     setPage(1);
     setHasMore(true);
-  }, [search, selectedBedrooms, debouncedPriceRange, selectedPropertyTypes, debouncedLocationSearch, sortBy]);
+  }, [
+    search,
+    selectedBedrooms,
+    debouncedPriceRange,
+    selectedPropertyTypes,
+    debouncedLocationSearch,
+    sortBy,
+  ]);
 
   useEffect(() => {
     if (searchMode !== "ai") {
@@ -194,7 +262,7 @@ export function ForBuyers() {
         return;
       }
       isResettingRef.current = false;
-      
+
       setLoading(true);
       setError(null);
       try {
@@ -203,56 +271,63 @@ export function ForBuyers() {
           page: page,
           limit: 20,
         };
-        
+
         if (search.trim()) {
           params.q = search.trim();
         }
-        
+
         if (selectedBedrooms.length > 0) {
-          const bedroomNums = selectedBedrooms.map(b => {
-            const match = b.match(/\d+/);
-            return match ? parseInt(match[0]) : null;
-          }).filter((num): num is number => num !== null);
+          const bedroomNums = selectedBedrooms
+            .map((b) => {
+              const match = b.match(/\d+/);
+              return match ? parseInt(match[0]) : null;
+            })
+            .filter((num): num is number => num !== null);
           if (bedroomNums.length === 1) {
             params.bedrooms = bedroomNums[0];
           }
         }
-        
+
         if (debouncedPriceRange[0] > 0) {
           params.minPrice = debouncedPriceRange[0];
         }
         if (debouncedPriceRange[1] < 5000000000) {
           params.maxPrice = debouncedPriceRange[1];
         }
-        
+
         if (selectedPropertyTypes.length > 0) {
-          params.propertyType = selectedPropertyTypes.join(',');
+          params.propertyType = selectedPropertyTypes.join(",");
         }
-        
+
         if (debouncedLocationSearch.trim()) {
           params.microlocation = debouncedLocationSearch.trim();
         }
-        
-        let sortParam = 'newest';
-        if (sortBy === 'Lowest Price') {
-          sortParam = 'price_asc';
-        } else if (sortBy === 'Highest Price') {
-          sortParam = 'price_desc';
+
+        let sortParam = "newest";
+        if (sortBy === "Lowest Price") {
+          sortParam = "price_asc";
+        } else if (sortBy === "Highest Price") {
+          sortParam = "price_desc";
         }
         params.sort = sortParam;
-        
-        const response = await apiClient.get('/listings', { params });
-        
+
+        const response = await apiClient.get("/listings", { params });
+
         const data = response.data;
-        const listings = data.data?.items || data.data?.listings || data.listings || data.data || [];
-        
+        const listings =
+          data.data?.items ||
+          data.data?.listings ||
+          data.listings ||
+          data.data ||
+          [];
+
         if (Array.isArray(listings)) {
           const mappedProperties = listings.map(mapListingToProperty);
-          
+
           if (page === 1) {
             setProperties(mappedProperties);
           } else {
-            setProperties(prev => [...prev, ...mappedProperties]);
+            setProperties((prev) => [...prev, ...mappedProperties]);
           }
 
           const pagination = data.data?.pagination;
@@ -261,30 +336,37 @@ export function ForBuyers() {
           } else {
             setHasMore(mappedProperties.length === 20);
           }
-          
+
           if (mappedProperties.length === 0) {
             try {
-              const suggestionResponse = await apiClient.get('/listings', {
-                params: { page: 1, limit: 6, sort: 'newest' }
+              const suggestionResponse = await apiClient.get("/listings", {
+                params: { page: 1, limit: 6, sort: "newest" },
               });
               const suggestionData = suggestionResponse.data;
-              const suggestions = suggestionData.data?.items || suggestionData.data?.listings || suggestionData.listings || suggestionData.data || [];
+              const suggestions =
+                suggestionData.data?.items ||
+                suggestionData.data?.listings ||
+                suggestionData.listings ||
+                suggestionData.data ||
+                [];
               if (Array.isArray(suggestions)) {
                 setSuggestedProperties(suggestions.map(mapListingToProperty));
               }
             } catch (suggestionErr) {
-              console.warn('Failed to fetch suggestions:', suggestionErr);
+              console.warn("Failed to fetch suggestions:", suggestionErr);
             }
           } else {
-             setSuggestedProperties([]);
+            setSuggestedProperties([]);
           }
         } else {
-          console.warn('Unexpected API response format:', data);
+          console.warn("Unexpected API response format:", data);
           setProperties([]);
         }
       } catch (err: unknown) {
-        console.error('Failed to fetch listings:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load listings');
+        console.error("Failed to fetch listings:", err);
+        setError(
+          err instanceof Error ? err.message : "Failed to load listings",
+        );
         setProperties([]);
       } finally {
         setLoading(false);
@@ -292,26 +374,39 @@ export function ForBuyers() {
     };
 
     fetchListings();
-  }, [searchMode, search, selectedBedrooms, debouncedPriceRange, selectedPropertyTypes, debouncedLocationSearch, sortBy, page]);
+  }, [
+    searchMode,
+    search,
+    selectedBedrooms,
+    debouncedPriceRange,
+    selectedPropertyTypes,
+    debouncedLocationSearch,
+    sortBy,
+    page,
+  ]);
 
   const handleViewProperty = (propertyId: string) => {
     router.push(`/property/${propertyId}`);
   };
 
   const handleMakeOffer = (propertyId: string) => {
-    const property = properties.find(p => p.id === propertyId);
+    const property = properties.find((p) => p.id === propertyId);
     setSelectedPropertyId(propertyId);
     if (property) {
       setSelectedPropertyTitle(property.title);
       setSelectedPropertyPrice(property.price);
-      setSelectedPropertyWhatsapp(property.whatsapp || '');
+      setSelectedPropertyWhatsapp(property.whatsapp || "");
     }
     setShowMakeOfferModal(true);
   };
 
-  const toggleSelection = (array: string[], setArray: React.Dispatch<React.SetStateAction<string[]>>, item: string) => {
+  const toggleSelection = (
+    array: string[],
+    setArray: React.Dispatch<React.SetStateAction<string[]>>,
+    item: string,
+  ) => {
     if (array.includes(item)) {
-      setArray(array.filter(i => i !== item));
+      setArray(array.filter((i) => i !== item));
     } else {
       setArray([...array, item]);
     }
@@ -329,11 +424,13 @@ export function ForBuyers() {
 
   const getFilterContent = (filterName: string) => {
     switch (filterName) {
-      case 'Price Range':
+      case "Price Range":
         return (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
-              <span className="text-[14px] text-muted-foreground">Min Price</span>
+              <span className="text-[14px] text-muted-foreground">
+                Min Price
+              </span>
               <span className="text-[15px]">{formatPrice(priceRange[0])}</span>
             </div>
             <input
@@ -342,15 +439,19 @@ export function ForBuyers() {
               max="5000000000"
               step="5000000"
               value={priceRange[0]}
-              onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
+              onChange={(e) =>
+                setPriceRange([Number(e.target.value), priceRange[1]])
+              }
               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb"
               style={{
-                background: `linear-gradient(to right, #4ea8a1 0%, #4ea8a1 ${(priceRange[0] / 5000000000) * 100}%, #e5e7eb ${(priceRange[0] / 5000000000) * 100}%, #e5e7eb 100%)`
+                background: `linear-gradient(to right, #4ea8a1 0%, #4ea8a1 ${(priceRange[0] / 5000000000) * 100}%, #e5e7eb ${(priceRange[0] / 5000000000) * 100}%, #e5e7eb 100%)`,
               }}
             />
-            
+
             <div className="flex items-center justify-between mt-8">
-              <span className="text-[14px] text-muted-foreground">Max Price</span>
+              <span className="text-[14px] text-muted-foreground">
+                Max Price
+              </span>
               <span className="text-[15px]">{formatPrice(priceRange[1])}</span>
             </div>
             <input
@@ -359,22 +460,26 @@ export function ForBuyers() {
               max="5000000000"
               step="5000000"
               value={priceRange[1]}
-              onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
+              onChange={(e) =>
+                setPriceRange([priceRange[0], Number(e.target.value)])
+              }
               className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb"
               style={{
-                background: `linear-gradient(to right, #4ea8a1 0%, #4ea8a1 ${(priceRange[1] / 5000000000) * 100}%, #e5e7eb ${(priceRange[1] / 5000000000) * 100}%, #e5e7eb 100%)`
+                background: `linear-gradient(to right, #4ea8a1 0%, #4ea8a1 ${(priceRange[1] / 5000000000) * 100}%, #e5e7eb ${(priceRange[1] / 5000000000) * 100}%, #e5e7eb 100%)`,
               }}
             />
 
             <div className="pt-4 border-t border-gray-200">
               <div className="flex items-center justify-between text-[14px]">
                 <span className="text-muted-foreground">Selected Range:</span>
-                <span>{formatPrice(priceRange[0])} - {formatPrice(priceRange[1])}</span>
+                <span>
+                  {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])}
+                </span>
               </div>
             </div>
           </div>
         );
-      case 'Location':
+      case "Location":
         return (
           <div className="space-y-4">
             <div className="relative">
@@ -387,39 +492,47 @@ export function ForBuyers() {
                 className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#4ea8a1] focus:border-transparent text-[14px]"
               />
             </div>
-            
+
             {locationSearch && (
               <div className="space-y-1">
-                <p className="text-[13px] text-muted-foreground mb-2">Suggested locations:</p>
+                <p className="text-[13px] text-muted-foreground mb-2">
+                  Suggested locations:
+                </p>
                 {[
-                  'Lekki Phase 1, Lagos, Nigeria',
-                  'Victoria Island, Lagos, Nigeria',
-                  'Ikoyi, Lagos, Nigeria',
-                  'Ajah, Lagos, Nigeria',
-                  'Yaba, Lagos, Nigeria'
-                ].filter(loc => loc.toLowerCase().includes(locationSearch.toLowerCase())).map((location, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setLocationSearch(location)}
-                    className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors text-left"
-                  >
-                    <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                    <span className="text-[14px]">{location}</span>
-                  </button>
-                ))}
+                  "Lekki Phase 1, Lagos, Nigeria",
+                  "Victoria Island, Lagos, Nigeria",
+                  "Ikoyi, Lagos, Nigeria",
+                  "Ajah, Lagos, Nigeria",
+                  "Yaba, Lagos, Nigeria",
+                ]
+                  .filter((loc) =>
+                    loc.toLowerCase().includes(locationSearch.toLowerCase()),
+                  )
+                  .map((location, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setLocationSearch(location)}
+                      className="w-full flex items-center gap-2 px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors text-left"
+                    >
+                      <MapPin className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      <span className="text-[14px]">{location}</span>
+                    </button>
+                  ))}
               </div>
             )}
 
             {!locationSearch && (
               <div className="pt-2">
-                <p className="text-[13px] text-muted-foreground mb-3">Popular locations:</p>
+                <p className="text-[13px] text-muted-foreground mb-3">
+                  Popular locations:
+                </p>
                 <div className="space-y-2">
                   {[
-                    'Lekki Phase 1, Lagos',
-                    'Victoria Island, Lagos',
-                    'Ikoyi, Lagos',
-                    'Banana Island, Lagos',
-                    'Ikeja GRA, Lagos'
+                    "Lekki Phase 1, Lagos",
+                    "Victoria Island, Lagos",
+                    "Ikoyi, Lagos",
+                    "Banana Island, Lagos",
+                    "Ikeja GRA, Lagos",
                   ].map((location, index) => (
                     <button
                       key={index}
@@ -435,13 +548,15 @@ export function ForBuyers() {
             )}
           </div>
         );
-      case 'Bedrooms':
+      case "Bedrooms":
         return (
           <div className="space-y-2">
             {bedroomOptions.map((option) => (
               <button
                 key={option}
-                onClick={() => toggleSelection(selectedBedrooms, setSelectedBedrooms, option)}
+                onClick={() =>
+                  toggleSelection(selectedBedrooms, setSelectedBedrooms, option)
+                }
                 className="w-full flex items-center justify-between px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors text-left"
               >
                 <span className="text-[14px]">{option}</span>
@@ -452,13 +567,19 @@ export function ForBuyers() {
             ))}
           </div>
         );
-      case 'Property Type':
+      case "Property Type":
         return (
           <div className="space-y-2">
             {propertyTypes.map((type) => (
               <button
                 key={type}
-                onClick={() => toggleSelection(selectedPropertyTypes, setSelectedPropertyTypes, type)}
+                onClick={() =>
+                  toggleSelection(
+                    selectedPropertyTypes,
+                    setSelectedPropertyTypes,
+                    type,
+                  )
+                }
                 className="w-full flex items-center justify-between px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors text-left"
               >
                 <span className="text-[14px]">{type}</span>
@@ -476,9 +597,9 @@ export function ForBuyers() {
 
   const sortedProperties = useMemo(() => {
     const sorted = [...properties];
-    
+
     switch (sortBy) {
-      case 'Highest Inda Score':
+      case "Highest Inda Score":
         return sorted.sort((a, b) => b.trustScore - a.trustScore);
       default:
         return sorted;
@@ -492,32 +613,33 @@ export function ForBuyers() {
       <Navbar />
       <div className="min-h-screen bg-slate-50">
         <section className="relative pt-32 pb-8 px-6 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
-        <div className="max-w-7xl mx-auto relative">
+          <div className="max-w-7xl mx-auto relative">
             <div className="mb-8 text-center">
               <h1 className="text-4xl lg:text-5xl mb-4 leading-tight text-gray-900">
-                Buy with certainty. Get the truth about{' '}
+                Buy with certainty. Get the truth about{" "}
                 <span className="bg-gradient-to-r from-[#4ea8a1] to-teal-600 bg-clip-text text-transparent">
                   any property.
                 </span>
               </h1>
             </div>
 
-            <Tabs 
-              defaultValue="ai" 
+            <Tabs
+              defaultValue="ai"
               value={searchMode}
-              onValueChange={(value: string) => setSearchMode(value as "link" | "ai")}
+              onValueChange={(value: string) =>
+                setSearchMode(value as "link" | "ai")
+              }
               className="w-full"
             >
               <TabsList className="w-full mb-6 bg-white rounded-2xl shadow-lg p-1.5 max-w-2xl mx-auto">
-               
-                <TabsTrigger 
+                <TabsTrigger
                   value="ai"
                   className="flex-1 data-[state=active]:bg-[#4ea8a1] data-[state=active]:text-white"
                 >
                   Search Our Listings
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="link" 
+                <TabsTrigger
+                  value="link"
                   className="flex-1 data-[state=active]:bg-[#4ea8a1] data-[state=active]:text-white"
                 >
                   Scan External Listing
@@ -528,32 +650,34 @@ export function ForBuyers() {
                 <div className="max-w-4xl mx-auto">
                   <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
                     <div className="flex items-center gap-3">
-                  <Search className="w-5 h-5 text-gray-400" />
-                  <input 
-                    id="buyer-search-input"
-                    type="text" 
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
+                      <Search className="w-5 h-5 text-gray-400" />
+                      <input
+                        id="buyer-search-input"
+                        type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
                             handleSearch();
                           }
                         }}
                         placeholder="Paste property link..."
                         className="flex-1 outline-none text-gray-900"
                       />
-                    <Button
-                      onClick={handleSearch}
-                      disabled={!isValidUrl(search)}
-                      className={`bg-[#4ea8a1] hover:bg-[#3d8680] px-6 ${!isValidUrl(search) ? "opacity-60 cursor-not-allowed hover:bg-[#4ea8a1]" : ""}`}
-                    >
-                      Scan
-                    </Button>
+                      <Button
+                        onClick={handleSearch}
+                        disabled={!isValidUrl(search)}
+                        className={`bg-[#4ea8a1] hover:bg-[#3d8680] px-6 ${!isValidUrl(search) ? "opacity-60 cursor-not-allowed hover:bg-[#4ea8a1]" : ""}`}
+                      >
+                        Scan
+                      </Button>
                     </div>
                   </div>
 
                   <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-6">How External Scanning Works</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                      How External Scanning Works
+                    </h2>
                     <div className="space-y-6">
                       <div className="flex gap-4">
                         <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-[#4ea8a1] to-[#3d8680] rounded-xl flex items-center justify-center text-white font-bold">
@@ -562,10 +686,13 @@ export function ForBuyers() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
                             <FileText className="w-5 h-5 text-[#4ea8a1]" />
-                            <h3 className="text-lg font-semibold text-gray-900">Extract</h3>
+                            <h3 className="text-lg font-semibold text-gray-900">
+                              Extract
+                            </h3>
                           </div>
                           <p className="text-gray-600">
-                            We scan basic details (price, location, bedrooms, features) from the external listing
+                            We scan basic details (price, location, bedrooms,
+                            features) from the external listing
                           </p>
                         </div>
                       </div>
@@ -577,10 +704,13 @@ export function ForBuyers() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
                             <Brain className="w-5 h-5 text-[#4ea8a1]" />
-                            <h3 className="text-lg font-semibold text-gray-900">Analyze</h3>
+                            <h3 className="text-lg font-semibold text-gray-900">
+                              Analyze
+                            </h3>
                           </div>
                           <p className="text-gray-600">
-                            Our AI computes Fair Market Value, risk scores, and liquidity using our database of similar properties
+                            Our AI computes Fair Market Value, risk scores, and
+                            liquidity using our database of similar properties
                           </p>
                         </div>
                       </div>
@@ -592,10 +722,13 @@ export function ForBuyers() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
                             <TrendingUp className="w-5 h-5 text-[#4ea8a1]" />
-                            <h3 className="text-lg font-semibold text-gray-900">Enrich</h3>
+                            <h3 className="text-lg font-semibold text-gray-900">
+                              Enrich
+                            </h3>
                           </div>
                           <p className="text-gray-600">
-                            We provide location insights, financial projections, and market comparisons based on the area
+                            We provide location insights, financial projections,
+                            and market comparisons based on the area
                           </p>
                         </div>
                       </div>
@@ -607,10 +740,13 @@ export function ForBuyers() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
                             <ClipboardCheck className="w-5 h-5 text-[#4ea8a1]" />
-                            <h3 className="text-lg font-semibold text-gray-900">Guide</h3>
+                            <h3 className="text-lg font-semibold text-gray-900">
+                              Guide
+                            </h3>
                           </div>
                           <p className="text-gray-600">
-                            Clear checklist of what to verify (title, developer, etc.) before making an offer
+                            Clear checklist of what to verify (title, developer,
+                            etc.) before making an offer
                           </p>
                         </div>
                       </div>
@@ -620,7 +756,9 @@ export function ForBuyers() {
                       <div className="flex items-start gap-3">
                         <Lightbulb className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
                         <div>
-                          <h4 className="font-semibold text-gray-900 mb-2">What You Get:</h4>
+                          <h4 className="font-semibold text-gray-900 mb-2">
+                            What You Get:
+                          </h4>
                           <ul className="space-y-1 text-gray-700 text-sm">
                             <li>• FMV analysis</li>
                             <li>• Location & infrastructure insights</li>
@@ -635,52 +773,70 @@ export function ForBuyers() {
                   </div>
 
                   <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-6">Supported Property Sites</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                      Supported Property Sites
+                    </h2>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
                       <div className="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
                         <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center text-white font-bold text-lg mb-2">
                           NPC
                         </div>
-                        <span className="text-sm font-medium text-gray-700 text-center">Nigeria Property Center</span>
+                        <span className="text-sm font-medium text-gray-700 text-center">
+                          Nigeria Property Center
+                        </span>
                       </div>
                       <div className="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
                         <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center text-white font-bold text-lg mb-2">
                           PP
                         </div>
-                        <span className="text-sm font-medium text-gray-700 text-center">PropertyPro</span>
+                        <span className="text-sm font-medium text-gray-700 text-center">
+                          PropertyPro
+                        </span>
                       </div>
                       <div className="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
                         <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center text-white font-bold text-lg mb-2">
                           PF
                         </div>
-                        <span className="text-sm font-medium text-gray-700 text-center">Private Property</span>
+                        <span className="text-sm font-medium text-gray-700 text-center">
+                          Private Property
+                        </span>
                       </div>
                       <div className="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
                         <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center text-white font-bold text-lg mb-2">
                           TO
                         </div>
-                        <span className="text-sm font-medium text-gray-700 text-center">Tolet.com.ng</span>
+                        <span className="text-sm font-medium text-gray-700 text-center">
+                          Tolet.com.ng
+                        </span>
                       </div>
                       <div className="flex flex-col items-center p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
                         <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-xl flex items-center justify-center text-white font-bold text-lg mb-2">
                           JJ
                         </div>
-                        <span className="text-sm font-medium text-gray-700 text-center">Jiji.ng</span>
+                        <span className="text-sm font-medium text-gray-700 text-center">
+                          Jiji.ng
+                        </span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <span className="text-lg font-bold text-[#4ea8a1]">+</span>
+                      <span className="text-lg font-bold text-[#4ea8a1]">
+                        +
+                      </span>
                       <span>More coming soon</span>
                     </div>
                   </div>
 
                   <div className="bg-white rounded-2xl shadow-xl p-8">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">Example URLs to try:</h2>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                      Example URLs to try:
+                    </h2>
                     <div className="space-y-3">
                       <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                         <ExternalLink className="w-5 h-5 text-[#4ea8a1] flex-shrink-0 mt-0.5" />
                         <div>
-                          <p className="text-sm text-gray-600 mb-1">Nigeria Property Centre</p>
+                          <p className="text-sm text-gray-600 mb-1">
+                            Nigeria Property Centre
+                          </p>
                           <code className="text-xs text-gray-800 break-all">
                             https://www.nigeriapropertycentre.com/for-sale/...
                           </code>
@@ -689,7 +845,9 @@ export function ForBuyers() {
                       <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                         <ExternalLink className="w-5 h-5 text-[#4ea8a1] flex-shrink-0 mt-0.5" />
                         <div>
-                          <p className="text-sm text-gray-600 mb-1">PropertyPro</p>
+                          <p className="text-sm text-gray-600 mb-1">
+                            PropertyPro
+                          </p>
                           <code className="text-xs text-gray-800 break-all">
                             https://www.propertypro.ng/property/...
                           </code>
@@ -698,7 +856,9 @@ export function ForBuyers() {
                       <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                         <ExternalLink className="w-5 h-5 text-[#4ea8a1] flex-shrink-0 mt-0.5" />
                         <div>
-                          <p className="text-sm text-gray-600 mb-1">Tolet.com.ng</p>
+                          <p className="text-sm text-gray-600 mb-1">
+                            Tolet.com.ng
+                          </p>
                           <code className="text-xs text-gray-800 break-all">
                             https://www.tolet.com.ng/ads/...
                           </code>
@@ -713,9 +873,9 @@ export function ForBuyers() {
                 <div className="bg-white rounded-2xl shadow-xl p-6 max-w-2xl mx-auto mb-8">
                   <div className="flex items-center gap-3">
                     <Search className="w-5 h-5 text-gray-400" />
-                    <input 
+                    <input
                       id="buyer-search-input"
-                      type="text" 
+                      type="text"
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                       onKeyDown={(e) => {
@@ -737,20 +897,28 @@ export function ForBuyers() {
                 </div>
 
                 {searchMode === "ai" && (
-        <div className="max-w-7xl mx-auto">
+                  <div className="max-w-7xl mx-auto">
                     <div className="bg-white border-b border-gray-200 sticky top-0 z-10 mb-6">
                       <div className="px-6 py-4">
                         <div className="flex items-center justify-between mb-4">
                           <div>
                             <h2 className="text-xl font-bold text-gray-900">
                               {filteredProperties.length} Properties Found
-                              {search && <span className="text-gray-500 font-normal ml-2">for &quot;{search}&quot;</span>}
-          </h2>
-            </div>
+                              {search && (
+                                <span className="text-gray-500 font-normal ml-2">
+                                  for &quot;{search}&quot;
+                                </span>
+                              )}
+                            </h2>
+                          </div>
 
                           <div className="flex items-center gap-3">
                             <button
-                              onClick={() => setActiveFilter(activeFilter ? null : 'Price Range')}
+                              onClick={() =>
+                                setActiveFilter(
+                                  activeFilter ? null : "Price Range",
+                                )
+                              }
                               className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
                             >
                               <SlidersHorizontal className="w-4 h-4" />
@@ -768,17 +936,19 @@ export function ForBuyers() {
                                 <option>Newest</option>
                               </select>
                               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-muted-foreground" />
-            </div>
-          </div>
-        </div>
+                            </div>
+                          </div>
+                        </div>
 
                         <div className="flex items-center gap-3">
-                          <span className="text-[14px] text-muted-foreground">Searching for:</span>
+                          <span className="text-[14px] text-muted-foreground">
+                            Searching for:
+                          </span>
                           <div className="px-4 py-2 bg-[#4ea8a1]/10 text-[#4ea8a1] rounded-full text-[14px] border border-[#4ea8a1]/20">
-                            {search || 'All properties'}
-            </div>
-          </div>
-        </div>
+                            {search || "All properties"}
+                          </div>
+                        </div>
+                      </div>
 
                       <div className="border-t border-gray-200 px-6 py-3 overflow-x-auto">
                         <div className="flex gap-2 min-w-max">
@@ -786,21 +956,23 @@ export function ForBuyers() {
                             <button
                               key={index}
                               onClick={() => setActiveFilter(filter)}
-                              className={`px-4 py-2 bg-white border border-gray-200 rounded-lg text-[13px] hover:border-[#4ea8a1] hover:text-[#4ea8a1] transition-colors whitespace-nowrap ${activeFilter === filter ? 'border-[#4ea8a1] text-[#4ea8a1]' : ''}`}
+                              className={`px-4 py-2 bg-white border border-gray-200 rounded-lg text-[13px] hover:border-[#4ea8a1] hover:text-[#4ea8a1] transition-colors whitespace-nowrap ${activeFilter === filter ? "border-[#4ea8a1] text-[#4ea8a1]" : ""}`}
                             >
                               {filter}
                             </button>
                           ))}
-                </div>
-              </div>
-            </div>
+                        </div>
+                      </div>
+                    </div>
 
                     <div className="px-6 pb-8">
                       {loading && page === 1 ? (
                         <div className="flex items-center justify-center py-20">
                           <Loader2 className="w-10 h-10 text-[#4ea8a1] animate-spin" />
-                          <span className="ml-3 text-gray-500">Loading properties...</span>
-                </div>
+                          <span className="ml-3 text-gray-500">
+                            Loading properties...
+                          </span>
+                        </div>
                       ) : error ? (
                         <div className="flex flex-col items-center justify-center py-20 text-center">
                           <p className="text-red-500 mb-4">{error}</p>
@@ -810,71 +982,92 @@ export function ForBuyers() {
                           >
                             Retry
                           </button>
-              </div>
+                        </div>
                       ) : filteredProperties.length === 0 ? (
                         <div>
                           <div className="flex flex-col items-center justify-center py-12 text-center mb-8">
                             <Home className="w-16 h-16 text-gray-300 mb-4" />
-                            <p className="text-gray-500 text-lg">No properties found {search && `for "${search}"`}</p>
-                            <p className="text-sm text-gray-400 mt-2">Try adjusting your filters or search query</p>
-            </div>
+                            <p className="text-gray-500 text-lg">
+                              No properties found {search && `for "${search}"`}
+                            </p>
+                            <p className="text-sm text-gray-400 mt-2">
+                              Try adjusting your filters or search query
+                            </p>
+                          </div>
 
                           {suggestedProperties.length > 0 && (
                             <div>
-                              <h3 className="text-lg font-semibold text-gray-700 mb-4">You might also like</h3>
+                              <h3 className="text-lg font-semibold text-gray-700 mb-4">
+                                You might also like
+                              </h3>
                               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {suggestedProperties.map((property) => (
-                                  <PropertyCard key={property.id} {...property} onViewProperty={handleViewProperty} onMakeOffer={handleMakeOffer} />
+                                  <PropertyCard
+                                    key={property.id}
+                                    {...property}
+                                    onViewProperty={handleViewProperty}
+                                    onMakeOffer={handleMakeOffer}
+                                  />
                                 ))}
-                </div>
-              </div>
+                              </div>
+                            </div>
                           )}
                         </div>
                       ) : (
                         <>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {filteredProperties.map((property, index) => {
-                              const isLastElement = filteredProperties.length === index + 1;
+                              const isLastElement =
+                                filteredProperties.length === index + 1;
                               return (
-                                <div key={property.id} ref={isLastElement ? lastPropertyElementRef : null}>
-                                  <PropertyCard 
-                                    {...property} 
-                                    onViewProperty={handleViewProperty} 
-                                    onMakeOffer={handleMakeOffer} 
+                                <div
+                                  key={property.id}
+                                  ref={
+                                    isLastElement
+                                      ? lastPropertyElementRef
+                                      : null
+                                  }
+                                >
+                                  <PropertyCard
+                                    {...property}
+                                    onViewProperty={handleViewProperty}
+                                    onMakeOffer={handleMakeOffer}
                                   />
-              </div>
+                                </div>
                               );
                             })}
-              </div>
+                          </div>
                           {loading && page > 1 && (
                             <div className="flex justify-center py-8">
                               <Loader2 className="w-8 h-8 text-[#4ea8a1] animate-spin" />
-                              <span className="ml-2 text-gray-500">Loading more...</span>
-                </div>
+                              <span className="ml-2 text-gray-500">
+                                Loading more...
+                              </span>
+                            </div>
                           )}
                           {!hasMore && filteredProperties.length > 0 && (
                             <div className="text-center py-8 text-gray-400 text-sm">
                               No more properties found
-              </div>
+                            </div>
                           )}
                         </>
                       )}
-            </div>
-          </div>
+                    </div>
+                  </div>
                 )}
               </TabsContent>
             </Tabs>
           </div>
         </section>
-        </div>
+      </div>
 
       {activeFilter && searchMode === "ai" && (
         <>
-          <div 
+          <div
             className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40"
             onClick={() => setActiveFilter(null)}
           />
-          
+
           <div className="fixed top-0 right-0 bottom-0 w-96 bg-white shadow-2xl z-50 overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-200 p-5 flex items-center justify-between">
               <h3>{activeFilter}</h3>
@@ -885,16 +1078,14 @@ export function ForBuyers() {
                 <ArrowLeft className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-5">
-              {getFilterContent(activeFilter)}
-            </div>
+            <div className="p-5">{getFilterContent(activeFilter)}</div>
             <div className="sticky bottom-0 bg-white border-t border-gray-200 p-5 flex gap-3">
               <button
                 onClick={() => {
                   setPriceRange([0, 5000000000]);
                   setSelectedBedrooms([]);
                   setSelectedPropertyTypes([]);
-                  setLocationSearch('');
+                  setLocationSearch("");
                 }}
                 className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors text-[14px]"
               >
