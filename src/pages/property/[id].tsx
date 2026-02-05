@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/router';
-import { Container } from '@/components';
-import { PropertyDetail } from '@/views/property-details/PropertyDetail';
-import apiClient from '@/api';
-import LoadingScreen from '@/views/result/sections/LoadingScreen';
-import NotFoundScreen from '@/views/result/sections/NotFoundScreen';
-import { mapListingToPropertyDetail } from '@/views/property-details/utils';
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import { Container } from "@/components";
+import { PropertyDetail } from "@/views/property-details/PropertyDetail";
+import apiClient from "@/api";
+import LoadingScreen from "@/views/result/sections/LoadingScreen";
+import NotFoundScreen from "@/views/result/sections/NotFoundScreen";
+import { mapListingToPropertyDetail } from "@/views/property-details/utils";
 
 const PropertyDetailsPage: React.FC = () => {
   const router = useRouter();
@@ -22,56 +22,39 @@ const PropertyDetailsPage: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         let data = null;
-        
-        // Try to get listing from the listings endpoint with _id filter
-        // The backend now supports _id filtering
+
+        // Try to get listing directly by id (supports both _id and indaTag)
         try {
-          const response = await apiClient.get('/listings', {
-            params: { 
-              _id: id, 
-              limit: 1,
-              page: 1
-            }
-          });
-          
-          // Handle different response formats
-          const responseData = response.data?.data || response.data;
-          const listings = responseData?.items || responseData?.listings || responseData?.data || [];
-          
-          if (Array.isArray(listings) && listings.length > 0) {
-            // Find the exact match by _id in case multiple are returned
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            data = listings.find((l: any) => (l._id || l.id) === id) || listings[0];
-          } else if (responseData && !Array.isArray(responseData) && (responseData._id || responseData.id)) {
-            // If the response is a single object, use it directly
-            data = responseData;
-          }
-        } catch (searchErr) {
-          console.log('Failed to fetch listing with _id filter:', searchErr);
+          const response = await apiClient.get(`/api/listings/${id}`);
+          data = response.data?.data || response.data;
+        } catch (err: any) {
+          console.log("Failed to fetch listing by id:", err?.response?.status);
         }
-        
+
         // If still no data, try computed listing endpoint (for scanned listings)
         if (!data) {
           try {
-            const computedResponse = await apiClient.get(`/listings/computed/${id}`);
+            const computedResponse = await apiClient.get(
+              `/listings/computed/${id}`,
+            );
             data = computedResponse.data?.data || computedResponse.data;
           } catch {
-            console.log('Computed listing also not found');
+            console.log("Computed listing also not found");
           }
         }
-        
+
         if (!data) {
-          setError('Listing not found');
+          setError("Listing not found");
           setLoading(false);
           return;
         }
 
         setListing(data);
       } catch (err: unknown) {
-        console.error('Failed to fetch listing:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load listing');
+        console.error("Failed to fetch listing:", err);
+        setError(err instanceof Error ? err.message : "Failed to load listing");
       } finally {
         setLoading(false);
       }
