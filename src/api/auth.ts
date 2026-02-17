@@ -7,6 +7,7 @@ export interface RegisterPayload {
   password: string;
   howDidYouHearAboutUs: string;
   todo: string;
+  referralSource?: string;
 }
 
 export const register = (data: RegisterPayload) => {

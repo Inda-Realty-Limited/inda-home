@@ -1,4 +1,9 @@
-import { register, RegisterPayload, verifyOtp, requestResetPassword as requestResetApi } from "@/api/auth";
+import {
+  register,
+  RegisterPayload,
+  verifyOtp,
+  requestResetPassword as requestResetApi,
+} from "@/api/auth";
 import { Button, Container, Footer, Input, Navbar } from "@/components";
 import GoogleButton from "@/components/OAuth/GoogleButton";
 import { useToast } from "@/components/ToastProvider";
@@ -46,7 +51,9 @@ const Signup: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Role selection and Pro fields
-  const [selectedRole, setSelectedRole] = useState<'Buyer' | 'Agent' | 'Investor' | 'Developer'>('Buyer');
+  const [selectedRole, setSelectedRole] = useState<
+    "Buyer" | "Agent" | "Investor" | "Developer"
+  >("Buyer");
   const [companyName, setCompanyName] = useState("");
   const [companyType, setCompanyType] = useState("");
   const [registrationNumber, setRegistrationNumber] = useState("");
@@ -57,7 +64,7 @@ const Signup: React.FC = () => {
 
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const otpInputs = Array.from({ length: 6 }, (_, _i) =>
-    React.createRef<HTMLInputElement>()
+    React.createRef<HTMLInputElement>(),
   );
   const [otpLoading, setOtpLoading] = useState(false);
   const [resendLoading, setResendLoading] = useState(false);
@@ -77,16 +84,18 @@ const Signup: React.FC = () => {
       toast.showToast(
         "Sign up successful! Please verify your email.",
         2500,
-        "success"
+        "success",
       );
       setTimeout(() => setStep(4), 800);
     },
     onError: (error: any) => {
-      const errorMessage = error?.response?.data?.message || error?.message || "Sign up failed. Please try again.";
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Sign up failed. Please try again.";
       toast.showToast(errorMessage, 3000, "error");
     },
   });
-
 
   const lookingToDoOptions = [
     {
@@ -117,41 +126,41 @@ const Signup: React.FC = () => {
     label: string;
     icon: React.ReactNode;
   }[] = [
-      {
-        value: HowDidYouHearAboutUs.SearchEngines,
-        label: "Search Engines – Google, Bing, Yahoo, etc.",
-        icon: <FiSearch />,
-      },
-      {
-        value: HowDidYouHearAboutUs.SocialMediaOrganic,
-        label:
-          "Social Media (Organic) – Facebook, Instagram, Twitter/X, YouTube, TikTok",
-        icon: <FiUsers />,
-      },
-      {
-        value: HowDidYouHearAboutUs.SocialMediaPaidAds,
-        label:
-          "Social Media (Paid Ads) – Facebook Ads, Instagram Ads, Twitter Ads, YouTube Ads",
-        icon: <FiTag />,
-      },
-      {
-        value: HowDidYouHearAboutUs.Referrals,
-        label: "Referrals – Direct mentions, backlinks, influencer shares",
-        icon: <FiUser />,
-      },
-      {
-        value: HowDidYouHearAboutUs.CommunityGroupsForums,
-        label:
-          "Community Groups & Forums – WhatsApp groups, Telegram, niche online forums",
-        icon: <FiGlobe />,
-      },
-      {
-        value: HowDidYouHearAboutUs.EmailNewsletters,
-        label: "Email / Newsletters – Campaigns, drip sequences, updates",
-        icon: <FiMail />,
-      },
-      { value: HowDidYouHearAboutUs.Other, label: "Other", icon: <FiTag /> },
-    ];
+    {
+      value: HowDidYouHearAboutUs.SearchEngines,
+      label: "Search Engines – Google, Bing, Yahoo, etc.",
+      icon: <FiSearch />,
+    },
+    {
+      value: HowDidYouHearAboutUs.SocialMediaOrganic,
+      label:
+        "Social Media (Organic) – Facebook, Instagram, Twitter/X, YouTube, TikTok",
+      icon: <FiUsers />,
+    },
+    {
+      value: HowDidYouHearAboutUs.SocialMediaPaidAds,
+      label:
+        "Social Media (Paid Ads) – Facebook Ads, Instagram Ads, Twitter Ads, YouTube Ads",
+      icon: <FiTag />,
+    },
+    {
+      value: HowDidYouHearAboutUs.Referrals,
+      label: "Referrals – Direct mentions, backlinks, influencer shares",
+      icon: <FiUser />,
+    },
+    {
+      value: HowDidYouHearAboutUs.CommunityGroupsForums,
+      label:
+        "Community Groups & Forums – WhatsApp groups, Telegram, niche online forums",
+      icon: <FiGlobe />,
+    },
+    {
+      value: HowDidYouHearAboutUs.EmailNewsletters,
+      label: "Email / Newsletters – Campaigns, drip sequences, updates",
+      icon: <FiMail />,
+    },
+    { value: HowDidYouHearAboutUs.Other, label: "Other", icon: <FiTag /> },
+  ];
 
   return (
     <Container
@@ -161,8 +170,9 @@ const Signup: React.FC = () => {
       <Navbar variant="signUp" />
       <div className="flex-1 flex items-center justify-center py-8 sm:py-12">
         <div
-          className={`flex flex-col bg-[#E5E5E573] items-center justify-center rounded-3xl w-[95%] sm:w-[85%] md:w-[75%] lg:w-[65%] xl:w-[50%] mx-auto py-8 sm:py-12 px-4 sm:px-6 ${step === 2 ? "overflow-y-auto max-h-fit" : ""
-            }`}
+          className={`flex flex-col bg-[#E5E5E573] items-center justify-center rounded-3xl w-[95%] sm:w-[85%] md:w-[75%] lg:w-[65%] xl:w-[50%] mx-auto py-8 sm:py-12 px-4 sm:px-6 ${
+            step === 2 ? "overflow-y-auto max-h-fit" : ""
+          }`}
         >
           {step === 1 && (
             <>
@@ -173,7 +183,14 @@ const Signup: React.FC = () => {
                 No noise. No spam. Just clarity where it matters most.
               </p>
               <div className="flex flex-col gap-4 sm:gap-6 w-full max-w-[320px] sm:max-w-[400px] md:max-w-[480px] mx-auto justify-center">
-                <GoogleButton returnTo={returnTo || (searchQuery ? `/${searchType === "ai" ? "search-results" : "result"}?q=${encodeURIComponent(searchQuery)}&type=${searchType}` : undefined)} />
+                <GoogleButton
+                  returnTo={
+                    returnTo ||
+                    (searchQuery
+                      ? `/${searchType === "ai" ? "search-results" : "result"}?q=${encodeURIComponent(searchQuery)}&type=${searchType}`
+                      : undefined)
+                  }
+                />
                 <button
                   onClick={() => {
                     setStep(2);
@@ -198,22 +215,45 @@ const Signup: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-4 w-full max-w-[500px] mx-auto mb-8">
                 {[
-                  { role: 'Buyer' as const, icon: '🏠', title: 'Buyer', desc: 'I want to buy a home' },
-                  { role: 'Agent' as const, icon: '👔', title: 'Agent', desc: 'I sell & list homes' },
-                  { role: 'Investor' as const, icon: '💼', title: 'Investor', desc: 'I invest in real estate' },
-                  { role: 'Developer' as const, icon: '🏗️', title: 'Developer', desc: 'I build properties' },
+                  {
+                    role: "Buyer" as const,
+                    icon: "🏠",
+                    title: "Buyer",
+                    desc: "I want to buy a home",
+                  },
+                  {
+                    role: "Agent" as const,
+                    icon: "👔",
+                    title: "Agent",
+                    desc: "I sell & list homes",
+                  },
+                  {
+                    role: "Investor" as const,
+                    icon: "💼",
+                    title: "Investor",
+                    desc: "I invest in real estate",
+                  },
+                  {
+                    role: "Developer" as const,
+                    icon: "🏗️",
+                    title: "Developer",
+                    desc: "I build properties",
+                  },
                 ].map((option) => (
                   <button
                     key={option.role}
                     type="button"
                     onClick={() => setSelectedRole(option.role)}
-                    className={`p-6 rounded-2xl border-2 transition-all duration-200 text-center ${selectedRole === option.role
-                      ? 'border-[#4EA8A1] bg-[#4EA8A1]/10 shadow-md scale-105'
-                      : 'border-gray-200 hover:border-[#4EA8A1]/50 hover:bg-gray-50'
-                      }`}
+                    className={`p-6 rounded-2xl border-2 transition-all duration-200 text-center ${
+                      selectedRole === option.role
+                        ? "border-[#4EA8A1] bg-[#4EA8A1]/10 shadow-md scale-105"
+                        : "border-gray-200 hover:border-[#4EA8A1]/50 hover:bg-gray-50"
+                    }`}
                   >
                     <div className="text-4xl mb-2">{option.icon}</div>
-                    <div className="font-bold text-base mb-1">{option.title}</div>
+                    <div className="font-bold text-base mb-1">
+                      {option.title}
+                    </div>
                     <div className="text-xs text-gray-600">{option.desc}</div>
                   </button>
                 ))}
@@ -251,18 +291,34 @@ const Signup: React.FC = () => {
 
                     // Validate required fields
                     if (!lookingToDo) {
-                      setErrors({ lookingToDo: 'Please select what you\'re looking to do' });
-                      toast.showToast("Please select what you're looking to do", 2500, "error");
+                      setErrors({
+                        lookingToDo: "Please select what you're looking to do",
+                      });
+                      toast.showToast(
+                        "Please select what you're looking to do",
+                        2500,
+                        "error",
+                      );
                       return;
                     }
 
                     if (!hearAboutUs) {
-                      setErrors({ hearAboutUs: 'Please tell us how you heard about us' });
-                      toast.showToast("Please tell us how you heard about us", 2500, "error");
+                      setErrors({
+                        hearAboutUs: "Please tell us how you heard about us",
+                      });
+                      toast.showToast(
+                        "Please tell us how you heard about us",
+                        2500,
+                        "error",
+                      );
                       return;
                     }
 
                     // Build payload with role and conditional Pro fields
+                    const referralSource =
+                      typeof window !== "undefined"
+                        ? localStorage.getItem("inda_ref")
+                        : null;
                     const payload: any = {
                       email,
                       firstName,
@@ -271,14 +327,22 @@ const Signup: React.FC = () => {
                       howDidYouHearAboutUs: hearAboutUs,
                       todo: lookingToDo,
                       role: selectedRole,
+                      ...(referralSource ? { referralSource } : {}),
                     };
 
                     // Add Pro fields if not a Buyer
-                    if (selectedRole !== 'Buyer') {
+                    if (selectedRole !== "Buyer") {
                       // Validate required pro fields
                       if (!phoneNumber.trim()) {
-                        setErrors({ phoneNumber: 'Phone number is required for Agents and Developers' });
-                        toast.showToast("Phone number is required", 2500, "error");
+                        setErrors({
+                          phoneNumber:
+                            "Phone number is required for Agents and Developers",
+                        });
+                        toast.showToast(
+                          "Phone number is required",
+                          2500,
+                          "error",
+                        );
                         return;
                       }
                       payload.companyName = companyName;
@@ -287,11 +351,18 @@ const Signup: React.FC = () => {
                       payload.phoneNumber = phoneNumber;
                     }
 
-                    const validation = validateAndSanitize(registerSchema, payload);
+                    const validation = validateAndSanitize(
+                      registerSchema,
+                      payload,
+                    );
 
                     if (!validation.success) {
                       setErrors(validation.errors);
-                      toast.showToast("Please fix the errors in the form", 2500, "error");
+                      toast.showToast(
+                        "Please fix the errors in the form",
+                        2500,
+                        "error",
+                      );
                       return;
                     }
 
@@ -299,7 +370,11 @@ const Signup: React.FC = () => {
                     const limitCheck = limiter.checkLimit();
 
                     if (!limitCheck.allowed) {
-                      toast.showToast("Please wait a moment before submitting again", 2000, "error");
+                      toast.showToast(
+                        "Please wait a moment before submitting again",
+                        2000,
+                        "error",
+                      );
                       return;
                     }
 
@@ -325,19 +400,21 @@ const Signup: React.FC = () => {
                         value={email}
                         onChange={(e) => {
                           setEmail(e.target.value);
-                          setErrors(prev => ({ ...prev, email: "" }));
+                          setErrors((prev) => ({ ...prev, email: "" }));
                         }}
-                        className={`w-full rounded-xl bg-[#F9F9F9] border ${errors.email ? "border-red-500" : "border-[#e0e0e0]"
-                          } focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base`}
+                        className={`w-full rounded-xl bg-[#F9F9F9] border ${
+                          errors.email ? "border-red-500" : "border-[#e0e0e0]"
+                        } focus:ring-2 focus:ring-[#4EA8A1] pl-9 sm:pl-10 pr-3 sm:pr-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base`}
                       />
                     </div>
                     {errors.email && (
-                      <p className="text-red-500 text-xs sm:text-sm -mt-3">{errors.email}</p>
+                      <p className="text-red-500 text-xs sm:text-sm -mt-3">
+                        {errors.email}
+                      </p>
                     )}
                   </div>
                   <div className="flex flex-col gap-1 sm:gap-2">
-                    <div className="relative flex items-center">
-                    </div>
+                    <div className="relative flex items-center"></div>
                   </div>
                   {/* First Name Field */}
                   <div className="flex flex-col gap-1 sm:gap-2">
@@ -411,7 +488,8 @@ const Signup: React.FC = () => {
                       htmlFor="lookingToDo"
                       className="text-gray-700 font-medium text-sm sm:text-base"
                     >
-                      What are you looking to do? <span className="text-red-500">*</span>
+                      What are you looking to do?{" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <button
@@ -421,21 +499,21 @@ const Signup: React.FC = () => {
                           setOpenDropdown(
                             openDropdown === "lookingToDo"
                               ? null
-                              : "lookingToDo"
+                              : "lookingToDo",
                           )
                         }
                       >
                         <span className="flex items-center gap-2">
                           {
                             lookingToDoOptions.find(
-                              (opt) => opt.value === lookingToDo
+                              (opt) => opt.value === lookingToDo,
                             )?.icon
                           }
                           {lookingToDo ? (
                             <span className="truncate">
                               {
                                 lookingToDoOptions.find(
-                                  (opt) => opt.value === lookingToDo
+                                  (opt) => opt.value === lookingToDo,
                                 )?.label
                               }
                             </span>
@@ -472,7 +550,8 @@ const Signup: React.FC = () => {
                       htmlFor="hearAboutUs"
                       className="text-gray-700 font-medium text-sm sm:text-base"
                     >
-                      How did you hear about us? <span className="text-red-500">*</span>
+                      How did you hear about us?{" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <button
@@ -482,21 +561,21 @@ const Signup: React.FC = () => {
                           setOpenDropdown(
                             openDropdown === "hearAboutUs"
                               ? null
-                              : "hearAboutUs"
+                              : "hearAboutUs",
                           )
                         }
                       >
                         <span className="flex items-center gap-2">
                           {
                             hearAboutUsOptions.find(
-                              (opt) => opt.value === hearAboutUs
+                              (opt) => opt.value === hearAboutUs,
                             )?.icon
                           }
                           {hearAboutUs ? (
                             <span className="truncate">
                               {
                                 hearAboutUsOptions.find(
-                                  (opt) => opt.value === hearAboutUs
+                                  (opt) => opt.value === hearAboutUs,
                                 )?.label
                               }
                             </span>
@@ -529,7 +608,7 @@ const Signup: React.FC = () => {
                   </div>
 
                   {/* CONDITIONAL PRO FIELDS - Only for Agent, Investor, Developer */}
-                  {selectedRole !== 'Buyer' && (
+                  {selectedRole !== "Buyer" && (
                     <>
                       <div className="border-t border-gray-200 pt-4 mt-4">
                         <h3 className="font-semibold text-gray-700 mb-4 text-sm sm:text-base">
@@ -538,7 +617,10 @@ const Signup: React.FC = () => {
 
                         {/* Company Name */}
                         <div className="flex flex-col gap-1 sm:gap-2 mb-4">
-                          <label htmlFor="companyName" className="text-gray-700 font-medium text-sm sm:text-base">
+                          <label
+                            htmlFor="companyName"
+                            className="text-gray-700 font-medium text-sm sm:text-base"
+                          >
                             Company Name <span className="text-red-500">*</span>
                           </label>
                           <Input
@@ -553,7 +635,10 @@ const Signup: React.FC = () => {
 
                         {/* Company Type */}
                         <div className="flex flex-col gap-1 sm:gap-2 mb-4">
-                          <label htmlFor="companyType" className="text-gray-700 font-medium text-sm sm:text-base">
+                          <label
+                            htmlFor="companyType"
+                            className="text-gray-700 font-medium text-sm sm:text-base"
+                          >
                             Company Type <span className="text-red-500">*</span>
                           </label>
                           <div className="relative">
@@ -564,9 +649,15 @@ const Signup: React.FC = () => {
                               className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] focus:ring-2 focus:ring-[#4EA8A1] px-3 sm:px-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base appearance-none"
                             >
                               <option value="">Select Company Type</option>
-                              <option value="Real Estate Agency">Real Estate Agency</option>
-                              <option value="Property Developer">Property Developer</option>
-                              <option value="Investment Firm">Investment Firm</option>
+                              <option value="Real Estate Agency">
+                                Real Estate Agency
+                              </option>
+                              <option value="Property Developer">
+                                Property Developer
+                              </option>
+                              <option value="Investment Firm">
+                                Investment Firm
+                              </option>
                             </select>
                             <FiChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" />
                           </div>
@@ -574,22 +665,31 @@ const Signup: React.FC = () => {
 
                         {/* Registration Number */}
                         <div className="flex flex-col gap-1 sm:gap-2 mb-4">
-                          <label htmlFor="registrationNumber" className="text-gray-700 font-medium text-sm sm:text-base">
-                            Registration Number <span className="text-red-500">*</span>
+                          <label
+                            htmlFor="registrationNumber"
+                            className="text-gray-700 font-medium text-sm sm:text-base"
+                          >
+                            Registration Number{" "}
+                            <span className="text-red-500">*</span>
                           </label>
                           <Input
                             id="registrationNumber"
                             type="text"
                             placeholder="RC Number"
                             value={registrationNumber}
-                            onChange={(e) => setRegistrationNumber(e.target.value)}
+                            onChange={(e) =>
+                              setRegistrationNumber(e.target.value)
+                            }
                             className="w-full rounded-xl bg-[#F9F9F9] border border-[#e0e0e0] focus:ring-2 focus:ring-[#4EA8A1] px-3 sm:px-4 py-2.5 sm:py-3 transition-all duration-200 text-sm sm:text-base"
                           />
                         </div>
 
                         {/* Phone Number */}
                         <div className="flex flex-col gap-1 sm:gap-2">
-                          <label htmlFor="phoneNumber" className="text-gray-700 font-medium text-sm sm:text-base">
+                          <label
+                            htmlFor="phoneNumber"
+                            className="text-gray-700 font-medium text-sm sm:text-base"
+                          >
                             Phone Number <span className="text-red-500">*</span>
                           </label>
                           <Input
@@ -616,14 +716,15 @@ const Signup: React.FC = () => {
                 <span className="text-xs sm:text-sm text-gray-600 mt-4 sm:mt-6 text-center">
                   Already have an account?{" "}
                   <a
-                    href={`/auth/signin${returnTo
-                      ? `?returnTo=${encodeURIComponent(returnTo)}`
-                      : searchQuery
-                        ? `?q=${encodeURIComponent(
-                          searchQuery
-                        )}&type=${searchType}`
-                        : ""
-                      }`}
+                    href={`/auth/signin${
+                      returnTo
+                        ? `?returnTo=${encodeURIComponent(returnTo)}`
+                        : searchQuery
+                          ? `?q=${encodeURIComponent(
+                              searchQuery,
+                            )}&type=${searchType}`
+                          : ""
+                    }`}
                     className="text-[#4EA8A1] font-semibold hover:underline transition-all duration-200"
                   >
                     Log in
@@ -687,7 +788,7 @@ const Signup: React.FC = () => {
                       toast.showToast(
                         "Please enter the 6-digit code.",
                         2500,
-                        "error"
+                        "error",
                       );
                       setOtpLoading(false);
                       return;
@@ -708,11 +809,14 @@ const Signup: React.FC = () => {
                         setTimeout(() => {
                           // Role-based redirect
                           const userRole = response.user.role || selectedRole;
-                          const isProRole = userRole === 'Agent' || userRole === 'Developer' || userRole === 'Admin';
+                          const isProRole =
+                            userRole === "Agent" ||
+                            userRole === "Developer" ||
+                            userRole === "Admin";
 
                           if (isProRole) {
                             // Pro users go to dashboard
-                            router.push('/dashboard');
+                            router.push("/dashboard");
                           } else if (returnTo) {
                             // Buyers with returnTo
                             try {
@@ -722,11 +826,12 @@ const Signup: React.FC = () => {
                             }
                           } else if (searchQuery) {
                             // Buyers with search query
-                            const page = searchType === "ai" ? "search-results" : "result";
+                            const page =
+                              searchType === "ai" ? "search-results" : "result";
                             router.push(
                               `/${page}?q=${encodeURIComponent(
-                                searchQuery
-                              )}&type=${searchType}`
+                                searchQuery,
+                              )}&type=${searchType}`,
                             );
                           } else {
                             // Default: Buyers go to home
@@ -738,10 +843,10 @@ const Signup: React.FC = () => {
                       setOtpLoading(false);
                       toast.showToast(
                         err?.response?.data?.message ||
-                        err?.message ||
-                        "Invalid code. Please try again.",
+                          err?.message ||
+                          "Invalid code. Please try again.",
                         2500,
-                        "error"
+                        "error",
                       );
                     }
                   }}
@@ -775,8 +880,9 @@ const Signup: React.FC = () => {
                             }
                           }
                         }}
-                        className={`w-10 h-12 sm:w-12 sm:h-14 md:w-14 md:h-16 text-xl sm:text-2xl md:text-3xl text-center rounded-xl border-2 transition-all duration-200 outline-none bg-[#F9F9F9] focus:ring-2 focus:ring-[#4EA8A1] border-[#e0e0e0] focus:border-[#4EA8A1] ${digit ? "border-[#4EA8A1] bg-white" : ""
-                          }`}
+                        className={`w-10 h-12 sm:w-12 sm:h-14 md:w-14 md:h-16 text-xl sm:text-2xl md:text-3xl text-center rounded-xl border-2 transition-all duration-200 outline-none bg-[#F9F9F9] focus:ring-2 focus:ring-[#4EA8A1] border-[#e0e0e0] focus:border-[#4EA8A1] ${
+                          digit ? "border-[#4EA8A1] bg-white" : ""
+                        }`}
                         style={{
                           letterSpacing: "2px",
                         }}
@@ -804,15 +910,15 @@ const Signup: React.FC = () => {
                       toast.showToast(
                         "Verification code resent!",
                         2000,
-                        "info"
+                        "info",
                       );
                     } catch (err: any) {
                       toast.showToast(
                         err?.response?.data?.message ||
-                        err?.message ||
-                        "Failed to resend code.",
+                          err?.message ||
+                          "Failed to resend code.",
                         2500,
-                        "error"
+                        "error",
                       );
                     }
                     setResendLoading(false);
