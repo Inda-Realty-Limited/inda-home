@@ -18,9 +18,13 @@ const GoogleButton: React.FC<GoogleButtonProps> = ({
     setIsLoading(true);
 
     const state = returnTo ? encodeURIComponent(returnTo) : "";
+    const ref =
+      typeof window !== "undefined"
+        ? localStorage.getItem("inda_ref") || ""
+        : "";
     const redirectUri = `${typeof window !== "undefined" ? window.location.origin : ""}/auth/oauth/callback`;
 
-    const oauthUrl = `${env.api.baseUrl}/auth/google?state=${state}&redirectUri=${encodeURIComponent(redirectUri)}`;
+    const oauthUrl = `${env.api.baseUrl}/auth/google?state=${state}&ref=${encodeURIComponent(ref)}&redirectUri=${encodeURIComponent(redirectUri)}`;
 
     window.location.href = oauthUrl;
   };
@@ -38,5 +42,3 @@ const GoogleButton: React.FC<GoogleButtonProps> = ({
 };
 
 export default GoogleButton;
-
-
