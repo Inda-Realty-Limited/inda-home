@@ -64,6 +64,7 @@ import {
   DocumentType,
   PhotoCategory,
   PhotoLabel,
+  DeclaredDocument,
   UploadedDocument,
   UploadedPhoto,
   AIInferredData,
@@ -93,6 +94,7 @@ export function PropertyUploadWizard({
     address: initialData?.address || "",
     askingPrice: initialData?.askingPrice || 0,
     documents: initialData?.documents || [],
+    declaredDocuments: initialData?.declaredDocuments || [],
     photos: initialData?.photos || [],
   });
 
@@ -113,9 +115,9 @@ export function PropertyUploadWizard({
   const [bathrooms, setBathrooms] = useState(
     initialData?.confirmedData?.bathrooms || 0,
   );
-  const [documents, setDocuments] = useState<UploadedDocument[]>(
-    initialData?.documents || [],
-  );
+  const [declaredDocuments, setDeclaredDocuments] = useState<
+    DeclaredDocument[]
+  >(initialData?.declaredDocuments || []);
   const [photos, setPhotos] = useState<UploadedPhoto[]>(
     initialData?.photos || [],
   );
@@ -148,58 +150,45 @@ export function PropertyUploadWizard({
   // ============================================================================
 
   /**
-   * USE CASE 1: Document Upload with Auto-Detection
+   * USE CASE 1: Declare Document Types & Optional File Upload
    *
-   * When user uploads documents:
-   * 1. Accept multiple files at once (drag & drop or file picker)
-   * 2. Auto-detect document type from filename and content
-   * 3. Allow manual correction if AI detection is wrong
-   * 4. Validate file types (PDF, JPG, PNG only)
-   * 5. Check file size limits (max 10MB per file)
-   *
-   * INTEGRATION POINT: Replace detectDocumentType() with real AI endpoint
+   * User declares which document types the property has (required),
+   * then optionally uploads the actual files for verification.
    */
-  const handleDocumentUpload = useCallback((files: FileList | null) => {
-    if (!files) return;
-
-    const newDocuments: UploadedDocument[] = [];
-
-    Array.from(files).forEach((file) => {
-      // Validation
-      if (file.size > 10 * 1024 * 1024) {
-        setErrors((prev) => ({
-          ...prev,
-          documents: `${file.name} exceeds 10MB limit`,
-        }));
-        return;
-      }
-
-      if (!["application/pdf", "image/jpeg", "image/png"].includes(file.type)) {
-        setErrors((prev) => ({
-          ...prev,
-          documents: `${file.name} has unsupported format`,
-        }));
-        return;
-      }
-
-      newDocuments.push({
-        id: `doc-${Date.now()}-${Math.random()}`,
-        file,
-      });
-    });
-
-    setDocuments((prev) => [...prev, ...newDocuments]);
+  const handleDeclareDocument = useCallback((type: DocumentType) => {
+    const newDoc: DeclaredDocument = {
+      id: `doc-${Date.now()}-${Math.random()}`,
+      type,
+      uploaded: false,
+    };
+    setDeclaredDocuments((prev) => [...prev, newDoc]);
     setErrors((prev) => ({ ...prev, documents: "" }));
   }, []);
 
-  const handleDocumentTypeChange = useCallback(
-    (docId: string, type: DocumentType) => {
-      setDocuments((prev) =>
-        prev.map((doc) => (doc.id === docId ? { ...doc, type } : doc)),
+  const handleRemoveDeclaredDocument = useCallback((id: string) => {
+    setDeclaredDocuments((prev) => prev.filter((d) => d.id !== id));
+  }, []);
+
+  const handleDocumentFileUpload = useCallback(
+    (declaredDocId: string, file: File) => {
+      setDeclaredDocuments((prev) =>
+        prev.map((doc) =>
+          doc.id === declaredDocId ? { ...doc, uploaded: true, file } : doc,
+        ),
       );
     },
     [],
   );
+
+  const handleRemoveDocumentFile = useCallback((declaredDocId: string) => {
+    setDeclaredDocuments((prev) =>
+      prev.map((doc) =>
+        doc.id === declaredDocId
+          ? { ...doc, uploaded: false, file: undefined }
+          : doc,
+      ),
+    );
+  }, []);
 
   /**
    * USE CASE 2: Categorized Photo Upload
@@ -419,25 +408,21 @@ export function PropertyUploadWizard({
       newErrors.askingPrice = `Maximum price is ₦${MAX_PRICE.toLocaleString()}`;
     }
 
-    // DOCUMENT VALIDATION
-    if (documents.length < 2) {
+    // DOCUMENT TYPE DECLARATION VALIDATION (file upload is optional)
+    if (declaredDocuments.length === 0) {
       newErrors.documents =
-        "Please upload at least 2 documents (e.g., Title Document and Survey Plan)";
+        "Please select at least one document type that this property has";
     } else {
-      // Check if all documents are labeled
-      const unlabeledDocs = documents.filter((d) => !d.type);
-      if (unlabeledDocs.length > 0) {
-        newErrors.documents = `Please label all ${unlabeledDocs.length} document(s) using the dropdown`;
-      } else {
-        // Check for Title Document OR Survey Plan
-        const hasTitleDoc = documents.some(
-          (d) => d.type === "Title Document (C of O, Deed, etc.)",
-        );
-        const hasSurveyPlan = documents.some((d) => d.type === "Survey Plan");
-        if (!hasTitleDoc && !hasSurveyPlan) {
-          newErrors.documents =
-            "Please upload either a Title Document or Survey Plan";
-        }
+      // Check for Title Document OR Survey Plan among declared types
+      const hasTitleDoc = declaredDocuments.some(
+        (d) => d.type === "Title Document (C of O, Deed, etc.)",
+      );
+      const hasSurveyPlan = declaredDocuments.some(
+        (d) => d.type === "Survey Plan",
+      );
+      if (!hasTitleDoc && !hasSurveyPlan) {
+        newErrors.documents =
+          "Please declare at least a Title Document or Survey Plan";
       }
     }
 
@@ -504,7 +489,9 @@ export function PropertyUploadWizard({
               "Land listings require at least 2 photos of the land/plot";
           }
           // Warn about survey plan for land
-          const hasSurveyPlan = documents.some((d) => d.type === "Survey Plan");
+          const hasSurveyPlan = declaredDocuments.some(
+            (d) => d.type === "Survey Plan",
+          );
           if (!hasSurveyPlan && !newErrors.documents) {
             newErrors.documents =
               "Survey Plan is strongly recommended for land listings";
@@ -753,17 +740,30 @@ export function PropertyUploadWizard({
       formData.append("state", addressState);
       if (addressCity) formData.append("lga", addressCity);
 
-      // Add documents with metadata
-      documents.forEach((doc, index) => {
-        formData.append("legalDocs", doc.file);
+      // Add uploaded document files (only those with actual files)
+      const uploadedDocs = declaredDocuments.filter(
+        (doc) => doc.uploaded && doc.file,
+      );
+      uploadedDocs.forEach((doc) => {
+        formData.append("legalDocs", doc.file!);
       });
 
-      // Send document metadata as JSON
-      const documentsMeta = documents.map((doc) => ({
+      // Send metadata for uploaded documents
+      const documentsMeta = uploadedDocs.map((doc) => ({
         type: doc.type || "Other",
-        originalName: doc.file.name,
+        originalName: doc.file!.name,
       }));
       formData.append("documentsMeta", JSON.stringify(documentsMeta));
+
+      // Send all declared document types (including those without uploaded files)
+      const declaredDocumentTypes = declaredDocuments.map((doc) => ({
+        type: doc.type,
+        uploaded: doc.uploaded,
+      }));
+      formData.append(
+        "declaredDocumentTypes",
+        JSON.stringify(declaredDocumentTypes),
+      );
 
       // Add photos with metadata
       photos.forEach((photo, index) => {
@@ -1130,7 +1130,7 @@ export function PropertyUploadWizard({
                 askingPrice={askingPrice}
                 bedrooms={bedrooms}
                 bathrooms={bathrooms}
-                documents={documents}
+                declaredDocuments={declaredDocuments}
                 photos={photos}
                 errors={errors}
                 priceWarning={priceWarning}
@@ -1139,13 +1139,12 @@ export function PropertyUploadWizard({
                 onPriceChange={handlePriceChange}
                 onBedroomsChange={handleBedroomsChange}
                 onBathroomsChange={handleBathroomsChange}
-                onDocumentUpload={handleDocumentUpload}
-                onDocumentTypeChange={handleDocumentTypeChange}
+                onDeclareDocument={handleDeclareDocument}
+                onRemoveDeclaredDocument={handleRemoveDeclaredDocument}
+                onDocumentFileUpload={handleDocumentFileUpload}
+                onRemoveDocumentFile={handleRemoveDocumentFile}
                 onPhotoUpload={handlePhotoUpload}
                 onPhotoLabelChange={handlePhotoLabelChange}
-                onDocumentRemove={(id) =>
-                  setDocuments((prev) => prev.filter((d) => d.id !== id))
-                }
                 onPhotoRemove={(id) =>
                   setPhotos((prev) => prev.filter((p) => p.id !== id))
                 }
@@ -1155,7 +1154,12 @@ export function PropertyUploadWizard({
 
             {currentPhase === "processing" && (
               <Phase2Processing
-                documents={documents}
+                documents={declaredDocuments
+                  .filter(
+                    (d): d is DeclaredDocument & { file: File } =>
+                      d.uploaded && !!d.file,
+                  )
+                  .map((d) => ({ id: d.id, file: d.file, type: d.type }))}
                 photos={photos}
                 onComplete={handleAnalysisComplete}
                 onError={handleAnalysisError}
@@ -1167,7 +1171,13 @@ export function PropertyUploadWizard({
               <ReviewExtractedInfo
                 data={{
                   ...uploadData,
-                  documents, // Use actual uploaded documents from state
+                  documents: declaredDocuments
+                    .filter(
+                      (d): d is DeclaredDocument & { file: File } =>
+                        d.uploaded && !!d.file,
+                    )
+                    .map((d) => ({ id: d.id, file: d.file, type: d.type })),
+                  declaredDocuments, // All declared document types
                   photos, // Use actual uploaded photos from state
                 }}
                 onEdit={handleConfirmField}
