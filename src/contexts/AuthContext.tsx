@@ -1,4 +1,4 @@
-import { login as loginApi, logout as logoutApi } from "@/api/auth";
+import { login as loginApi } from "@/api/auth";
 import { env } from "@/config/env";
 import { AuthContextType, AuthState, StoredUser } from "@/types/auth";
 import { useRouter } from "next/router";
@@ -102,8 +102,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       const response = await loginApi({ email, password });
 
-      if (response?.user && response?.token) {
-        setUser(response.user, response.token);
+      const userData = response?.data?.user ?? response?.user;
+      const token = response?.data?.token ?? response?.token;
+
+      if (userData && token) {
+        setUser(userData, token);
       } else {
         throw new Error("No user data or token returned from login");
       }
@@ -118,23 +121,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [setUser]);
 
-  const logout = useCallback(async () => {
-    try {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
-      await logoutApi();
-    } catch (error) {
-      console.error("Logout API call failed:", error);
-    } finally {
-      // Clear storage and state
-      setUser(null);
-      setState(prev => ({ ...prev, isLoading: false }));
+  const logout = useCallback(() => {
+    setUser(null);
 
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new Event("inda:logout"));
-      }
-
-      router.push("/");
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("inda:logout"));
     }
+
+    router.push("/");
   }, [setUser, router]);
 
   // Load user and token from localStorage on mount

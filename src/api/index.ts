@@ -86,15 +86,15 @@ apiClient.interceptors.response.use(
         });
       }
 
-      // Handle 401 Unauthorized
+      // Handle 401 Unauthorized — but not for auth endpoints (login/register errors must reach the caller)
       if (error.response.status === 401) {
-        if (typeof window !== "undefined") {
-          // Dispatch event for other listeners
+        const requestUrl = error.config?.url || "";
+        const isAuthEndpoint = requestUrl.includes("/auth/");
+
+        if (!isAuthEndpoint && typeof window !== "undefined") {
           window.dispatchEvent(new Event("inda:session-expired"));
 
           const currentPath = window.location.pathname;
-
-          // Redirect to login if not already there
           if (!currentPath.startsWith("/auth")) {
             const returnTo = encodeURIComponent(currentPath + window.location.search);
             window.location.href = `/auth/signin?returnTo=${returnTo}`;

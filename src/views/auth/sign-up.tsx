@@ -46,7 +46,7 @@ const Signup: React.FC = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Role selection and Pro fields
-  const [selectedRole, setSelectedRole] = useState<'Buyer' | 'Agent' | 'Investor' | 'Developer'>('Buyer');
+  const [selectedRole, setSelectedRole] = useState<'Buyer' | 'Investor' | 'Developer'>('Buyer');
   const [companyName, setCompanyName] = useState("");
   const [companyType, setCompanyType] = useState("");
   const [registrationNumber, setRegistrationNumber] = useState("");
@@ -199,7 +199,6 @@ const Signup: React.FC = () => {
               <div className="grid grid-cols-2 gap-4 w-full max-w-[500px] mx-auto mb-8">
                 {[
                   { role: 'Buyer' as const, icon: '🏠', title: 'Buyer', desc: 'I want to buy a home' },
-                  { role: 'Agent' as const, icon: '👔', title: 'Agent', desc: 'I sell & list homes' },
                   { role: 'Investor' as const, icon: '💼', title: 'Investor', desc: 'I invest in real estate' },
                   { role: 'Developer' as const, icon: '🏗️', title: 'Developer', desc: 'I build properties' },
                 ].map((option) => (
@@ -708,7 +707,7 @@ const Signup: React.FC = () => {
                         setTimeout(() => {
                           // Role-based redirect
                           const userRole = response.user.role || selectedRole;
-                          const isProRole = userRole === 'Agent' || userRole === 'Developer' || userRole === 'Admin';
+                          const isProRole = userRole === 'AGENT' || userRole === 'Developer' || userRole === 'DEVELOPER' || userRole === 'Admin' || userRole === 'ADMIN';
 
                           if (isProRole) {
                             // Pro users go to dashboard

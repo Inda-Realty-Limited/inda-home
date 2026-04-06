@@ -31,7 +31,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) =
             return;
         }
 
-        const allowedRoles = ['Agent', 'Developer'];
+        const allowedRoles = ['AGENT', 'DEVELOPER'];
         if (!user.role || !allowedRoles.includes(user.role)) {
             toast.showToast('Only Agents and Developers can subscribe to professional plans.', 3000, 'error');
             return;
