@@ -1,7 +1,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import AppSidebar from './AppSidebar';
-import { FaBell } from 'react-icons/fa';
-import { useEffect } from 'react';
+import { Bell } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 
 interface DashboardLayoutProps {
@@ -10,86 +10,63 @@ interface DashboardLayoutProps {
     showHeader?: boolean;
 }
 
-export default function DashboardLayout({ children, title = 'Inda Pro', showHeader = true }: DashboardLayoutProps) {
+export default function DashboardLayout({ children, showHeader = true }: DashboardLayoutProps) {
     const { user, isAuthenticated } = useAuth();
     const router = useRouter();
+    const [showNotifications, setShowNotifications] = useState(false);
 
     useEffect(() => {
         if (isAuthenticated && user) {
-            const allowedRoles = ['Agent', 'Developer', 'Admin'];
+            const allowedRoles = ['AGENT', 'DEVELOPER', 'ADMIN', 'SUPER_ADMIN'];
             if (!allowedRoles.includes(user.role)) {
                 router.replace('/');
             }
         }
     }, [user, isAuthenticated, router]);
 
-    // Safety check for user loaded
-    // Note: Dashboard pages should be wrapped in ProtectedRoute, so user should exist here.
-    // If not, we handle gracefully.
-
     const getInitials = () => {
         if (!user) return 'U';
-        if (user.firstName) {
-            const first = user.firstName[0];
-            const last = user.lastName ? user.lastName[0] : '';
-            return (first + last).toUpperCase();
-        }
-        if (user.name) return user.name[0].toUpperCase();
-        if (user.email) return user.email[0].toUpperCase();
-        return 'U';
+        const first = user.firstName?.[0] || '';
+        const last = user.lastName?.[0] || '';
+        return (first + last).toUpperCase() || user.email?.[0]?.toUpperCase() || 'U';
     };
 
     return (
-        <div className="flex h-screen bg-inda-light font-sans overflow-hidden">
+        <div className="min-h-screen bg-gray-50 font-sans">
 
-            <AppSidebar />
-
-            <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
-
-                {showHeader && (
-                    <header className="bg-[#12181F] text-white h-16 flex items-center justify-between shadow-lg z-20 flex-shrink-0 
-          px-4 pl-14 md:px-8 border-b border-white/5"
-                    >
-
-                        <div className="font-bold text-xl flex items-center gap-3 group cursor-pointer">
-                            <div className="bg-inda-teal/20 p-1.5 rounded-lg group-hover:bg-inda-teal/30 transition-colors">
-                                <div className="bg-inda-teal w-1.5 h-5 block rounded-full"></div>
-                            </div>
-                            <span className="truncate max-w-[150px] md:max-w-none tracking-tight font-black text-white/90">{title}</span>
+            {/* Full-width top header */}
+            {showHeader && (
+                <header className="bg-white h-16 fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-8 border-b border-gray-200">
+                    <div className="flex items-center gap-3">
+                        <div className="bg-[#4ea8a1] rounded-lg px-3 py-2 flex items-center justify-center">
+                            <span className="text-white font-bold text-base">I</span>
                         </div>
+                        <span className="text-gray-900 font-bold text-lg">Inda Pro</span>
+                    </div>
 
-                        <div className="flex items-center gap-4 md:gap-8">
-                            <button
-                                className="relative text-gray-400 hover:text-inda-teal transition-all hover:scale-110 active:scale-90"
-                                aria-label="Notifications"
-                            >
-                                <FaBell size={18} />
-                                <span className="absolute -top-1.5 -right-1.5 bg-inda-teal w-4 h-4 rounded-full text-[9px] flex items-center justify-center text-inda-dark font-black shadow-lg">
-                                    5
-                                </span>
-                            </button>
+                    <div className="flex items-center gap-6">
+                        <button
+                            className="relative group"
+                            onClick={() => setShowNotifications(!showNotifications)}
+                        >
+                            <Bell className="w-6 h-6 text-gray-600 group-hover:text-gray-900 transition-colors" />
+                            <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#4ea8a1] rounded-full text-white text-xs flex items-center justify-center font-semibold">
+                                3
+                            </span>
+                        </button>
+                        <button className="bg-[#4ea8a1] rounded-full w-9 h-9 flex items-center justify-center">
+                            <span className="text-white font-semibold text-base">{getInitials()}</span>
+                        </button>
+                    </div>
+                </header>
+            )}
 
-                            <div className="flex items-center gap-4 pl-4 border-l border-white/10">
-                                <div className="text-right hidden lg:block leading-tight">
-                                    <p className="text-sm font-black text-white/90">
-                                        {user?.firstName || user?.name || user?.email || 'User'}
-                                    </p>
-                                    <p className="text-[9px] text-inda-teal uppercase tracking-[0.1em] font-black opacity-80">
-                                        {user?.role || 'Member'}
-                                    </p>
-                                </div>
-                                <div className="h-9 w-9 bg-gradient-to-br from-gray-700 to-gray-800 rounded-full border-2 border-white/10 flex items-center justify-center text-xs font-black overflow-hidden cursor-pointer hover:border-inda-teal transition-all hover:scale-105 shadow-inner">
-                                    {getInitials()}
-                                </div>
-                            </div>
-                        </div>
-                    </header>
-                )}
+            <AppSidebar headerVisible={showHeader} />
 
-                <main className="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth pb-20 md:pb-8">
+            <div className={`ml-[277px] ${showHeader ? 'pt-16' : ''}`}>
+                <main className="p-8 pb-20 min-h-screen">
                     {children}
                 </main>
-
             </div>
         </div>
     );

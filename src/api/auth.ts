@@ -2,11 +2,12 @@ import apiClient from ".";
 
 export interface RegisterPayload {
   firstName: string;
-  lastName: string;
+  lastName?: string;
   email: string;
   password: string;
-  howDidYouHearAboutUs: string;
-  todo: string;
+  howDidYouHearAboutUs?: string;
+  todo?: string;
+  role?: string;
   referralSource?: string;
 }
 

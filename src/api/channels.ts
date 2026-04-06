@@ -27,7 +27,7 @@ export interface PublicListing {
 }
 
 export const getChannelStats = async (): Promise<ChannelStatsItem[]> => {
-    const res = await apiClient.get("/api/channels/stats");
+    const res = await apiClient.get("/channels/stats");
     const data = res.data?.data;
 
     // Handle new object format: { channels: { whatsapp: { clicks, leads }, ... } }
@@ -48,15 +48,15 @@ export const getChannelStats = async (): Promise<ChannelStatsItem[]> => {
 };
 
 export const trackChannelClick = async (userId: string, channel: string): Promise<void> => {
-    await apiClient.post("/api/channels/track-click", { userId, channel });
+    await apiClient.post("/channels/track-click", { userId, channel });
 };
 
 export const trackChannelLead = async (userId: string, channel: string): Promise<void> => {
-    await apiClient.post("/api/channels/track-lead", { userId, channel });
+    await apiClient.post("/channels/track-lead", { userId, channel });
 };
 
 export const getPublicListings = async (userId: string): Promise<PublicListing[]> => {
-    const res = await apiClient.get(`/api/channels/listings/${userId}`);
+    const res = await apiClient.get(`/channels/listings/${userId}`);
     return (res.data?.data || []) as PublicListing[];
 };
 
@@ -76,11 +76,11 @@ export interface InquiryResponse {
 }
 
 export const submitInquiry = async (payload: InquiryPayload): Promise<InquiryResponse> => {
-    const res = await apiClient.post("/api/channels/inquiry", payload);
+    const res = await apiClient.post("/channels/inquiry", payload);
     return (res.data?.data || { agentPhone: null, agentName: 'Agent' }) as InquiryResponse;
 };
 
 export const getPublicListingById = async (listingId: string): Promise<PublicListing | null> => {
-    const res = await apiClient.get(`/api/channels/listing/${listingId}`);
+    const res = await apiClient.get(`/channels/listing/${listingId}`);
     return (res.data?.data || null) as PublicListing | null;
 };

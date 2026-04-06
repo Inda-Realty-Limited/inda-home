@@ -26,7 +26,7 @@ export interface Listing extends ListingPayload {
 
 export const ProListingsService = {
   getUserListings: async (userId: string) => {
-    const response = await apiClient.get(`/api/listings/user/${userId}`);
+    const response = await apiClient.get(`/listings/user/${userId}`);
     return response.data;
   },
 
@@ -35,19 +35,19 @@ export const ProListingsService = {
     limit = 10,
     filters: Record<string, any> = {},
   ) => {
-    const response = await apiClient.get("/api/listings", {
+    const response = await apiClient.get("/listings", {
       params: { page, limit, ...filters },
     });
     return response.data;
   },
 
   getListing: async (indaTag: string) => {
-    const response = await apiClient.get(`/api/listings/${indaTag}`);
+    const response = await apiClient.get(`/listings/${indaTag}`);
     return response.data;
   },
 
   deleteListing: async (indaTag: string, userId?: string) => {
-    const response = await apiClient.delete(`/api/listings/${indaTag}`, {
+    const response = await apiClient.delete(`/listings/${indaTag}`, {
       data: { userId },
     });
     return response.data;
@@ -56,7 +56,7 @@ export const ProListingsService = {
   create: async (data: any, userId?: string) => {
     if (data instanceof FormData) {
       if (userId) data.append("userId", userId);
-      const response = await apiClient.post("/api/listings", data);
+      const response = await apiClient.post("/listings", data);
       return response.data;
     }
 
@@ -73,18 +73,18 @@ export const ProListingsService = {
       }
     });
 
-    const response = await apiClient.post("/api/listings", formData);
+    const response = await apiClient.post("/listings", formData);
     return response.data;
   },
 
   updateListing: async (id: string, data: any) => {
-    const response = await apiClient.put(`/api/listings/${id}`, data);
+    const response = await apiClient.put(`/listings/${id}`, data);
     return response.data;
   },
 
   refreshLocationIntelligence: async (indaTag: string) => {
     const response = await apiClient.post(
-      `/api/listings/${indaTag}/refresh-location`,
+      `/listings/${indaTag}/refresh-location`,
     );
     return response.data;
   },

@@ -153,7 +153,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
             >
               Use Cases
             </button>
-            {(user?.role === 'Agent' || user?.role === 'Developer' || user?.role === 'Admin') && (
+            {(user?.role === 'AGENT' || user?.role === 'DEVELOPER' || user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') && (
               <button
                 onClick={() => router.push("/dashboard")}
                 className="text-white/90 hover:text-white text-sm font-medium transition-colors duration-200"
@@ -338,7 +338,7 @@ const Navbar: React.FC<NavbarProps> = ({ variant }) => {
               >
                 Use Cases
               </button>
-              {(user?.role === 'Agent' || user?.role === 'Developer' || user?.role === 'Admin') && (
+              {(user?.role === 'AGENT' || user?.role === 'DEVELOPER' || user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN') && (
                 <button
                   className="w-full text-left px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white text-base"
                   onClick={() => {

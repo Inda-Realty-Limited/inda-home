@@ -811,8 +811,11 @@ const Signup: React.FC = () => {
                           const userRole = response.user.role || selectedRole;
                           const isProRole =
                             userRole === "Agent" ||
+                            userRole === "AGENT" ||
                             userRole === "Developer" ||
-                            userRole === "Admin";
+                            userRole === "DEVELOPER" ||
+                            userRole === "Admin" ||
+                            userRole === "ADMIN";
 
                           if (isProRole) {
                             // Pro users go to dashboard
