@@ -5,7 +5,8 @@ import "@/styles/globals.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { AppProps } from "next/app";
 import Head from "next/head";
-import { useState } from "react";
+import { useRouter } from "next/router";
+import { useState, useEffect } from "react";
 
 export default function App({ Component, pageProps }: AppProps) {
   const [queryClient] = useState(
@@ -23,10 +24,18 @@ export default function App({ Component, pageProps }: AppProps) {
               Math.min(1000 * 2 ** attemptIndex, 30000),
           },
         },
-      })
+      }),
   );
 
-  // CSRF not required for Authorization header auth; no initialization needed
+  // Capture ref query param (e.g. ?ref=masterclass) and persist to localStorage
+  const router = useRouter();
+  useEffect(() => {
+    if (!router.isReady) return;
+    const ref = router.query.ref;
+    if (typeof ref === "string" && ref.trim()) {
+      localStorage.setItem("inda_ref", ref.trim());
+    }
+  }, [router.isReady, router.query.ref]);
 
   return (
     <ErrorBoundary>
