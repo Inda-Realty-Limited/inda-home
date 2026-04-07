@@ -1,214 +1,373 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
-    FaCloudUploadAlt, FaPlus
-} from 'react-icons/fa';
+  Database, Upload, CheckCircle2, DollarSign,
+  Award, FileText, Clock, TrendingUp,
+} from 'lucide-react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
-import DashboardButton from '@/components/dashboard/DashboardButton';
-import { ProContributionService } from '@/api/pro-contributions';
-import ComingSoonOverlay from '@/components/shared/ComingSoonOverlay';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import {
+  ProContributionService,
+  type Contribution,
+  type ContributionStats,
+} from '@/api/pro-contributions';
+import Input from '@/components/base/Input';
+import { cn } from '@/lib/utils';
 
-interface ContributionStat {
-    label: string;
-    value: string | number;
-    subtext: string;
-    isPrimary?: boolean;
+type Tab = 'contribute' | 'history';
+type DataType = 'Property Sale Data' | 'Market Trends' | 'Developer Info' | '';
+
+const CONTRIBUTION_TYPES = [
+  { title: 'Property Sale Data', icon: DollarSign, description: 'Recent transaction prices in your area' },
+  { title: 'Market Trends', icon: TrendingUp, description: 'Local price movements and demand insights' },
+  { title: 'Developer Info', icon: FileText, description: 'Developer credentials and project updates' },
+] as const;
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-import { useAuth } from '@/contexts/AuthContext';
+function statusLabel(status: string): 'Approved' | 'Pending' | 'Rejected' {
+  if (status === 'approved') return 'Approved';
+  if (status === 'rejected') return 'Rejected';
+  return 'Pending';
+}
 
 export default function DataContributionPage() {
-    const { user } = useAuth();
-    const [isContributing, setIsContributing] = useState(false);
-    const [loading, setLoading] = useState(true);
-    const [stats, setStats] = useState<ContributionStat[]>([]);
-    const [history, setHistory] = useState<any[]>([]);
+  const [activeTab, setActiveTab] = useState<Tab>('contribute');
+  const [stats, setStats] = useState<ContributionStats | null>(null);
+  const [history, setHistory] = useState<Contribution[]>([]);
+  const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const loadDashboard = async () => {
-            if (!user) return;
-            try {
-                const userId = user.id || user._id || (user as any).user?.id;
+  // Form state
+  const [dataType, setDataType] = useState<DataType>('');
+  const [location, setLocation] = useState('');
+  const [details, setDetails] = useState('');
+  const [files, setFiles] = useState<File[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-                if (userId) {
-                    try {
-                        const data = await ProContributionService.getDashboard(userId);
-                        const dashboard = data.data || data;
+  const loadData = async () => {
+    setLoading(true);
+    try {
+      const [fetchedStats, contributions] = await Promise.all([
+        ProContributionService.getStats(),
+        ProContributionService.getMyContributions(),
+      ]);
+      setStats(fetchedStats);
+      setHistory(contributions);
+    } catch {
+      // leave null so UI can show empty state
+    } finally {
+      setLoading(false);
+    }
+  };
 
-                        setStats([
-                            { label: 'Total Contributions', value: dashboard.stats?.totalContributions || 0, subtext: 'Verified Transactions', isPrimary: true },
-                            { label: 'Credits Gained', value: dashboard.stats?.creditsEarned || 0, subtext: 'From contributions' },
-                            { label: 'Impact Score', value: dashboard.stats?.impactScore || 0, subtext: 'Community impact' },
-                            { label: 'Leaderboard Rank', value: `#${dashboard.stats?.leaderboardRank || '-'}`, subtext: 'This month' }
-                        ]);
-                        setHistory(dashboard.history || []);
-                    } catch (err) {
-                        setStats([
-                            { label: 'Total Contributions', value: 0, subtext: 'Verified Transactions', isPrimary: true },
-                            { label: 'Credits Earned', value: 0, subtext: 'From contributions' },
-                            { label: 'Impact Score', value: 0, subtext: 'Community impact' },
-                            { label: 'Leaderboard Rank', value: '-', subtext: 'This month' }
-                        ]);
-                    }
-                }
-            } catch (e) {
-                console.error(e);
-            } finally {
-                setLoading(false);
-            }
-        };
+  useEffect(() => {
+    loadData();
+  }, []);
 
-        if (user) {
-            loadDashboard();
-        } else {
-            setLoading(false);
-        }
-    }, [user]);
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!dataType || !location || !details) return;
+    setSubmitting(true);
+    setSubmitError('');
+    try {
+      await ProContributionService.submit({ type: dataType, description: details, location });
+      setSubmitSuccess(true);
+      setDataType('');
+      setLocation('');
+      setDetails('');
+      setFiles([]);
+      // Refresh stats and history
+      await loadData();
+      setTimeout(() => setSubmitSuccess(false), 4000);
+    } catch (err: any) {
+      setSubmitError(err?.response?.data?.message || 'Failed to submit. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-    return (
-        <DashboardLayout title="Data Contribution">
-            <div className="max-w-6xl mx-auto pb-10">
-                <ComingSoonOverlay>
-                    {isContributing ? (
-                        <ContributionForm onCancel={() => setIsContributing(false)} />
-                    ) : (
-                        <DashboardView
-                            loading={loading}
-                            stats={stats}
-                            history={history}
-                            onContribute={() => setIsContributing(true)}
-                        />
-                    )}
-                </ComingSoonOverlay>
+  return (
+    <ProtectedRoute>
+      <DashboardLayout>
+        <div className="space-y-6">
+          {/* Header */}
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-inda-teal to-[#3d8780] bg-clip-text text-transparent">
+              Data Contribution
+            </h1>
+            <p className="text-gray-600 mt-1">
+              Help build Nigeria&apos;s most comprehensive real estate database — earn credits per approved submission
+            </p>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <StatCard
+              icon={<Database className="w-5 h-5 text-inda-teal" />}
+              iconBg="bg-inda-teal/10"
+              value={loading ? '—' : String(stats?.totalSubmitted ?? 0)}
+              label="Total Submitted"
+            />
+            <StatCard
+              icon={<CheckCircle2 className="w-5 h-5 text-green-600" />}
+              iconBg="bg-green-100"
+              value={loading ? '—' : String(stats?.approved ?? 0)}
+              label="Approved"
+            />
+            <StatCard
+              icon={<Clock className="w-5 h-5 text-amber-600" />}
+              iconBg="bg-amber-100"
+              value={loading ? '—' : String(stats?.pending ?? 0)}
+              label="Pending Review"
+            />
+            <StatCard
+              icon={<Award className="w-5 h-5 text-inda-teal" />}
+              iconBg="bg-inda-teal/10"
+              value={loading ? '—' : (stats?.creditsEarned ?? 0).toLocaleString()}
+              label="Credits Earned"
+            />
+          </div>
+
+          {/* Credits Banner */}
+          <div className="bg-gradient-to-r from-inda-teal to-[#3d8780] rounded-xl p-6 text-white">
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-white/20 rounded-lg flex-shrink-0">
+                <Award className="w-8 h-8" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-bold mb-2">Earn Marketing Credits Per Approval</h3>
+                <p className="text-white/90 mb-4">
+                  Submit sales data, market trends, or developer info. Each approved submission earns you credits
+                  automatically added to your balance for use on any marketing service.
+                </p>
+                <div className="flex items-center gap-2 bg-white/20 rounded-lg p-3 w-fit">
+                  <CheckCircle2 className="w-5 h-5" />
+                  <span className="text-sm font-semibold">Credits automatically added · No redemption needed</span>
+                </div>
+              </div>
             </div>
-        </DashboardLayout>
-    );
+          </div>
+
+          {/* Tabs */}
+          <div className="bg-white rounded-xl p-1 shadow-sm border border-inda-gray inline-flex">
+            {(['contribute', 'history'] as Tab[]).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={cn(
+                  'px-6 py-2.5 rounded-lg text-sm font-semibold transition-all',
+                  activeTab === tab
+                    ? 'bg-gradient-to-r from-inda-teal to-[#3d8780] text-white shadow-md'
+                    : 'text-gray-600 hover:text-gray-900'
+                )}
+              >
+                {tab === 'contribute' ? 'Submit Data' : 'Submission History'}
+              </button>
+            ))}
+          </div>
+
+          {/* Submit Data Tab */}
+          {activeTab === 'contribute' && (
+            <div className="space-y-6">
+              {/* Type cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {CONTRIBUTION_TYPES.map((type) => {
+                  const Icon = type.icon;
+                  return (
+                    <div
+                      key={type.title}
+                      onClick={() => setDataType(type.title)}
+                      className={cn(
+                        'bg-white rounded-xl p-6 shadow-sm border transition-colors cursor-pointer',
+                        dataType === type.title
+                          ? 'border-inda-teal ring-1 ring-inda-teal'
+                          : 'border-inda-gray hover:border-inda-teal/50'
+                      )}
+                    >
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="p-3 bg-inda-teal/10 rounded-lg">
+                          <Icon className="w-6 h-6 text-inda-teal" />
+                        </div>
+                        <div className="bg-green-50 px-3 py-1 rounded-full">
+                          <span className="text-sm font-semibold text-green-700">+credits</span>
+                        </div>
+                      </div>
+                      <h3 className="font-bold text-gray-900 mb-2">{type.title}</h3>
+                      <p className="text-sm text-gray-600">{type.description}</p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Submit Form */}
+              <div className="bg-white rounded-xl shadow-sm border border-inda-gray p-6">
+                <h3 className="font-bold text-gray-900 mb-4">Submit New Data</h3>
+
+                {submitSuccess && (
+                  <div className="mb-4 flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm font-medium">
+                    <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                    Submitted successfully! Credits will be added once approved.
+                  </div>
+                )}
+                {submitError && (
+                  <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                    {submitError}
+                  </div>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Data Type</label>
+                    <select
+                      value={dataType}
+                      onChange={(e) => setDataType(e.target.value as DataType)}
+                      required
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-inda-teal text-sm"
+                    >
+                      <option value="">Select data type...</option>
+                      <option>Property Sale Data</option>
+                      <option>Market Trends</option>
+                      <option>Developer Info</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Location</label>
+                    <Input
+                      placeholder="e.g. Lekki Phase 1, Lagos"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      required
+                      className="w-full"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Details</label>
+                    <textarea
+                      placeholder="Provide as much detail as possible..."
+                      value={details}
+                      onChange={(e) => setDetails(e.target.value)}
+                      required
+                      className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-inda-teal text-sm resize-none min-h-[120px]"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Supporting Documents <span className="font-normal text-gray-400">(Optional)</span>
+                    </label>
+                    <div
+                      onClick={() => fileInputRef.current?.click()}
+                      className="border-2 border-dashed border-gray-200 rounded-lg p-6 text-center hover:border-inda-teal transition-colors cursor-pointer"
+                    >
+                      <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-sm text-gray-600">Click to upload or drag and drop</p>
+                      <p className="text-xs text-gray-500 mt-1">PDF, JPG, PNG up to 10MB</p>
+                      {files.length > 0 && (
+                        <p className="text-xs text-inda-teal font-medium mt-2">
+                          {files.length} file{files.length > 1 ? 's' : ''} selected
+                        </p>
+                      )}
+                    </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      multiple
+                      hidden
+                      onChange={(e) => e.target.files && setFiles(Array.from(e.target.files))}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-inda-teal to-[#3d8780] hover:from-[#3d8780] hover:to-[#2d6760] text-white font-semibold rounded-lg transition-colors disabled:opacity-60"
+                  >
+                    <Upload className="w-4 h-4" />
+                    {submitting ? 'Submitting...' : 'Submit for Review'}
+                  </button>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* History Tab */}
+          {activeTab === 'history' && (
+            <div className="bg-white rounded-xl shadow-sm border border-inda-gray overflow-hidden">
+              {loading ? (
+                <div className="p-12 text-center text-sm text-gray-500">Loading...</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        {['Date', 'Type', 'Location', 'Status', 'Credits'].map((h) => (
+                          <th key={h} className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            {h}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {history.map((row) => {
+                        const label = statusLabel(row.status);
+                        const loc = (row.data as any)?.location ?? '—';
+                        return (
+                          <tr key={row.id} className="hover:bg-gray-50">
+                            <td className="px-6 py-4 text-sm text-gray-900">{formatDate(row.createdAt)}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600">{row.type}</td>
+                            <td className="px-6 py-4 text-sm text-gray-600">{loc}</td>
+                            <td className="px-6 py-4">
+                              <span className={cn(
+                                'px-3 py-1 rounded-full text-xs font-semibold',
+                                label === 'Approved' ? 'bg-green-100 text-green-700' :
+                                label === 'Rejected' ? 'bg-red-100 text-red-700' :
+                                'bg-amber-100 text-amber-700'
+                              )}>
+                                {label}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-sm font-bold text-green-600">
+                              {row.points > 0 ? `+${row.points}` : '—'}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {history.length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="px-6 py-12 text-center text-sm text-gray-500">
+                            No submissions yet. Start contributing to see your history here.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </DashboardLayout>
+    </ProtectedRoute>
+  );
 }
 
-const DashboardView = ({ loading, stats, history, onContribute }: any) => {
-    if (loading) return <div className="p-10 text-center">Loading...</div>;
-
-    return (
-        <div className="space-y-8 animate-in fade-in duration-300">
-            <div>
-                <h1 className="text-3xl font-bold text-inda-dark">Data Contribution</h1>
-                <p className="text-sm text-gray-500 mt-1">Share real transaction data and earn rewards</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {stats.map((stat: any, i: number) => (
-                    <div key={i} className={`p-6 rounded-xl flex flex-col justify-center h-32 border ${stat.isPrimary ? 'bg-[#2D8B8B] text-white border-transparent' : 'bg-white text-inda-dark border-gray-200'}`}>
-                        <div className={`text-xs font-medium mb-1 ${stat.isPrimary ? 'text-white/80' : 'text-gray-500'}`}>{stat.label}</div>
-                        <div className="text-3xl font-bold mb-1">{stat.value}</div>
-                        <div className={`text-[10px] ${stat.isPrimary ? 'text-white/70' : 'text-gray-400'}`}>{stat.subtext}</div>
-                    </div>
-                ))}
-            </div>
-
-            <div className="bg-[#EFF8F7] rounded-xl overflow-hidden border border-gray-100 min-h-[300px]">
-                <div className="bg-inda-teal text-white p-4 grid grid-cols-12 gap-4 text-xs font-bold items-center">
-                    <div className="col-span-3">Title</div>
-                    <div className="col-span-2">Type</div>
-                    <div className="col-span-2">Price</div>
-                    <div className="col-span-3">Status</div>
-                    <div className="col-span-2 text-right">Date</div>
-                </div>
-                <div className="p-4 space-y-2">
-                    {history.length === 0 ? (
-                        <p className="text-center text-gray-500 py-10 text-sm">No contributions found.</p>
-                    ) : (
-                        history.map((item: any, i: number) => (
-                            <div key={i} className="grid grid-cols-12 gap-4 text-xs items-center py-3 border-b border-gray-200/50">
-                                <div className="col-span-3 font-bold text-gray-700">{item.title || 'Untitled'}</div>
-                                <div className="col-span-2 text-gray-500">{item.type}</div>
-                                <div className="col-span-2 font-medium">{item.salePrice || item.price || 'N/A'}</div>
-                                <div className="col-span-3"><span className="px-2 py-1 bg-white rounded border border-gray-200">{item.status}</span></div>
-                                <div className="col-span-2 text-right text-gray-400">{item.date}</div>
-                            </div>
-                        ))
-                    )}
-                </div>
-            </div>
-
-            <div className="flex justify-end">
-                <DashboardButton onClick={onContribute} variant="primary" className="shadow-lg flex items-center gap-2">
-                    <FaPlus size={12} /> Contribute Data
-                </DashboardButton>
-            </div>
-        </div>
-    );
-};
-
-const ContributionForm = ({ onCancel }: { onCancel: () => void }) => {
-    const { user } = useAuth();
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [formData, setFormData] = useState({
-        transactionType: '', propertyType: '', address: '', amount: '', date: '', size: '', bedrooms: '', details: ''
-    });
-    const [files, setFiles] = useState<File[]>([]);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-        try {
-            if (!user) throw new Error("User not found");
-            const userId = user.id || user._id || (user as any).user?.id;
-
-            await ProContributionService.submit({
-                userId: userId,
-                ...formData,
-                amount: Number(formData.amount),
-                documents: files
-            });
-
-            alert("Contribution submitted successfully!");
-            onCancel();
-        } catch (err) {
-            console.error(err);
-            alert("Failed to submit contribution.");
-        } finally {
-            setIsSubmitting(false);
-        }
-    };
-
-    const handleChange = (e: any) => setFormData({ ...formData, [e.target.name]: e.target.value });
-
-    return (
-        <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
-            <div>
-                <h1 className="text-3xl font-bold text-inda-dark">New Contribution</h1>
-                <p className="text-sm text-gray-500 mt-1">Submit transaction details for verification</p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="bg-white p-8 rounded-xl border border-gray-100 shadow-sm space-y-6">
-                <div className="grid grid-cols-2 gap-6">
-                    <input name="transactionType" value={formData.transactionType} onChange={handleChange} placeholder="Transaction Type (Sale/Rent)" className="p-3 bg-gray-50 rounded border-none w-full text-sm" required />
-                    <input name="propertyType" value={formData.propertyType} onChange={handleChange} placeholder="Property Type" className="p-3 bg-gray-50 rounded border-none w-full text-sm" required />
-                </div>
-                <div className="grid grid-cols-2 gap-6">
-                    <input name="address" value={formData.address} onChange={handleChange} placeholder="Property Address" className="p-3 bg-gray-50 rounded border-none w-full text-sm" required />
-                    <input name="amount" type="number" value={formData.amount} onChange={handleChange} placeholder="Amount (₦)" className="p-3 bg-gray-50 rounded border-none w-full text-sm" required />
-                </div>
-                <div className="grid grid-cols-3 gap-6">
-                    <input name="date" type="date" value={formData.date} onChange={handleChange} className="p-3 bg-gray-50 rounded border-none w-full text-sm" required />
-                    <input name="size" value={formData.size} onChange={handleChange} placeholder="Size (sqm)" className="p-3 bg-gray-50 rounded border-none w-full text-sm" />
-                    <input name="bedrooms" value={formData.bedrooms} onChange={handleChange} placeholder="Bedrooms" className="p-3 bg-gray-50 rounded border-none w-full text-sm" />
-                </div>
-
-                <textarea name="details" value={formData.details} onChange={handleChange} placeholder="Additional details..." className="w-full p-3 bg-gray-50 rounded border-none text-sm h-24 resize-none" />
-
-                <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50">
-                    <FaCloudUploadAlt className="text-3xl text-gray-400 mb-2" />
-                    <span className="text-xs text-gray-500 font-bold">Upload Supporting Documents</span>
-                    <input type="file" multiple hidden ref={fileInputRef} onChange={(e) => e.target.files && setFiles(Array.from(e.target.files))} />
-                </div>
-                {files.length > 0 && <div className="text-xs text-gray-500">{files.length} files selected</div>}
-
-                <div className="flex justify-end gap-4 pt-4">
-                    <button type="button" onClick={onCancel} className="px-6 py-2 text-sm text-gray-500 hover:text-gray-700">Cancel</button>
-                    <DashboardButton type="submit" variant="primary" disabled={isSubmitting}>{isSubmitting ? 'Submitting...' : 'Submit Contribution'}</DashboardButton>
-                </div>
-            </form>
-        </div>
-    );
-};
+function StatCard({ icon, iconBg, value, label }: {
+  icon: React.ReactNode;
+  iconBg: string;
+  value: string;
+  label: string;
+}) {
+  return (
+    <div className="bg-white rounded-xl p-5 shadow-sm border border-inda-gray">
+      <div className={cn('p-2 rounded-lg w-fit mb-3', iconBg)}>{icon}</div>
+      <p className="text-2xl font-bold text-gray-900 mb-1">{value}</p>
+      <p className="text-sm text-gray-600">{label}</p>
+    </div>
+  );
+}
