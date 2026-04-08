@@ -3,25 +3,25 @@ import apiClient from ".";
 export interface UserProfileUpdatePayload {
   firstName?: string;
   lastName?: string;
-  email?: string;
-  company?: string;
-  howDidYouHearAboutUs?: string;
-  todo?: string;
-  role?: string;
-  companyName?: string;
-  companyType?: string;
-  registrationNumber?: string;
   phoneNumber?: string;
+  companyName?: string;
 }
 
-export const getProfile = () => {
-  return apiClient.get("/profile").then((res) => res.data);
-};
+export interface NotificationPreferences {
+  whatsapp?: boolean;
+  emailReports?: boolean;
+  sms?: boolean;
+  marketing?: boolean;
+}
 
-export const updateProfile = (data: UserProfileUpdatePayload) => {
-  return apiClient.put("/profile", data).then((res) => res.data);
-};
+export const getProfile = () =>
+  apiClient.get("/profile").then((res) => res.data);
 
-export const deleteProfile = () => {
-  return apiClient.delete("/profile").then((res) => res.data);
-};
+export const updateProfile = (data: UserProfileUpdatePayload) =>
+  apiClient.put("/profile", data).then((res) => res.data);
+
+export const getNotificationPreferences = (): Promise<NotificationPreferences> =>
+  apiClient.get("/profile/notifications").then((res) => res.data?.data ?? {});
+
+export const updateNotificationPreferences = (data: NotificationPreferences) =>
+  apiClient.put("/profile/notifications", data).then((res) => res.data);
