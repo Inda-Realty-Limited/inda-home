@@ -6,22 +6,32 @@ import {
     FileText, CheckCircle2, TrendingUp, ArrowRight
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/router';
 import apiClient from '@/api';
+import leadsApi from '@/api/leads';
 
 export default function DashboardPage() {
     const { user } = useAuth();
-    const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState<any>(null);
     const [properties, setProperties] = useState<any[]>([]);
+    const [leadTrendPercentage, setLeadTrendPercentage] = useState(0);
 
     const fetchStats = useCallback(async () => {
         try {
-            const res = await apiClient.get('/listings/dashboard/stats');
-            setStats(res.data.data);
-            if (res.data.data?.allListings) {
-                setProperties(res.data.data.allListings);
+            const [statsResult, leadStatsResult] = await Promise.allSettled([
+                apiClient.get('/listings/dashboard/stats'),
+                leadsApi.getStats(),
+            ]);
+
+            if (statsResult.status === 'fulfilled') {
+                setStats(statsResult.value.data.data);
+                if (statsResult.value.data.data?.allListings) {
+                    setProperties(statsResult.value.data.data.allListings);
+                }
+            }
+
+            if (leadStatsResult.status === 'fulfilled' && leadStatsResult.value.success) {
+                setLeadTrendPercentage(leadStatsResult.value.data.monthOverMonthChangePct ?? 0);
             }
         } catch (error) {
             console.error(error);
@@ -37,6 +47,8 @@ export default function DashboardPage() {
     const totalLeads = stats?.metrics?.totalLeads ?? 0;
     const totalListings = properties.length;
     const dealProgress = Math.min(Math.round((totalLeads / 20) * 100), 100);
+    const leadTrendPrefix = leadTrendPercentage > 0 ? '+' : '';
+    const leadTrendColor = leadTrendPercentage >= 0 ? 'text-green-600' : 'text-red-600';
 
     return (
         <ProtectedRoute>
@@ -86,8 +98,10 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 text-sm">
-                                    <TrendingUp className="w-4 h-4 text-green-600" />
-                                    <span className="text-green-600 font-medium">+34%</span>
+                                    <TrendingUp className={`w-4 h-4 ${leadTrendColor}`} />
+                                    <span className={`font-medium ${leadTrendColor}`}>
+                                        {loading ? '...' : `${leadTrendPrefix}${leadTrendPercentage}%`}
+                                    </span>
                                     <span className="text-gray-600">vs last month</span>
                                 </div>
                             </div>
