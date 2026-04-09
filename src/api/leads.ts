@@ -1,8 +1,22 @@
 import apiClient from "./index";
 
-export type LeadStatus = "new_lead" | "contacted" | "viewing_scheduled" | "offer_made" | "closed_won" | "closed_lost";
+export type LeadStatus =
+  | "new_lead"
+  | "contacted"
+  | "viewing_scheduled"
+  | "offer_made"
+  | "closed_won"
+  | "closed_lost";
 export type LeadPriority = "low" | "medium" | "high";
-export type ActivityType = "inquiry" | "status_change" | "view" | "note" | "call" | "email" | "whatsapp" | "reminder";
+export type ActivityType =
+  | "inquiry"
+  | "status_change"
+  | "view"
+  | "note"
+  | "call"
+  | "email"
+  | "whatsapp"
+  | "reminder";
 
 export interface LeadActivity {
   _id?: string;
@@ -26,19 +40,21 @@ export interface LeadBudget {
 export interface Lead {
   _id: string;
   agentUserId: string;
-  channel: string;
-  name: string;
-  email: string;
-  phone?: string;
-  message?: string;
-  listingId?: string | {
-    _id: string;
-    title: string;
-    microlocationStd?: string;
-    lga?: string;
-    indaTag?: string;
-    priceNGN?: number;
-  };
+  channel: string | null;
+  name: string | null;
+  email: string | null;
+  phone?: string | null;
+  message?: string | null;
+  listingId?:
+    | string
+    | {
+        _id: string;
+        title: string | null;
+        microlocationStd?: string | null;
+        lga?: string | null;
+        indaTag?: string | null;
+        priceNGN?: number;
+      };
   status: LeadStatus;
   priority: LeadPriority;
   notes: LeadNote[];
@@ -49,10 +65,13 @@ export interface Lead {
   reminderDate?: string;
   pageViews: number;
   lastActivityAt?: string;
-  propertyTitle?: string;
-  propertyLocation?: string;
+  propertyTitle?: string | null;
+  propertyLocation?: string | null;
   createdAt: string;
   updatedAt: string;
+  source?: string | null;
+  isHot?: boolean;
+  contactedAt?: string | null;
 }
 
 export interface LeadStats {
@@ -62,6 +81,9 @@ export interface LeadStats {
   closedWon: number;
   byStatus: Record<string, number>;
   byPriority: Record<string, number>;
+  currentMonth: number;
+  previousMonth: number;
+  monthOverMonthChangePct: number;
 }
 
 export interface LeadsResponse {
@@ -88,7 +110,6 @@ export interface LeadFilters {
 }
 
 export const leadsApi = {
-  // Get all leads with filters and pagination
   getLeads: async (filters: LeadFilters = {}): Promise<LeadsResponse> => {
     const params = new URLSearchParams();
     if (filters.status) params.append("status", filters.status);
@@ -103,19 +124,16 @@ export const leadsApi = {
     return response.data;
   },
 
-  // Get lead stats
   getStats: async (): Promise<{ success: boolean; data: LeadStats }> => {
     const response = await apiClient.get("/api/leads/stats");
     return response.data;
   },
 
-  // Get single lead
   getLead: async (id: string): Promise<{ success: boolean; data: Lead }> => {
     const response = await apiClient.get(`/api/leads/${id}`);
     return response.data;
   },
 
-  // Update lead
   updateLead: async (
     id: string,
     updates: {
@@ -125,19 +143,30 @@ export const leadsApi = {
       offerAmount?: number;
       offerPercent?: string;
       reminderDate?: string;
+      isHot?: boolean;
     }
   ): Promise<{ success: boolean; data: Lead }> => {
-    const response = await apiClient.put(`/api/leads/${id}`, updates);
+    const payload: Record<string, unknown> = {
+      status: updates.status,
+      priority: updates.priority,
+      offerAmount: updates.offerAmount,
+      offerPercent: updates.offerPercent,
+      reminderDate: updates.reminderDate,
+      isHot: updates.isHot,
+      budgetMin: updates.budget?.min,
+      budgetMax: updates.budget?.max,
+      budgetCurrency: updates.budget?.currency,
+    };
+
+    const response = await apiClient.patch(`/api/leads/${id}`, payload);
     return response.data;
   },
 
-  // Add note to lead
   addNote: async (id: string, content: string): Promise<{ success: boolean; data: Lead }> => {
     const response = await apiClient.post(`/api/leads/${id}/notes`, { content });
     return response.data;
   },
 
-  // Add activity to lead
   addActivity: async (
     id: string,
     type: ActivityType,
@@ -147,13 +176,11 @@ export const leadsApi = {
     return response.data;
   },
 
-  // Set reminder
   setReminder: async (id: string, reminderDate: string): Promise<{ success: boolean; data: Lead }> => {
     const response = await apiClient.post(`/api/leads/${id}/reminder`, { reminderDate });
     return response.data;
   },
 
-  // Delete lead
   deleteLead: async (id: string): Promise<{ success: boolean; data: { message: string } }> => {
     const response = await apiClient.delete(`/api/leads/${id}`);
     return response.data;

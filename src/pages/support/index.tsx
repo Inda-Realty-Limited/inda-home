@@ -22,8 +22,8 @@ const SUPPORT_CATEGORIES = [
     iconBg: 'bg-blue-100',
     iconColor: 'text-blue-600',
     description: 'Get help with deals, negotiations, and closing',
-    whatsapp: '+2348031234567',
-    email: 'sales@investinda.com',
+    whatsapp: '+2347084960775',
+    email: 'hello@investinda.com',
   },
   {
     id: 'marketing' as SupportType,
@@ -32,8 +32,8 @@ const SUPPORT_CATEGORIES = [
     iconBg: 'bg-purple-100',
     iconColor: 'text-purple-600',
     description: 'Assistance with campaigns, content, and promotion',
-    whatsapp: '+2348059876543',
-    email: 'marketing@investinda.com',
+    whatsapp: '+2347084960775',
+    email: 'hello@investinda.com',
   },
   {
     id: 'ops' as SupportType,
@@ -42,8 +42,8 @@ const SUPPORT_CATEGORIES = [
     iconBg: 'bg-green-100',
     iconColor: 'text-green-600',
     description: 'Property listings, documentation, and processes',
-    whatsapp: '+2348075551234',
-    email: 'ops@investinda.com',
+    whatsapp: '+2347084960775',
+    email: 'hello@investinda.com',
   },
   {
     id: 'tech' as SupportType,
@@ -52,8 +52,8 @@ const SUPPORT_CATEGORIES = [
     iconBg: 'bg-amber-100',
     iconColor: 'text-amber-600',
     description: 'Platform issues, bugs, and technical assistance',
-    whatsapp: '+2348092223333',
-    email: 'tech@investinda.com',
+    whatsapp: '+2347084960775',
+    email: 'hello@investinda.com',
   },
 ];
 
@@ -467,7 +467,7 @@ export default function SupportPage() {
                 </div>
               </div>
               <a
-                href="tel:+2348001234567"
+                href="tel:+2347084960775"
                 className="flex items-center gap-2 px-5 py-2.5 bg-white text-red-600 font-bold rounded-xl hover:bg-gray-100 transition-colors text-sm"
               >
                 <Phone className="w-4 h-4" />

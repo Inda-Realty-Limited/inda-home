@@ -18,7 +18,7 @@ const getTokenSecret = () => {
   return env.security.encryptionSecret;
 };
 
-const getStoredToken = (): string | null => {
+export const getStoredToken = (): string | null => {
   try {
     const encrypted = localStorage.getItem("inda_token");
     if (!encrypted) return null;
