@@ -203,8 +203,16 @@ export default function DashboardLayout({ children, showHeader = true }: Dashboa
                                 </div>
                             )}
                         </div>
-                        <button className="bg-[#4ea8a1] rounded-full w-9 h-9 flex items-center justify-center">
-                            <span className="text-white font-semibold text-base">{getInitials()}</span>
+                        <button className="bg-[#4ea8a1] rounded-full w-9 h-9 flex items-center justify-center overflow-hidden">
+                            {user?.avatarUrl ? (
+                                <img
+                                    src={user.avatarUrl}
+                                    alt={`${user.firstName || user.email}'s avatar`}
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <span className="text-white font-semibold text-base">{getInitials()}</span>
+                            )}
                         </button>
                     </div>
                 </header>

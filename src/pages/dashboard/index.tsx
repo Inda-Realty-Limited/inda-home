@@ -56,7 +56,8 @@ export default function DashboardPage() {
 
     const totalLeads = stats?.metrics?.totalLeads ?? 0;
     const totalListings = properties.length;
-    const dealProgress = Math.min(Math.round((totalLeads / 20) * 100), 100);
+    const dealProgress = stats?.metrics?.dealProgress ?? 0;
+    const conversionRate = stats?.metrics?.conversionRate ?? 0;
     const leadTrendPrefix = leadTrendPercentage > 0 ? '+' : '';
     const leadTrendColor = leadTrendPercentage >= 0 ? 'text-green-600' : 'text-red-600';
     const LeadTrendIcon = leadTrendPercentage >= 0 ? TrendingUp : TrendingDown;
@@ -126,7 +127,7 @@ export default function DashboardPage() {
                                     <div className="flex-1">
                                         <p className="text-sm text-gray-600">Conversion Rate</p>
                                         <p className="text-2xl font-semibold text-gray-900">
-                                            {loading ? <span className="inline-block w-16 h-7 bg-gray-100 animate-pulse rounded" /> : totalLeads > 0 ? `${((3 / totalLeads) * 100).toFixed(1)}%` : '0%'}
+                                            {loading ? <span className="inline-block w-16 h-7 bg-gray-100 animate-pulse rounded" /> : `${conversionRate}%`}
                                         </p>
                                     </div>
                                 </div>
@@ -270,15 +271,15 @@ export default function DashboardPage() {
                                 <div className="space-y-2 text-sm">
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Started</span>
-                                        <span className="font-medium">0</span>
+                                        <span className="font-medium">{stats?.metrics?.closingStarted ?? 0}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">In Progress</span>
-                                        <span className="font-medium">0</span>
+                                        <span className="font-medium">{stats?.metrics?.closingInProgress ?? 0}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span className="text-gray-600">Closed</span>
-                                        <span className="font-medium">0</span>
+                                        <span className="font-medium">{stats?.metrics?.closingClosed ?? 0}</span>
                                     </div>
                                 </div>
                             </div>
