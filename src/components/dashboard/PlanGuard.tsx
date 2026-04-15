@@ -5,17 +5,24 @@ import { FaLock, FaRocket } from 'react-icons/fa';
 interface PlanGuardProps {
     children: React.ReactNode;
     plan: string;
-    requiredPlan?: 'pro' | 'enterprise';
+    requiredPlan?: 'growth' | 'elite' | 'partner';
     message?: string;
 }
 
 export const PlanGuard: React.FC<PlanGuardProps> = ({
     children,
     plan,
-    requiredPlan = 'pro',
-    message = "Upgrade to Pro to unlock advanced analytics and lead tracking."
+    requiredPlan = 'growth',
+    message = "Upgrade to Growth to unlock advanced analytics and lead tracking."
 }) => {
-    const isLocked = plan === 'free' || (plan === 'pro' && requiredPlan === 'enterprise');
+    const planOrder: Record<string, number> = {
+        starter: 0,
+        growth: 1,
+        elite: 2,
+        partner: 3,
+    };
+    const normalizedPlan = (plan || 'starter').toLowerCase();
+    const isLocked = (planOrder[normalizedPlan] ?? 0) < planOrder[requiredPlan];
 
     if (!isLocked) return <>{children}</>;
 
