@@ -2,13 +2,15 @@ import { useState } from 'react';
 import { ArrowLeft, Megaphone, Target, DollarSign, TrendingUp, CheckCircle2, ChevronRight, ChevronLeft, MapPin, Users, Briefcase } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MarketingService } from '@/api/marketing';
+import { initiatePayment } from '@/api/payments';
+import { computeAdCredits, DIGITAL_ADS_MINIMUM, MarketingPaymentMethod } from './pricing';
 
 interface Props { onBack: () => void; }
 
 const adPlatforms = [
-  { id: 'google', name: 'Google Ads', description: 'Search & Display Network', minBudget: 25000, reach: '2M+ Lagos users', icon: '🔍' },
-  { id: 'facebook', name: 'Facebook Ads', description: 'News Feed & Stories', minBudget: 15000, reach: '8M+ Nigerian users', icon: '📘' },
-  { id: 'instagram', name: 'Instagram Ads', description: 'Feed, Stories & Reels', minBudget: 15000, reach: '5M+ Nigerian users', icon: '📸' },
+  { id: 'google', name: 'Google Ads', description: 'Search & Display Network', minBudget: DIGITAL_ADS_MINIMUM.price, reach: '2M+ Lagos users', icon: '🔍' },
+  { id: 'facebook', name: 'Facebook Ads', description: 'News Feed & Stories', minBudget: DIGITAL_ADS_MINIMUM.price, reach: '8M+ Nigerian users', icon: '📘' },
+  { id: 'instagram', name: 'Instagram Ads', description: 'Feed, Stories & Reels', minBudget: DIGITAL_ADS_MINIMUM.price, reach: '5M+ Nigerian users', icon: '📸' },
   { id: 'youtube', name: 'YouTube Ads', description: 'Video & Discovery Ads', minBudget: 30000, reach: '10M+ viewers', icon: '▶️' },
 ];
 
@@ -27,6 +29,7 @@ export function DigitalAdsFlow({ onBack }: Props) {
   const [adObjective, setAdObjective] = useState('');
   const [startDate, setStartDate] = useState('');
   const [targeting, setTargeting] = useState<Record<string, string[]>>({});
+  const [paymentMethod, setPaymentMethod] = useState<MarketingPaymentMethod>('credits');
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
 
@@ -42,7 +45,7 @@ export function DigitalAdsFlow({ onBack }: Props) {
   const handleLaunch = async () => {
     setSubmitting(true);
     try {
-      await MarketingService.createAdCampaign({
+      const payload = {
         platforms: selectedPlatforms,
         objective: adObjective,
         budget: parseInt(budget),
@@ -54,8 +57,39 @@ export function DigitalAdsFlow({ onBack }: Props) {
           incomeLevel: targeting.income,
           interests: targeting.interest,
         },
-      });
-      setSuccess(true);
+      };
+
+      if (paymentMethod === 'credits') {
+        await MarketingService.createAdCampaign({
+          ...payload,
+          paymentMethod: 'CREDITS',
+        });
+        setSuccess(true);
+      } else {
+        if (typeof window !== 'undefined') {
+          sessionStorage.setItem(
+            'inda_marketing_checkout',
+            JSON.stringify({
+              type: 'ad-campaign',
+              payload,
+            }),
+          );
+        }
+
+        const payment = await initiatePayment({
+          amount: (parseInt(budget) || DIGITAL_ADS_MINIMUM.price).toFixed(2),
+          provider: 'FLUTTERWAVE',
+          currency: 'NGN',
+          paymentType: 'MARKETING_AD_CAMPAIGN',
+          callbackUrl: `${window.location.origin}/marketing/checkout`,
+        });
+
+        if (!payment?.authorizationUrl) {
+          throw new Error('Failed to initiate Flutterwave payment');
+        }
+
+        window.location.href = payment.authorizationUrl;
+      }
     } catch {
       alert('Failed to launch campaign. Please try again.');
     } finally {
@@ -63,9 +97,10 @@ export function DigitalAdsFlow({ onBack }: Props) {
     }
   };
 
-  const totalBudget = parseInt(budget) || 0;
+  const totalBudget = parseInt(budget) || DIGITAL_ADS_MINIMUM.price;
   const days = parseInt(duration) || 1;
   const estimatedReach = Math.floor(totalBudget * 15);
+  const requiredCredits = computeAdCredits(totalBudget);
 
   if (success) {
     return (
@@ -168,9 +203,9 @@ export function DigitalAdsFlow({ onBack }: Props) {
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">Total Budget (₦)</label>
-                  <input type="number" value={budget} onChange={e => setBudget(e.target.value)} min="15000" step="5000"
+                  <input type="number" value={budget} onChange={e => setBudget(e.target.value)} min="30000" step="5000"
                     className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-300" />
-                  <p className="text-xs text-gray-400 mt-1">Minimum: ₦15,000</p>
+                  <p className="text-xs text-gray-400 mt-1">Minimum: ₦30,000 or 30 credits</p>
                 </div>
                 <div>
                   <label className="block text-sm font-semibold text-gray-900 mb-2">Duration (days)</label>
@@ -355,6 +390,25 @@ export function DigitalAdsFlow({ onBack }: Props) {
                         <li>• Unused budget will be refunded</li>
                       </ul>
                     </div>
+                  </div>
+                </div>
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <p className="text-sm font-semibold text-gray-900 mb-3">Payment Method</p>
+                  <div className="space-y-2">
+                    <label className={cn('flex items-start gap-3 p-3 border rounded-lg cursor-pointer', paymentMethod === 'credits' ? 'border-amber-500 bg-amber-50' : 'border-gray-200')}>
+                      <input type="radio" checked={paymentMethod === 'credits'} onChange={() => setPaymentMethod('credits')} className="mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Use Credits</p>
+                        <p className="text-xs text-gray-500">{requiredCredits} credits required</p>
+                      </div>
+                    </label>
+                    <label className={cn('flex items-start gap-3 p-3 border rounded-lg cursor-pointer', paymentMethod === 'flutterwave' ? 'border-amber-500 bg-amber-50' : 'border-gray-200')}>
+                      <input type="radio" checked={paymentMethod === 'flutterwave'} onChange={() => setPaymentMethod('flutterwave')} className="mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Pay via Flutterwave</p>
+                        <p className="text-xs text-gray-500">₦{totalBudget.toLocaleString()} checkout</p>
+                      </div>
+                    </label>
                   </div>
                 </div>
               </div>

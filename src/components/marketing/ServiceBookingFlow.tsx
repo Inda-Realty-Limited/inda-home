@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { ArrowLeft, Camera, Video, Calendar, MapPin, CheckCircle2, ChevronRight, ChevronLeft, Home, CreditCard, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { MarketingService } from '@/api/marketing';
+import { initiatePayment } from '@/api/payments';
+import { MarketingPaymentMethod, SERVICE_PRICING } from './pricing';
 
 type ServiceType = 'photography' | 'videography' | '3d-tour';
 
@@ -10,29 +12,26 @@ interface Props {
   serviceType: ServiceType;
 }
 
-const serviceDetails: Record<ServiceType, { title: string; icon: any; credits: number; packages: { id: string; name: string; price: number; features: string[] }[] }> = {
+const serviceDetails: Record<ServiceType, { title: string; icon: any; packages: { id: string; name: string; price: number; credits: number; features: string[] }[] }> = {
   photography: {
-    title: 'Professional Photography', icon: Camera, credits: 10,
+    title: 'Professional Photography', icon: Camera,
     packages: [
-      { id: 'basic', name: 'Basic Package', price: 10000, features: ['10–15 HDR photos', 'Same-day editing', 'Digital delivery'] },
-      { id: 'standard', name: 'Standard Package', price: 18000, features: ['20–25 HDR photos', 'Twilight shots', 'Same-day editing', 'Digital delivery'] },
-      { id: 'premium', name: 'Premium Package', price: 30000, features: ['30–40 HDR photos', 'Aerial drone shots', 'Twilight shots', 'Rush delivery', 'Print-ready files'] },
+      { id: 'basic', name: 'Basic Package', price: SERVICE_PRICING.photography.basic.price, credits: SERVICE_PRICING.photography.basic.credits, features: ['10–15 HDR photos', 'Same-day editing', 'Digital delivery'] },
+      { id: 'standard', name: 'Standard Package', price: SERVICE_PRICING.photography.standard.price, credits: SERVICE_PRICING.photography.standard.credits, features: ['20–25 HDR photos', 'Twilight shots', 'Same-day editing', 'Digital delivery'] },
+      { id: 'premium', name: 'Premium Package', price: SERVICE_PRICING.photography.premium.price, credits: SERVICE_PRICING.photography.premium.credits, features: ['30–40 HDR photos', 'Aerial drone shots', 'Twilight shots', 'Rush delivery', 'Print-ready files'] },
     ],
   },
   videography: {
-    title: 'Professional Videography', icon: Video, credits: 20,
+    title: 'Professional Videography', icon: Video,
     packages: [
-      { id: 'basic', name: 'Basic Video', price: 20000, features: ['1–2 min property tour', '4K quality', 'Background music', '2-day delivery'] },
-      { id: 'standard', name: 'Cinematic Tour', price: 35000, features: ['2–3 min cinematic tour', '4K quality', 'Drone footage', 'Professional editing', 'Next-day delivery'] },
-      { id: 'premium', name: 'Premium Package', price: 55000, features: ['3–5 min feature video', '4K quality', 'Aerial cinematography', 'Agent intro', 'Same-day delivery'] },
+      { id: 'walkthrough', name: 'Walkthrough', price: SERVICE_PRICING.videography.walkthrough.price, credits: SERVICE_PRICING.videography.walkthrough.credits, features: ['Simple walkthrough', 'Basic edits', '4K quality', '2-day delivery'] },
+      { id: 'cinematic', name: 'Cinematic', price: SERVICE_PRICING.videography.cinematic.price, credits: SERVICE_PRICING.videography.cinematic.credits, features: ['Cinematic tour', 'Drone footage', 'Professional editing', 'Next-day delivery'] },
     ],
   },
   '3d-tour': {
-    title: '3D Virtual Tour', icon: Video, credits: 15,
+    title: '3D Virtual Tour', icon: Video,
     packages: [
-      { id: 'basic', name: 'Basic 3D Tour', price: 15000, features: ['Up to 1500 sqft', '360° walkthrough', 'Floor plan', '2-day delivery'] },
-      { id: 'standard', name: 'Standard 3D Tour', price: 25000, features: ['Up to 3000 sqft', '360° walkthrough', 'Floor plan', 'Branded intro', 'Next-day delivery'] },
-      { id: 'premium', name: 'Premium 3D Tour', price: 40000, features: ['Unlimited size', '360° walkthrough', '4K quality', 'Floor plan', 'Measurement tools', 'Same-day delivery'] },
+      { id: 'standard', name: 'Standard 3D Tour', price: SERVICE_PRICING['3d-tour'].standard.price, credits: SERVICE_PRICING['3d-tour'].standard.credits, features: ['Full property walkthrough', '360° walkthrough', 'Floor plan', 'Measurement tools'] },
     ],
   },
 };
@@ -43,9 +42,9 @@ const propertyTypes = ['Apartment/Flat', 'Detached House', 'Duplex', 'Penthouse'
 // Simple inline payment modal
 function PaymentModal({ price, serviceTitle, packageName, credits, onClose, onSuccess }: {
   price: number; serviceTitle: string; packageName: string; credits: number;
-  onClose: () => void; onSuccess: (method: 'credits' | 'bank' | 'card') => void;
+  onClose: () => void; onSuccess: (method: MarketingPaymentMethod) => void;
 }) {
-  const [method, setMethod] = useState<'credits' | 'bank' | 'card'>('credits');
+  const [method, setMethod] = useState<MarketingPaymentMethod>('credits');
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6">
@@ -62,12 +61,11 @@ function PaymentModal({ price, serviceTitle, packageName, credits, onClose, onSu
           <p className="text-sm font-semibold text-gray-700 mb-2">Payment Method</p>
           {[
             { id: 'credits', label: `Use Marketing Credits (${credits} credits)`, sub: 'Deducted from your monthly allocation' },
-            { id: 'bank', label: 'Bank Transfer', sub: 'Pay via verified Inda payment channel' },
-            { id: 'card', label: 'Card Payment (Paystack)', sub: 'Pay instantly with debit/credit card' },
+            { id: 'flutterwave', label: `Pay ₦${price.toLocaleString()} via Flutterwave`, sub: 'Pay instantly with card, transfer, or bank account' },
           ].map(m => (
             <label key={m.id} className={cn('flex items-start gap-3 p-3 border-2 rounded-lg cursor-pointer transition-all',
               method === m.id ? 'border-inda-teal bg-inda-teal/5' : 'border-gray-200 hover:border-gray-300')}>
-              <input type="radio" name="payment" checked={method === m.id} onChange={() => setMethod(m.id as any)} className="mt-0.5" />
+              <input type="radio" name="payment" checked={method === m.id} onChange={() => setMethod(m.id as MarketingPaymentMethod)} className="mt-0.5" />
               <div>
                 <p className="text-sm font-medium text-gray-900">{m.label}</p>
                 <p className="text-xs text-gray-500">{m.sub}</p>
@@ -103,6 +101,12 @@ export function ServiceBookingFlow({ onBack, serviceType }: Props) {
   const service = serviceDetails[serviceType];
   const ServiceIcon = service.icon;
   const selectedPkg = service.packages.find(p => p.id === selectedPackage);
+  const backendServiceType =
+    serviceType === 'photography'
+      ? 'PHOTOGRAPHY'
+      : serviceType === 'videography'
+        ? 'VIDEOGRAPHY'
+        : 'TOUR_3D';
 
   if (success) {
     return (
@@ -350,14 +354,14 @@ export function ServiceBookingFlow({ onBack, serviceType }: Props) {
           serviceTitle={service.title}
           packageName={selectedPkg.name}
           price={selectedPkg.price}
-          credits={service.credits}
+          credits={selectedPkg.credits}
           onClose={() => setPaymentOpen(false)}
           onSuccess={async (method) => {
             setPaymentOpen(false);
             setSubmitting(true);
             try {
-              await MarketingService.createBooking({
-                serviceType,
+              const bookingPayload = {
+                serviceType: backendServiceType,
                 packageId: selectedPackage!,
                 propertyAddress,
                 propertyType,
@@ -366,9 +370,39 @@ export function ServiceBookingFlow({ onBack, serviceType }: Props) {
                 date: bookingDate,
                 time: bookingTime,
                 specialRequests: specialRequests || undefined,
-                paymentMethod: method,
-              });
-              setSuccess(true);
+              } as const;
+
+              if (method === 'credits') {
+                await MarketingService.createBooking({
+                  ...bookingPayload,
+                  paymentMethod: 'CREDITS',
+                });
+                setSuccess(true);
+              } else {
+                if (typeof window !== 'undefined') {
+                  sessionStorage.setItem(
+                    'inda_marketing_checkout',
+                    JSON.stringify({
+                      type: 'booking',
+                      payload: bookingPayload,
+                    }),
+                  );
+                }
+
+                const payment = await initiatePayment({
+                  amount: selectedPkg.price.toFixed(2),
+                  provider: 'FLUTTERWAVE',
+                  currency: 'NGN',
+                  paymentType: 'MARKETING_SERVICE_BOOKING',
+                  callbackUrl: `${window.location.origin}/marketing/checkout`,
+                });
+
+                if (!payment?.authorizationUrl) {
+                  throw new Error('Failed to initiate Flutterwave payment');
+                }
+
+                window.location.href = payment.authorizationUrl;
+              }
             } catch {
               alert('Booking failed. Please try again.');
             } finally {

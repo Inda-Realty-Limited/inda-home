@@ -497,12 +497,12 @@ const ForProfessionals: React.FC = () => {
 
   const getButtonText = () => {
     if (!user) return "Apply to Join";
-    if (user.subscriptionPlan !== "free") return "Go to Dashboard";
+    if (user.subscriptionPlan !== "starter") return "Go to Dashboard";
     return "Apply to Join";
   };
 
   const onGetStarted = () => {
-    if (user && user.subscriptionPlan !== "free") {
+    if (user && user.subscriptionPlan !== "starter") {
       router.push("/dashboard");
       return;
     }

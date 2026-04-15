@@ -10,7 +10,7 @@ export type StoredUser = {
   todo?: string;
   createdAt?: string;
   updatedAt?: string;
-  subscriptionPlan?: "free" | "pro" | "enterprise";
+  subscriptionPlan?: "starter" | "growth" | "elite" | "partner";
   subscriptionStatus?: "active" | "expired" | "none";
   subscriptionExpiresAt?: string;
   [key: string]: any;
@@ -28,5 +28,4 @@ export interface AuthContextType extends AuthState {
   logout: () => void;
   setUser: (user: StoredUser | null, token?: string) => void;
 }
-
 

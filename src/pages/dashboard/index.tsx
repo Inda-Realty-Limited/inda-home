@@ -313,7 +313,7 @@ export default function DashboardPage() {
                                 <div
                                     key={idx}
                                     className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all cursor-pointer"
-                                    onClick={() => router.push(`/listings/${property.indaTag || property._id}`)}
+                                    onClick={() => router.push(`/listings/${property.id || property.indaTag || property._id}`)}
                                 >
                                     <div className="h-32 bg-gradient-to-br from-[#4ea8a1]/20 to-[#3d8780]/30" />
                                     <div className="p-4">
