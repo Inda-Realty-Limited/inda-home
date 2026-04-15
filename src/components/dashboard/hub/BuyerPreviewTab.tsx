@@ -15,6 +15,7 @@ import {
   CheckCircle2
 } from "lucide-react";
 import { ListingSettingsService } from "@/api/listing-hub";
+import { createTrackedReportLink } from "@/utils/reportShare";
 
 // ============================================================================
 // TYPES
@@ -261,7 +262,12 @@ export function BuyerPreviewTab({ property, settings, metrics, onSettingsChange 
 
   const handleCopyLink = async () => {
     try {
-      await navigator.clipboard.writeText(previewUrl);
+      const link = await createTrackedReportLink({
+        listingId: property.id,
+        channel: "copy_link",
+        fallbackPath: `/property/${property.id}`,
+      });
+      await navigator.clipboard.writeText(link);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {

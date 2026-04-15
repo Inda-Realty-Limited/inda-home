@@ -52,6 +52,7 @@ import { DueDiligenceModal } from "./modals/DueDiligenceModal";
 import { AskAIModal } from "./modals/AskAIModal";
 import { ScheduleSiteVisitModal } from "./modals/ScheduleSiteVisitModal";
 import { MakeOfferModal } from "./modals/MakeOfferModal";
+import { createTrackedReportLink } from "@/utils/reportShare";
 
 // Real data structure from data engineer
 interface PropertyIntelligenceData {
@@ -582,22 +583,27 @@ export function PropertyDetail({
           </button>
           <button
             onClick={async () => {
+              const shareUrl = await createTrackedReportLink({
+                listingId: property.id,
+                channel: "share_button",
+                fallbackPath: `/property/${property.id}`,
+              });
               if (navigator.share) {
                 try {
                   await navigator.share({
                     title: property.name,
                     text: `Check out this property: ${property.name}`,
-                    url: window.location.href,
+                    url: shareUrl,
                   });
                 } catch (err) {
                   console.log("Share cancelled or denied");
                 }
               } else {
                 try {
-                  navigator.clipboard.writeText(window.location.href);
+                  navigator.clipboard.writeText(shareUrl);
                   alert("Link copied to clipboard!");
                 } catch (error) {
-                  alert(`Share this link: ${window.location.href}`);
+                  alert(`Share this link: ${shareUrl}`);
                 }
               }
             }}

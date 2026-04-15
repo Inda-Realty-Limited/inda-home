@@ -23,6 +23,7 @@ import {
   Info,
   ChevronLeft,
   ChevronRight,
+  XCircle,
 } from "lucide-react";
 import { PropertyUploadData } from "./types";
 
@@ -75,6 +76,12 @@ export function BuyerReportPreview({
   const backendDocCount =
     backendDocuments.length || listing.legalDocs?.length || 0;
 
+  // Get declared document types (all documents the property has, uploaded or not)
+  const backendDeclaredDocs = listing.declaredDocumentTypes || [];
+  const localDeclaredDocs = data.declaredDocuments || [];
+  const allDeclaredDocs =
+    backendDeclaredDocs.length > 0 ? backendDeclaredDocs : localDeclaredDocs;
+
   // Get enhancement data from saved listing or local state
   const enhancedData = {
     virtualTourUrl: listing.virtualTourUrl || data.enhancedData?.virtualTourUrl,
@@ -102,9 +109,15 @@ export function BuyerReportPreview({
 
     // Documents (40%)
     total += 40;
-    const docCount = backendDocCount || data.documents?.length || 0;
-    if (docCount >= 2) score += 40;
-    else if (docCount >= 1) score += 20;
+    const declaredCount = allDeclaredDocs.length;
+    const uploadedDocCount = allDeclaredDocs.filter(
+      (d: any) => d.uploaded,
+    ).length;
+    // Declared types give partial credit, uploaded files give full credit
+    if (declaredCount >= 2 && uploadedDocCount >= 2) score += 40;
+    else if (declaredCount >= 2 && uploadedDocCount >= 1) score += 30;
+    else if (declaredCount >= 2) score += 20;
+    else if (declaredCount >= 1) score += 10;
 
     // Photos (20%)
     total += 20;
@@ -119,26 +132,44 @@ export function BuyerReportPreview({
   };
 
   const completenessScore = calculateCompletenessScore();
-  const totalDocCount = backendDocCount || data.documents?.length || 0;
+  const totalDeclaredCount = allDeclaredDocs.length;
+  const totalUploadedCount = allDeclaredDocs.filter(
+    (d: any) => d.uploaded,
+  ).length;
 
-  // Check for title and survey documents in both backend and local data
+  // Check for title and survey documents in declared types
   const hasTitle =
-    backendDocuments.some(
+    allDeclaredDocs.some(
       (d: any) =>
         d?.type?.includes("Title") || d?.type?.includes("Certificate"),
     ) ||
-    data.documents?.some(
-      (d) => d?.type?.includes("Title") || d?.type?.includes("Certificate"),
-    ) ||
-    totalDocCount > 0;
+    backendDocuments.some(
+      (d: any) =>
+        d?.type?.includes("Title") || d?.type?.includes("Certificate"),
+    );
   const hasSurvey =
-    backendDocuments.some((d: any) => d?.type?.includes("Survey")) ||
-    data.documents?.some((d) => d?.type?.includes("Survey")) ||
-    totalDocCount > 1;
+    allDeclaredDocs.some((d: any) => d?.type?.includes("Survey")) ||
+    backendDocuments.some((d: any) => d?.type?.includes("Survey"));
+
+  // Check if title/survey docs were actually uploaded (not just declared)
+  const hasTitleUploaded =
+    allDeclaredDocs.some(
+      (d: any) =>
+        d.uploaded &&
+        (d?.type?.includes("Title") || d?.type?.includes("Certificate")),
+    ) ||
+    backendDocuments.some(
+      (d: any) =>
+        d?.type?.includes("Title") || d?.type?.includes("Certificate"),
+    );
+  const hasSurveyUploaded =
+    allDeclaredDocs.some(
+      (d: any) => d.uploaded && d?.type?.includes("Survey"),
+    ) || backendDocuments.some((d: any) => d?.type?.includes("Survey"));
 
   // Determine verification status
   const getVerificationStatus = () => {
-    if (completenessScore >= 80 && hasTitle && hasSurvey) {
+    if (completenessScore >= 80 && hasTitleUploaded && hasSurveyUploaded) {
       return {
         level: "high",
         label: "High Confidence",
@@ -446,7 +477,7 @@ export function BuyerReportPreview({
                 <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
                 <div className="text-sm text-yellow-800">
                   <p className="font-medium mb-1">
-                    ⚠️ Preliminary Analysis - Based on uploaded documents only.
+                    Preliminary Analysis - Based on uploaded documents only.
                   </p>
                   <p>
                     Full verification with market comparables and registry
@@ -457,48 +488,106 @@ export function BuyerReportPreview({
             </div>
           )}
 
-          {/* Document Checklist */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              {hasTitle ? (
-                <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
-              ) : (
-                <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
-              )}
-              <div className="flex-1">
-                <p className="font-medium text-gray-900">Title Document</p>
-                <p className="text-sm text-gray-600">
-                  {hasTitle ? "Uploaded and scanned" : "Not provided"}
-                </p>
-              </div>
-            </div>
+          {/* Document Checklist - Show each declared document type */}
+          {allDeclaredDocs.length > 0 ? (
+            <div className="space-y-3">
+              {allDeclaredDocs.map((doc: any, idx: number) => {
+                const isUploaded =
+                  doc.uploaded ||
+                  backendDocuments.some((bd: any) => bd.type === doc.type);
+                return (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg"
+                  >
+                    {isUploaded ? (
+                      <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
+                    ) : (
+                      <XCircle className="w-5 h-5 text-amber-500 flex-shrink-0" />
+                    )}
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900">{doc.type}</p>
+                      {isUploaded ? (
+                        <p className="text-sm text-green-600">
+                          Uploaded and scanned for verification
+                        </p>
+                      ) : (
+                        <p className="text-sm text-amber-600">
+                          Declared by seller - document has not been uploaded
+                          for verification
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
 
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              {hasSurvey ? (
-                <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
-              ) : (
-                <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
-              )}
-              <div className="flex-1">
-                <p className="font-medium text-gray-900">Survey Plan</p>
-                <p className="text-sm text-gray-600">
-                  {hasSurvey ? "Uploaded and scanned" : "Not provided"}
+              {/* Summary */}
+              <div className="mt-4 p-3 bg-gray-100 rounded-lg">
+                <p className="text-sm text-gray-700">
+                  <span className="font-medium">{totalDeclaredCount}</span>{" "}
+                  document type{totalDeclaredCount !== 1 ? "s" : ""} declared
+                  {totalUploadedCount > 0 && (
+                    <span className="text-green-600 font-medium">
+                      {" "}
+                      &bull; {totalUploadedCount} uploaded for verification
+                    </span>
+                  )}
+                  {totalDeclaredCount - totalUploadedCount > 0 && (
+                    <span className="text-amber-600 font-medium">
+                      {" "}
+                      &bull; {totalDeclaredCount - totalUploadedCount} not
+                      uploaded for verification
+                    </span>
+                  )}
                 </p>
               </div>
             </div>
+          ) : (
+            /* Fallback for legacy listings without declared types */
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                {hasTitle ? (
+                  <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
+                ) : (
+                  <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
+                )}
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">Title Document</p>
+                  <p className="text-sm text-gray-600">
+                    {hasTitle ? "Uploaded and scanned" : "Not provided"}
+                  </p>
+                </div>
+              </div>
 
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-              <FileText className="w-5 h-5 text-gray-400 flex-shrink-0" />
-              <div className="flex-1">
-                <p className="font-medium text-gray-900">
-                  Additional Documents
-                </p>
-                <p className="text-sm text-gray-600">
-                  {totalDocCount || data.documents.length} document(s) uploaded
-                </p>
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                {hasSurvey ? (
+                  <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0" />
+                ) : (
+                  <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0" />
+                )}
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">Survey Plan</p>
+                  <p className="text-sm text-gray-600">
+                    {hasSurvey ? "Uploaded and scanned" : "Not provided"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                <FileText className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="font-medium text-gray-900">
+                    Additional Documents
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    {backendDocCount || data.documents.length} document(s)
+                    uploaded
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
 

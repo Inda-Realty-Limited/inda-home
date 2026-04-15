@@ -90,7 +90,7 @@ const SignIn: React.FC = () => {
         }
 
         // Role-based redirect
-        const isProRole = userRole === 'Agent' || userRole === 'Developer' || userRole === 'Admin';
+        const isProRole = userRole === 'AGENT' || userRole === 'DEVELOPER' || userRole === 'ADMIN' || userRole === 'SUPER_ADMIN';
 
         if (isProRole) {
           // Pro users go to dashboard

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Phone, MessageCircle, User, MapPin, Eye, Clock, Calendar, ChevronDown, Send, TrendingUp, CheckCircle } from 'lucide-react';
+import { X, Phone, MessageCircle, User, MapPin, Eye, Calendar, ChevronDown, Send, TrendingUp, CheckCircle } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa';
 import leadsApi, { Lead, LeadStatus, LeadPriority, ActivityType } from '@/api/leads';
 
@@ -128,7 +128,6 @@ export default function LeadDetailModal({ isOpen, onClose, lead }: LeadDetailMod
             const encodedMessage = encodeURIComponent(reply);
             const phone = lead.phone.replace(/\D/g, '');
             window.open(`https://wa.me/${phone}?text=${encodedMessage}`, '_blank');
-            // Log activity
             leadsApi.addActivity(lead._id, 'whatsapp', `Sent WhatsApp: ${reply.substring(0, 50)}...`);
         }
     };
@@ -149,12 +148,9 @@ export default function LeadDetailModal({ isOpen, onClose, lead }: LeadDetailMod
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-            {/* Backdrop */}
             <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
-            {/* Modal */}
             <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col mx-4">
-                {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                     <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-full bg-inda-teal flex items-center justify-center">
@@ -174,12 +170,9 @@ export default function LeadDetailModal({ isOpen, onClose, lead }: LeadDetailMod
                     </button>
                 </div>
 
-                {/* Content */}
                 <div className="flex-1 overflow-y-auto p-6">
                     <div className="grid md:grid-cols-2 gap-6">
-                        {/* Left Column */}
                         <div className="space-y-6">
-                            {/* Contact Information */}
                             <div>
                                 <h3 className="text-sm font-semibold text-gray-900 mb-3">Contact Information</h3>
                                 <div className="space-y-3">
@@ -218,14 +211,15 @@ export default function LeadDetailModal({ isOpen, onClose, lead }: LeadDetailMod
                                             </a>
                                         </div>
                                     )}
-                                    <div className="flex items-center gap-3 text-sm text-gray-600">
-                                        <span className="text-gray-400">Email:</span>
-                                        <a href={`mailto:${lead.email}`} className="text-inda-teal hover:underline">{lead.email}</a>
-                                    </div>
+                                    {lead.email && (
+                                        <div className="flex items-center gap-3 text-sm text-gray-600">
+                                            <span className="text-gray-400">Email:</span>
+                                            <a href={`mailto:${lead.email}`} className="text-inda-teal hover:underline">{lead.email}</a>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
-                            {/* Interested Property */}
                             <div>
                                 <h3 className="text-sm font-semibold text-gray-900 mb-3">Interested Property</h3>
                                 <div className="flex items-start gap-3">
@@ -237,7 +231,6 @@ export default function LeadDetailModal({ isOpen, onClose, lead }: LeadDetailMod
                                 </div>
                             </div>
 
-                            {/* Lead Score */}
                             <div>
                                 <h3 className="text-sm font-semibold text-gray-900 mb-3">Lead Score</h3>
                                 <div className="space-y-3">
@@ -290,7 +283,6 @@ export default function LeadDetailModal({ isOpen, onClose, lead }: LeadDetailMod
                                 </div>
                             </div>
 
-                            {/* Budget */}
                             <div>
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-sm font-semibold text-gray-900">Budget</h3>
@@ -313,20 +305,17 @@ export default function LeadDetailModal({ isOpen, onClose, lead }: LeadDetailMod
                                 )}
                             </div>
 
-                            {/* Initial Message */}
                             {lead.message && (
                                 <div>
                                     <h3 className="text-sm font-semibold text-gray-900 mb-3">Initial Message</h3>
                                     <div className="p-3 bg-gray-50 rounded-xl text-sm text-gray-700 italic">
-                                        "{lead.message}"
+                                        &quot;{lead.message}&quot;
                                     </div>
                                 </div>
                             )}
                         </div>
 
-                        {/* Right Column */}
                         <div className="space-y-6">
-                            {/* Lead Status */}
                             <div>
                                 <h3 className="text-sm font-semibold text-gray-900 mb-3">Lead Status</h3>
                                 <div className="grid grid-cols-3 gap-2">
@@ -347,7 +336,6 @@ export default function LeadDetailModal({ isOpen, onClose, lead }: LeadDetailMod
                                 </div>
                             </div>
 
-                            {/* Quick Replies */}
                             <div>
                                 <h3 className="text-sm font-semibold text-gray-900 mb-3">Quick Replies</h3>
                                 <div className="space-y-2 max-h-[200px] overflow-y-auto">
@@ -364,7 +352,6 @@ export default function LeadDetailModal({ isOpen, onClose, lead }: LeadDetailMod
                                 </div>
                             </div>
 
-                            {/* Schedule Follow-up Reminder */}
                             <div className="bg-amber-50 rounded-xl p-4 border border-amber-100">
                                 <div className="flex items-center gap-2 mb-3">
                                     <div className="w-5 h-5 rounded-full bg-amber-400 flex items-center justify-center">
@@ -396,7 +383,6 @@ export default function LeadDetailModal({ isOpen, onClose, lead }: LeadDetailMod
                                 </button>
                             </div>
 
-                            {/* Activity Timeline */}
                             <div>
                                 <h3 className="text-sm font-semibold text-gray-900 mb-3">Activity Timeline</h3>
                                 {activities.length === 0 ? (
@@ -416,7 +402,6 @@ export default function LeadDetailModal({ isOpen, onClose, lead }: LeadDetailMod
                                 )}
                             </div>
 
-                            {/* Add Note */}
                             <div>
                                 <h3 className="text-sm font-semibold text-gray-900 mb-3">Add Note</h3>
                                 <div className="relative">

@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import { Search, Flame, Phone, Mail, MoreHorizontal, MessageCircle, Clock } from "lucide-react";
@@ -17,11 +17,17 @@ export default function LeadsInboxPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  // Fetch leads
-  const fetchLeads = async () => {
+  const fetchLeads = useCallback(async () => {
     try {
       setLoading(true);
-      const filters: any = { page, limit: 20 };
+      const filters: {
+        page: number;
+        limit: number;
+        status?: LeadStatus;
+        priority?: LeadPriority;
+        search?: string;
+      } = { page, limit: 20 };
+
       if (statusFilter !== "all") {
         filters.status = statusFilter;
       }
@@ -38,9 +44,8 @@ export default function LeadsInboxPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page, priorityFilter, query, statusFilter]);
 
-  // Fetch stats
   const fetchStats = async () => {
     try {
       const response = await leadsApi.getStats();
@@ -54,13 +59,12 @@ export default function LeadsInboxPage() {
 
   useEffect(() => {
     fetchLeads();
-  }, [statusFilter, priorityFilter, query, page]);
+  }, [fetchLeads]);
 
   useEffect(() => {
     fetchStats();
   }, []);
 
-  // Refresh data when modal closes (in case updates were made)
   const handleModalClose = () => {
     setSelectedLead(null);
     fetchLeads();
@@ -181,7 +185,7 @@ export default function LeadsInboxPage() {
             <div className="flex gap-3">
               <select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as any)}
+                onChange={(e) => setStatusFilter(e.target.value as "all" | LeadStatus)}
                 className="px-4 py-3 rounded-2xl border border-gray-200 bg-white text-sm text-gray-700 focus:ring-2 focus:ring-[#4EA8A1]/40 focus:border-[#4EA8A1] min-w-[140px]"
               >
                 <option value="all">All Status</option>
@@ -194,7 +198,7 @@ export default function LeadsInboxPage() {
               </select>
               <select
                 value={priorityFilter}
-                onChange={(e) => setPriorityFilter(e.target.value as any)}
+                onChange={(e) => setPriorityFilter(e.target.value as "all" | LeadPriority)}
                 className="px-4 py-3 rounded-2xl border border-gray-200 bg-white text-sm text-gray-700 focus:ring-2 focus:ring-[#4EA8A1]/40 focus:border-[#4EA8A1] min-w-[140px]"
               >
                 <option value="all">All Priority</option>
@@ -268,10 +272,12 @@ export default function LeadsInboxPage() {
                             {lead.phone}
                           </span>
                         )}
-                        <span className="flex items-center gap-1">
-                          <Mail className="w-3.5 h-3.5" />
-                          {lead.email}
-                        </span>
+                        {lead.email && (
+                          <span className="flex items-center gap-1">
+                            <Mail className="w-3.5 h-3.5" />
+                            {lead.email}
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -327,7 +333,7 @@ export default function LeadsInboxPage() {
                         Message
                       </div>
                       <div className="text-gray-700 md:flex-1">
-                        <span className="italic">"{lead.message}"</span>
+                        <span className="italic">&quot;{lead.message}&quot;</span>
                       </div>
                     </div>
                   )}
@@ -357,7 +363,6 @@ export default function LeadsInboxPage() {
             )}
           </div>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-2 pt-4">
               <button
@@ -379,16 +384,15 @@ export default function LeadsInboxPage() {
               </button>
             </div>
           )}
-        </div>
 
-        {/* Lead Detail Modal */}
-        {selectedLead && (
-          <LeadDetailModal
-            isOpen={!!selectedLead}
-            onClose={handleModalClose}
-            lead={selectedLead}
-          />
-        )}
+          {selectedLead && (
+            <LeadDetailModal
+              isOpen={!!selectedLead}
+              onClose={handleModalClose}
+              lead={selectedLead}
+            />
+          )}
+        </div>
       </DashboardLayout>
     </ProtectedRoute>
   );
