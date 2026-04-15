@@ -56,7 +56,7 @@ export const AiService = {
   chatAboutProperty: async (request: PropertyChatRequest): Promise<PropertyChatResponse> => {
     try {
       const response = await apiClient.post<PropertyChatResponse>(
-        "/api/ai/chat/property",
+        "/ai/chat/property",
         request
       );
       return response.data;

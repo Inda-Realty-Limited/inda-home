@@ -1,44 +1,54 @@
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
+import { useRouter } from 'next/router';
 import {
     DollarSign, Users, Target, Eye, Share2, BarChart3,
-    FileText, CheckCircle2, TrendingUp, ArrowRight
+    FileText, CheckCircle2, TrendingUp, TrendingDown, ArrowRight
 } from 'lucide-react';
 import { useState, useEffect, useCallback } from 'react';
 import apiClient from '@/api';
 import leadsApi from '@/api/leads';
+import { ProListingsService } from '@/api/pro-listings';
 
 export default function DashboardPage() {
     const { user } = useAuth();
+    const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState<any>(null);
     const [properties, setProperties] = useState<any[]>([]);
     const [leadTrendPercentage, setLeadTrendPercentage] = useState(0);
 
     const fetchStats = useCallback(async () => {
+        if (!user?.id) {
+            setLoading(false);
+            return;
+        }
+
         try {
-            const [statsResult, leadStatsResult] = await Promise.allSettled([
+            const [statsResult, leadStatsResult, userListingsResult] = await Promise.allSettled([
                 apiClient.get('/listings/dashboard/stats'),
                 leadsApi.getStats(),
+                ProListingsService.getUserListings(user.id),
             ]);
 
             if (statsResult.status === 'fulfilled') {
                 setStats(statsResult.value.data.data);
-                if (statsResult.value.data.data?.allListings) {
-                    setProperties(statsResult.value.data.data.allListings);
-                }
             }
 
             if (leadStatsResult.status === 'fulfilled' && leadStatsResult.value.success) {
                 setLeadTrendPercentage(leadStatsResult.value.data.monthOverMonthChangePct ?? 0);
+            }
+
+            if (userListingsResult.status === 'fulfilled') {
+                setProperties(userListingsResult.value.data ?? []);
             }
         } catch (error) {
             console.error(error);
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [user?.id]);
 
     useEffect(() => {
         fetchStats();
@@ -49,6 +59,7 @@ export default function DashboardPage() {
     const dealProgress = Math.min(Math.round((totalLeads / 20) * 100), 100);
     const leadTrendPrefix = leadTrendPercentage > 0 ? '+' : '';
     const leadTrendColor = leadTrendPercentage >= 0 ? 'text-green-600' : 'text-red-600';
+    const LeadTrendIcon = leadTrendPercentage >= 0 ? TrendingUp : TrendingDown;
 
     return (
         <ProtectedRoute>
@@ -98,7 +109,7 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-2 text-sm">
-                                    <TrendingUp className={`w-4 h-4 ${leadTrendColor}`} />
+                                    <LeadTrendIcon className={`w-4 h-4 ${leadTrendColor}`} />
                                     <span className={`font-medium ${leadTrendColor}`}>
                                         {loading ? '...' : `${leadTrendPrefix}${leadTrendPercentage}%`}
                                     </span>

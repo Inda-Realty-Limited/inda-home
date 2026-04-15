@@ -58,7 +58,7 @@ export function Phase2Processing({ documents, photos, onComplete, onError, onBac
             setProgress(30);
             setStep("Sending to AI for processing...");
 
-            const response = await apiClient.post("/api/listings/analyze", formData, {
+            const response = await apiClient.post("/listings/analyze", formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 },

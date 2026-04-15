@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { useAuth } from '@/contexts/AuthContext';
 import {
     User, Home, DollarSign, Calendar, MessageSquare, Phone, Mail,
     Eye, ChevronRight, Plus, Search, LayoutGrid, LayoutList, Clock,
@@ -8,6 +9,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DealsService, Deal, DealStage, CreateDealPayload } from '@/api/crm';
+import { buildBuyerWhatsAppMessage, openWhatsApp } from '@/utils/whatsapp';
 
 // ── Stage config ─────────────────────────────────────────────────────────────
 
@@ -86,6 +88,7 @@ const emptyForm: CreateDealPayload & { stage: LocalStage } = {
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function CRMPage() {
+    const { user } = useAuth();
     const [view, setView] = useState<'kanban' | 'list'>('kanban');
     const [deals, setDeals] = useState<Deal[]>([]);
     const [loading, setLoading] = useState(true);
@@ -97,6 +100,7 @@ export default function CRMPage() {
     const [saving, setSaving] = useState(false);
     const [editingNotes, setEditingNotes] = useState('');
     const [logActivity, setLogActivity] = useState<{ type: string; text: string } | null>(null);
+    const senderName = [user?.firstName, user?.lastName].filter(Boolean).join(' ').trim();
 
     const load = useCallback(async () => {
         try {
@@ -110,6 +114,18 @@ export default function CRMPage() {
     }, []);
 
     useEffect(() => { load(); }, [load]);
+
+    const handleWhatsAppMessage = useCallback((deal: Deal) => {
+        openWhatsApp({
+            phoneNumber: deal.buyerPhone,
+            message: buildBuyerWhatsAppMessage({
+                buyerName: deal.buyerName,
+                propertyName: deal.propertyName,
+                propertyLocation: deal.propertyLocation,
+                senderName,
+            }),
+        });
+    }, [senderName]);
 
     // ── Filtering ──────────────────────────────────────────────────────────────
 
@@ -448,7 +464,11 @@ export default function CRMPage() {
                                     <a href={`mailto:${selectedDeal.buyerEmail}`} className="flex-1 flex items-center justify-center gap-2 border border-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:border-inda-teal hover:text-inda-teal transition-colors">
                                         <Mail className="w-4 h-4" /> Email
                                     </a>
-                                    <button className="flex-1 flex items-center justify-center gap-2 border border-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:border-inda-teal hover:text-inda-teal transition-colors">
+                                    <button
+                                        onClick={() => handleWhatsAppMessage(selectedDeal)}
+                                        disabled={!selectedDeal.buyerPhone}
+                                        className="flex-1 flex items-center justify-center gap-2 border border-gray-200 text-gray-700 px-3 py-2 rounded-lg text-sm font-medium hover:border-inda-teal hover:text-inda-teal transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:text-gray-700"
+                                    >
                                         <MessageSquare className="w-4 h-4" /> Message
                                     </button>
                                 </div>

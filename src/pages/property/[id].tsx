@@ -27,7 +27,7 @@ const PropertyDetailsPage: React.FC = () => {
 
         // Try to get listing directly by id (supports both _id and indaTag)
         try {
-          const response = await apiClient.get(`/api/listings/${id}`);
+          const response = await apiClient.get(`/listings/${id}`);
           data = response.data?.data || response.data;
         } catch (err: any) {
           console.log("Failed to fetch listing by id:", err?.response?.status);

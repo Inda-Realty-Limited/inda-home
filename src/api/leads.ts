@@ -120,17 +120,17 @@ export const leadsApi = {
     if (filters.page) params.append("page", String(filters.page));
     if (filters.limit) params.append("limit", String(filters.limit));
 
-    const response = await apiClient.get(`/api/leads?${params.toString()}`);
+    const response = await apiClient.get(`/leads?${params.toString()}`);
     return response.data;
   },
 
   getStats: async (): Promise<{ success: boolean; data: LeadStats }> => {
-    const response = await apiClient.get("/api/leads/stats");
+    const response = await apiClient.get("/leads/stats");
     return response.data;
   },
 
   getLead: async (id: string): Promise<{ success: boolean; data: Lead }> => {
-    const response = await apiClient.get(`/api/leads/${id}`);
+    const response = await apiClient.get(`/leads/${id}`);
     return response.data;
   },
 
@@ -158,12 +158,12 @@ export const leadsApi = {
       budgetCurrency: updates.budget?.currency,
     };
 
-    const response = await apiClient.patch(`/api/leads/${id}`, payload);
+    const response = await apiClient.patch(`/leads/${id}`, payload);
     return response.data;
   },
 
   addNote: async (id: string, content: string): Promise<{ success: boolean; data: Lead }> => {
-    const response = await apiClient.post(`/api/leads/${id}/notes`, { content });
+    const response = await apiClient.post(`/leads/${id}/notes`, { content });
     return response.data;
   },
 
@@ -172,17 +172,17 @@ export const leadsApi = {
     type: ActivityType,
     content: string
   ): Promise<{ success: boolean; data: Lead }> => {
-    const response = await apiClient.post(`/api/leads/${id}/activity`, { type, content });
+    const response = await apiClient.post(`/leads/${id}/activity`, { type, content });
     return response.data;
   },
 
   setReminder: async (id: string, reminderDate: string): Promise<{ success: boolean; data: Lead }> => {
-    const response = await apiClient.post(`/api/leads/${id}/reminder`, { reminderDate });
+    const response = await apiClient.post(`/leads/${id}/reminder`, { reminderDate });
     return response.data;
   },
 
   deleteLead: async (id: string): Promise<{ success: boolean; data: { message: string } }> => {
-    const response = await apiClient.delete(`/api/leads/${id}`);
+    const response = await apiClient.delete(`/leads/${id}`);
     return response.data;
   },
 };
