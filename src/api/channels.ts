@@ -11,7 +11,7 @@ export interface ChannelStatsItem {
 }
 
 export interface PublicListing {
-    _id: string;
+    id: string;
     title: string;
     priceNGN?: number;
     priceOriginal?: number;

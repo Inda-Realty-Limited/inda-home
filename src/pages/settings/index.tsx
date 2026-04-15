@@ -237,6 +237,23 @@ export default function SettingsPage() {
           getNotificationPreferences(),
         ]);
         const u = result.data || result.user || result;
+        if (
+          user &&
+          (
+            u.firstName !== user.firstName ||
+            u.lastName !== user.lastName ||
+            u.phoneNumber !== user.phoneNumber ||
+            u.email !== user.email ||
+            (u.company || u.companyName) !== (user.company || user.companyName) ||
+            u.role !== user.role ||
+            u.avatarUrl !== user.avatarUrl ||
+            u.logoLightUrl !== user.logoLightUrl ||
+            u.logoDarkUrl !== user.logoDarkUrl ||
+            u.watermarkUrl !== user.watermarkUrl
+          )
+        ) {
+          setUser({ ...user, ...u });
+        }
         setForm((prev) => ({
           ...prev,
           firstName: u.firstName || prev.firstName,
@@ -259,7 +276,7 @@ export default function SettingsPage() {
         setLoading(false);
       }
     })();
-  }, [user]);
+  }, [setUser, user]);
 
   // ── Handlers ────────────────────────────────────────────────────────────────
 
@@ -320,7 +337,11 @@ export default function SettingsPage() {
     setUploadingAvatar(true);
     try {
       const result = await UploadService.avatar(file);
-      setAvatarUrl(result?.avatarUrl ?? result);
+      const nextAvatarUrl = result?.avatarUrl ?? result;
+      setAvatarUrl(nextAvatarUrl);
+      if (user) {
+        setUser({ ...user, avatarUrl: nextAvatarUrl });
+      }
     } catch (err: any) {
       setProfileToast({ type: 'error', message: err?.response?.data?.message || 'Avatar upload failed.' });
     } finally {
@@ -332,7 +353,11 @@ export default function SettingsPage() {
     setUploadingLogoLight(true);
     try {
       const result = await UploadService.logoLight(file);
-      setLogoLightUrl(result?.logoLightUrl ?? result);
+      const nextLogoLightUrl = result?.logoLightUrl ?? result;
+      setLogoLightUrl(nextLogoLightUrl);
+      if (user) {
+        setUser({ ...user, logoLightUrl: nextLogoLightUrl });
+      }
     } catch { /* silently fail, UI can retry */ }
     finally { setUploadingLogoLight(false); }
   };
@@ -341,7 +366,11 @@ export default function SettingsPage() {
     setUploadingLogoDark(true);
     try {
       const result = await UploadService.logoDark(file);
-      setLogoDarkUrl(result?.logoDarkUrl ?? result);
+      const nextLogoDarkUrl = result?.logoDarkUrl ?? result;
+      setLogoDarkUrl(nextLogoDarkUrl);
+      if (user) {
+        setUser({ ...user, logoDarkUrl: nextLogoDarkUrl });
+      }
     } catch { /* silently fail */ }
     finally { setUploadingLogoDark(false); }
   };
@@ -350,7 +379,11 @@ export default function SettingsPage() {
     setUploadingWatermark(true);
     try {
       const result = await UploadService.watermark(file);
-      setWatermarkUrl(result?.watermarkUrl ?? result);
+      const nextWatermarkUrl = result?.watermarkUrl ?? result;
+      setWatermarkUrl(nextWatermarkUrl);
+      if (user) {
+        setUser({ ...user, watermarkUrl: nextWatermarkUrl });
+      }
     } catch { /* silently fail */ }
     finally { setUploadingWatermark(false); }
   };

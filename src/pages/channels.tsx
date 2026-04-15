@@ -69,7 +69,7 @@ const ChannelCard: React.FC<ChannelCardProps> = ({
         if (selectedPromotion === 'all') {
             return `${baseUrl}/portfolio/${userId}?c=${channelKey}`;
         }
-        return `${baseUrl}/portfolio/${userId}?c=${channelKey}&listing=${selectedPromotion}`;
+        return `${baseUrl}/property/${selectedPromotion}?c=${channelKey}&agent=${userId}`;
     };
 
     const handleCopy = () => {
@@ -305,13 +305,14 @@ export default function ChannelSetup() {
     const [channelStats, setChannelStats] = useState<ChannelStatsItem[]>([]);
     const [listings, setListings] = useState<PublicListing[]>([]);
     const [loading, setLoading] = useState(true);
+    const userId = user?.id || user?._id || (user as any)?.user?.id;
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const [stats, userListings] = await Promise.all([
                     getChannelStats(),
-                    user?._id ? getPublicListings(user._id) : Promise.resolve([]),
+                    userId ? getPublicListings(userId) : Promise.resolve([]),
                 ]);
                 setChannelStats(stats);
                 setListings(userListings);
@@ -323,7 +324,7 @@ export default function ChannelSetup() {
         };
 
         fetchData();
-    }, [user?._id]);
+    }, [userId]);
 
     const steps = [
         { title: 'Choose Property', desc: 'Select which property (or all) to promote', number: 1 },
@@ -341,9 +342,9 @@ export default function ChannelSetup() {
             icon: '🏘️',
         },
         ...listings.map((listing) => ({
-            id: listing._id,
+            id: listing.id,
             label: listing.title || 'Untitled Property',
-            description: `${listing.microlocationStd || listing.state || 'No location'} • ${listing.priceNGN ? `₦${listing.priceNGN.toLocaleString()}` : 'Price TBD'}`,
+            description: `${listing.microlocationStd || listing.lga || listing.state || 'No location'} • ${listing.priceNGN ? `₦${listing.priceNGN.toLocaleString()}` : 'Price TBD'}`,
             icon: '🏠',
         })),
     ];
@@ -411,7 +412,7 @@ export default function ChannelSetup() {
                                     stats={getStatsForChannel(channelKey)}
                                     borderColor={config.borderColor}
                                     iconColor={config.iconColor}
-                                    userId={user?._id || 'demo'}
+                                    userId={userId || 'demo'}
                                     promotionOptions={promotionOptions}
                                 />
                             );
