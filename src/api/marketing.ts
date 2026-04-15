@@ -77,6 +77,7 @@ export interface CreateAdCampaignPayload {
   budget: number;
   durationDays: number;
   startDate?: string;
+  paymentMethod?: 'CREDITS' | 'BANK' | 'CARD';
   targeting: {
     locations?: string[];
     ageRanges?: string[];
@@ -86,7 +87,7 @@ export interface CreateAdCampaignPayload {
 }
 
 export interface CreateBookingPayload {
-  serviceType: 'photography' | 'videography' | '3d-tour';
+  serviceType: 'PHOTOGRAPHY' | 'VIDEOGRAPHY' | 'TOUR_3D';
   packageId: string;
   propertyAddress: string;
   propertyType: string;
@@ -95,7 +96,7 @@ export interface CreateBookingPayload {
   date: string;
   time: string;
   specialRequests?: string;
-  paymentMethod: 'credits' | 'bank' | 'card';
+  paymentMethod: 'CREDITS' | 'BANK' | 'CARD';
 }
 
 export interface CreateContentPayload {

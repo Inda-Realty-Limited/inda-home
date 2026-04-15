@@ -19,6 +19,27 @@ export const verifyPayment = async (reference: string) => {
   return res.data?.data;
 };
 
+export type InitiatePaymentPayload = {
+  amount: string;
+  provider: "FLUTTERWAVE" | "PAYSTACK";
+  currency?: string;
+  paymentType?: string;
+  callbackUrl?: string;
+};
+
+export const initiatePayment = async (payload: InitiatePaymentPayload) => {
+  const res = await apiClient.post("/payments/initiate", payload);
+  return res.data?.data;
+};
+
+export const verifyAuthenticatedPayment = async (
+  reference: string,
+  provider: "FLUTTERWAVE" | "PAYSTACK",
+) => {
+  const res = await apiClient.post("/payments/verify", { reference, provider });
+  return res.data?.data;
+};
+
 // Free view status for the authenticated user
 export type FreeViewStatus = {
   hasUsedFreeView: boolean;

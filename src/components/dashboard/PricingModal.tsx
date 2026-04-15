@@ -11,13 +11,66 @@ interface PricingModalProps {
     onClose: () => void;
 }
 
+type ProfessionalPlan = 'starter' | 'growth' | 'elite' | 'partner';
+
+const PLAN_ORDER: Record<ProfessionalPlan, number> = {
+    starter: 0,
+    growth: 1,
+    elite: 2,
+    partner: 3,
+};
+
+const PLAN_CONFIG: Array<{
+    id: ProfessionalPlan;
+    label: string;
+    price: string;
+    cadence: string;
+    credits: string;
+    features: string[];
+    featured?: boolean;
+}> = [
+    {
+        id: 'starter',
+        label: 'Starter',
+        price: 'Free',
+        cadence: 'Default plan',
+        credits: '0 monthly credits',
+        features: ['1 property listing', 'Shareable property link', 'Basic analytics'],
+    },
+    {
+        id: 'growth',
+        label: 'Growth',
+        price: '₦300K',
+        cadence: 'per month',
+        credits: '300 monthly credits',
+        features: ['Up to 300 credits monthly', 'WhatsApp and channel distribution', 'Lead and CRM tracking', 'Marketing service checkout with credits'],
+        featured: true,
+    },
+    {
+        id: 'elite',
+        label: 'Elite',
+        price: '₦750K',
+        cadence: 'per month',
+        credits: '750 monthly credits',
+        features: ['Up to 750 credits monthly', 'Priority marketing operations', 'Advanced reporting and white-label assets', 'Higher team throughput'],
+    },
+    {
+        id: 'partner',
+        label: 'Partner',
+        price: '₦2.5M',
+        cadence: 'per month',
+        credits: '2,500 monthly credits',
+        features: ['Up to 2,500 credits monthly', 'Highest servicing priority', 'Partner-level support', 'Best fit for large-volume agencies'],
+    },
+];
+
 export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) => {
     const router = useRouter();
     const { user, setUser } = useAuth();
     const toast = useToast();
-    const [isSubscribing, setIsSubscribing] = useState<string | null>(null);
+    const [isSubscribing, setIsSubscribing] = useState<ProfessionalPlan | null>(null);
 
-    const handleSubscription = async (plan: string) => {
+    const handleSubscription = async (plan: ProfessionalPlan) => {
         if (!user) {
             onClose();
             const rt = encodeURIComponent(router.asPath);
@@ -83,17 +136,17 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) =
 
     if (!isOpen) return null;
 
-    const getButtonText = (plan: string) => {
+    const getButtonText = (plan: ProfessionalPlan) => {
         if (!user) return 'Get Started';
         if (user.subscriptionPlan === plan && user.subscriptionStatus === 'active') return 'Current Plan';
-        if (plan === 'free') return user.subscriptionPlan === 'free' ? 'Current Plan' : 'Switch to Starter';
-        if (plan === 'pro') return user.subscriptionPlan === 'free' ? 'Upgrade to Pro' : user.subscriptionPlan === 'pro' ? 'Current Plan' : 'Switch to Pro';
-        if (plan === 'enterprise') return user.subscriptionPlan === 'enterprise' ? 'Current Plan' : 'Upgrade to Enterprise';
-        return 'Get Started';
+        const currentPlan = (user.subscriptionPlan || 'starter') as ProfessionalPlan;
+        if (plan === 'starter') return 'Starter is the default plan';
+        if ((PLAN_ORDER[currentPlan] ?? 0) < PLAN_ORDER[plan]) return `Upgrade to ${PLAN_CONFIG.find((item) => item.id === plan)?.label}`;
+        return `Switch to ${PLAN_CONFIG.find((item) => item.id === plan)?.label}`;
     };
 
-    const isCurrentPlan = (plan: string) => {
-        return user?.subscriptionPlan === plan && (user?.subscriptionStatus === 'active' || plan === 'free');
+    const isCurrentPlan = (plan: ProfessionalPlan) => {
+        return user?.subscriptionPlan === plan && (user?.subscriptionStatus === 'active' || plan === 'starter');
     };
 
     return (
@@ -118,136 +171,45 @@ export const PricingModal: React.FC<PricingModalProps> = ({ isOpen, onClose }) =
                 </div>
 
                 {/* Pricing cards */}
-                <div className="grid md:grid-cols-3 gap-4 p-6">
-                    {/* Starter */}
-                    <div className={`bg-white rounded-xl border p-6 hover:shadow-md transition-shadow relative ${isCurrentPlan('free') ? 'border-[#50b8b1] ring-1 ring-[#50b8b1]' : 'border-gray-200'}`}>
-                        {isCurrentPlan('free') && (
-                            <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-[#50b8b1] text-white px-2.5 py-0.5 rounded-full text-xs font-medium">
-                                Current
-                            </div>
-                        )}
-                        <div className="mb-5">
-                            <div className="text-xs text-gray-500 mb-1 uppercase tracking-wide font-medium">Starter</div>
-                            <div className="text-3xl font-bold text-gray-900 mb-0.5">Free</div>
-                            <div className="text-xs text-gray-500">Forever</div>
-                        </div>
-                        <ul className="space-y-2.5 mb-6 text-sm text-gray-600">
-                            <li className="flex items-start gap-2">
-                                <span className="text-[#50b8b1] mt-0.5">✓</span>
-                                <span>1 property listing</span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <span className="text-[#50b8b1] mt-0.5">✓</span>
-                                <span>Shareable property link</span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <span className="text-[#50b8b1] mt-0.5">✓</span>
-                                <span>Basic analytics</span>
-                            </li>
-                        </ul>
-                        <button
-                            onClick={() => handleSubscription('free')}
-                            disabled={isSubscribing !== null || isCurrentPlan('free')}
-                            className="w-full py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:border-gray-400 transition-colors text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isSubscribing === 'free' && <Loader2 className="w-4 h-4 animate-spin" />}
-                            {getButtonText('free')}
-                        </button>
-                    </div>
-
-                    {/* Pro - Featured */}
-                    <div className="bg-gray-900 rounded-xl border-2 border-[#50b8b1] p-6 relative hover:shadow-xl transition-shadow">
-                        <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 flex gap-1">
-                            {isCurrentPlan('pro') ? (
-                                <div className="bg-[#50b8b1] text-white px-2.5 py-0.5 rounded-full text-xs font-medium">
-                                    Current
+                <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-4 p-6">
+                    {PLAN_CONFIG.map((plan) => {
+                        const current = isCurrentPlan(plan.id);
+                        const highlighted = plan.featured;
+                        return (
+                            <div
+                                key={plan.id}
+                                className={`${highlighted ? 'bg-gray-900 border-2 border-[#50b8b1]' : 'bg-white border'} rounded-xl p-6 relative hover:shadow-md transition-shadow ${current ? 'ring-1 ring-[#50b8b1]' : 'border-gray-200'}`}
+                            >
+                                {(current || highlighted) && (
+                                    <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-[#50b8b1] text-white px-2.5 py-0.5 rounded-full text-xs font-medium">
+                                        {current ? 'Current' : 'Popular'}
+                                    </div>
+                                )}
+                                <div className="mb-5">
+                                    <div className={`text-xs mb-1 uppercase tracking-wide font-medium ${highlighted ? 'text-gray-400' : 'text-gray-500'}`}>{plan.label}</div>
+                                    <div className={`text-3xl font-bold mb-0.5 ${highlighted ? 'text-white' : 'text-gray-900'}`}>{plan.price}</div>
+                                    <div className={`text-xs ${highlighted ? 'text-gray-400' : 'text-gray-500'}`}>{plan.cadence}</div>
+                                    <div className={`text-xs mt-2 font-medium ${highlighted ? 'text-[#7dd2cb]' : 'text-[#50b8b1]'}`}>{plan.credits}</div>
                                 </div>
-                            ) : (
-                                <div className="bg-[#50b8b1] text-white px-2.5 py-0.5 rounded-full text-xs font-medium">
-                                    Popular
-                                </div>
-                            )}
-                        </div>
-                        <div className="mb-5">
-                            <div className="text-xs text-gray-400 mb-1 uppercase tracking-wide font-medium">Pro</div>
-                            <div className="text-3xl font-bold text-white mb-0.5">₦50K</div>
-                            <div className="text-xs text-gray-400">per month</div>
-                        </div>
-                        <ul className="space-y-2.5 mb-6 text-sm text-gray-300">
-                            <li className="flex items-start gap-2">
-                                <span className="text-[#50b8b1] mt-0.5">✓</span>
-                                <span>20 properties</span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <span className="text-[#50b8b1] mt-0.5">✓</span>
-                                <span>WhatsApp integration</span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <span className="text-[#50b8b1] mt-0.5">✓</span>
-                                <span>Full lead tracking</span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <span className="text-[#50b8b1] mt-0.5">✓</span>
-                                <span>Channel analytics</span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <span className="text-[#50b8b1] mt-0.5">✓</span>
-                                <span>AI recommendations</span>
-                            </li>
-                        </ul>
-                        <button
-                            onClick={() => handleSubscription('pro')}
-                            disabled={isSubscribing !== null || isCurrentPlan('pro')}
-                            className="w-full py-2.5 bg-[#50b8b1] rounded-lg text-white hover:bg-[#3a9892] transition-colors text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isSubscribing === 'pro' && <Loader2 className="w-4 h-4 animate-spin" />}
-                            {getButtonText('pro')}
-                        </button>
-                    </div>
-
-                    {/* Enterprise */}
-                    <div className={`bg-white rounded-xl border p-6 hover:shadow-md transition-shadow relative ${isCurrentPlan('enterprise') ? 'border-[#50b8b1] ring-1 ring-[#50b8b1]' : 'border-gray-200'}`}>
-                        {isCurrentPlan('enterprise') && (
-                            <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-[#50b8b1] text-white px-2.5 py-0.5 rounded-full text-xs font-medium">
-                                Current
+                                <ul className={`space-y-2.5 mb-6 text-sm ${highlighted ? 'text-gray-300' : 'text-gray-600'}`}>
+                                    {plan.features.map((feature) => (
+                                        <li key={feature} className="flex items-start gap-2">
+                                            <span className="text-[#50b8b1] mt-0.5">✓</span>
+                                            <span>{feature}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                                <button
+                                    onClick={() => handleSubscription(plan.id)}
+                                    disabled={isSubscribing !== null || current || plan.id === 'starter'}
+                                    className={`w-full py-2.5 rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${highlighted ? 'bg-[#50b8b1] text-white hover:bg-[#3a9892]' : 'border border-gray-300 text-gray-700 hover:border-gray-400'}`}
+                                >
+                                    {isSubscribing === plan.id && <Loader2 className="w-4 h-4 animate-spin" />}
+                                    {getButtonText(plan.id)}
+                                </button>
                             </div>
-                        )}
-                        <div className="mb-5">
-                            <div className="text-xs text-gray-500 mb-1 uppercase tracking-wide font-medium">Enterprise</div>
-                            <div className="text-3xl font-bold text-gray-900 mb-0.5">₦75K</div>
-                            <div className="text-xs text-gray-500">per month</div>
-                        </div>
-                        <ul className="space-y-2.5 mb-6 text-sm text-gray-600">
-                            <li className="flex items-start gap-2">
-                                <span className="text-[#50b8b1] mt-0.5">✓</span>
-                                <span>Unlimited properties</span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <span className="text-[#50b8b1] mt-0.5">✓</span>
-                                <span>API access</span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <span className="text-[#50b8b1] mt-0.5">✓</span>
-                                <span>White label reports</span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <span className="text-[#50b8b1] mt-0.5">✓</span>
-                                <span>Priority verification</span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                                <span className="text-[#50b8b1] mt-0.5">✓</span>
-                                <span>Dedicated support</span>
-                            </li>
-                        </ul>
-                        <button
-                            onClick={() => handleSubscription('enterprise')}
-                            disabled={isSubscribing !== null || isCurrentPlan('enterprise')}
-                            className="w-full py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:border-gray-400 transition-colors text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {isSubscribing === 'enterprise' && <Loader2 className="w-4 h-4 animate-spin" />}
-                            {getButtonText('enterprise')}
-                        </button>
-                    </div>
+                        );
+                    })}
                 </div>
 
                 {/* Footer note */}

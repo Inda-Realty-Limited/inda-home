@@ -15,6 +15,7 @@ import { ServiceBookingFlow } from '@/components/marketing/ServiceBookingFlow';
 import { AnalyticsView } from '@/components/marketing/AnalyticsView';
 import { useAuth } from '@/contexts/AuthContext';
 import { ProListingsService } from '@/api/pro-listings';
+import { DIGITAL_ADS_MINIMUM, SERVICE_PRICING } from '@/components/marketing/pricing';
 
 type Step = 'main' | 'create' | 'email' | 'ads' | 'photography' | 'videography' | '3d-tour' | 'analytics';
 type Platform = 'instagram' | 'facebook' | 'tiktok' | 'youtube' | 'twitter' | 'linkedin';
@@ -74,6 +75,7 @@ export default function MarketingPage() {
   const [hashtags, setHashtags] = useState('');
   const [scheduleDate, setScheduleDate] = useState('');
   const [scheduleTime, setScheduleTime] = useState('18:00');
+  const userId = user?.id || user?._id || (user as any)?.user?.id;
 
   // Load credits + stats on mount
   useEffect(() => {
@@ -88,10 +90,10 @@ export default function MarketingPage() {
   }, []);
 
   useEffect(() => {
-    if (user?._id && step === 'create' && createStep === 2) {
-      ProListingsService.getUserListings(user._id).then(data => setListings(data || [])).catch(() => {});
+    if (userId && step === 'create' && createStep === 2) {
+      ProListingsService.getUserListings(userId).then(data => setListings(data || [])).catch(() => {});
     }
-  }, [user?._id, step, createStep]);
+  }, [userId, step, createStep]);
 
   const togglePlatform = (p: Platform) =>
     setSelectedPlatforms(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]);
@@ -696,10 +698,10 @@ export default function MarketingPage() {
             <div className="mt-4 pt-4 border-t border-white/20">
               <p className="text-sm text-white/80 mb-2">Service Pricing:</p>
               <div className="flex flex-wrap gap-3 text-xs">
-                <span className="px-3 py-1 bg-white/10 rounded-full">Photography: 10 credits</span>
-                <span className="px-3 py-1 bg-white/10 rounded-full">Videography: 20 credits</span>
-                <span className="px-3 py-1 bg-white/10 rounded-full">3D Tour: 15 credits</span>
-                <span className="px-3 py-1 bg-white/10 rounded-full">Ads: 5 credits/day</span>
+                <span className="px-3 py-1 bg-white/10 rounded-full">Photography: from {SERVICE_PRICING.photography.basic.credits} credits</span>
+                <span className="px-3 py-1 bg-white/10 rounded-full">Videography: from {SERVICE_PRICING.videography.walkthrough.credits} credits</span>
+                <span className="px-3 py-1 bg-white/10 rounded-full">3D Tour: {SERVICE_PRICING['3d-tour'].standard.credits} credits</span>
+                <span className="px-3 py-1 bg-white/10 rounded-full">Ads: from {DIGITAL_ADS_MINIMUM.credits} credits</span>
               </div>
             </div>
           </div>
@@ -709,7 +711,16 @@ export default function MarketingPage() {
             {[
               { icon: BarChart3, label: 'Posts This Month', value: marketingStats?.postsThisMonth, bg: 'bg-purple-100', color: 'text-purple-600' },
               { icon: TrendingUp, label: 'Total Reach', value: marketingStats?.totalReach?.toLocaleString(), bg: 'bg-inda-teal/10', color: 'text-inda-teal' },
-              { icon: Target, label: 'Engagement Rate', value: marketingStats ? `${marketingStats.engagementRate}%` : undefined, bg: 'bg-pink-100', color: 'text-pink-600' },
+              {
+                icon: Target,
+                label: 'Engagement Rate',
+                value:
+                  marketingStats && typeof marketingStats.engagementRate === 'number'
+                    ? `${marketingStats.engagementRate}%`
+                    : '—',
+                bg: 'bg-pink-100',
+                color: 'text-pink-600',
+              },
               { icon: CheckCircle2, label: 'Leads Generated', value: marketingStats?.leadsGenerated, bg: 'bg-green-100', color: 'text-green-600' },
             ].map(s => {
               const Icon = s.icon;
