@@ -3,17 +3,33 @@ import { useRouter } from "next/router";
 import { Container } from "@/components";
 import { PropertyDetail } from "@/views/property-details/PropertyDetail";
 import apiClient from "@/api";
+import { trackChannelClick } from "@/api/channels";
 import LoadingScreen from "@/views/result/sections/LoadingScreen";
 import NotFoundScreen from "@/views/result/sections/NotFoundScreen";
 import { mapListingToPropertyDetail } from "@/views/property-details/utils";
 
 const PropertyDetailsPage: React.FC = () => {
   const router = useRouter();
-  const { id } = router.query;
+  const { id, c: channel, agent } = router.query;
   const [loading, setLoading] = useState(true);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [listing, setListing] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (
+      router.isReady &&
+      typeof agent === "string" &&
+      typeof channel === "string"
+    ) {
+      sessionStorage.setItem("inda_channel_source", channel);
+      sessionStorage.setItem("inda_agent_id", agent);
+
+      trackChannelClick(agent, channel).catch((err) => {
+        console.error("Failed to track channel click:", err);
+      });
+    }
+  }, [router.isReady, agent, channel]);
 
   useEffect(() => {
     if (!router.isReady || !id) return;

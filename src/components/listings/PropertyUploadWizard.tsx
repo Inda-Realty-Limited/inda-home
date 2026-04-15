@@ -100,6 +100,7 @@ export function PropertyUploadWizard({
 
   // Phase 1 state
   const [addressState, setAddressState] = useState("Lagos");
+  const [addressLga, setAddressLga] = useState("");
   const [addressCity, setAddressCity] = useState("");
   const [addressStreet, setAddressStreet] = useState("");
   const [propertyFlowType, setPropertyFlowType] = useState<
@@ -294,28 +295,46 @@ export function PropertyUploadWizard({
   const handleAddressStateChange = useCallback(
     (value: string) => {
       setAddressState(value);
-      const newAddress = `${addressStreet}, ${addressCity}, ${value}`;
+      const newAddress = [addressStreet, addressCity, addressLga, value]
+        .filter(Boolean)
+        .join(", ");
       setAddress(newAddress);
     },
-    [addressCity, addressStreet],
+    [addressCity, addressLga, addressStreet],
   );
 
-  const handleAddressCityChange = useCallback(
+  const handleAddressLgaChange = useCallback(
     (value: string) => {
-      setAddressCity(value);
-      const newAddress = `${addressStreet}, ${value}, ${addressState}`;
+      setAddressLga(value);
+      setAddressCity("");
+      const newAddress = [addressStreet, value, addressState]
+        .filter(Boolean)
+        .join(", ");
       setAddress(newAddress);
     },
     [addressState, addressStreet],
   );
 
+  const handleAddressCityChange = useCallback(
+    (value: string) => {
+      setAddressCity(value);
+      const newAddress = [addressStreet, value, addressLga, addressState]
+        .filter(Boolean)
+        .join(", ");
+      setAddress(newAddress);
+    },
+    [addressLga, addressState, addressStreet],
+  );
+
   const handleAddressStreetChange = useCallback(
     (value: string) => {
       setAddressStreet(value);
-      const newAddress = `${value}, ${addressCity}, ${addressState}`;
+      const newAddress = [value, addressCity, addressLga, addressState]
+        .filter(Boolean)
+        .join(", ");
       setAddress(newAddress);
     },
-    [addressState, addressCity],
+    [addressCity, addressLga, addressState],
   );
 
   /**
@@ -380,7 +399,7 @@ export function PropertyUploadWizard({
     const newErrors: { [key: string]: string } = {};
 
     // ADDRESS VALIDATION
-    if (!addressStreet || !addressCity || !addressState) {
+    if (!addressStreet || !addressCity || !addressLga || !addressState) {
       newErrors.address = "Please complete all address fields";
     } else if (addressStreet.trim().length < 5) {
       newErrors.address = "Street address must be at least 5 characters";
@@ -581,7 +600,7 @@ export function PropertyUploadWizard({
       // Add basic listing data
       formData.append(
         "title",
-        `${confirmedData.bedrooms || ""}${propertyType} in ${addressCity}`,
+        `${confirmedData.bedrooms || ""}${propertyType} in ${addressCity || addressLga}`,
       );
       formData.append("propertyType", propertyType);
       formData.append("microlocation", addressCity);
@@ -738,7 +757,7 @@ export function PropertyUploadWizard({
       // Add address
       formData.append("address", address);
       formData.append("state", addressState);
-      if (addressCity) formData.append("lga", addressCity);
+      if (addressLga) formData.append("lga", addressLga);
 
       // Add uploaded document files (only those with actual files)
       const uploadedDocs = declaredDocuments.filter(
@@ -1122,9 +1141,11 @@ export function PropertyUploadWizard({
             {currentPhase === "upload" && (
               <Phase1Upload
                 addressState={addressState}
+                addressLga={addressLga}
                 addressCity={addressCity}
                 addressStreet={addressStreet}
                 onAddressStateChange={handleAddressStateChange}
+                onAddressLgaChange={handleAddressLgaChange}
                 onAddressCityChange={handleAddressCityChange}
                 onAddressStreetChange={handleAddressStreetChange}
                 askingPrice={askingPrice}
