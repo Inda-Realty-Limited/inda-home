@@ -52,7 +52,7 @@ export const DisputeService = {
    */
   submit: async (data: DisputeData): Promise<DisputeResponse> => {
     try {
-      const response = await apiClient.post(`/api/listings/${data.listingId}/disputes`, {
+      const response = await apiClient.post(`/listings/${data.listingId}/disputes`, {
         category: data.category,
         explanation: data.explanation,
         userId: data.userId
@@ -70,7 +70,7 @@ export const DisputeService = {
    */
   getByListing: async (listingId: string) => {
     try {
-      const response = await apiClient.get(`/api/listings/${listingId}`);
+      const response = await apiClient.get(`/listings/${listingId}`);
       return {
         success: true,
         data: response.data?.data?.disputes || []
@@ -93,7 +93,7 @@ export const ListingSettingsService = {
    */
   getSettings: async (listingId: string): Promise<BuyerPreviewSettings | null> => {
     try {
-      const response = await apiClient.get(`/api/listings/${listingId}`);
+      const response = await apiClient.get(`/listings/${listingId}`);
       return response.data?.data?.buyerPreviewSettings || null;
     } catch (error: any) {
       if (error.response?.status === 404) {
@@ -110,7 +110,7 @@ export const ListingSettingsService = {
    */
   saveSettings: async (listingId: string, settings: Partial<BuyerPreviewSettings>): Promise<boolean> => {
     try {
-      await apiClient.put(`/api/listings/${listingId}`, {
+      await apiClient.put(`/listings/${listingId}`, {
         buyerPreviewSettings: settings
       });
       return true;
@@ -132,7 +132,7 @@ export const ListingAnalyticsService = {
    */
   getAnalytics: async (listingId: string): Promise<ListingAnalytics> => {
     try {
-      const response = await apiClient.get(`/api/listings/${listingId}/analytics`);
+      const response = await apiClient.get(`/listings/${listingId}/analytics`);
       return response.data?.data || {
         views: 0,
         uniqueViewers: 0,
@@ -166,7 +166,7 @@ export const ListingAnalyticsService = {
     // Views are automatically tracked when getSingleListing is called
     // This is a no-op but kept for API compatibility
     try {
-      await apiClient.get(`/api/listings/${listingId}`);
+      await apiClient.get(`/listings/${listingId}`);
     } catch (error) {
       console.error('Failed to track view:', error);
     }

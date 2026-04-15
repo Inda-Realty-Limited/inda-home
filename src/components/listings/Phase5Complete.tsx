@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useRouter } from "next/router";
 import { CheckCircle2, TrendingUp, Eye, AlertTriangle, Info } from "lucide-react";
 import { PropertyUploadData } from "./types";
+import { createTrackedReportLink } from "@/utils/reportShare";
 
 
 export interface Phase5CompleteProps {
@@ -24,15 +25,23 @@ export function Phase5Complete({
 }: Phase5CompleteProps) {
     const router = useRouter();
     const [copied, setCopied] = useState(false);
+    const [resolvedShareableLink, setResolvedShareableLink] = useState<string | null>(null);
 
     // Generate shareable link using the actual listing ID
     const listingId = savedListing?._id || savedListing?.indaTag;
     const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://investinda.com";
-    const shareableLink = listingId
+    const fallbackShareableLink = listingId
         ? `${baseUrl}/property/${listingId}`
         : `${baseUrl}/listings`;
-    const handleCopyLink = () => {
-        navigator.clipboard.writeText(shareableLink);
+    const shareableLink = resolvedShareableLink || fallbackShareableLink;
+    const handleCopyLink = async () => {
+        const link = await createTrackedReportLink({
+            listingId,
+            channel: "copy_link",
+            fallbackPath: listingId ? `/property/${listingId}` : "/listings",
+        });
+        await navigator.clipboard.writeText(link);
+        setResolvedShareableLink(link);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
     };
@@ -256,6 +265,5 @@ export function Phase5Complete({
         </div>
     );
 }
-
 
 

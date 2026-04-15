@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/router';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import PublicReportLayout from '@/components/reports/PublicReportLayout';
@@ -7,21 +7,30 @@ import { FaSpinner, FaArrowLeft, FaExclamationTriangle } from 'react-icons/fa';
 import DeepDiveReport from '@/components/dashboard/reports/DeepDiveReport';
 import DeeperDiveReport from '@/components/dashboard/reports/DeeperDiveReport';
 import { ProReportsService } from '@/api/pro-reports';
+import { getOrCreateReportSessionId } from '@/utils/reportTracking';
 
 const SAMPLE_REPORT_ID = 'IND-8827';
 
 export default function ReportDetailsPage() {
     const router = useRouter();
-    const { id } = router.query;
+    const { id, t } = router.query;
     const [report, setReport] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const hasTrackedEngagement = useRef(false);
+    const hasTrackedViewed = useRef(false);
+    const viewerToken = typeof t === 'string' ? t : undefined;
+    const reportId = typeof id === 'string' ? id : undefined;
+    const trackingSessionId = useMemo(
+        () => (reportId ? getOrCreateReportSessionId(reportId) : undefined),
+        [reportId],
+    );
 
     useEffect(() => {
-        if (!id) return;
+        if (!reportId) return;
 
         const fetchReport = async () => {
-            if (id === SAMPLE_REPORT_ID) {
+            if (reportId === SAMPLE_REPORT_ID) {
                 setLoading(true);
                 // Simulate network delay for realism
                 await new Promise(resolve => setTimeout(resolve, 800));
@@ -155,7 +164,7 @@ export default function ReportDetailsPage() {
 
             try {
                 setLoading(true);
-                const response = await ProReportsService.getReport(id as string);
+                const response = await ProReportsService.getAccessibleReport(reportId, viewerToken);
                 if (response.success && response.data) {
                     // Map the data to expected format if it's from DueDiligenceReport
                     if (response.source === 'DueDiligenceReport') {
@@ -286,9 +295,85 @@ export default function ReportDetailsPage() {
         };
 
         fetchReport();
-    }, [id]);
+    }, [reportId, viewerToken]);
 
-    const isSampleReport = id === SAMPLE_REPORT_ID;
+    const trackReportEvent = useCallback(
+        async (eventType: "OPENED" | "VIEWED" | "ENGAGED", metadata?: Record<string, unknown>) => {
+            if (!reportId || reportId === SAMPLE_REPORT_ID || !trackingSessionId) {
+                return;
+            }
+
+            try {
+                await ProReportsService.trackEvent(reportId, {
+                    eventType,
+                    viewerToken,
+                    sessionId: trackingSessionId,
+                    metadata,
+                });
+            } catch {
+                // Tracking should not break the report experience.
+            }
+        },
+        [reportId, trackingSessionId, viewerToken],
+    );
+
+    useEffect(() => {
+        if (!report || !reportId || reportId === SAMPLE_REPORT_ID || !trackingSessionId) {
+            return;
+        }
+
+        trackReportEvent('OPENED');
+    }, [report, reportId, trackReportEvent, trackingSessionId]);
+
+    useEffect(() => {
+        if (!report || !reportId || reportId === SAMPLE_REPORT_ID || !trackingSessionId) {
+            return;
+        }
+
+        let timer: ReturnType<typeof setTimeout> | null = null;
+
+        const scheduleViewedEvent = () => {
+            if (document.visibilityState !== 'visible' || hasTrackedViewed.current) {
+                return;
+            }
+
+            timer = setTimeout(() => {
+                hasTrackedViewed.current = true;
+                void trackReportEvent('VIEWED', { thresholdSeconds: 10 });
+            }, 10000);
+        };
+
+        const clearTimer = () => {
+            if (timer) {
+                clearTimeout(timer);
+                timer = null;
+            }
+        };
+
+        const handleVisibilityChange = () => {
+            clearTimer();
+            scheduleViewedEvent();
+        };
+
+        scheduleViewedEvent();
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+
+        return () => {
+            clearTimer();
+            document.removeEventListener('visibilitychange', handleVisibilityChange);
+        };
+    }, [report, reportId, trackReportEvent, trackingSessionId]);
+
+    const handleReportEngagement = useCallback(() => {
+        if (hasTrackedEngagement.current || !reportId || reportId === SAMPLE_REPORT_ID) {
+            return;
+        }
+
+        hasTrackedEngagement.current = true;
+        void trackReportEvent('ENGAGED', { interaction: 'click' });
+    }, [reportId, trackReportEvent]);
+
+    const isSampleReport = reportId === SAMPLE_REPORT_ID;
     const Layout = isSampleReport ? PublicReportLayout : DashboardLayout;
 
     if (!router.isReady || loading) {
@@ -329,7 +414,7 @@ export default function ReportDetailsPage() {
 
     return (
         <Layout title={`Report: ${report.reportId}`}>
-            <div className="bg-[#F8FAFC] min-h-screen pb-20">
+            <div className="bg-[#F8FAFC] min-h-screen pb-20" onClickCapture={handleReportEngagement}>
                 {!isSampleReport && (
                     <div className="max-w-7xl mx-auto mb-6 pt-6 px-4 md:px-0">
                         <button

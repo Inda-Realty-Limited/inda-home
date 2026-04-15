@@ -34,6 +34,15 @@ export const getStoredToken = (): string | null => {
 
 apiClient.interceptors.request.use(
   (config) => {
+    const baseUrl = config.baseURL ?? apiClient.defaults.baseURL ?? "";
+    if (typeof config.url === "string" && baseUrl.endsWith("/api")) {
+      if (config.url === "/api") {
+        config.url = "/";
+      } else if (config.url.startsWith("/api/")) {
+        config.url = config.url.slice(4);
+      }
+    }
+
     // Add Authorization header with token from localStorage
     const token = getStoredToken();
     if (token) {
