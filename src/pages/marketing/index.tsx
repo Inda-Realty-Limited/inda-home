@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import {
   Mail, Megaphone, Camera, Video, Box, BarChart3, Sparkles, TrendingUp,
   ChevronRight, ChevronLeft, Instagram, Facebook, Youtube, Linkedin,
@@ -55,6 +56,7 @@ const AI_CAPTIONS = [
 
 
 export default function MarketingPage() {
+  const router = useRouter();
   const { user } = useAuth();
   const [step, setStep] = useState<Step>('main');
 
@@ -88,6 +90,15 @@ export default function MarketingPage() {
       if (statsRes.status === 'fulfilled') setMarketingStats(statsRes.value);
     }).finally(() => setDataLoading(false));
   }, []);
+
+  useEffect(() => {
+    if (!router.isReady) return;
+
+    const requestedStep = router.query.step;
+    if (requestedStep === 'email') {
+      setStep('email');
+    }
+  }, [router.isReady, router.query.step]);
 
   useEffect(() => {
     if (userId && step === 'create' && createStep === 2) {
