@@ -64,11 +64,58 @@ export interface ContactList {
 export interface CreateEmailCampaignPayload {
   templateId: string;
   recipientListIds: string[];
+  customRecipients?: string[];
   subject: string;
   preheader: string;
   body: string;
+  htmlBody?: string;
   scheduleDate?: string;
   scheduleTime?: string;
+}
+
+export interface GenerateEmailCampaignCopyPayload {
+  templateId: string;
+  recipientListIds?: string[];
+  customRecipients?: string[];
+}
+
+export interface GeneratedEmailCampaignCopy {
+  subject: string;
+  preheader: string;
+  body: string;
+}
+
+export interface SendTestEmailCampaignPayload {
+  templateId: string;
+  subject: string;
+  preheader?: string;
+  body: string;
+  htmlBody?: string;
+}
+
+export interface CanvaAuthUrlResponse {
+  url: string;
+}
+
+export interface CanvaStatus {
+  connected: boolean;
+  connectedAt: string | null;
+  expiresAt: string | null;
+}
+
+export interface CanvaDesign {
+  id: string;
+  title: string;
+  thumbnailUrl: string | null;
+  updatedAt: string;
+  pageCount: number | null;
+}
+
+export interface ImportedCanvaEmail {
+  templateName: string;
+  subject: string;
+  preheader: string;
+  htmlBody: string;
 }
 
 export interface CreateAdCampaignPayload {
@@ -119,28 +166,52 @@ export interface CreateContentPayload {
 
 export const MarketingService = {
   getCredits: (): Promise<MarketingCredits> =>
-    apiClient.get('/marketing/credits').then(r => r.data),
+    apiClient.get('/marketing/credits').then(r => r.data?.data ?? r.data),
 
   getStats: (): Promise<MarketingStats> =>
-    apiClient.get('/marketing/stats').then(r => r.data),
+    apiClient.get('/marketing/stats').then(r => r.data?.data ?? r.data),
 
   getAnalytics: (period = '30d'): Promise<AnalyticsData> =>
-    apiClient.get('/marketing/analytics', { params: { period } }).then(r => r.data),
+    apiClient.get('/marketing/analytics', { params: { period } }).then(r => r.data?.data ?? r.data),
 
   getContactLists: (): Promise<ContactList[]> =>
-    apiClient.get('/marketing/contacts/lists').then(r => r.data),
+    apiClient.get('/marketing/contact-lists').then(r => r.data?.data ?? []),
 
   createEmailCampaign: (payload: CreateEmailCampaignPayload) =>
-    apiClient.post('/marketing/email-campaigns', payload).then(r => r.data),
+    apiClient.post('/marketing/email-campaigns', payload).then(r => r.data?.data ?? r.data),
+
+  generateEmailCampaignCopy: (payload: GenerateEmailCampaignCopyPayload): Promise<GeneratedEmailCampaignCopy> =>
+    apiClient.post('/marketing/email-campaigns/generate-copy', payload).then(r => r.data?.data ?? r.data),
+
+  sendTestEmailCampaign: (payload: SendTestEmailCampaignPayload) =>
+    apiClient.post('/marketing/email-campaigns/send-test', payload).then(r => r.data?.data ?? r.data),
+
+  getCanvaAuthUrl: (params: { redirectUri: string }): Promise<CanvaAuthUrlResponse> =>
+    apiClient.get('/marketing/canva/auth-url', { params }).then(r => r.data?.data ?? r.data),
+
+  exchangeCanvaCode: (payload: { code: string; state: string; redirectUri: string }) =>
+    apiClient.post('/marketing/canva/exchange', payload).then(r => r.data?.data ?? r.data),
+
+  getCanvaStatus: (): Promise<CanvaStatus> =>
+    apiClient.get('/marketing/canva/status').then(r => r.data?.data ?? r.data),
+
+  disconnectCanva: () =>
+    apiClient.delete('/marketing/canva/status').then(r => r.data?.data ?? r.data),
+
+  listCanvaDesigns: (query?: string): Promise<CanvaDesign[]> =>
+    apiClient.get('/marketing/canva/designs', { params: query ? { query } : undefined }).then(r => r.data?.data ?? []),
+
+  importCanvaEmail: (designId: string): Promise<ImportedCanvaEmail> =>
+    apiClient.post('/marketing/canva/import-email', { designId }).then(r => r.data?.data ?? r.data),
 
   createAdCampaign: (payload: CreateAdCampaignPayload) =>
-    apiClient.post('/marketing/ad-campaigns', payload).then(r => r.data),
+    apiClient.post('/marketing/ad-campaigns', payload).then(r => r.data?.data ?? r.data),
 
   createBooking: (payload: CreateBookingPayload) =>
-    apiClient.post('/marketing/bookings', payload).then(r => r.data),
+    apiClient.post('/marketing/bookings', payload).then(r => r.data?.data ?? r.data),
 
   createContent: (payload: CreateContentPayload) =>
-    apiClient.post('/marketing/content', payload).then(r => r.data),
+    apiClient.post('/marketing/content', payload).then(r => r.data?.data ?? r.data),
 };
 
 /*
