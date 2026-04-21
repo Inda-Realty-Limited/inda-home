@@ -222,12 +222,6 @@ const Signup: React.FC = () => {
                     desc: "I want to buy a home",
                   },
                   {
-                    role: "Agent" as const,
-                    icon: "👔",
-                    title: "Agent",
-                    desc: "I sell & list homes",
-                  },
-                  {
                     role: "Investor" as const,
                     icon: "💼",
                     title: "Investor",
@@ -257,6 +251,17 @@ const Signup: React.FC = () => {
                     <div className="text-xs text-gray-600">{option.desc}</div>
                   </button>
                 ))}
+              </div>
+
+              <div className="w-full max-w-[500px] mx-auto mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 flex items-start gap-3">
+                <span className="text-xl mt-0.5">👔</span>
+                <div className="text-sm text-amber-800">
+                  <span className="font-semibold">Are you an agent?</span> Agents join Inda through our dedicated application process.{" "}
+                  <a href="/apply" className="font-semibold underline underline-offset-2 hover:text-amber-900">
+                    Apply here
+                  </a>{" "}
+                  to get started.
+                </div>
               </div>
 
               <div className="flex gap-4 w-full max-w-[400px] mx-auto">
