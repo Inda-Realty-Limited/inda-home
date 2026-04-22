@@ -5,7 +5,6 @@ import {
   ChevronRight,
   Building,
   Home,
-  AlertTriangle,
 } from "lucide-react";
 import { SimpleDocumentUpload } from "./SimpleDocumentUpload";
 import { SimplePhotoUpload } from "./SimplePhotoUpload";
@@ -66,7 +65,6 @@ interface Phase1UploadProps {
   declaredDocuments: DeclaredDocument[];
   photos: UploadedPhoto[];
   errors: { [key: string]: string };
-  priceWarning: string | null;
   propertyFlowType: PropertyFlowType;
   onPropertyFlowTypeChange: (type: PropertyFlowType) => void;
 
@@ -98,7 +96,6 @@ export function Phase1Upload({
   declaredDocuments,
   photos,
   errors,
-  priceWarning,
   propertyFlowType,
   onPropertyFlowTypeChange,
   onPriceChange,
@@ -251,12 +248,6 @@ export function Phase1Upload({
         {errors.askingPrice && (
           <p className="text-sm text-red-600 mt-2">{errors.askingPrice}</p>
         )}
-        {priceWarning && !errors.askingPrice && (
-          <div className="flex items-start gap-2 mt-2 p-2 bg-amber-50 border border-amber-200 rounded-lg">
-            <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-amber-700">{priceWarning}</p>
-          </div>
-        )}
         {askingPrice > 0 && (
           <p className="text-sm text-gray-600 mt-2">
             &#8358;{askingPrice.toLocaleString()}
@@ -265,42 +256,44 @@ export function Phase1Upload({
       </div>
 
       {/* Number of Bedrooms */}
-      <div>
-        <label className="block text-sm font-medium text-gray-900 mb-2">
-          5. Number of Bedrooms <span className="text-red-500">*</span>
-        </label>
-        <div className="relative">
-          <Bed className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="number"
-            min="0"
-            value={bedrooms || ""}
-            onChange={(e) => onBedroomsChange(Number(e.target.value))}
-            placeholder="e.g., 4"
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4ea8a1] focus:border-transparent"
-          />
+      {propertyFlowType !== "land-only" && (
+        <div>
+          <label className="block text-sm font-medium text-gray-900 mb-2">
+            5. Number of Bedrooms <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <Bed className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="number"
+              min="0"
+              value={bedrooms || ""}
+              onChange={(e) => onBedroomsChange(Number(e.target.value))}
+              placeholder="e.g., 4"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4ea8a1] focus:border-transparent"
+            />
+          </div>
         </div>
-        <p className="text-xs text-gray-500 mt-1">Enter 0 for land only</p>
-      </div>
+      )}
 
       {/* Number of Bathrooms */}
-      <div>
-        <label className="block text-sm font-medium text-gray-900 mb-2">
-          6. Number of Bathrooms <span className="text-red-500">*</span>
-        </label>
-        <div className="relative">
-          <Bath className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="number"
-            min="0"
-            value={bathrooms || ""}
-            onChange={(e) => onBathroomsChange(Number(e.target.value))}
-            placeholder="e.g., 5"
-            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4ea8a1] focus:border-transparent"
-          />
+      {propertyFlowType !== "land-only" && (
+        <div>
+          <label className="block text-sm font-medium text-gray-900 mb-2">
+            6. Number of Bathrooms <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <Bath className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="number"
+              min="0"
+              value={bathrooms || ""}
+              onChange={(e) => onBathroomsChange(Number(e.target.value))}
+              placeholder="e.g., 5"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4ea8a1] focus:border-transparent"
+            />
+          </div>
         </div>
-        <p className="text-xs text-gray-500 mt-1">Enter 0 for land only</p>
-      </div>
+      )}
 
       {/* Submit Button */}
       <div className="flex items-center justify-between pt-4 border-t border-gray-200">

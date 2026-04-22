@@ -140,9 +140,6 @@ export function PropertyUploadWizard({
     plan: string;
   } | null>(null);
 
-  // Price warning state
-  const [priceWarning, setPriceWarning] = useState<string | null>(null);
-
   // Location intelligence warning state
   const [showLocationWarning, setShowLocationWarning] = useState(false);
 
@@ -351,16 +348,7 @@ export function PropertyUploadWizard({
   const handlePriceChange = useCallback((value: number) => {
     setAskingPrice(value);
 
-    // Check for suspiciously round prices (exact millions >= 10M)
-    if (value >= 10_000_000 && value % 1_000_000 === 0) {
-      setPriceWarning(
-        "Round prices may seem less credible. Consider a specific price like ₦52,500,000 instead of ₦50,000,000",
-      );
-    } else {
-      setPriceWarning(null);
-    }
-
-    // TODO: Fetch market comparables
+// TODO: Fetch market comparables
     // fetch(`/api/market-data/comparable?address=${address}&price=${value}`)
     //   .then(res => res.json())
     //   .then(data => setSuggestedPrice(data));
@@ -530,6 +518,12 @@ export function PropertyUploadWizard({
         ...prev,
         address: address,
         askingPrice: askingPrice,
+        addressState,
+        addressLga,
+        addressCity,
+        propertyFlowType,
+        bedroomsInput: bedrooms,
+        bathroomsInput: bathrooms,
       }));
       setCurrentPhase("processing");
     }
@@ -564,8 +558,9 @@ export function PropertyUploadWizard({
 
   const handlePhase3Submit = async () => {
     const aiData = uploadData.aiInferredData;
+    const flowTypeLabel = propertyFlowType === "land-only" ? "Land Only" : propertyFlowType === "off-plan" ? "Off-Plan" : propertyFlowType === "completed" ? "Completed" : undefined;
     const propertyType =
-      uploadData.confirmedData?.propertyType || aiData?.propertyType;
+      uploadData.confirmedData?.propertyType || flowTypeLabel || aiData?.propertyType;
 
     if (!propertyType) {
       setErrors({
@@ -1154,7 +1149,6 @@ export function PropertyUploadWizard({
                 declaredDocuments={declaredDocuments}
                 photos={photos}
                 errors={errors}
-                priceWarning={priceWarning}
                 propertyFlowType={propertyFlowType}
                 onPropertyFlowTypeChange={handlePropertyFlowTypeChange}
                 onPriceChange={handlePriceChange}
@@ -1243,7 +1237,7 @@ export function PropertyUploadWizard({
                 {/* Buyer Report Preview */}
                 <div className="border border-gray-200 rounded-lg overflow-hidden">
                   <BuyerReportPreview
-                    data={uploadData}
+                    data={{ ...uploadData, photos }}
                     savedListing={savedListing}
                     mode="preview"
                   />
