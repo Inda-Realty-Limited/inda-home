@@ -6,6 +6,26 @@
   "confidenceLevel": "High",
   "confidenceScore": 95,
   "listingUrl": "https://example.com/property/sample-listing",
+  "property": {
+    "name": "4 Bedroom Terrace Duplex in Lekki Phase 1",
+    "location": "Lekki Phase 1, Lagos",
+    "price": 185000000,
+    "bed": 4,
+    "bath": 4,
+    "size": "2,400 sqm",
+    "type": "Terrace Duplex",
+    "yearBuilt": 2019,
+    "amenities": [
+      "Swimming Pool",
+      "24/7 Security",
+      "Gym & Fitness Center",
+      "Children's Playground",
+      "Backup Generator",
+      "Borehole Water",
+      "Estate Management",
+      "Visitor Parking"
+    ]
+  },
   "propertyOverview": {
     "title": "4 Bedroom Terrace Duplex in Lekki Phase 1",
     "propertyType": "4 Bedroom Duplex",
