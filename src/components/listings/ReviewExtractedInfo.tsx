@@ -111,11 +111,11 @@ export function ReviewExtractedInfo({
     // PROPERTY IDENTIFICATION
     propertyIdentity: {
       address: data.address || "Not detected",
-      propertyType: confirmed?.propertyType || aiData?.propertyType || "Not detected",
-      titleType: confirmed?.titleType || aiData?.documentAnalysis?.titleType || "Not detected",
+      propertyType: confirmed?.propertyType || (data.propertyFlowType === "land-only" ? "Land Only" : data.propertyFlowType === "off-plan" ? "Off-Plan" : data.propertyFlowType === "completed" ? "Completed" : undefined) || aiData?.propertyType || "Not detected",
+      titleType: confirmed?.titleType || (data.declaredDocuments?.length ? data.declaredDocuments.map(d => d.type).join(", ") : undefined) || aiData?.documentAnalysis?.titleType || "Not detected",
       plotNumber: aiData?.location || "Not detected",
-      stateJurisdiction: aiData?.documentAnalysis?.state || "Not detected",
-      lgaJurisdiction: aiData?.documentAnalysis?.lga || "Not detected",
+      stateJurisdiction: data.addressState || aiData?.documentAnalysis?.state || "Not detected",
+      lgaJurisdiction: data.addressLga || aiData?.documentAnalysis?.lga || "Not detected",
       confidence: aiData?.confidence?.propertyType || 0
     },
 
@@ -188,10 +188,10 @@ export function ReviewExtractedInfo({
     regulatory: {
       buildingApproval: {
         approvalNumber: aiData?.documentAnalysis?.buildingApproval?.approvalNumber || "Not detected",
-        approvedUse: confirmed?.propertyType || aiData?.propertyType || "Not detected",
+        approvedUse: confirmed?.propertyType || (data.propertyFlowType === "land-only" ? "Land Only" : data.propertyFlowType === "off-plan" ? "Off-Plan" : data.propertyFlowType === "completed" ? "Completed" : undefined) || aiData?.propertyType || "Not detected",
         floors: aiData?.documentAnalysis?.buildingApproval?.floors || "Not detected",
         buildingArea: confirmed?.landSize || aiData?.landSize || "Not detected",
-        approvedBedrooms: aiData?.bedrooms ? aiData.bedrooms.toString() : "Not detected",
+        approvedBedrooms: data.bedroomsInput?.toString() || aiData?.bedrooms?.toString() || "Not detected",
         zoningCompliance: aiData?.documentAnalysis?.buildingApproval?.zoningCompliance || "Not detected",
         approvalDate: aiData?.documentAnalysis?.buildingApproval?.approvalDate || "Not detected"
       },
@@ -219,9 +219,9 @@ export function ReviewExtractedInfo({
 
     // CONSTRUCTION & PHYSICAL (from photos + documents)
     constructionPhysical: {
-      propertyType: confirmed?.propertyType || aiData?.propertyType || "Not detected",
-      bedrooms: confirmed?.bedrooms?.toString() || aiData?.bedrooms?.toString() || "Not detected",
-      bathrooms: confirmed?.bathrooms?.toString() || aiData?.bathrooms?.toString() || "Not detected",
+      propertyType: confirmed?.propertyType || (data.propertyFlowType === "land-only" ? "Land Only" : data.propertyFlowType === "off-plan" ? "Off-Plan" : data.propertyFlowType === "completed" ? "Completed" : undefined) || aiData?.propertyType || "Not detected",
+      bedrooms: confirmed?.bedrooms?.toString() || (data.bedroomsInput ? data.bedroomsInput.toString() : undefined) || aiData?.bedrooms?.toString() || "Not detected",
+      bathrooms: confirmed?.bathrooms?.toString() || (data.bathroomsInput ? data.bathroomsInput.toString() : undefined) || aiData?.bathrooms?.toString() || "Not detected",
       floors: aiData?.documentAnalysis?.buildingApproval?.floors || "Not detected",
       roofType: aiData?.photoAnalysis?.roofType || "Not detected",
       propertyCondition: aiData?.photoAnalysis?.propertyCondition || "Not detected",

@@ -348,6 +348,12 @@ export interface AnalysisRequest {
 
 export interface PropertyUploadData {
   address: string;
+  addressState?: string;
+  addressLga?: string;
+  addressCity?: string;
+  propertyFlowType?: "completed" | "off-plan" | "land-only";
+  bedroomsInput?: number;
+  bathroomsInput?: number;
   askingPrice: number;
   documents: UploadedDocument[];
   declaredDocuments: DeclaredDocument[];
