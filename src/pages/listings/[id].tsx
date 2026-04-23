@@ -39,21 +39,79 @@ export default function PropertyHubPage() {
                 const address = rawData.fullAddress || rawData.microlocation || rawData.microlocationStd ||
                                rawData.address || rawData.location || 'Unknown Location';
 
+                const isNonEmptyString = (value: unknown): value is string =>
+                    typeof value === "string" && value.trim().length > 0;
+
+                const isTitleDocumentLabel = (value: string) => {
+                    const normalized = value.toLowerCase();
+                    return (
+                        normalized.includes("title") ||
+                        normalized.includes("c of o") ||
+                        normalized.includes("certificate of occupancy") ||
+                        normalized.includes("governor") ||
+                        normalized.includes("deed")
+                    );
+                };
+
+                const isSurveyDocumentLabel = (value: string) =>
+                    value.toLowerCase().includes("survey");
+
                 // Combine all document types into a single array with labels
                 const allDocuments: Array<{ url?: string; label: string }> = [];
+                const seenDocuments = new Set<string>();
+                const addDocument = (doc: { url?: string; label: string }) => {
+                    const label = isNonEmptyString(doc.label) ? doc.label.trim() : "Document";
+                    const url = isNonEmptyString(doc.url) ? doc.url.trim() : undefined;
+                    const key = `${label}::${url ?? "declared-only"}`;
 
-                // First, use documentsWithMeta if available (new structured format)
-                if (rawData.documentsWithMeta?.length) {
-                    rawData.documentsWithMeta.forEach((doc: { url: string; type: string }) => {
-                        allDocuments.push({ url: doc.url, label: doc.type });
+                    if (seenDocuments.has(key)) return;
+                    seenDocuments.add(key);
+                    allDocuments.push({ url, label });
+                };
+
+                // Current backend shape: relational documents table
+                if (rawData.documents?.length) {
+                    rawData.documents.forEach((doc: any, index: number) => {
+                        if (typeof doc === "string") {
+                            addDocument({ url: doc, label: `Document ${index + 1}` });
+                            return;
+                        }
+
+                        addDocument({
+                            url: doc?.url,
+                            label: doc?.type || doc?.label || doc?.originalName || `Document ${index + 1}`
+                        });
                     });
-                } else {
+                }
+
+                // Include declared document types even when the file was not uploaded.
+                if (rawData.declaredDocumentTypes?.length) {
+                    rawData.declaredDocumentTypes.forEach((docType: any) => {
+                        if (isNonEmptyString(docType?.type)) {
+                            addDocument({ label: docType.type });
+                        }
+                    });
+                }
+
+                // Older manual-upload listings may only have title verification text.
+                if (isNonEmptyString(rawData.titleVerification)) {
+                    addDocument({ label: rawData.titleVerification });
+                }
+
+                // Legacy structured format fallback
+                if (allDocuments.length === 0 && rawData.documentsWithMeta?.length) {
+                    rawData.documentsWithMeta.forEach((doc: { url: string; type: string }) => {
+                        addDocument({ url: doc.url, label: doc.type });
+                    });
+                }
+
+                if (allDocuments.length === 0) {
                     // Fallback to legacy format
 
                     // Add title docs
                     if (rawData.titleDocs?.length) {
                         rawData.titleDocs.forEach((url: string) => {
-                            allDocuments.push({ url, label: 'Title Document' });
+                            addDocument({ url, label: 'Title Document' });
                         });
                     }
 
@@ -62,58 +120,79 @@ export default function PropertyHubPage() {
                         rawData.legalDocs.forEach((url: string, index: number) => {
                             // Try to determine if it's a survey based on filename or just label generically
                             const isSurvey = url.toLowerCase().includes('survey');
-                            allDocuments.push({
+                            addDocument({
                                 url,
                                 label: isSurvey ? 'Survey Plan' : `Legal Document ${index + 1}`
                             });
                         });
                     }
 
-                    // Add general documents
-                    if (rawData.documents?.length) {
-                        rawData.documents.forEach((doc: any, index: number) => {
-                            if (typeof doc === 'string') {
-                                allDocuments.push({ url: doc, label: `Document ${index + 1}` });
-                            } else if (doc.url) {
-                                allDocuments.push({ url: doc.url, label: doc.label || `Document ${index + 1}` });
-                            }
+                    // Legacy general documents shape
+                    if (rawData.documentUrls?.length) {
+                        rawData.documentUrls.forEach((url: string, index: number) => {
+                            addDocument({ url, label: `Document ${index + 1}` });
                         });
                     }
                 }
 
                 // Combine all photo types
                 const allPhotos: Array<{ url: string; label: string; category: string }> = [];
+                const seenPhotos = new Set<string>();
+                const addPhoto = (photo: { url?: string; label?: string; category?: string }) => {
+                    const url = isNonEmptyString(photo.url) ? photo.url.trim() : "";
+                    if (!url || seenPhotos.has(url)) return;
 
-                // First, use photosWithMeta if available (new structured format)
-                if (rawData.photosWithMeta?.length) {
+                    seenPhotos.add(url);
+                    allPhotos.push({
+                        url,
+                        label: isNonEmptyString(photo.label) ? photo.label.trim() : "Photo",
+                        category: isNonEmptyString(photo.category) ? photo.category.trim() : "general"
+                    });
+                };
+
+                // Current backend shape: relational photos table
+                if (rawData.photos?.length) {
+                    rawData.photos.forEach((photo: any, index: number) => {
+                        addPhoto({
+                            url: photo?.url,
+                            label: photo?.label || photo?.originalName || `Photo ${index + 1}`,
+                            category: photo?.category || "general"
+                        });
+                    });
+                }
+
+                // Legacy structured format fallback
+                if (allPhotos.length === 0 && rawData.photosWithMeta?.length) {
                     rawData.photosWithMeta.forEach((photo: { url: string; label: string; category?: string }) => {
-                        allPhotos.push({
+                        addPhoto({
                             url: photo.url,
                             label: photo.label,
                             category: photo.category || 'general'
                         });
                     });
-                } else {
+                }
+
+                if (allPhotos.length === 0) {
                     // Fallback to legacy format
 
                     // Add property images
                     if (rawData.propertyImages?.length) {
                         rawData.propertyImages.forEach((url: string) => {
-                            allPhotos.push({ url, label: 'Property Photo', category: 'property' });
+                            addPhoto({ url, label: 'Property Photo', category: 'property' });
                         });
                     }
 
                     // Add amenity images
                     if (rawData.amenityImages?.length) {
                         rawData.amenityImages.forEach((url: string) => {
-                            allPhotos.push({ url, label: 'Amenity Photo', category: 'amenity' });
+                            addPhoto({ url, label: 'Amenity Photo', category: 'amenity' });
                         });
                     }
 
                     // Add general images
                     if (rawData.imageUrls?.length) {
                         rawData.imageUrls.forEach((url: string) => {
-                            allPhotos.push({ url, label: 'Photo', category: 'general' });
+                            addPhoto({ url, label: 'Photo', category: 'general' });
                         });
                     }
 
@@ -122,10 +201,21 @@ export default function PropertyHubPage() {
                         rawData.images.forEach((img: any) => {
                             const url = typeof img === 'string' ? img : img.url;
                             if (url) {
-                                allPhotos.push({ url, label: 'Photo', category: 'general' });
+                                addPhoto({ url, label: 'Photo', category: 'general' });
                             }
                         });
                     }
+                }
+
+                // If title docs were only inferred elsewhere, ensure the hub still recognizes them.
+                const hasRecognizedTitle = allDocuments.some((doc) => isTitleDocumentLabel(doc.label));
+                if (!hasRecognizedTitle && isNonEmptyString(rawData.titleVerification)) {
+                    addDocument({ label: rawData.titleVerification });
+                }
+
+                const hasRecognizedSurvey = allDocuments.some((doc) => isSurveyDocumentLabel(doc.label));
+                if (!hasRecognizedSurvey && isNonEmptyString(rawData.surveyType)) {
+                    addDocument({ label: rawData.surveyType });
                 }
 
                 // Map API response to ViewHub PropertyData interface

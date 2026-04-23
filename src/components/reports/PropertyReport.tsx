@@ -47,6 +47,12 @@ export interface PropertyReportData {
   image?: string;
   yearBuilt?: number;
   amenities?: string[];
+  isOffPlan?: boolean;
+  offPlanData?: {
+    indaVerifiedCompletion?: number;
+    lastVerificationDate?: string;
+    expectedHandoverDate?: string;
+  };
 }
 
 type ReportSection =
@@ -76,6 +82,9 @@ export function PropertyReport({
   const [showVirtualTour, setShowVirtualTour] = useState(false);
   const [lifestyleTab, setLifestyleTab] = useState<LifestyleTab>("eat");
   const [roiYears, setRoiYears] = useState(5);
+
+  const isLand = property.bed === 0 || property.type?.toLowerCase() === "land";
+  const isOffPlan = property.isOffPlan ?? false;
 
   const askingPrice =
     typeof property.price === "string"
@@ -238,32 +247,36 @@ export function PropertyReport({
 
               {/* Quick Stats */}
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
-                <div className="grid grid-cols-4 gap-6">
+                <div className={`grid gap-6 ${isLand ? "grid-cols-2" : "grid-cols-4"}`}>
                   <div className="text-center">
                     <div className="text-2xl font-semibold text-gray-900">
                       ₦{(askingPrice / 1000000).toFixed(1)}M
                     </div>
                     <div className="text-sm text-gray-600 mt-1">Asking Price</div>
                   </div>
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-1 text-2xl font-semibold text-gray-900">
-                      <Bed className="w-5 h-5" />
-                      {property.bed ?? 3}
+                  {!isLand && (
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-1 text-2xl font-semibold text-gray-900">
+                        <Bed className="w-5 h-5" />
+                        {property.bed ?? 3}
+                      </div>
+                      <div className="text-sm text-gray-600 mt-1">Bedrooms</div>
                     </div>
-                    <div className="text-sm text-gray-600 mt-1">Bedrooms</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="flex items-center justify-center gap-1 text-2xl font-semibold text-gray-900">
-                      <Bath className="w-5 h-5" />
-                      {property.bath ?? 3}
+                  )}
+                  {!isLand && (
+                    <div className="text-center">
+                      <div className="flex items-center justify-center gap-1 text-2xl font-semibold text-gray-900">
+                        <Bath className="w-5 h-5" />
+                        {property.bath ?? 3}
+                      </div>
+                      <div className="text-sm text-gray-600 mt-1">Bathrooms</div>
                     </div>
-                    <div className="text-sm text-gray-600 mt-1">Bathrooms</div>
-                  </div>
+                  )}
                   <div className="text-center">
                     <div className="text-2xl font-semibold text-gray-900">
-                      {property.size || "150m²"}
+                      {property.size || (isLand ? "Plot Size" : "150m²")}
                     </div>
-                    <div className="text-sm text-gray-600 mt-1">Size</div>
+                    <div className="text-sm text-gray-600 mt-1">{isLand ? "Plot Size" : "Size"}</div>
                   </div>
                 </div>
               </div>
@@ -523,12 +536,16 @@ export function PropertyReport({
 
       {/* Section Content */}
       <div className="max-w-4xl mx-auto px-4 py-6 pb-24">
-        {selectedSection === "overview" && <OverviewSection property={property} />}
+        {selectedSection === "overview" && (
+          <OverviewSection property={property} isLand={isLand} isOffPlan={isOffPlan} />
+        )}
         {selectedSection === "pricing" && (
           <PricingSection
             askingPrice={askingPrice}
             marketPrice={marketPrice}
             pricePerSqm={pricePerSqm}
+            isLand={isLand}
+            landSize={property.size}
           />
         )}
         {selectedSection === "location" && <LocationSection property={property} />}
@@ -544,6 +561,7 @@ export function PropertyReport({
             netYield={netYield}
             roiYears={roiYears}
             setRoiYears={setRoiYears}
+            isLand={isLand}
           />
         )}
         {selectedSection === "legal" && (
@@ -662,136 +680,280 @@ function AskAIModal({
 
 // ─── Section Components ───────────────────────────────────────────────────────
 
-function OverviewSection({ property }: { property: PropertyReportData }) {
+function OverviewSection({
+  property,
+  isLand,
+  isOffPlan,
+}: {
+  property: PropertyReportData;
+  isLand: boolean;
+  isOffPlan: boolean;
+}) {
   return (
     <div className="space-y-6">
-      {/* Condition Score */}
-      <div className="bg-inda-teal rounded-2xl p-6 text-white">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <div className="text-sm opacity-90 mb-1">Property Condition</div>
-            <div className="text-3xl font-bold">Excellent</div>
+      {/* Hero Score Card — varies by type */}
+      {!isLand && !isOffPlan && (
+        <div className="bg-inda-teal rounded-2xl p-6 text-white">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <div className="text-sm opacity-90 mb-1">Property Condition</div>
+              <div className="text-3xl font-bold">Excellent</div>
+            </div>
+            <div className="text-5xl font-bold">
+              8.5<span className="text-2xl">/10</span>
+            </div>
           </div>
-          <div className="text-5xl font-bold">
-            8.5<span className="text-2xl">/10</span>
-          </div>
+          <p className="text-sm opacity-90">
+            Better condition than 73% of similar properties. Well-maintained with modern fixtures.
+          </p>
         </div>
-        <p className="text-sm opacity-90">
-          Better condition than 73% of similar properties. Well-maintained with modern fixtures.
-        </p>
-      </div>
+      )}
+
+      {isOffPlan && property.offPlanData && (
+        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <div className="text-sm opacity-90 mb-1">Construction Progress</div>
+              <div className="text-3xl font-bold">
+                {property.offPlanData.indaVerifiedCompletion ?? 0}%
+              </div>
+            </div>
+            <div className="w-16 h-16 rounded-full border-4 border-white/40 flex items-center justify-center">
+              <span className="text-2xl font-bold">
+                {property.offPlanData.indaVerifiedCompletion ?? 0}
+              </span>
+            </div>
+          </div>
+          <p className="text-sm opacity-90">
+            Verified by Inda on {property.offPlanData.lastVerificationDate || "—"}. Expected
+            handover: {property.offPlanData.expectedHandoverDate || "TBD"}
+          </p>
+        </div>
+      )}
+
+      {isLand && (
+        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <div className="text-sm opacity-90 mb-1">Plot Size</div>
+              <div className="text-3xl font-bold">{property.size || "Plot"}</div>
+            </div>
+            <div className="text-5xl">🌳</div>
+          </div>
+          <p className="text-sm opacity-90">
+            Prime {property.size || ""} land plot ready for development. Clean title and
+            infrastructure in place.
+          </p>
+        </div>
+      )}
 
       {/* What You're Getting */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
-        <h3 className="font-semibold text-gray-900 mb-4">What you're getting</h3>
+        <h3 className="font-semibold text-gray-900 mb-4">What you&apos;re getting</h3>
         <div className="space-y-4">
-          {[
-            { icon: Home, label: "Property Type", value: property.type || "Modern Apartment" },
-            {
-              icon: Bed,
-              label: "Space",
-              value: `${property.bed ?? 3} bedrooms · ${property.bath ?? 3} bathrooms · ${property.size || "150m²"}`,
-            },
-            {
-              icon: Calendar,
-              label: "Age",
-              value: `Built in ${property.yearBuilt || 2020} (${new Date().getFullYear() - (property.yearBuilt || 2020)} years old)`,
-            },
-            { icon: Key, label: "Availability", value: "Ready for immediate occupancy" },
-          ].map(({ icon: ItemIcon, label, value }) => (
-            <div key={label} className="flex items-start gap-3">
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-inda-teal/10 flex items-center justify-center flex-shrink-0">
+              <Home className="w-4 h-4 text-inda-teal" />
+            </div>
+            <div>
+              <div className="font-medium text-gray-900">Property Type</div>
+              <div className="text-sm text-gray-600 mt-1">{property.type || "Residential Property"}</div>
+            </div>
+          </div>
+
+          {isLand && (
+            <div className="flex items-start gap-3">
               <div className="w-8 h-8 rounded-lg bg-inda-teal/10 flex items-center justify-center flex-shrink-0">
-                <ItemIcon className="w-4 h-4 text-inda-teal" />
+                <svg className="w-4 h-4 text-inda-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                </svg>
               </div>
               <div>
-                <div className="font-medium text-gray-900">{label}</div>
-                <div className="text-sm text-gray-600 mt-1">{value}</div>
+                <div className="font-medium text-gray-900">Land Dimensions</div>
+                <div className="text-sm text-gray-600 mt-1">{property.size || "—"} total plot area</div>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
+          )}
 
-      {/* What Makes This Special */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
-        <h3 className="font-semibold text-gray-900 mb-4">What makes this special</h3>
-        <div className="flex flex-wrap gap-2">
-          {[
-            "🌟 Premium Location",
-            "🏊 Swimming Pool",
-            "🔒 24/7 Security",
-            "⚡ Backup Generator",
-            "💧 Borehole Water",
-            "🚗 Dedicated Parking",
-          ].map((feature) => (
-            <div
-              key={feature}
-              className="px-3 py-2 bg-inda-teal/10 text-inda-teal rounded-full text-sm font-medium"
-            >
-              {feature}
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Amenities */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
-        <h3 className="font-semibold text-gray-900 mb-4">Estate amenities included</h3>
-        <div className="grid grid-cols-2 gap-3">
-          {(
-            property.amenities || [
-              "Swimming Pool",
-              "24/7 Security",
-              "Gym & Fitness Center",
-              "Children's Playground",
-              "Backup Generator",
-              "Borehole Water",
-              "Estate Management",
-              "Visitor Parking",
-            ]
-          ).map((amenity) => (
-            <div key={amenity} className="flex items-center gap-2 text-sm text-gray-700">
-              <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
-              <span>{amenity}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Condition Details */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
-        <h3 className="font-semibold text-gray-900 mb-4">Property condition details</h3>
-        <div className="space-y-3">
-          {[
-            { label: "Structure", rating: "Excellent", stars: 5 },
-            { label: "Fixtures & Fittings", rating: "Modern", stars: 4 },
-            { label: "Maintenance", rating: "Well-maintained", stars: 5 },
-          ].map(({ label, rating, stars }) => (
-            <div
-              key={label}
-              className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
-            >
-              <span className="text-sm text-gray-600">{label}</span>
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-900">{rating}</span>
-                <div className="flex gap-0.5">
-                  {[1, 2, 3, 4, 5].map((s) => (
-                    <Star
-                      key={s}
-                      className={`w-4 h-4 ${s <= stars ? "fill-amber-400 text-amber-400" : "text-gray-300"}`}
-                    />
-                  ))}
+          {!isLand && (
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-inda-teal/10 flex items-center justify-center flex-shrink-0">
+                <Bed className="w-4 h-4 text-inda-teal" />
+              </div>
+              <div>
+                <div className="font-medium text-gray-900">Space</div>
+                <div className="text-sm text-gray-600 mt-1">
+                  {property.bed ?? 3} bedrooms · {property.bath ?? 3} bathrooms
+                  {property.size ? ` · ${property.size}` : ""}
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-        <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
-          <p className="text-xs text-blue-800">
-            💡 We recommend getting a professional inspection before purchase (₦50K–₦100K)
-          </p>
+          )}
+
+          {!isLand && !isOffPlan && property.yearBuilt && (
+            <div className="flex items-start gap-3">
+              <div className="w-8 h-8 rounded-lg bg-inda-teal/10 flex items-center justify-center flex-shrink-0">
+                <Calendar className="w-4 h-4 text-inda-teal" />
+              </div>
+              <div>
+                <div className="font-medium text-gray-900">Age</div>
+                <div className="text-sm text-gray-600 mt-1">
+                  Built in {property.yearBuilt} ({new Date().getFullYear() - property.yearBuilt} years old)
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-start gap-3">
+            <div className="w-8 h-8 rounded-lg bg-inda-teal/10 flex items-center justify-center flex-shrink-0">
+              <Key className="w-4 h-4 text-inda-teal" />
+            </div>
+            <div>
+              <div className="font-medium text-gray-900">Availability</div>
+              <div className="text-sm text-gray-600 mt-1">
+                {isOffPlan
+                  ? `Expected completion: ${property.offPlanData?.expectedHandoverDate || "TBD"}`
+                  : isLand
+                  ? "Ready for development immediately"
+                  : "Ready for immediate occupancy"}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Features / Location advantages */}
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
+        <h3 className="font-semibold text-gray-900 mb-4">
+          {isLand ? "Location advantages" : isOffPlan ? "Planned features" : "What makes this special"}
+        </h3>
+        <div className="flex flex-wrap gap-2">
+          {isLand
+            ? (property.amenities || [
+                "🌟 Premium Location",
+                "🛣️ Dual Road Access",
+                "🔒 Gated Estate",
+                "⚡ Electricity Available",
+                "💧 Drainage System",
+                "🚧 Tarred Roads",
+              ]).map((feature) => (
+                <div
+                  key={feature}
+                  className="px-3 py-2 bg-green-50 text-green-700 rounded-full text-sm font-medium"
+                >
+                  {feature}
+                </div>
+              ))
+            : (property.amenities
+                ? property.amenities.slice(0, 6).map((f) => `✅ ${f}`)
+                : [
+                    "🌟 Premium Location",
+                    "🏊 Swimming Pool",
+                    "🔒 24/7 Security",
+                    "⚡ Backup Generator",
+                    "💧 Borehole Water",
+                    "🚗 Dedicated Parking",
+                  ]
+              ).map((feature) => (
+                <div
+                  key={feature}
+                  className="px-3 py-2 bg-inda-teal/10 text-inda-teal rounded-full text-sm font-medium"
+                >
+                  {feature}
+                </div>
+              ))}
+        </div>
+      </div>
+
+      {/* Amenities (buildings) / Infrastructure (land) */}
+      {!isLand && (
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
+          <h3 className="font-semibold text-gray-900 mb-4">
+            {isOffPlan ? "Planned amenities" : "Estate amenities included"}
+          </h3>
+          <div className="grid grid-cols-2 gap-3">
+            {(
+              property.amenities || [
+                "Swimming Pool",
+                "24/7 Security",
+                "Gym & Fitness Center",
+                "Children's Playground",
+                "Backup Generator",
+                "Borehole Water",
+                "Estate Management",
+                "Visitor Parking",
+              ]
+            ).map((amenity) => (
+              <div key={amenity} className="flex items-center gap-2 text-sm text-gray-700">
+                <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+                <span>{amenity}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {isLand && (
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
+          <h3 className="font-semibold text-gray-900 mb-4">Available infrastructure</h3>
+          <div className="grid grid-cols-2 gap-3">
+            {(
+              property.amenities || [
+                "Tarred Road Access",
+                "Electricity Connection",
+                "Drainage System",
+                "Street Lights",
+                "Security Gate",
+                "Perimeter Fencing",
+                "Water Supply Ready",
+                "Telecommunication Lines",
+              ]
+            ).map((infra) => (
+              <div key={infra} className="flex items-center gap-2 text-sm text-gray-700">
+                <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
+                <span>{infra}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Condition Details — completed buildings only */}
+      {!isLand && !isOffPlan && (
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
+          <h3 className="font-semibold text-gray-900 mb-4">Property condition details</h3>
+          <div className="space-y-3">
+            {[
+              { label: "Structure", rating: "Excellent", stars: 5 },
+              { label: "Fixtures & Fittings", rating: "Modern", stars: 4 },
+              { label: "Maintenance", rating: "Well-maintained", stars: 5 },
+            ].map(({ label, rating, stars }) => (
+              <div
+                key={label}
+                className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
+              >
+                <span className="text-sm text-gray-600">{label}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-gray-900">{rating}</span>
+                  <div className="flex gap-0.5">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star
+                        key={s}
+                        className={`w-4 h-4 ${s <= stars ? "fill-amber-400 text-amber-400" : "text-gray-300"}`}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+            <p className="text-xs text-blue-800">
+              💡 We recommend getting a professional inspection before purchase (₦50K–₦100K)
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -800,30 +962,38 @@ function PricingSection({
   askingPrice,
   marketPrice,
   pricePerSqm,
+  isLand,
+  landSize,
 }: {
   askingPrice: number;
   marketPrice: number;
   pricePerSqm: number;
+  isLand: boolean;
+  landSize?: string;
 }) {
   return (
     <div className="space-y-6">
-      {/* Deal Score */}
+      {/* Deal / Land Value Score */}
       <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <div className="text-sm opacity-90 mb-1">Deal Score</div>
+            <div className="text-sm opacity-90 mb-1">{isLand ? "Land Value Score" : "Deal Score"}</div>
             <div className="text-3xl font-bold">Great Deal!</div>
           </div>
           <div className="text-5xl font-bold">8.5</div>
         </div>
         <p className="text-sm opacity-90">
-          This property is priced 3% below market average. Better than 73% of similar properties.
+          {isLand
+            ? `This land is priced at ₦${(pricePerSqm / 1000).toFixed(0)}K per sqm, which is 3% below market average. Excellent value for this prime location.`
+            : "This property is priced 3% below market average. Better than 73% of similar properties."}
         </p>
       </div>
 
       {/* Price Comparison */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
-        <h3 className="font-semibold text-gray-900 mb-4">How does this compare?</h3>
+        <h3 className="font-semibold text-gray-900 mb-4">
+          {isLand ? "Price breakdown" : "How does this compare?"}
+        </h3>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-600">Asking Price</span>
@@ -831,12 +1001,33 @@ function PricingSection({
               ₦{(askingPrice / 1000000).toFixed(1)}M
             </span>
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Market Average</span>
-            <span className="text-lg font-semibold text-gray-900">
-              ₦{(marketPrice / 1000000).toFixed(1)}M
-            </span>
-          </div>
+          {isLand ? (
+            <>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Plot Size</span>
+                <span className="text-lg font-semibold text-gray-900">{landSize || "—"}</span>
+              </div>
+              <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+                <span className="text-sm font-medium text-gray-900">Price per sqm</span>
+                <span className="text-lg font-bold text-inda-teal">
+                  ₦{(pricePerSqm / 1000).toFixed(0)}K
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-600">Market avg (per sqm)</span>
+                <span className="text-lg font-semibold text-gray-900">
+                  ₦{((pricePerSqm * 1.03) / 1000).toFixed(0)}K
+                </span>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Market Average</span>
+              <span className="text-lg font-semibold text-gray-900">
+                ₦{(marketPrice / 1000000).toFixed(1)}M
+              </span>
+            </div>
+          )}
           <div className="flex items-center justify-between pt-3 border-t border-gray-200">
             <span className="text-sm text-green-600 font-medium">You Save</span>
             <span className="text-lg font-bold text-green-600">
@@ -846,37 +1037,62 @@ function PricingSection({
         </div>
       </div>
 
-      {/* Price per sqm */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
-        <h3 className="font-semibold text-gray-900 mb-2">Price per sqm</h3>
-        <div className="text-3xl font-bold text-gray-900 mb-1">
-          ₦{pricePerSqm.toLocaleString()}
+      {/* Price per sqm — shown for all but more prominent for buildings */}
+      {!isLand && (
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
+          <h3 className="font-semibold text-gray-900 mb-2">Price per sqm</h3>
+          <div className="text-3xl font-bold text-gray-900 mb-1">
+            ₦{pricePerSqm.toLocaleString()}
+          </div>
+          <p className="text-sm text-gray-600">per square metre — in line with area average</p>
         </div>
-        <p className="text-sm text-gray-600">per square metre — in line with area average</p>
-      </div>
+      )}
 
       {/* Similar Properties */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
-        <h3 className="font-semibold text-gray-900 mb-4">Similar properties nearby</h3>
+        <h3 className="font-semibold text-gray-900 mb-4">
+          {isLand ? "Similar land plots nearby" : "Similar properties nearby"}
+        </h3>
         <div className="space-y-3">
-          {[
-            { address: "Block 4, Same Estate", price: 43000000, beds: 3 },
-            { address: "Adjacent Estate", price: 46500000, beds: 3 },
-            { address: "2km Away", price: 42000000, beds: 3 },
-          ].map((comp) => (
-            <div
-              key={comp.address}
-              className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
-            >
-              <div>
-                <div className="text-sm font-medium text-gray-900">{comp.address}</div>
-                <div className="text-xs text-gray-600 mt-1">{comp.beds} bed apartment</div>
-              </div>
-              <div className="text-sm font-semibold text-gray-900">
-                ₦{(comp.price / 1000000).toFixed(1)}M
-              </div>
-            </div>
-          ))}
+          {isLand
+            ? [
+                { address: "Plot 12, Same Estate", price: 92000000, size: "580 sqm", pricePerSqm: 159 },
+                { address: "Adjacent Development", price: 98000000, size: "610 sqm", pricePerSqm: 161 },
+                { address: "500m Away", price: 88000000, size: "550 sqm", pricePerSqm: 160 },
+              ].map((comp) => (
+                <div
+                  key={comp.address}
+                  className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
+                >
+                  <div>
+                    <div className="text-sm font-medium text-gray-900">{comp.address}</div>
+                    <div className="text-xs text-gray-600 mt-1">
+                      {comp.size} · ₦{comp.pricePerSqm}K/sqm
+                    </div>
+                  </div>
+                  <div className="text-sm font-semibold text-gray-900">
+                    ₦{(comp.price / 1000000).toFixed(1)}M
+                  </div>
+                </div>
+              ))
+            : [
+                { address: "Block 4, Same Estate", price: 43000000, beds: 3 },
+                { address: "Adjacent Estate", price: 46500000, beds: 3 },
+                { address: "2km Away", price: 42000000, beds: 3 },
+              ].map((comp) => (
+                <div
+                  key={comp.address}
+                  className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
+                >
+                  <div>
+                    <div className="text-sm font-medium text-gray-900">{comp.address}</div>
+                    <div className="text-xs text-gray-600 mt-1">{comp.beds} bed apartment</div>
+                  </div>
+                  <div className="text-sm font-semibold text-gray-900">
+                    ₦{(comp.price / 1000000).toFixed(1)}M
+                  </div>
+                </div>
+              ))}
         </div>
       </div>
     </div>
@@ -894,6 +1110,7 @@ function FinancialsSection({
   netYield,
   roiYears,
   setRoiYears,
+  isLand,
 }: {
   totalInvestment: number;
   askingPrice: number;
@@ -905,18 +1122,24 @@ function FinancialsSection({
   netYield: number;
   roiYears: number;
   setRoiYears: (v: number) => void;
+  isLand: boolean;
 }) {
-  const projectedValue = askingPrice * Math.pow(1.09, roiYears);
+  const landAppreciationRate = 0.12;
+  const projectedValue = isLand
+    ? askingPrice * Math.pow(1 + landAppreciationRate, roiYears)
+    : askingPrice * Math.pow(1.09, roiYears);
   const totalGain = projectedValue - totalInvestment;
-  const totalRentalIncome = annualRent * roiYears;
+  const totalRentalIncome = isLand ? 0 : annualRent * roiYears;
   const totalReturn = totalGain + totalRentalIncome;
   const roiPercentage = (totalReturn / totalInvestment) * 100;
 
   return (
     <div className="space-y-6">
-      {/* ROI Calculator */}
+      {/* ROI / Appreciation Calculator */}
       <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-6 text-white">
-        <h3 className="text-lg font-semibold mb-4">ROI Calculator</h3>
+        <h3 className="text-lg font-semibold mb-4">
+          {isLand ? "Land Appreciation Calculator" : "ROI Calculator"}
+        </h3>
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm opacity-90">Investment Period</span>
@@ -933,7 +1156,9 @@ function FinancialsSection({
         </div>
         <div className="grid grid-cols-2 gap-4 mt-4">
           <div>
-            <div className="text-sm opacity-90 mb-1">Total Return</div>
+            <div className="text-sm opacity-90 mb-1">
+              {isLand ? "Appreciation Gain" : "Total Return"}
+            </div>
             <div className="text-2xl font-bold">₦{(totalReturn / 1000000).toFixed(1)}M</div>
           </div>
           <div>
@@ -941,6 +1166,11 @@ function FinancialsSection({
             <div className="text-2xl font-bold">{roiPercentage.toFixed(0)}%</div>
           </div>
         </div>
+        {isLand && (
+          <p className="text-xs opacity-80 mt-3 border-t border-white/20 pt-3">
+            Based on {(landAppreciationRate * 100).toFixed(0)}% annual land appreciation in this area. Returns are from land value increase only.
+          </p>
+        )}
       </div>
 
       {/* Total Investment */}
@@ -969,30 +1199,59 @@ function FinancialsSection({
         </div>
       </div>
 
-      {/* Rental Income */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
-        <h3 className="font-semibold text-gray-900 mb-4">If you rent it out</h3>
-        <div className="space-y-4">
-          <div>
-            <div className="text-sm text-gray-600 mb-1">Expected annual rent</div>
-            <div className="text-2xl font-bold text-gray-900">
-              ₦{(annualRent / 1000000).toFixed(1)}M / year
+      {/* Rental Income — buildings only */}
+      {!isLand && (
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
+          <h3 className="font-semibold text-gray-900 mb-4">If you rent it out</h3>
+          <div className="space-y-4">
+            <div>
+              <div className="text-sm text-gray-600 mb-1">Expected annual rent</div>
+              <div className="text-2xl font-bold text-gray-900">
+                ₦{(annualRent / 1000000).toFixed(1)}M / year
+              </div>
+              <div className="text-sm text-gray-600 mt-1">
+                (₦{Math.round(monthlyRent / 1000)}K per month)
+              </div>
             </div>
-            <div className="text-sm text-gray-600 mt-1">
-              (₦{Math.round(monthlyRent / 1000)}K per month)
+            <div className="pt-4 border-t border-gray-100">
+              <div className="text-sm text-gray-600 mb-1">Annual return</div>
+              <div className="text-2xl font-bold text-green-600">{netYield}%</div>
             </div>
           </div>
-          <div className="pt-4 border-t border-gray-100">
-            <div className="text-sm text-gray-600 mb-1">Annual return</div>
-            <div className="text-2xl font-bold text-green-600">{netYield}%</div>
+          <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+            <p className="text-xs text-blue-800">📊 Based on similar properties in this area</p>
           </div>
         </div>
-        <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
-          <p className="text-xs text-blue-800">
-            📊 Based on similar properties in this area
+      )}
+
+      {/* Land Investment Returns — land only */}
+      {isLand && (
+        <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-200">
+          <h3 className="font-semibold text-gray-900 mb-3">💡 Land Investment Returns</h3>
+          <p className="text-sm text-gray-700 mb-3">
+            Land generates returns through appreciation, not rental income. Based on historical
+            trends in this area:
           </p>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Annual appreciation (historical)</span>
+              <span className="text-sm font-bold text-green-600">12–15%</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">5-year projected value</span>
+              <span className="text-sm font-bold text-gray-900">
+                ₦{((askingPrice * Math.pow(1.12, 5)) / 1000000).toFixed(1)}M
+              </span>
+            </div>
+            <div className="flex items-center justify-between pt-2 border-t border-amber-200">
+              <span className="text-sm font-medium text-gray-900">Potential profit (5 years)</span>
+              <span className="text-lg font-bold text-green-600">
+                ₦{(((askingPrice * Math.pow(1.12, 5)) - askingPrice) / 1000000).toFixed(1)}M
+              </span>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
