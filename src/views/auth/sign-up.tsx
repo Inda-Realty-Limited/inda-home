@@ -11,6 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { registerSchema, validateAndSanitize } from "@/utils/validation";
 import { createFormSubmitLimiter } from "@/utils/rateLimiter";
 import { useMutation } from "@tanstack/react-query";
+import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useEffect, useState } from "react";
 import {
@@ -257,9 +258,9 @@ const Signup: React.FC = () => {
                 <span className="text-xl mt-0.5">👔</span>
                 <div className="text-sm text-amber-800">
                   <span className="font-semibold">Are you an agent?</span> Agents join Inda through our dedicated application process.{" "}
-                  <a href="/apply" className="font-semibold underline underline-offset-2 hover:text-amber-900">
+                  <Link href="/apply" className="font-semibold underline underline-offset-2 hover:text-amber-900">
                     Apply here
-                  </a>{" "}
+                  </Link>{" "}
                   to get started.
                 </div>
               </div>

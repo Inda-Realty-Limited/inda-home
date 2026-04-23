@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { Container } from "@/components";
-import { PropertyDetail } from "@/views/property-details/PropertyDetail";
+import { PropertyReport, PropertyReportData } from "@/components/reports/PropertyReport";
 import apiClient from "@/api";
 import { trackChannelClick } from "@/api/channels";
 import LoadingScreen from "@/views/result/sections/LoadingScreen";
@@ -88,17 +87,28 @@ const PropertyDetailsPage: React.FC = () => {
   }
 
   const mappedData = mapListingToPropertyDetail(listing);
-  const { intelligenceData, ...property } = mappedData;
 
-  return (
-    <Container noPadding className="min-h-screen bg-gray-50">
-      <PropertyDetail
-        property={property}
-        onBack={() => router.back()}
-        intelligenceData={intelligenceData}
-      />
-    </Container>
-  );
+  const property: PropertyReportData = {
+    name: mappedData.name,
+    location: mappedData.location,
+    price: mappedData.priceNumeric,
+    bed: mappedData.bedrooms || undefined,
+    bath: mappedData.scannedData.bathrooms || undefined,
+    size: mappedData.scannedData.landSize || undefined,
+    type: mappedData.scannedData.propertyType || undefined,
+    image: mappedData.images[0] || undefined,
+    amenities: mappedData.scannedData.features.length > 0 ? mappedData.scannedData.features : undefined,
+    isOffPlan: mappedData.isOffPlan,
+    offPlanData: mappedData.offPlanData
+      ? {
+          indaVerifiedCompletion: mappedData.offPlanData.indaVerifiedCompletion,
+          lastVerificationDate: mappedData.offPlanData.lastVerificationDate,
+          expectedHandoverDate: mappedData.offPlanData.expectedHandoverDate,
+        }
+      : undefined,
+  };
+
+  return <PropertyReport property={property} onBack={() => router.back()} />;
 };
 
 export default PropertyDetailsPage;
