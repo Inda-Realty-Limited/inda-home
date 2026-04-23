@@ -70,10 +70,10 @@ export const DisputeService = {
    */
   getByListing: async (listingId: string) => {
     try {
-      const response = await apiClient.get(`/listings/${listingId}`);
+      const response = await apiClient.get(`/listings/${listingId}/disputes`);
       return {
         success: true,
-        data: response.data?.data?.disputes || []
+        data: response.data?.data || []
       };
     } catch (error: any) {
       console.error('Failed to get disputes:', error);

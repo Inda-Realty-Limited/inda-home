@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/router';
-import Image from 'next/image';
 import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { ProListingsService } from '@/api/pro-listings';
+import Modal from '@/components/inc/Modal';
 import {
     ArrowLeft,
     Save,
@@ -53,11 +53,15 @@ interface ListingData {
     amenityImages: string[];
     legalDocs: string[];
     titleDocs: string[];
+    documents?: Array<{ url?: string; type?: string; label?: string; originalName?: string }>;
+    photos?: Array<{ url?: string; label?: string; category?: string; originalName?: string }>;
+    declaredDocumentTypes?: Array<{ type?: string; uploaded?: boolean }>;
     documentsWithMeta?: Array<{ url: string; type: string; originalName?: string }>;
     photosWithMeta?: Array<{ url: string; label: string; category?: string }>;
     locationIntelligenceStatus?: string;
     // Additional fields
     titleType?: string;
+    titleVerification?: string;
     serviceCharge?: string;
     furnishing?: string;
     parking?: string;
@@ -89,6 +93,12 @@ interface NewDocumentItem {
     type: string;
 }
 
+interface ExistingDocumentItem {
+    url: string;
+    type: string;
+    name?: string;
+}
+
 export default function EditListingPage() {
     const router = useRouter();
     const { id } = router.query;
@@ -103,6 +113,7 @@ export default function EditListingPage() {
     const [activeSection, setActiveSection] = useState('basic');
     const [isRefreshingLocation, setIsRefreshingLocation] = useState(false);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+    const [selectedDocument, setSelectedDocument] = useState<ExistingDocumentItem | null>(null);
 
     // Form state
     const [formData, setFormData] = useState({
@@ -147,6 +158,20 @@ export default function EditListingPage() {
             const data = response.data || response;
 
             setListing(data);
+            const normalizedFeatures = Array.isArray(data.features)
+                ? data.features.join(', ')
+                : (typeof data.features === 'string' ? data.features : '');
+            const normalizedAmenities = Array.isArray(data.amenities)
+                ? data.amenities.join(', ')
+                : (typeof data.amenities === 'string' ? data.amenities : '');
+            const derivedTitleType =
+                data.titleType ||
+                data.titleVerification ||
+                data.declaredDocumentTypes?.find((doc: { type?: string }) => doc?.type)?.type ||
+                data.documents?.find((doc: { type?: string; label?: string }) => doc?.type || doc?.label)?.type ||
+                data.documents?.find((doc: { type?: string; label?: string }) => doc?.type || doc?.label)?.label ||
+                '';
+
             setFormData({
                 title: data.title || '',
                 propertyType: data.propertyType || 'Residential',
@@ -158,11 +183,11 @@ export default function EditListingPage() {
                 size: data.size?.toString() || data.sizeSqm?.toString() || '',
                 buildYear: data.buildYear?.toString() || '',
                 constructionStatus: data.constructionStatus || 'Completed',
-                features: Array.isArray(data.features) ? data.features.join(', ') : (data.features || ''),
-                amenities: Array.isArray(data.amenities) ? data.amenities.join(', ') : (data.amenities || ''),
+                features: normalizedFeatures,
+                amenities: normalizedAmenities,
                 listingStatus: data.listingStatus || 'active',
                 description: data.description || '',
-                titleType: data.titleType || '',
+                titleType: derivedTitleType,
                 serviceCharge: data.serviceCharge?.toString() || '',
                 furnishing: data.furnishing || 'Unfurnished',
                 parking: data.parking?.toString() || '',
@@ -287,6 +312,15 @@ export default function EditListingPage() {
     const getAllPhotos = () => {
         if (!listing) return [];
 
+        if (listing.photos?.length) {
+            return listing.photos
+                .map(p => ({
+                    url: p.url || '',
+                    label: p.label || p.originalName || 'Photo'
+                }))
+                .filter(p => Boolean(p.url));
+        }
+
         if (listing.photosWithMeta?.length) {
             return listing.photosWithMeta.map(p => ({ url: p.url, label: p.label }));
         }
@@ -302,6 +336,26 @@ export default function EditListingPage() {
     const getAllDocuments = () => {
         if (!listing) return [];
 
+        if (listing.documents?.length) {
+            const uploadedDocuments = listing.documents
+                .map(d => ({
+                    url: d.url || '',
+                    type: d.type || d.label || d.originalName || 'Document',
+                    name: d.originalName
+                }))
+                .filter(d => Boolean(d.url));
+
+            const declaredOnlyDocuments = (listing.declaredDocumentTypes || [])
+                .filter(doc => doc?.type && !uploadedDocuments.some(uploaded => uploaded.type === doc.type))
+                .map(doc => ({
+                    url: '',
+                    type: doc.type || 'Document',
+                    name: undefined
+                }));
+
+            return [...uploadedDocuments, ...declaredOnlyDocuments];
+        }
+
         if (listing.documentsWithMeta?.length) {
             return listing.documentsWithMeta.map(d => ({ url: d.url, type: d.type, name: d.originalName }));
         }
@@ -310,6 +364,29 @@ export default function EditListingPage() {
         listing.titleDocs?.forEach(url => docs.push({ url, type: 'Title Document' }));
         listing.legalDocs?.forEach((url, i) => docs.push({ url, type: `Legal Document ${i + 1}` }));
         return docs;
+    };
+
+    const canPreviewDocument = (doc: ExistingDocumentItem) => {
+        const target = `${doc.url} ${doc.name || ''}`.toLowerCase();
+        return (
+            target.includes('.pdf') ||
+            target.includes('.png') ||
+            target.includes('.jpg') ||
+            target.includes('.jpeg') ||
+            target.includes('.gif') ||
+            target.includes('.webp')
+        );
+    };
+
+    const isImageDocument = (doc: ExistingDocumentItem) => {
+        const target = `${doc.url} ${doc.name || ''}`.toLowerCase();
+        return (
+            target.includes('.png') ||
+            target.includes('.jpg') ||
+            target.includes('.jpeg') ||
+            target.includes('.gif') ||
+            target.includes('.webp')
+        );
     };
 
     const photos = getAllPhotos();
@@ -851,11 +928,10 @@ export default function EditListingPage() {
                                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                     {photos.map((photo, index) => (
                                         <div key={`existing-${index}`} className="relative group aspect-square rounded-lg overflow-hidden bg-gray-100">
-                                            <Image
+                                            <img
                                                 src={photo.url}
                                                 alt={photo.label}
-                                                fill
-                                                className="object-cover"
+                                                className="w-full h-full object-cover"
                                             />
                                             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
                                                 <span className="text-xs text-white font-medium">{photo.label}</span>
@@ -864,11 +940,10 @@ export default function EditListingPage() {
                                     ))}
                                     {newPhotos.map((item, index) => (
                                         <div key={`new-${index}`} className="relative group aspect-square rounded-lg overflow-hidden bg-gray-100 border-2 border-dashed border-[#4ea8a1]">
-                                            <Image
+                                            <img
                                                 src={URL.createObjectURL(item.file)}
                                                 alt={`New photo ${index + 1}`}
-                                                fill
-                                                className="object-cover"
+                                                className="w-full h-full object-cover"
                                             />
                                             <button
                                                 type="button"
@@ -948,16 +1023,22 @@ export default function EditListingPage() {
                                                 <div>
                                                     <p className="font-medium text-gray-900">{doc.type}</p>
                                                     {doc.name && <p className="text-sm text-gray-500">{doc.name}</p>}
+                                                    {!doc.url && (
+                                                        <p className="text-sm text-amber-600">Declared on listing, file not uploaded</p>
+                                                    )}
                                                 </div>
                                             </div>
-                                            <a
-                                                href={doc.url}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
-                                                className="text-[#4ea8a1] hover:underline text-sm"
-                                            >
-                                                View
-                                            </a>
+                                            {doc.url ? (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setSelectedDocument(doc)}
+                                                    className="text-[#4ea8a1] hover:underline text-sm"
+                                                >
+                                                    View
+                                                </button>
+                                            ) : (
+                                                <span className="text-sm text-gray-400">No file</span>
+                                            )}
                                         </div>
                                     ))}
                                     {newDocuments.map((item, index) => (
@@ -1011,6 +1092,56 @@ export default function EditListingPage() {
                 </div>
             </div>
             </DashboardLayout>
+            <Modal
+                isOpen={selectedDocument !== null}
+                onClose={() => setSelectedDocument(null)}
+                maxWidth="6xl"
+            >
+                {selectedDocument && (
+                    <div className="space-y-4">
+                        <div className="pr-12">
+                            <h3 className="text-xl font-semibold text-gray-900">{selectedDocument.type}</h3>
+                            {selectedDocument.name && (
+                                <p className="text-sm text-gray-500 mt-1">{selectedDocument.name}</p>
+                            )}
+                        </div>
+
+                        {canPreviewDocument(selectedDocument) ? (
+                            <div className="rounded-xl border border-gray-200 overflow-hidden bg-gray-50 min-h-[70vh]">
+                                {isImageDocument(selectedDocument) ? (
+                                    <div className="w-full h-[70vh] flex items-center justify-center">
+                                        <img
+                                            src={selectedDocument.url}
+                                            alt={selectedDocument.type}
+                                            className="max-w-full max-h-full object-contain"
+                                        />
+                                    </div>
+                                ) : (
+                                    <iframe
+                                        src={selectedDocument.url}
+                                        title={selectedDocument.type}
+                                        className="w-full h-[70vh] bg-white"
+                                    />
+                                )}
+                            </div>
+                        ) : (
+                            <div className="rounded-xl border border-gray-200 bg-gray-50 p-6">
+                                <p className="text-sm text-gray-700">
+                                    This file type cannot be previewed inline in the browser.
+                                </p>
+                                <a
+                                    href={selectedDocument.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-block mt-3 text-[#4ea8a1] hover:underline text-sm"
+                                >
+                                    Open file directly
+                                </a>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </Modal>
         </ProtectedRoute>
     );
 }
