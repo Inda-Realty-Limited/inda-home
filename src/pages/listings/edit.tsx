@@ -20,7 +20,6 @@ import {
     Camera,
     Plus,
     Trash2,
-    RefreshCw,
     CheckCircle2,
     AlertCircle,
     Building2,
@@ -111,7 +110,6 @@ export default function EditListingPage() {
     const [error, setError] = useState<string | null>(null);
     const [listing, setListing] = useState<ListingData | null>(null);
     const [activeSection, setActiveSection] = useState('basic');
-    const [isRefreshingLocation, setIsRefreshingLocation] = useState(false);
     const [selectedImageIndex, setSelectedImageIndex] = useState(0);
     const [selectedDocument, setSelectedDocument] = useState<ExistingDocumentItem | null>(null);
 
@@ -235,19 +233,6 @@ export default function EditListingPage() {
 
     const updateNewDocumentType = (index: number, type: string) => {
         setNewDocuments(prev => prev.map((item, i) => i === index ? { ...item, type } : item));
-    };
-
-    const handleRefreshLocation = async () => {
-        if (!id || isRefreshingLocation) return;
-        setIsRefreshingLocation(true);
-        try {
-            await ProListingsService.refreshLocationIntelligence(id as string);
-            await fetchListing();
-        } catch (err) {
-            console.error('Failed to refresh location:', err);
-        } finally {
-            setIsRefreshingLocation(false);
-        }
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -786,19 +771,10 @@ export default function EditListingPage() {
                                                 <p className="text-sm text-gray-500">
                                                     {listing?.locationIntelligenceStatus === 'success'
                                                         ? 'Market insights and area analytics are available'
-                                                        : 'Click refresh to fetch location data'}
+                                                        : 'Background enrichment runs automatically'}
                                                 </p>
                                             </div>
                                         </div>
-                                        <button
-                                            type="button"
-                                            onClick={handleRefreshLocation}
-                                            disabled={isRefreshingLocation}
-                                            className="flex items-center gap-2 px-4 py-2 bg-[#4ea8a1] text-white rounded-lg hover:bg-[#3d8580] transition-colors disabled:opacity-50"
-                                        >
-                                            <RefreshCw className={`w-4 h-4 ${isRefreshingLocation ? 'animate-spin' : ''}`} />
-                                            {isRefreshingLocation ? 'Refreshing...' : 'Refresh'}
-                                        </button>
                                     </div>
                                 </div>
                             </div>

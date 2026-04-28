@@ -21,6 +21,9 @@ export interface Listing extends ListingPayload {
   id?: string;
   indaTag?: string;
   intelligenceData?: any;
+  locationIntelligenceStatus?: "pending" | "success" | "failed" | string | null;
+  locationIntelligenceRetryCount?: number;
+  locationIntelligenceLastAttempt?: string;
   [key: string]: any;
 }
 
