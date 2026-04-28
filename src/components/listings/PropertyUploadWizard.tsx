@@ -799,12 +799,17 @@ export function PropertyUploadWizard({
         setSavedListingId(listingId);
         setSavedListing(response.data);
 
+        const enrichmentStatus =
+          response.data?.locationIntelligenceStatus ||
+          response.locationIntelligenceStatus ||
+          "pending";
+
         // Check if location intelligence failed
-        if (response.locationIntelligenceStatus === "failed") {
+        if (enrichmentStatus === "failed") {
           setShowLocationWarning(true);
         }
 
-        // Use intelligence data returned from the backend (already fetched during createListing)
+        // Use intelligence data immediately when it already exists on the saved listing.
         if (response.data?.intelligenceData) {
           setUploadData((prev) => ({
             ...prev,
@@ -1023,11 +1028,12 @@ export function PropertyUploadWizard({
               <Info className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
                 <p className="font-medium text-amber-900 text-sm">
-                  Location insights unavailable right now
+                  Listing saved, but enrichment is delayed
                 </p>
                 <p className="text-amber-700 text-xs mt-1">
-                  Your listing was saved successfully. Location data will be
-                  added automatically when available.
+                  The property was created successfully. Area insights and
+                  investment analysis will appear after the background worker
+                  completes.
                 </p>
               </div>
               <button

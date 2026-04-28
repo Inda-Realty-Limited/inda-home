@@ -22,9 +22,36 @@ const TYPE_BADGE_COLORS: Record<string, string> = {
     default: 'bg-gray-100 text-gray-700',
 };
 
+const ENRICHMENT_BADGE_STYLES: Record<string, string> = {
+    success: 'bg-green-100 text-green-700',
+    failed: 'bg-amber-100 text-amber-700',
+    pending: 'bg-blue-100 text-blue-700',
+};
+
 function getTypeBadgeClass(type: string) {
     const key = (type || '').toLowerCase();
     return TYPE_BADGE_COLORS[key] || TYPE_BADGE_COLORS.default;
+}
+
+function getEnrichmentMeta(status?: string | null) {
+    if (status === 'success') {
+        return {
+            label: 'Insights Ready',
+            className: ENRICHMENT_BADGE_STYLES.success,
+        };
+    }
+
+    if (status === 'failed') {
+        return {
+            label: 'Insights Delayed',
+            className: ENRICHMENT_BADGE_STYLES.failed,
+        };
+    }
+
+    return {
+        label: 'Insights Processing',
+        className: ENRICHMENT_BADGE_STYLES.pending,
+    };
 }
 
 export default function ListingsHubPage() {
@@ -330,11 +357,11 @@ export default function ListingsHubPage() {
                     ) : (
                         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                             {/* Table header */}
-                            <div className="grid grid-cols-[2fr_1.2fr_0.8fr_0.8fr_1fr_0.6fr_1.2fr] gap-4 px-5 py-3 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                            <div className="grid grid-cols-[2fr_1.2fr_0.8fr_1fr_0.8fr_0.6fr_1.2fr] gap-4 px-5 py-3 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide">
                                 <span>Property</span>
                                 <span>Location</span>
                                 <span>Type</span>
-                                <span>Specs</span>
+                                <span>Insights</span>
                                 <span>Price</span>
                                 <span>ROI</span>
                                 <span className="text-right">Actions</span>
@@ -351,12 +378,13 @@ export default function ListingsHubPage() {
                                 const baths = item.bathrooms || item.specs?.bath || null;
                                 const size = item.size || item.specs?.size || null;
                                 const roi = item.roi || item.intelligenceData?.roi || null;
+                                const enrichment = getEnrichmentMeta(item.locationIntelligenceStatus);
                                 const isSaved = savedListings.has(id);
 
                                 return (
                                     <div
                                         key={id}
-                                        className="grid grid-cols-[2fr_1.2fr_0.8fr_0.8fr_1fr_0.6fr_1.2fr] gap-4 px-5 py-4 border-b border-gray-100 last:border-0 items-center hover:bg-gray-50/50 transition-colors"
+                                        className="grid grid-cols-[2fr_1.2fr_0.8fr_1fr_0.8fr_0.6fr_1.2fr] gap-4 px-5 py-4 border-b border-gray-100 last:border-0 items-center hover:bg-gray-50/50 transition-colors"
                                     >
                                         {/* Property */}
                                         <div className="flex items-center gap-3 min-w-0">
@@ -388,15 +416,24 @@ export default function ListingsHubPage() {
                                             </span>
                                         </div>
 
-                                        {/* Specs */}
-                                        <div className="text-sm text-gray-600">
-                                            {beds !== null && baths !== null ? (
-                                                <span>{beds} bed · {baths} bath</span>
-                                            ) : size ? (
-                                                <span>{size} sqm</span>
-                                            ) : (
-                                                <span className="text-gray-400">—</span>
-                                            )}
+                                        {/* Insights */}
+                                        <div className="min-w-0">
+                                            <span className={cn('inline-flex items-center rounded-full px-2 py-1 text-xs font-medium', enrichment.className)}>
+                                                {enrichment.label}
+                                            </span>
+                                            <p className="mt-1 truncate text-xs text-gray-500">
+                                                {item.locationIntelligenceStatus === 'success'
+                                                    ? roi
+                                                        ? `${roi}% projected ROI available`
+                                                        : 'Area analytics attached'
+                                                    : item.locationIntelligenceStatus === 'failed'
+                                                        ? 'Retrying enrichment in background'
+                                                        : beds !== null && baths !== null
+                                                            ? `${beds} bed · ${baths} bath`
+                                                            : size
+                                                                ? `${size} sqm`
+                                                                : 'Waiting for analysis'}
+                                            </p>
                                         </div>
 
                                         {/* Price */}

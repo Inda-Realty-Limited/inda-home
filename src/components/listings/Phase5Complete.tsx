@@ -64,6 +64,7 @@ export function Phase5Complete({
     const displayPropertyType = savedListing?.propertyType
         || uploadData.confirmedData?.propertyType
         || "N/A";
+    const enrichmentStatus = savedListing?.locationIntelligenceStatus || "pending";
 
     // Calculate tiered completeness with weighted categories
     const calculateCompleteness = () => {
@@ -200,6 +201,52 @@ export function Phase5Complete({
                     </div>
                 </div>
 
+                <div className={`rounded-lg border p-4 ${
+                    enrichmentStatus === 'success'
+                        ? 'bg-green-50 border-green-200'
+                        : enrichmentStatus === 'failed'
+                            ? 'bg-amber-50 border-amber-200'
+                            : 'bg-blue-50 border-blue-200'
+                }`}>
+                    <div className="flex items-start gap-3">
+                        {enrichmentStatus === 'success' ? (
+                            <CheckCircle2 className="w-4 h-4 text-green-600 mt-0.5" />
+                        ) : enrichmentStatus === 'failed' ? (
+                            <AlertTriangle className="w-4 h-4 text-amber-600 mt-0.5" />
+                        ) : (
+                            <Info className="w-4 h-4 text-blue-600 mt-0.5" />
+                        )}
+                        <div>
+                            <p className={`text-sm font-medium ${
+                                enrichmentStatus === 'success'
+                                    ? 'text-green-900'
+                                    : enrichmentStatus === 'failed'
+                                        ? 'text-amber-900'
+                                        : 'text-blue-900'
+                            }`}>
+                                {enrichmentStatus === 'success'
+                                    ? 'Location intelligence is ready'
+                                    : enrichmentStatus === 'failed'
+                                        ? 'Location intelligence is unavailable right now'
+                                        : 'Location intelligence is processing'}
+                            </p>
+                            <p className={`text-xs mt-1 ${
+                                enrichmentStatus === 'success'
+                                    ? 'text-green-700'
+                                    : enrichmentStatus === 'failed'
+                                        ? 'text-amber-700'
+                                        : 'text-blue-700'
+                            }`}>
+                                {enrichmentStatus === 'success'
+                                    ? 'Market insights and investment analysis are now attached to this listing.'
+                                    : enrichmentStatus === 'failed'
+                                        ? 'The listing is live. Background enrichment will retry automatically.'
+                                        : 'The listing is live. Area insights and investment analysis will appear shortly.'}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
                 {missingFields.length > 0 && (
                     <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                         <div className="flex items-start gap-2">
@@ -265,5 +312,4 @@ export function Phase5Complete({
         </div>
     );
 }
-
 
