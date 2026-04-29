@@ -29,12 +29,15 @@ import {
   Star,
   MapPinned,
   Navigation,
-  TrendingDown,
   Key,
   AlertCircle,
+  Edit3,
 } from "lucide-react";
 import { useRouter } from "next/router";
-import Modal from "@/components/inc/Modal";
+import { AskAIModal } from "@/views/property-details/modals/AskAIModal";
+import { MakeOfferModal } from "@/views/property-details/modals/MakeOfferModal";
+import { ScheduleSiteVisitModal } from "@/views/property-details/modals/ScheduleSiteVisitModal";
+import { BookVirtualTourModal } from "@/views/property-details/modals/BookVirtualTourModal";
 
 export interface PropertyReportData {
   name: string;
@@ -47,11 +50,101 @@ export interface PropertyReportData {
   image?: string;
   yearBuilt?: number;
   amenities?: string[];
+  views?: number;
   isOffPlan?: boolean;
   offPlanData?: {
     indaVerifiedCompletion?: number;
     lastVerificationDate?: string;
     expectedHandoverDate?: string;
+  };
+}
+
+interface PropertyIntelligenceData {
+  location_intelligence?: {
+    coordinates?: {
+      lat?: number;
+      lng?: number;
+    };
+    district?: string;
+    accessibility?: {
+      to_victoria_island_minutes?: number;
+      to_airport_minutes?: number;
+      to_lekki_ftz_minutes?: number;
+      to_ikeja_mall_minutes?: number;
+      to_marina_minutes?: number;
+      to_third_mainland_bridge_minutes?: number;
+    };
+    nearby_schools?: {
+      count?: number;
+      distance_km?: number;
+      names?: string[];
+    };
+    nearby_hospitals?: {
+      count?: number;
+      distance_km?: number;
+      names?: string[];
+    };
+    nearby_shopping?: {
+      count?: number;
+      distance_km?: number;
+      names?: string[];
+    };
+    infrastructure_projects?: Record<
+      string,
+      { distance_km?: number; expected_value_increase_pct?: string }
+    >;
+    nearby_amenities?: Array<{
+      name?: string;
+      category?: string;
+      distance_km?: number;
+      rating?: number;
+    }>;
+  };
+  investment_analysis?: {
+    total_investment_breakdown?: {
+      purchase_price?: number;
+      legal_fees?: number;
+      legal_fees_pct?: number;
+      agency_fees?: number;
+      agency_fees_pct?: number;
+      survey_fees?: number;
+      survey_fees_pct?: number;
+      stamp_duty?: number;
+      stamp_duty_pct?: number;
+      land_registration?: number;
+      governors_consent?: number;
+      governors_consent_pct?: number;
+      total_investment?: number;
+      additional_costs_pct?: number;
+    };
+    annual_rental_income?: {
+      net_rental_income?: number;
+      gross_yield_pct?: number;
+      net_yield_pct?: number;
+      rental_range_min?: number;
+      rental_range_max?: number;
+    };
+  };
+  value_projection?: {
+    annual_appreciation_pct?: number;
+    historical_avg_pct?: number;
+    year_5?: {
+      value?: number;
+      gain_pct?: number;
+    };
+    projected_gain_5_year?: number;
+  };
+  cash_flow_forecast?: {
+    year_1?: {
+      rental_income?: number;
+      expenses?: number;
+      net_cash_flow?: number;
+    };
+    year_5?: {
+      rental_income?: number;
+      expenses?: number;
+      net_cash_flow?: number;
+    };
   };
 }
 
@@ -68,9 +161,15 @@ type LifestyleTab = "eat" | "work" | "relax";
 export function PropertyReport({
   property,
   onBack,
+  onEdit,
+  intelligenceData,
+  sourceListing,
 }: {
   property: PropertyReportData;
   onBack?: () => void;
+  onEdit?: () => void;
+  intelligenceData?: PropertyIntelligenceData | null;
+  sourceListing?: any;
 }) {
   const router = useRouter();
   const handleBack = onBack ?? (() => router.back());
@@ -88,18 +187,28 @@ export function PropertyReport({
 
   const askingPrice =
     typeof property.price === "string"
-      ? parseInt((property.price as string).replace(/[^\d]/g, "")) || 45000000
-      : property.price || 45000000;
+      ? parseInt((property.price as string).replace(/[^\d]/g, "")) || 0
+      : property.price || 0;
 
-  const marketPrice = askingPrice * 0.97;
-  const pricePerSqm = Math.round(askingPrice / 150);
-  const legalFees = askingPrice * 0.05;
-  const stampDuty = askingPrice * 0.015;
-  const agencyFee = askingPrice * 0.05;
-  const totalInvestment = askingPrice + legalFees + stampDuty + agencyFee;
-  const annualRent = askingPrice * 0.078;
-  const monthlyRent = annualRent / 12;
-  const netYield = 6.5;
+  const investmentBreakdown =
+    intelligenceData?.investment_analysis?.total_investment_breakdown;
+  const rentalIncome = intelligenceData?.investment_analysis?.annual_rental_income;
+  const valueProjection = intelligenceData?.value_projection;
+
+  const legalFees = investmentBreakdown?.legal_fees;
+  const stampDuty = investmentBreakdown?.stamp_duty;
+  const agencyFee = investmentBreakdown?.agency_fees;
+  const surveyFees = investmentBreakdown?.survey_fees;
+  const landRegistration = investmentBreakdown?.land_registration;
+  const totalInvestment = investmentBreakdown?.total_investment;
+  const annualRent = rentalIncome?.net_rental_income;
+  const monthlyRent = annualRent ? annualRent / 12 : undefined;
+  const netYield = rentalIncome?.net_yield_pct;
+  const hasFinancialIntelligence = Boolean(
+    investmentBreakdown?.purchase_price &&
+      totalInvestment &&
+      valueProjection?.year_5?.value,
+  );
 
   const reportCards = [
     {
@@ -152,26 +261,7 @@ export function PropertyReport({
     },
   ];
 
-  const lifestyleData = {
-    eat: [
-      { name: "Yellow Chilli", category: "Upscale Restaurant", distance: "2km", rating: 4.5 },
-      { name: "Sailors Lounge", category: "Bar & Grill", distance: "3.5km", rating: 4.3 },
-      { name: "Hard Rock Cafe", category: "International Dining", distance: "5km", rating: 4.4 },
-      { name: "Craft Gourmet", category: "Bakery & Cafe", distance: "2.8km", rating: 4.6 },
-    ],
-    work: [
-      { name: "Workstation Lagos", category: "Co-working Space", distance: "3km", rating: 4.4 },
-      { name: "Lagos Business School", category: "Education & Networking", distance: "8km", rating: 4.7 },
-      { name: "Tech Hub Lekki", category: "Startup Community", distance: "4.5km", rating: 4.2 },
-      { name: "Venia Business Hub", category: "Office & Meeting Rooms", distance: "3.2km", rating: 4.3 },
-    ],
-    relax: [
-      { name: "Elegushi Beach", category: "Beach & Watersports", distance: "7km", rating: 4.1 },
-      { name: "Silverbird Cinemas", category: "Movies & Entertainment", distance: "6km", rating: 4.3 },
-      { name: "Genesis Gym & Spa", category: "Fitness & Wellness", distance: "1.5km", rating: 4.4 },
-      { name: "Lekki Arts & Crafts", category: "Weekend Market", distance: "4km", rating: 4.2 },
-    ],
-  };
+  const lifestyleData = buildLifestyleData(intelligenceData);
 
   if (selectedSection === null) {
     return (
@@ -205,6 +295,15 @@ export function PropertyReport({
                 </div>
               </div>
               <div className="flex items-center gap-2">
+                {onEdit && (
+                  <button
+                    onClick={onEdit}
+                    className="flex items-center gap-1.5 text-sm font-medium text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:border-inda-teal hover:text-inda-teal transition-colors"
+                  >
+                    <Edit3 className="w-4 h-4" />
+                    Edit
+                  </button>
+                )}
                 <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                   <Heart className="w-5 h-5 text-gray-600" />
                 </button>
@@ -223,26 +322,25 @@ export function PropertyReport({
             <div className="lg:col-span-2 space-y-6">
               {/* Hero Image */}
               <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-gray-200">
-                <img
-                  src={
-                    property.image ||
-                    "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800"
-                  }
-                  alt={property.name}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute top-4 left-4">
-                  <div className="px-4 py-2 bg-green-500 text-white rounded-full text-sm font-semibold flex items-center gap-2 shadow-lg">
-                    <TrendingDown className="w-4 h-4" />
-                    Great Deal — 3% below market
+                {property.image ? (
+                  <img
+                    src={property.image}
+                    alt={property.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-sm text-gray-500">
+                    No image available
                   </div>
-                </div>
-                <div className="absolute top-4 right-4">
-                  <div className="px-3 py-1.5 bg-black/50 backdrop-blur-sm text-white rounded-full text-sm flex items-center gap-2">
-                    <Eye className="w-4 h-4" />
-                    23 views this week
+                )}
+                {typeof property.views === "number" && property.views > 0 && (
+                  <div className="absolute top-4 right-4">
+                    <div className="px-3 py-1.5 bg-black/50 backdrop-blur-sm text-white rounded-full text-sm flex items-center gap-2">
+                      <Eye className="w-4 h-4" />
+                      {property.views} views
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Quick Stats */}
@@ -258,7 +356,7 @@ export function PropertyReport({
                     <div className="text-center">
                       <div className="flex items-center justify-center gap-1 text-2xl font-semibold text-gray-900">
                         <Bed className="w-5 h-5" />
-                        {property.bed ?? 3}
+                        {property.bed ?? "—"}
                       </div>
                       <div className="text-sm text-gray-600 mt-1">Bedrooms</div>
                     </div>
@@ -267,14 +365,14 @@ export function PropertyReport({
                     <div className="text-center">
                       <div className="flex items-center justify-center gap-1 text-2xl font-semibold text-gray-900">
                         <Bath className="w-5 h-5" />
-                        {property.bath ?? 3}
+                        {property.bath ?? "—"}
                       </div>
                       <div className="text-sm text-gray-600 mt-1">Bathrooms</div>
                     </div>
                   )}
                   <div className="text-center">
                     <div className="text-2xl font-semibold text-gray-900">
-                      {property.size || (isLand ? "Plot Size" : "150m²")}
+                      {property.size || "—"}
                     </div>
                     <div className="text-sm text-gray-600 mt-1">{isLand ? "Plot Size" : "Size"}</div>
                   </div>
@@ -409,87 +507,31 @@ export function PropertyReport({
           onClose={() => setShowAskAI(false)}
           propertyName={property.name}
         />
-        <ActionModal
+        <MakeOfferModal
           isOpen={showMakeOffer}
           onClose={() => setShowMakeOffer(false)}
-          title="Make an Offer"
-          icon={<Target className="w-6 h-6 text-inda-teal" />}
-        >
-          <p className="text-sm text-gray-600 mb-4">
-            Submit your offer for <span className="font-semibold">{property.name}</span>. An agent
-            will contact you within 24 hours.
-          </p>
-          <div className="space-y-3">
-            <input
-              type="text"
-              placeholder="Your offer amount (₦)"
-              className="w-full px-4 py-3 border border-inda-gray rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-inda-teal/30"
-            />
-            <input
-              type="text"
-              placeholder="Your name"
-              className="w-full px-4 py-3 border border-inda-gray rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-inda-teal/30"
-            />
-            <input
-              type="tel"
-              placeholder="Phone number"
-              className="w-full px-4 py-3 border border-inda-gray rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-inda-teal/30"
-            />
-            <button className="w-full py-3 bg-inda-teal text-white rounded-lg font-semibold hover:bg-inda-teal/90 transition-colors">
-              Submit Offer
-            </button>
-          </div>
-        </ActionModal>
-        <ActionModal
+          propertyName={property.name}
+          propertyPrice={`₦${askingPrice.toLocaleString()}`}
+          priceNumeric={askingPrice}
+          listingId={sourceListing?._id || sourceListing?.id}
+          agentUserId={sourceListing?.userId}
+        />
+        <ScheduleSiteVisitModal
           isOpen={showSiteVisit}
           onClose={() => setShowSiteVisit(false)}
-          title="Schedule a Visit"
-          icon={<Calendar className="w-6 h-6 text-inda-teal" />}
-        >
-          <p className="text-sm text-gray-600 mb-4">
-            Book a site visit for <span className="font-semibold">{property.name}</span> at{" "}
-            {property.location}.
-          </p>
-          <div className="space-y-3">
-            <input
-              type="date"
-              className="w-full px-4 py-3 border border-inda-gray rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-inda-teal/30"
-            />
-            <input
-              type="text"
-              placeholder="Your name"
-              className="w-full px-4 py-3 border border-inda-gray rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-inda-teal/30"
-            />
-            <input
-              type="tel"
-              placeholder="Phone number"
-              className="w-full px-4 py-3 border border-inda-gray rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-inda-teal/30"
-            />
-            <button className="w-full py-3 bg-inda-teal text-white rounded-lg font-semibold hover:bg-inda-teal/90 transition-colors">
-              Confirm Visit
-            </button>
-          </div>
-        </ActionModal>
-        <ActionModal
+          propertyName={property.name}
+          propertyLocation={property.location}
+          listingId={sourceListing?._id || sourceListing?.id}
+          agentUserId={sourceListing?.userId}
+        />
+        <BookVirtualTourModal
           isOpen={showVirtualTour}
           onClose={() => setShowVirtualTour(false)}
-          title="Virtual Tour"
-          icon={<Eye className="w-6 h-6 text-inda-teal" />}
-        >
-          <div className="text-center py-6">
-            <div className="w-16 h-16 bg-inda-teal/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Eye className="w-8 h-8 text-inda-teal" />
-            </div>
-            <h3 className="font-semibold text-gray-900 mb-2">Virtual Tour Coming Soon</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              The seller is uploading a virtual tour for this property. We'll notify you when it's
-              available.
-            </p>
-            <button className="px-6 py-2.5 bg-inda-teal text-white rounded-lg text-sm font-medium hover:bg-inda-teal/90 transition-colors">
-              Notify Me
-            </button>
-          </div>
-        </ActionModal>
+          propertyName={property.name}
+          propertyLocation={property.location}
+          listingId={sourceListing?._id || sourceListing?.id}
+          agentUserId={sourceListing?.userId}
+        />
       </div>
     );
   }
@@ -537,18 +579,23 @@ export function PropertyReport({
       {/* Section Content */}
       <div className="max-w-4xl mx-auto px-4 py-6 pb-24">
         {selectedSection === "overview" && (
-          <OverviewSection property={property} isLand={isLand} isOffPlan={isOffPlan} />
+          <OverviewSection
+            property={property}
+            isLand={isLand}
+            isOffPlan={isOffPlan}
+            sourceListing={sourceListing}
+          />
         )}
         {selectedSection === "pricing" && (
           <PricingSection
             askingPrice={askingPrice}
-            marketPrice={marketPrice}
-            pricePerSqm={pricePerSqm}
             isLand={isLand}
-            landSize={property.size}
+            intelligenceData={intelligenceData}
           />
         )}
-        {selectedSection === "location" && <LocationSection property={property} />}
+        {selectedSection === "location" && (
+          <LocationSection property={property} intelligenceData={intelligenceData} />
+        )}
         {selectedSection === "financials" && (
           <FinancialsSection
             totalInvestment={totalInvestment}
@@ -556,22 +603,30 @@ export function PropertyReport({
             legalFees={legalFees}
             stampDuty={stampDuty}
             agencyFee={agencyFee}
+            surveyFees={surveyFees}
+            landRegistration={landRegistration}
             annualRent={annualRent}
             monthlyRent={monthlyRent}
             netYield={netYield}
             roiYears={roiYears}
             setRoiYears={setRoiYears}
             isLand={isLand}
+            intelligenceData={intelligenceData}
+            hasFinancialIntelligence={hasFinancialIntelligence}
           />
         )}
         {selectedSection === "legal" && (
-          <LegalSection property={property} askingPrice={askingPrice} />
+          <LegalSection
+            intelligenceData={intelligenceData}
+            sourceListing={sourceListing}
+          />
         )}
         {selectedSection === "neighborhood" && (
           <NeighborhoodSection
             lifestyleTab={lifestyleTab}
             setLifestyleTab={setLifestyleTab}
             lifestyleData={lifestyleData}
+            intelligenceData={intelligenceData}
           />
         )}
       </div>
@@ -585,110 +640,44 @@ export function PropertyReport({
   );
 }
 
-// ─── Inline Modal Wrappers ────────────────────────────────────────────────────
-
-function ActionModal({
-  isOpen,
-  onClose,
-  title,
-  icon,
-  children,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  title: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} maxWidth="md">
-      <div className="flex items-center gap-3 mb-6">
-        {icon}
-        <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
-      </div>
-      {children}
-    </Modal>
-  );
-}
-
-function AskAIModal({
-  isOpen,
-  onClose,
-  propertyName,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  propertyName: string;
-}) {
-  const [input, setInput] = useState("");
-  const suggestions = [
-    "What are the hidden costs?",
-    "Is this a good investment?",
-    "What's the neighborhood like?",
-    "How does price compare to market?",
-  ];
-
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} maxWidth="lg">
-      <div className="flex items-center gap-3 mb-2">
-        <div className="w-10 h-10 rounded-full bg-inda-teal flex items-center justify-center">
-          <MessageCircle className="w-5 h-5 text-white" />
-        </div>
-        <div>
-          <h2 className="text-xl font-semibold text-gray-900">Ask Inda AI</h2>
-          <p className="text-xs text-gray-500">About: {propertyName}</p>
-        </div>
-      </div>
-
-      <div className="bg-inda-teal/5 rounded-xl p-4 mb-4 text-sm text-gray-600">
-        Hi! I'm Inda AI. I can answer any questions about this property — pricing, location,
-        legal status, investment potential, and more.
-      </div>
-
-      <div className="mb-4">
-        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
-          Suggested questions:
-        </p>
-        <div className="flex flex-wrap gap-2">
-          {suggestions.map((s) => (
-            <button
-              key={s}
-              onClick={() => setInput(s)}
-              className="px-3 py-1.5 bg-gray-100 hover:bg-inda-teal/10 hover:text-inda-teal text-xs text-gray-700 rounded-full transition-colors"
-            >
-              {s}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="flex gap-2">
-        <input
-          type="text"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          placeholder="Ask anything about this property..."
-          className="flex-1 px-4 py-3 border border-inda-gray rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-inda-teal/30"
-        />
-        <button className="px-4 py-3 bg-inda-teal text-white rounded-lg text-sm font-medium hover:bg-inda-teal/90 transition-colors">
-          Ask
-        </button>
-      </div>
-    </Modal>
-  );
-}
-
 // ─── Section Components ───────────────────────────────────────────────────────
 
 function OverviewSection({
   property,
   isLand,
   isOffPlan,
+  sourceListing,
 }: {
   property: PropertyReportData;
   isLand: boolean;
   isOffPlan: boolean;
+  sourceListing?: any;
 }) {
+  const photoAnalysis = sourceListing?.aiReport?.photoAnalysis;
+  const documentAnalysis = sourceListing?.aiReport?.documentAnalysis;
+  const propertyCondition = toTitleCase(
+    photoAnalysis?.propertyCondition || sourceListing?.condition,
+  );
+  const finishQuality = toTitleCase(photoAnalysis?.finishingQuality);
+  const conditionScore = getConditionScore(
+    photoAnalysis?.propertyCondition || sourceListing?.condition,
+  );
+  const constructionStatus = toTitleCase(sourceListing?.constructionStatus);
+  const declaredDocumentCount = Array.isArray(sourceListing?.declaredDocumentTypes)
+    ? sourceListing.declaredDocumentTypes.length
+    : 0;
+  const uploadedDocumentCount = Array.isArray(sourceListing?.documents)
+    ? sourceListing.documents.length
+    : 0;
+  const landSummary = [
+    property.size ? `${property.size} recorded` : null,
+    documentAnalysis?.titleType || sourceListing?.titleVerification || null,
+    uploadedDocumentCount > 0 ? `${uploadedDocumentCount} document(s) uploaded` : null,
+    declaredDocumentCount > 0 ? `${declaredDocumentCount} document type(s) declared` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
     <div className="space-y-6">
       {/* Hero Score Card — varies by type */}
@@ -697,14 +686,27 @@ function OverviewSection({
           <div className="flex items-center justify-between mb-4">
             <div>
               <div className="text-sm opacity-90 mb-1">Property Condition</div>
-              <div className="text-3xl font-bold">Excellent</div>
+              <div className="text-3xl font-bold">{propertyCondition || "Not available"}</div>
             </div>
             <div className="text-5xl font-bold">
-              8.5<span className="text-2xl">/10</span>
+              {typeof conditionScore === "number" ? (
+                <>
+                  {conditionScore}
+                  <span className="text-2xl">/10</span>
+                </>
+              ) : (
+                <span className="text-2xl">--</span>
+              )}
             </div>
           </div>
           <p className="text-sm opacity-90">
-            Better condition than 73% of similar properties. Well-maintained with modern fixtures.
+            {[
+              finishQuality ? `${finishQuality} finish quality` : null,
+              constructionStatus,
+              sourceListing?.buildYear ? `Built in ${sourceListing.buildYear}` : null,
+            ]
+              .filter(Boolean)
+              .join(" · ") || "Condition details are not available for this listing."}
           </p>
         </div>
       )}
@@ -736,13 +738,12 @@ function OverviewSection({
           <div className="flex items-center justify-between mb-4">
             <div>
               <div className="text-sm opacity-90 mb-1">Plot Size</div>
-              <div className="text-3xl font-bold">{property.size || "Plot"}</div>
+              <div className="text-3xl font-bold">{property.size || "Not available"}</div>
             </div>
             <div className="text-5xl">🌳</div>
           </div>
           <p className="text-sm opacity-90">
-            Prime {property.size || ""} land plot ready for development. Clean title and
-            infrastructure in place.
+            {landSummary || "Land-specific legal and survey details are not available yet."}
           </p>
         </div>
       )}
@@ -757,7 +758,7 @@ function OverviewSection({
             </div>
             <div>
               <div className="font-medium text-gray-900">Property Type</div>
-              <div className="text-sm text-gray-600 mt-1">{property.type || "Residential Property"}</div>
+              <div className="text-sm text-gray-600 mt-1">{property.type || "Not available"}</div>
             </div>
           </div>
 
@@ -783,7 +784,7 @@ function OverviewSection({
               <div>
                 <div className="font-medium text-gray-900">Space</div>
                 <div className="text-sm text-gray-600 mt-1">
-                  {property.bed ?? 3} bedrooms · {property.bath ?? 3} bathrooms
+                  {property.bed ?? "—"} bedrooms · {property.bath ?? "—"} bathrooms
                   {property.size ? ` · ${property.size}` : ""}
                 </div>
               </div>
@@ -814,8 +815,8 @@ function OverviewSection({
                 {isOffPlan
                   ? `Expected completion: ${property.offPlanData?.expectedHandoverDate || "TBD"}`
                   : isLand
-                  ? "Ready for development immediately"
-                  : "Ready for immediate occupancy"}
+                  ? constructionStatus || "Availability not provided"
+                  : constructionStatus || "Availability not provided"}
               </div>
             </div>
           </div>
@@ -829,14 +830,7 @@ function OverviewSection({
         </h3>
         <div className="flex flex-wrap gap-2">
           {isLand
-            ? (property.amenities || [
-                "🌟 Premium Location",
-                "🛣️ Dual Road Access",
-                "🔒 Gated Estate",
-                "⚡ Electricity Available",
-                "💧 Drainage System",
-                "🚧 Tarred Roads",
-              ]).map((feature) => (
+            ? (property.amenities || []).map((feature) => (
                 <div
                   key={feature}
                   className="px-3 py-2 bg-green-50 text-green-700 rounded-full text-sm font-medium"
@@ -844,17 +838,7 @@ function OverviewSection({
                   {feature}
                 </div>
               ))
-            : (property.amenities
-                ? property.amenities.slice(0, 6).map((f) => `✅ ${f}`)
-                : [
-                    "🌟 Premium Location",
-                    "🏊 Swimming Pool",
-                    "🔒 24/7 Security",
-                    "⚡ Backup Generator",
-                    "💧 Borehole Water",
-                    "🚗 Dedicated Parking",
-                  ]
-              ).map((feature) => (
+            : (property.amenities || []).slice(0, 6).map((f) => `✅ ${f}`).map((feature) => (
                 <div
                   key={feature}
                   className="px-3 py-2 bg-inda-teal/10 text-inda-teal rounded-full text-sm font-medium"
@@ -862,6 +846,9 @@ function OverviewSection({
                   {feature}
                 </div>
               ))}
+          {!property.amenities?.length && (
+            <div className="text-sm text-gray-600">No verified features available.</div>
+          )}
         </div>
       </div>
 
@@ -872,23 +859,17 @@ function OverviewSection({
             {isOffPlan ? "Planned amenities" : "Estate amenities included"}
           </h3>
           <div className="grid grid-cols-2 gap-3">
-            {(
-              property.amenities || [
-                "Swimming Pool",
-                "24/7 Security",
-                "Gym & Fitness Center",
-                "Children's Playground",
-                "Backup Generator",
-                "Borehole Water",
-                "Estate Management",
-                "Visitor Parking",
-              ]
-            ).map((amenity) => (
+            {(property.amenities || []).map((amenity) => (
               <div key={amenity} className="flex items-center gap-2 text-sm text-gray-700">
                 <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
                 <span>{amenity}</span>
               </div>
             ))}
+            {!property.amenities?.length && (
+              <div className="text-sm text-gray-600 col-span-2">
+                No verified amenities available.
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -897,23 +878,17 @@ function OverviewSection({
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
           <h3 className="font-semibold text-gray-900 mb-4">Available infrastructure</h3>
           <div className="grid grid-cols-2 gap-3">
-            {(
-              property.amenities || [
-                "Tarred Road Access",
-                "Electricity Connection",
-                "Drainage System",
-                "Street Lights",
-                "Security Gate",
-                "Perimeter Fencing",
-                "Water Supply Ready",
-                "Telecommunication Lines",
-              ]
-            ).map((infra) => (
+            {(property.amenities || []).map((infra) => (
               <div key={infra} className="flex items-center gap-2 text-sm text-gray-700">
                 <CheckCircle2 className="w-4 h-4 text-green-600 flex-shrink-0" />
                 <span>{infra}</span>
               </div>
             ))}
+            {!property.amenities?.length && (
+              <div className="text-sm text-gray-600 col-span-2">
+                No verified infrastructure data available.
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -924,9 +899,21 @@ function OverviewSection({
           <h3 className="font-semibold text-gray-900 mb-4">Property condition details</h3>
           <div className="space-y-3">
             {[
-              { label: "Structure", rating: "Excellent", stars: 5 },
-              { label: "Fixtures & Fittings", rating: "Modern", stars: 4 },
-              { label: "Maintenance", rating: "Well-maintained", stars: 5 },
+              {
+                label: "Condition",
+                rating: propertyCondition || "Not available",
+                stars: getConditionStars(photoAnalysis?.propertyCondition || sourceListing?.condition),
+              },
+              {
+                label: "Finish Quality",
+                rating: finishQuality || "Not available",
+                stars: getFinishQualityStars(photoAnalysis?.finishingQuality),
+              },
+              {
+                label: "Construction Status",
+                rating: constructionStatus || "Not available",
+                stars: getConstructionStatusStars(sourceListing?.constructionStatus),
+              },
             ].map(({ label, rating, stars }) => (
               <div
                 key={label}
@@ -960,139 +947,94 @@ function OverviewSection({
 
 function PricingSection({
   askingPrice,
-  marketPrice,
-  pricePerSqm,
   isLand,
-  landSize,
+  intelligenceData,
 }: {
   askingPrice: number;
-  marketPrice: number;
-  pricePerSqm: number;
   isLand: boolean;
-  landSize?: string;
+  intelligenceData?: PropertyIntelligenceData | null;
 }) {
-  return (
-    <div className="space-y-6">
-      {/* Deal / Land Value Score */}
-      <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <div className="text-sm opacity-90 mb-1">{isLand ? "Land Value Score" : "Deal Score"}</div>
-            <div className="text-3xl font-bold">Great Deal!</div>
-          </div>
-          <div className="text-5xl font-bold">8.5</div>
-        </div>
-        <p className="text-sm opacity-90">
-          {isLand
-            ? `This land is priced at ₦${(pricePerSqm / 1000).toFixed(0)}K per sqm, which is 3% below market average. Excellent value for this prime location.`
-            : "This property is priced 3% below market average. Better than 73% of similar properties."}
+  const investmentBreakdown =
+    intelligenceData?.investment_analysis?.total_investment_breakdown;
+  const valueProjection = intelligenceData?.value_projection;
+  const hasPricingIntelligence = Boolean(
+    investmentBreakdown?.purchase_price && valueProjection?.year_5?.value,
+  );
+
+  if (!hasPricingIntelligence) {
+    return (
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
+        <h3 className="font-semibold text-gray-900 mb-2">Pricing intelligence</h3>
+        <p className="text-sm text-gray-600">
+          Pricing intelligence is not available for this listing yet.
         </p>
       </div>
+    );
+  }
 
-      {/* Price Comparison */}
+  const purchasePrice = investmentBreakdown?.purchase_price ?? askingPrice;
+  const totalInvestment = investmentBreakdown?.total_investment;
+  const additionalCostsPct = investmentBreakdown?.additional_costs_pct;
+  const projectedValue = valueProjection?.year_5?.value;
+  const projectedGain = valueProjection?.projected_gain_5_year;
+  const annualAppreciationPct = valueProjection?.annual_appreciation_pct;
+  const historicalAvgPct = valueProjection?.historical_avg_pct;
+
+  return (
+    <div className="space-y-6">
+      <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white">
+        <div className="text-sm opacity-90 mb-1">
+          {isLand ? "Land pricing outlook" : "Pricing outlook"}
+        </div>
+        <div className="text-3xl font-bold">
+          {annualAppreciationPct?.toFixed(1)}% yearly projection
+        </div>
+        {typeof historicalAvgPct === "number" && (
+          <p className="text-sm opacity-90 mt-2">
+            Historical average in this area: {historicalAvgPct.toFixed(1)}%.
+          </p>
+        )}
+      </div>
+
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
-        <h3 className="font-semibold text-gray-900 mb-4">
-          {isLand ? "Price breakdown" : "How does this compare?"}
-        </h3>
+        <h3 className="font-semibold text-gray-900 mb-4">Pricing breakdown</h3>
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Asking Price</span>
+            <span className="text-sm text-gray-600">Purchase price</span>
             <span className="text-lg font-semibold text-gray-900">
-              ₦{(askingPrice / 1000000).toFixed(1)}M
+              {formatCurrency(purchasePrice)}
             </span>
           </div>
-          {isLand ? (
-            <>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Plot Size</span>
-                <span className="text-lg font-semibold text-gray-900">{landSize || "—"}</span>
-              </div>
-              <div className="flex items-center justify-between pt-3 border-t border-gray-200">
-                <span className="text-sm font-medium text-gray-900">Price per sqm</span>
-                <span className="text-lg font-bold text-inda-teal">
-                  ₦{(pricePerSqm / 1000).toFixed(0)}K
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Market avg (per sqm)</span>
-                <span className="text-lg font-semibold text-gray-900">
-                  ₦{((pricePerSqm * 1.03) / 1000).toFixed(0)}K
-                </span>
-              </div>
-            </>
-          ) : (
+          {typeof totalInvestment === "number" && (
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Market Average</span>
+              <span className="text-sm text-gray-600">Total investment</span>
               <span className="text-lg font-semibold text-gray-900">
-                ₦{(marketPrice / 1000000).toFixed(1)}M
+                {formatCurrency(totalInvestment)}
+              </span>
+            </div>
+          )}
+          {typeof additionalCostsPct === "number" && (
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Additional costs</span>
+              <span className="text-lg font-semibold text-gray-900">
+                {additionalCostsPct.toFixed(1)}%
               </span>
             </div>
           )}
           <div className="flex items-center justify-between pt-3 border-t border-gray-200">
-            <span className="text-sm text-green-600 font-medium">You Save</span>
+            <span className="text-sm font-medium text-gray-900">Projected value in 5 years</span>
             <span className="text-lg font-bold text-green-600">
-              ₦{((marketPrice - askingPrice) / 1000000).toFixed(1)}M
+              {formatCurrency(projectedValue)}
             </span>
           </div>
-        </div>
-      </div>
-
-      {/* Price per sqm — shown for all but more prominent for buildings */}
-      {!isLand && (
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
-          <h3 className="font-semibold text-gray-900 mb-2">Price per sqm</h3>
-          <div className="text-3xl font-bold text-gray-900 mb-1">
-            ₦{pricePerSqm.toLocaleString()}
-          </div>
-          <p className="text-sm text-gray-600">per square metre — in line with area average</p>
-        </div>
-      )}
-
-      {/* Similar Properties */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
-        <h3 className="font-semibold text-gray-900 mb-4">
-          {isLand ? "Similar land plots nearby" : "Similar properties nearby"}
-        </h3>
-        <div className="space-y-3">
-          {isLand
-            ? [
-                { address: "Plot 12, Same Estate", price: 92000000, size: "580 sqm", pricePerSqm: 159 },
-                { address: "Adjacent Development", price: 98000000, size: "610 sqm", pricePerSqm: 161 },
-                { address: "500m Away", price: 88000000, size: "550 sqm", pricePerSqm: 160 },
-              ].map((comp) => (
-                <div
-                  key={comp.address}
-                  className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
-                >
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">{comp.address}</div>
-                    <div className="text-xs text-gray-600 mt-1">
-                      {comp.size} · ₦{comp.pricePerSqm}K/sqm
-                    </div>
-                  </div>
-                  <div className="text-sm font-semibold text-gray-900">
-                    ₦{(comp.price / 1000000).toFixed(1)}M
-                  </div>
-                </div>
-              ))
-            : [
-                { address: "Block 4, Same Estate", price: 43000000, beds: 3 },
-                { address: "Adjacent Estate", price: 46500000, beds: 3 },
-                { address: "2km Away", price: 42000000, beds: 3 },
-              ].map((comp) => (
-                <div
-                  key={comp.address}
-                  className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0"
-                >
-                  <div>
-                    <div className="text-sm font-medium text-gray-900">{comp.address}</div>
-                    <div className="text-xs text-gray-600 mt-1">{comp.beds} bed apartment</div>
-                  </div>
-                  <div className="text-sm font-semibold text-gray-900">
-                    ₦{(comp.price / 1000000).toFixed(1)}M
-                  </div>
-                </div>
-              ))}
+          {typeof projectedGain === "number" && (
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Projected gain in 5 years</span>
+              <span className="text-lg font-semibold text-gray-900">
+                {formatCurrency(projectedGain)}
+              </span>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -1105,33 +1047,62 @@ function FinancialsSection({
   legalFees,
   stampDuty,
   agencyFee,
+  surveyFees,
+  landRegistration,
   annualRent,
   monthlyRent,
   netYield,
   roiYears,
   setRoiYears,
   isLand,
+  intelligenceData,
+  hasFinancialIntelligence,
 }: {
-  totalInvestment: number;
+  totalInvestment?: number;
   askingPrice: number;
-  legalFees: number;
-  stampDuty: number;
-  agencyFee: number;
-  annualRent: number;
-  monthlyRent: number;
-  netYield: number;
+  legalFees?: number;
+  stampDuty?: number;
+  agencyFee?: number;
+  surveyFees?: number;
+  landRegistration?: number;
+  annualRent?: number;
+  monthlyRent?: number;
+  netYield?: number;
   roiYears: number;
   setRoiYears: (v: number) => void;
   isLand: boolean;
+  intelligenceData?: PropertyIntelligenceData | null;
+  hasFinancialIntelligence: boolean;
 }) {
+  if (!hasFinancialIntelligence) {
+    return (
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
+        <h3 className="font-semibold text-gray-900 mb-2">Financial intelligence</h3>
+        <p className="text-sm text-gray-600">
+          Financial intelligence is not available for this listing yet.
+        </p>
+      </div>
+    );
+  }
+
+  const purchasePrice =
+    intelligenceData?.investment_analysis?.total_investment_breakdown?.purchase_price ?? askingPrice;
+  const annualAppreciationPct = intelligenceData?.value_projection?.annual_appreciation_pct ?? 0;
+  const projectedValue = intelligenceData?.value_projection?.year_5?.value ?? purchasePrice;
+  const projectedGain =
+    intelligenceData?.value_projection?.projected_gain_5_year ??
+    Math.max(projectedValue - purchasePrice, 0);
+  const year1CashFlow = intelligenceData?.cash_flow_forecast?.year_1?.net_cash_flow;
+  const year5CashFlow = intelligenceData?.cash_flow_forecast?.year_5?.net_cash_flow;
   const landAppreciationRate = 0.12;
-  const projectedValue = isLand
-    ? askingPrice * Math.pow(1 + landAppreciationRate, roiYears)
-    : askingPrice * Math.pow(1.09, roiYears);
-  const totalGain = projectedValue - totalInvestment;
-  const totalRentalIncome = isLand ? 0 : annualRent * roiYears;
+  const roiProjectionValue = isLand
+    ? purchasePrice * Math.pow(1 + landAppreciationRate, roiYears)
+    : purchasePrice * Math.pow(1 + annualAppreciationPct / 100, roiYears);
+  const roiBase = totalInvestment ?? purchasePrice;
+  const totalGain = roiProjectionValue - roiBase;
+  const totalRentalIncome = isLand ? 0 : (annualRent ?? 0) * roiYears;
   const totalReturn = totalGain + totalRentalIncome;
-  const roiPercentage = (totalReturn / totalInvestment) * 100;
+  const roiPercentage = roiBase > 0 ? (totalReturn / roiBase) * 100 : 0;
 
   return (
     <div className="space-y-6">
@@ -1178,22 +1149,29 @@ function FinancialsSection({
         <h3 className="font-semibold text-gray-900 mb-4">Total investment needed</h3>
         <div className="space-y-3">
           {[
-            { label: "Purchase price", value: askingPrice },
-            { label: "Legal fees (5%)", value: legalFees },
-            { label: "Stamp duty (1.5%)", value: stampDuty },
-            { label: "Agency fee (5%)", value: agencyFee },
-          ].map(({ label, value }) => (
+            { label: "Purchase price", value: purchasePrice },
+            { label: "Legal fees", value: legalFees },
+            { label: "Stamp duty", value: stampDuty },
+            { label: "Agency fee", value: agencyFee },
+            { label: "Survey fees", value: surveyFees },
+            { label: "Land registration", value: landRegistration },
+          ]
+            .filter(
+              (item): item is { label: string; value: number } =>
+                typeof item.value === "number" && item.value > 0,
+            )
+            .map(({ label, value }) => (
             <div key={label} className="flex items-center justify-between">
               <span className="text-sm text-gray-600">{label}</span>
               <span className="text-sm font-medium text-gray-900">
                 ₦{(value / 1000000).toFixed(2)}M
               </span>
             </div>
-          ))}
+            ))}
           <div className="flex items-center justify-between pt-3 border-t-2 border-gray-200">
             <span className="font-semibold text-gray-900">Total needed</span>
             <span className="text-lg font-bold text-gray-900">
-              ₦{(totalInvestment / 1000000).toFixed(1)}M
+              {formatCurrency(totalInvestment)}
             </span>
           </div>
         </div>
@@ -1207,19 +1185,34 @@ function FinancialsSection({
             <div>
               <div className="text-sm text-gray-600 mb-1">Expected annual rent</div>
               <div className="text-2xl font-bold text-gray-900">
-                ₦{(annualRent / 1000000).toFixed(1)}M / year
+                {formatCurrency(annualRent)} / year
               </div>
-              <div className="text-sm text-gray-600 mt-1">
-                (₦{Math.round(monthlyRent / 1000)}K per month)
-              </div>
+              {typeof monthlyRent === "number" && (
+                <div className="text-sm text-gray-600 mt-1">
+                  ({formatCurrency(monthlyRent)} per month)
+                </div>
+              )}
             </div>
             <div className="pt-4 border-t border-gray-100">
               <div className="text-sm text-gray-600 mb-1">Annual return</div>
               <div className="text-2xl font-bold text-green-600">{netYield}%</div>
             </div>
-          </div>
-          <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
-            <p className="text-xs text-blue-800">📊 Based on similar properties in this area</p>
+            {typeof year1CashFlow === "number" && (
+              <div className="pt-4 border-t border-gray-100">
+                <div className="text-sm text-gray-600 mb-1">Year 1 net cash flow</div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {formatCurrency(year1CashFlow)}
+                </div>
+              </div>
+            )}
+            {typeof year5CashFlow === "number" && (
+              <div className="pt-4 border-t border-gray-100">
+                <div className="text-sm text-gray-600 mb-1">Year 5 net cash flow</div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {formatCurrency(year5CashFlow)}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -1227,26 +1220,27 @@ function FinancialsSection({
       {/* Land Investment Returns — land only */}
       {isLand && (
         <div className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 border border-amber-200">
-          <h3 className="font-semibold text-gray-900 mb-3">💡 Land Investment Returns</h3>
+          <h3 className="font-semibold text-gray-900 mb-3">Land Investment Returns</h3>
           <p className="text-sm text-gray-700 mb-3">
-            Land generates returns through appreciation, not rental income. Based on historical
-            trends in this area:
+            Land returns depend on value appreciation data for this listing.
           </p>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Annual appreciation (historical)</span>
-              <span className="text-sm font-bold text-green-600">12–15%</span>
+              <span className="text-sm text-gray-600">Annual appreciation</span>
+              <span className="text-sm font-bold text-green-600">
+                {annualAppreciationPct ? `${annualAppreciationPct.toFixed(1)}%` : "Not available"}
+              </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">5-year projected value</span>
               <span className="text-sm font-bold text-gray-900">
-                ₦{((askingPrice * Math.pow(1.12, 5)) / 1000000).toFixed(1)}M
+                {formatCurrency(projectedValue)}
               </span>
             </div>
             <div className="flex items-center justify-between pt-2 border-t border-amber-200">
               <span className="text-sm font-medium text-gray-900">Potential profit (5 years)</span>
               <span className="text-lg font-bold text-green-600">
-                ₦{(((askingPrice * Math.pow(1.12, 5)) - askingPrice) / 1000000).toFixed(1)}M
+                {formatCurrency(projectedGain)}
               </span>
             </div>
           </div>
@@ -1256,7 +1250,87 @@ function FinancialsSection({
   );
 }
 
-function LocationSection({ property }: { property: PropertyReportData }) {
+function LocationSection({
+  property,
+  intelligenceData,
+}: {
+  property: PropertyReportData;
+  intelligenceData?: PropertyIntelligenceData | null;
+}) {
+  const locationIntelligence = intelligenceData?.location_intelligence;
+  const commuteRoutes = [
+    {
+      destination: "Victoria Island",
+      time: locationIntelligence?.accessibility?.to_victoria_island_minutes,
+      icon: "💼",
+      type: "Business District",
+    },
+    {
+      destination: "Murtala Muhammed Airport",
+      time: locationIntelligence?.accessibility?.to_airport_minutes,
+      icon: "✈️",
+      type: "International Airport",
+    },
+    {
+      destination: "Lekki FTZ",
+      time: locationIntelligence?.accessibility?.to_lekki_ftz_minutes,
+      icon: "🏭",
+      type: "Trade & Industry",
+    },
+    {
+      destination: "Marina",
+      time: locationIntelligence?.accessibility?.to_marina_minutes,
+      icon: "🏙️",
+      type: "Island CBD",
+    },
+  ].filter(
+    (route): route is { destination: string; time: number; icon: string; type: string } =>
+      typeof route.time === "number",
+  );
+  const essentialServices = [
+    {
+      icon: <ShoppingBag className="w-4 h-4 text-blue-600" />,
+      label: "Groceries & Shopping",
+      count: locationIntelligence?.nearby_shopping?.count,
+      distanceKm: locationIntelligence?.nearby_shopping?.distance_km,
+      names: locationIntelligence?.nearby_shopping?.names,
+    },
+    {
+      icon: <GraduationCap className="w-4 h-4 text-purple-600" />,
+      label: "Schools",
+      count: locationIntelligence?.nearby_schools?.count,
+      distanceKm: locationIntelligence?.nearby_schools?.distance_km,
+      names: locationIntelligence?.nearby_schools?.names,
+    },
+    {
+      icon: (
+        <svg className="w-4 h-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+      ),
+      label: "Healthcare",
+      count: locationIntelligence?.nearby_hospitals?.count,
+      distanceKm: locationIntelligence?.nearby_hospitals?.distance_km,
+      names: locationIntelligence?.nearby_hospitals?.names,
+    },
+  ].filter(
+    (service) =>
+      typeof service.count === "number" ||
+      typeof service.distanceKm === "number" ||
+      (Array.isArray(service.names) && service.names.length > 0),
+  );
+
+  if (commuteRoutes.length === 0 && essentialServices.length === 0 && !locationIntelligence?.district) {
+    return (
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
+        <h3 className="font-semibold text-gray-900 mb-2">Location intelligence</h3>
+        <p className="text-sm text-gray-600">
+          Location intelligence is not available for this listing yet.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Address */}
@@ -1266,115 +1340,366 @@ function LocationSection({ property }: { property: PropertyReportData }) {
           <MapPin className="w-5 h-5 text-inda-teal flex-shrink-0 mt-0.5" />
           <div>
             <div className="font-medium text-gray-900">{property.location}</div>
-            <div className="text-sm text-gray-600 mt-1">Lagos, Nigeria</div>
+            {locationIntelligence?.district && (
+              <div className="text-sm text-gray-600 mt-1">
+                District: {locationIntelligence.district}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Commute Times */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
-        <h3 className="font-semibold text-gray-900 mb-4">Your daily commute</h3>
-        <div className="space-y-3">
-          {[
-            { destination: "Victoria Island", time: "25–40 min", icon: "💼", type: "Business District" },
-            { destination: "Lekki Phase 1", time: "10 min", icon: "🏢", type: "Commercial Hub" },
-            { destination: "Ajah", time: "15 min", icon: "🏪", type: "Shopping & Business" },
-            { destination: "Murtala Muhammed Airport", time: "45 min", icon: "✈️", type: "International Airport" },
-          ].map((route) => (
-            <div
-              key={route.destination}
-              className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              <div className="text-2xl">{route.icon}</div>
-              <div className="flex-1">
-                <div className="font-medium text-gray-900">{route.destination}</div>
-                <div className="text-xs text-gray-600 mt-0.5">{route.type}</div>
+      {commuteRoutes.length > 0 && (
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
+          <h3 className="font-semibold text-gray-900 mb-4">Commute times</h3>
+          <div className="space-y-3">
+            {commuteRoutes.map((route) => (
+              <div
+                key={route.destination}
+                className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg"
+              >
+                <div className="text-2xl">{route.icon}</div>
+                <div className="flex-1">
+                  <div className="font-medium text-gray-900">{route.destination}</div>
+                  <div className="text-xs text-gray-600 mt-0.5">{route.type}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-gray-500" />
+                  <span className="font-semibold text-gray-900">{route.time} min</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-gray-500" />
-                <span className="font-semibold text-gray-900">{route.time}</span>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-        <div className="mt-4 p-3 bg-amber-50 rounded-lg border border-amber-100">
-          <p className="text-xs text-amber-800">
-            ⏱️ Times vary with Lagos traffic — allow extra time during peak hours (7–9am, 5–8pm)
-          </p>
-        </div>
-      </div>
+      )}
 
-      {/* Essential Services */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
-        <h3 className="font-semibold text-gray-900 mb-4">Essential services nearby</h3>
-        <div className="space-y-4">
-          {[
-            {
-              icon: <ShoppingBag className="w-4 h-4 text-blue-600" />,
-              label: "Groceries & Supermarkets",
-              value: "Shoprite (3km) · The Place Mall (4km) · Lekki Market (2.5km)",
-            },
-            {
-              icon: <GraduationCap className="w-4 h-4 text-purple-600" />,
-              label: "Schools",
-              value: "Greensprings School (1.2km) · Corona School (2.5km) · Lagoon School (3km)",
-            },
-            {
-              icon: (
-                <svg className="w-4 h-4 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-              ),
-              label: "Healthcare & Pharmacies",
-              value: "Reddington Hospital (4km) · MediPlus Pharmacy (1.8km) · Lekki Clinic (2.2km)",
-            },
-          ].map(({ icon, label, value }) => (
-            <div key={label} className="pt-2 first:pt-0 border-t border-gray-100 first:border-0">
-              <div className="flex items-center gap-2 mb-2">
-                {icon}
-                <div className="text-sm font-medium text-gray-900">{label}</div>
+      {essentialServices.length > 0 && (
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
+          <h3 className="font-semibold text-gray-900 mb-4">Essential services nearby</h3>
+          <div className="space-y-4">
+            {essentialServices.map(({ icon, label, count, distanceKm, names }) => (
+              <div key={label} className="pt-2 first:pt-0 border-t border-gray-100 first:border-0">
+                <div className="flex items-center gap-2 mb-2">
+                  {icon}
+                  <div className="text-sm font-medium text-gray-900">{label}</div>
+                </div>
+                <div className="text-sm text-gray-600 pl-6">
+                  {typeof count === "number" ? `${count} within ${distanceKm ?? "?"} km` : null}
+                  {Array.isArray(names) && names.length > 0
+                    ? `${typeof count === "number" ? " · " : ""}${names.slice(0, 3).join(" · ")}`
+                    : ""}
+                </div>
               </div>
-              <div className="text-sm text-gray-600 pl-6">{value}</div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
-
-      {/* Walkability */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
-        <h3 className="font-semibold text-gray-900 mb-4">Walkability & Access</h3>
-        <div className="space-y-4">
-          {[
-            { label: "Walk Score", score: 65, color: "bg-amber-500", note: "Some errands on foot" },
-            { label: "Transit Score", score: 55, color: "bg-blue-500", note: "Some public transport options" },
-          ].map(({ label, score, color, note }) => (
-            <div key={label}>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-600">{label}</span>
-                <span className="text-2xl font-bold text-gray-900">
-                  {score}<span className="text-sm text-gray-500">/100</span>
-                </span>
-              </div>
-              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div className={`h-full ${color} rounded-full`} style={{ width: `${score}%` }} />
-              </div>
-              <p className="text-xs text-gray-600 mt-1">{note}</p>
-            </div>
-          ))}
-        </div>
-      </div>
+      )}
     </div>
   );
 }
 
-function LegalSection({
-  property,
-  askingPrice,
+function buildLifestyleData(
+  intelligenceData?: PropertyIntelligenceData | null,
+): Record<
+  LifestyleTab,
+  { name: string; category: string; distance: string; rating?: number }[]
+> {
+  const nearbyAmenities = intelligenceData?.location_intelligence?.nearby_amenities;
+  const amenityGroups =
+    Array.isArray(nearbyAmenities) && nearbyAmenities.length > 0
+      ? {
+          eat: nearbyAmenities
+            .filter((item) =>
+              (item.category || "").toLowerCase().includes("food") ||
+              (item.category || "").toLowerCase().includes("restaurant") ||
+              (item.category || "").toLowerCase().includes("shop"),
+            )
+            .map((item) => ({
+              name: item.name || "Unnamed place",
+              category: item.category || "Nearby amenity",
+              distance:
+                typeof item.distance_km === "number"
+                  ? `${item.distance_km} km`
+                  : "Distance not available",
+              rating: item.rating,
+            })),
+          work: nearbyAmenities
+            .filter((item) =>
+              (item.category || "").toLowerCase().includes("school") ||
+              (item.category || "").toLowerCase().includes("office") ||
+              (item.category || "").toLowerCase().includes("business"),
+            )
+            .map((item) => ({
+              name: item.name || "Unnamed place",
+              category: item.category || "Nearby amenity",
+              distance:
+                typeof item.distance_km === "number"
+                  ? `${item.distance_km} km`
+                  : "Distance not available",
+              rating: item.rating,
+            })),
+          relax: nearbyAmenities
+            .filter((item) =>
+              (item.category || "").toLowerCase().includes("hospital") ||
+              (item.category || "").toLowerCase().includes("park") ||
+              (item.category || "").toLowerCase().includes("leisure"),
+            )
+            .map((item) => ({
+              name: item.name || "Unnamed place",
+              category: item.category || "Nearby amenity",
+              distance:
+                typeof item.distance_km === "number"
+                  ? `${item.distance_km} km`
+                  : "Distance not available",
+              rating: item.rating,
+            })),
+        }
+      : null;
+
+  if (
+    amenityGroups &&
+    (amenityGroups.eat.length > 0 ||
+      amenityGroups.work.length > 0 ||
+      amenityGroups.relax.length > 0)
+  ) {
+    return {
+      eat: amenityGroups.eat,
+      work: amenityGroups.work,
+      relax: amenityGroups.relax,
+    };
+  }
+
+  return {
+    eat: (intelligenceData?.location_intelligence?.nearby_shopping?.names || []).map((name) => ({
+      name,
+      category: "Shopping",
+      distance:
+        typeof intelligenceData?.location_intelligence?.nearby_shopping?.distance_km === "number"
+          ? `${intelligenceData.location_intelligence.nearby_shopping.distance_km} km`
+          : "Distance not available",
+    })),
+    work: (intelligenceData?.location_intelligence?.nearby_schools?.names || []).map((name) => ({
+      name,
+      category: "School",
+      distance:
+        typeof intelligenceData?.location_intelligence?.nearby_schools?.distance_km === "number"
+          ? `${intelligenceData.location_intelligence.nearby_schools.distance_km} km`
+          : "Distance not available",
+    })),
+    relax: (intelligenceData?.location_intelligence?.nearby_hospitals?.names || []).map((name) => ({
+      name,
+      category: "Healthcare",
+      distance:
+        typeof intelligenceData?.location_intelligence?.nearby_hospitals?.distance_km === "number"
+          ? `${intelligenceData.location_intelligence.nearby_hospitals.distance_km} km`
+          : "Distance not available",
+    })),
+  };
+}
+
+function buildLegalChecklist({
+  uniqueDocumentTypes,
+  documentAnalysis,
+  titleType,
+  documentVerification,
+  sourceListing,
 }: {
-  property: PropertyReportData;
-  askingPrice: number;
+  uniqueDocumentTypes: string[];
+  documentAnalysis: any;
+  titleType: string;
+  documentVerification?: any;
+  sourceListing?: any;
 }) {
-  const governorsConsent = askingPrice * 0.03;
+  const hasDocumentType = (patterns: string[]) =>
+    uniqueDocumentTypes.some((type) =>
+      patterns.some((pattern) => type.toLowerCase().includes(pattern)),
+    );
+
+  const items = [
+    {
+      item: titleType,
+      status: titleType !== "Not available" ? "provided" : "pending",
+      color: titleType !== "Not available" ? "green" : "blue",
+    },
+    {
+      item: "Survey Plan",
+      status:
+        hasDocumentType(["survey"]) || documentAnalysis?.surveyNumber
+          ? "provided"
+          : "pending",
+      color:
+        hasDocumentType(["survey"]) || documentAnalysis?.surveyNumber
+          ? "green"
+          : "blue",
+    },
+    {
+      item: "Building Approval",
+      status: documentAnalysis?.buildingApproval ? "provided" : "pending",
+      color: documentAnalysis?.buildingApproval ? "green" : "blue",
+    },
+    {
+      item: "Tax Records",
+      status: documentAnalysis?.propertyTax ? "provided" : "pending",
+      color: documentAnalysis?.propertyTax ? "green" : "blue",
+    },
+    {
+      item: "Governor's Consent",
+      status: documentAnalysis?.governorsConsent ? "provided" : "pending",
+      color: documentAnalysis?.governorsConsent ? "green" : "blue",
+    },
+    {
+      item: "Encumbrance Check",
+      status: sourceListing?.encumbrances || documentVerification?.verificationStatus || "not available",
+      color:
+        sourceListing?.encumbrances || documentVerification?.verificationStatus
+          ? "amber"
+          : "blue",
+    },
+  ];
+
+  return items;
+}
+
+function getConditionScore(value?: string) {
+  const normalized = (value || "").toLowerCase();
+  if (normalized.includes("excellent")) return 9;
+  if (normalized.includes("good")) return 7;
+  if (normalized.includes("fair")) return 5;
+  if (normalized.includes("poor")) return 3;
+  return undefined;
+}
+
+function getConditionStars(value?: string) {
+  const score = getConditionScore(value);
+  if (!score) return 0;
+  return Math.max(1, Math.min(5, Math.round(score / 2)));
+}
+
+function getFinishQualityStars(value?: string) {
+  const normalized = (value || "").toLowerCase();
+  if (normalized.includes("luxury")) return 5;
+  if (normalized.includes("standard")) return 3;
+  if (normalized.includes("basic")) return 2;
+  return 0;
+}
+
+function getConstructionStatusStars(value?: string) {
+  const normalized = (value || "").toLowerCase();
+  if (normalized.includes("complete")) return 5;
+  if (normalized.includes("finish")) return 4;
+  if (normalized.includes("roof")) return 3;
+  if (normalized.includes("structure")) return 2;
+  return 0;
+}
+
+function toTitleCase(value?: string) {
+  if (!value) return undefined;
+  return value
+    .replace(/[-_]/g, " ")
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function firstMatchingDocumentType(types: string[], patterns: string[]) {
+  return (
+    types.find((type) =>
+      patterns.some((pattern) => type.toLowerCase().includes(pattern)),
+    ) || undefined
+  );
+}
+
+function formatPercentCost(amount?: number, pct?: number) {
+  if (typeof amount === "number" && amount > 0 && typeof pct === "number") {
+    return `${formatCurrency(amount)} (${pct}%)`;
+  }
+  if (typeof amount === "number" && amount > 0) {
+    return formatCurrency(amount);
+  }
+  return undefined;
+}
+
+function formatCurrency(value?: number) {
+  if (typeof value !== "number" || Number.isNaN(value)) {
+    return "Not available";
+  }
+  if (value >= 1000000) {
+    return `₦${(value / 1000000).toFixed(1)}M`;
+  }
+  return `₦${Math.round(value).toLocaleString()}`;
+}
+
+function LegalSection({
+  intelligenceData,
+  sourceListing,
+}: {
+  intelligenceData?: PropertyIntelligenceData | null;
+  sourceListing?: any;
+}) {
+  const documentVerification = sourceListing?.documentVerification;
+  const aggregatedData = documentVerification?.aggregatedData;
+  const documentAnalysis = sourceListing?.aiReport?.documentAnalysis || {};
+  const documents = Array.isArray(sourceListing?.documents) ? sourceListing.documents : [];
+  const declaredDocumentTypes = Array.isArray(sourceListing?.declaredDocumentTypes)
+    ? sourceListing.declaredDocumentTypes
+    : [];
+  const documentTypes = [
+    ...documents.map((doc: any) => doc.type),
+    ...declaredDocumentTypes.map((doc: any) => doc.type),
+    ...((documentVerification?.documentTypes as string[]) || []),
+  ].filter(Boolean);
+  const uniqueDocumentTypes = Array.from(new Set(documentTypes));
+  const titleType =
+    aggregatedData?.titleTypeValue ||
+    documentAnalysis?.titleType ||
+    sourceListing?.titleVerification ||
+    firstMatchingDocumentType(uniqueDocumentTypes, ["title", "c of o", "deed"]) ||
+    "Not available";
+  const verificationStatus =
+    documentVerification?.verificationStatus ||
+    sourceListing?.titleVerification ||
+    "Not available";
+  const confidence =
+    typeof documentVerification?.overallConfidence !== "undefined"
+      ? Number(documentVerification.overallConfidence)
+      : undefined;
+  const riskLevel = toTitleCase(documentVerification?.riskLevel);
+  const recommendations = Array.isArray(documentVerification?.recommendations)
+    ? documentVerification.recommendations
+    : [];
+  const flags = Array.isArray(documentVerification?.flagsAndWarnings)
+    ? documentVerification.flagsAndWarnings
+    : [];
+  const legalCosts = [
+    {
+      label: "Governor's Consent",
+      value:
+        formatPercentCost(
+          intelligenceData?.investment_analysis?.total_investment_breakdown?.governors_consent,
+          intelligenceData?.investment_analysis?.total_investment_breakdown?.governors_consent_pct,
+        ) || "Not available",
+    },
+    {
+      label: "Survey Fees",
+      value:
+        formatPercentCost(
+          intelligenceData?.investment_analysis?.total_investment_breakdown?.survey_fees,
+          intelligenceData?.investment_analysis?.total_investment_breakdown?.survey_fees_pct,
+        ) || "Not available",
+    },
+    {
+      label: "Land Registration",
+      value:
+        formatCurrency(
+          intelligenceData?.investment_analysis?.total_investment_breakdown?.land_registration,
+        ),
+    },
+  ];
+  const checklist = buildLegalChecklist({
+    uniqueDocumentTypes,
+    documentAnalysis,
+    titleType,
+    documentVerification,
+    sourceListing,
+  });
 
   return (
     <div className="space-y-6">
@@ -1383,17 +1708,35 @@ function LegalSection({
         <div className="flex items-center justify-between mb-4">
           <div>
             <div className="text-sm opacity-90 mb-1">Document Health Score</div>
-            <div className="text-3xl font-bold">Good Standing</div>
+            <div className="text-3xl font-bold">
+              {riskLevel || toTitleCase(verificationStatus) || "Not available"}
+            </div>
           </div>
           <div className="flex gap-0.5">
             {[1, 2, 3, 4].map((s) => (
-              <Star key={s} className="w-8 h-8 fill-white text-white" />
+              <Star
+                key={s}
+                className={`w-8 h-8 ${
+                  confidence && s <= Math.max(1, Math.round(confidence / 25))
+                    ? "fill-white text-white"
+                    : "text-white/30"
+                }`}
+              />
             ))}
-            <Star className="w-8 h-8 text-white/30" />
           </div>
         </div>
         <p className="text-sm opacity-90">
-          Basic documentation is in order. Independent verification recommended before purchase.
+          {[
+            confidence ? `${confidence.toFixed(0)}% confidence` : null,
+            uniqueDocumentTypes.length > 0
+              ? `${uniqueDocumentTypes.length} document type(s) identified`
+              : null,
+            documentVerification?.documentCount
+              ? `${documentVerification.documentCount} document(s) processed`
+              : null,
+          ]
+            .filter(Boolean)
+            .join(" · ") || "No document verification data is available for this listing."}
         </p>
       </div>
 
@@ -1405,17 +1748,33 @@ function LegalSection({
             <FileText className="w-5 h-5 text-green-600" />
           </div>
           <div>
-            <div className="font-medium text-gray-900">Certificate of Occupancy (C of O)</div>
-            <div className="text-sm text-gray-600 mt-1">Government-issued title document</div>
+            <div className="font-medium text-gray-900">{titleType}</div>
+            <div className="text-sm text-gray-600 mt-1">
+              {documentAnalysis?.registrationNumber
+                ? `Registration No: ${documentAnalysis.registrationNumber}`
+                : documentAnalysis?.surveyNumber
+                  ? `Survey No: ${documentAnalysis.surveyNumber}`
+                  : "Registration number not available"}
+            </div>
           </div>
         </div>
         <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
           <div className="flex items-start gap-2">
             <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
             <div>
-              <div className="font-medium text-amber-900 mb-1">Verify before purchase</div>
+              <div className="font-medium text-amber-900 mb-1">Verification status</div>
               <p className="text-sm text-amber-700">
-                We recommend independent title verification with a property lawyer. Cost: ₦75K–₦150K.
+                {[
+                  verificationStatus !== "Not available" ? verificationStatus : null,
+                  documentAnalysis?.transferDate
+                    ? `Transfer date: ${documentAnalysis.transferDate}`
+                    : null,
+                  documentAnalysis?.governorsConsent?.status
+                    ? `Governor's Consent: ${documentAnalysis.governorsConsent.status}`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · ") || "No title verification details are available."}
               </p>
             </div>
           </div>
@@ -1426,14 +1785,7 @@ function LegalSection({
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
         <h3 className="font-semibold text-gray-900 mb-4">Your legal checklist</h3>
         <div className="space-y-3">
-          {[
-            { item: "Title Document (C of O)", status: "provided", color: "green" },
-            { item: "Survey Plan", status: "provided", color: "green" },
-            { item: "Building Approval", status: "verify", color: "amber" },
-            { item: "Tax Receipts (3 years)", status: "verify", color: "amber" },
-            { item: "Title Search at Registry", status: "pending", color: "blue" },
-            { item: "Independent Inspection", status: "recommended", color: "purple" },
-          ].map((check) => (
+          {checklist.map((check) => (
             <div
               key={check.item}
               className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
@@ -1468,12 +1820,7 @@ function LegalSection({
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
         <h3 className="font-semibold text-gray-900 mb-4">Legal costs to expect</h3>
         <div className="space-y-3">
-          {[
-            { label: "Governor's Consent (3%)", value: `₦${(governorsConsent / 1000000).toFixed(2)}M` },
-            { label: "Title Verification", value: "₦75K – ₦150K" },
-            { label: "Legal Representation", value: "₦500K – ₦1M" },
-            { label: "Survey Plan Confirmation", value: "₦150K – ₦250K" },
-          ].map(({ label, value }) => (
+          {legalCosts.map(({ label, value }) => (
             <div key={label} className="flex items-center justify-between py-2 border-t border-gray-100 first:border-0">
               <span className="text-sm text-gray-600">{label}</span>
               <span className="text-sm font-semibold text-gray-900">{value}</span>
@@ -1486,12 +1833,17 @@ function LegalSection({
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
         <h3 className="font-semibold text-gray-900 mb-4">Recommended next steps</h3>
         <div className="space-y-4">
-          {[
-            { step: "Hire a property lawyer", detail: "To verify documents and handle paperwork (₦500K–₦1M)" },
-            { step: "Conduct title search", detail: "Verify ownership at Lagos State Land Registry (₦75K–₦150K)" },
-            { step: "Professional inspection", detail: "Check structural integrity and systems (₦50K–₦100K)" },
-            { step: "Review all documents", detail: "C of O, survey plan, tax receipts, building approval, etc." },
-          ].map(({ step, detail }, idx) => (
+          {(
+            recommendations.length > 0
+              ? recommendations.map((item: string) => ({
+                  step: item,
+                  detail: "From document verification recommendations",
+                }))
+              : flags.slice(0, 4).map((flag: any) => ({
+                  step: flag.category || "Verification flag",
+                  detail: flag.message,
+                }))
+          ).map(({ step, detail }, idx) => (
             <div key={step} className="flex items-start gap-3">
               <div className="w-6 h-6 rounded-full bg-inda-teal text-white flex items-center justify-center flex-shrink-0 text-xs font-semibold">
                 {idx + 1}
@@ -1502,6 +1854,11 @@ function LegalSection({
               </div>
             </div>
           ))}
+          {recommendations.length === 0 && flags.length === 0 && (
+            <div className="text-sm text-gray-600">
+              No backend recommendations are available for this listing yet.
+            </div>
+          )}
         </div>
       </div>
 
@@ -1529,16 +1886,22 @@ function NeighborhoodSection({
   lifestyleTab,
   setLifestyleTab,
   lifestyleData,
+  intelligenceData,
 }: {
   lifestyleTab: LifestyleTab;
   setLifestyleTab: (t: LifestyleTab) => void;
   lifestyleData: Record<LifestyleTab, { name: string; category: string; distance: string; rating?: number }[]>;
+  intelligenceData?: PropertyIntelligenceData | null;
 }) {
   const tabs: { id: LifestyleTab; label: string; icon: React.ElementType }[] = [
     { id: "eat", label: "Eat & Shop", icon: Utensils },
     { id: "work", label: "Work & Learn", icon: Briefcase },
     { id: "relax", label: "Relax & Play", icon: Dumbbell },
   ];
+  const coordinates = intelligenceData?.location_intelligence?.coordinates;
+  const district = intelligenceData?.location_intelligence?.district;
+  const infrastructureProjects = intelligenceData?.location_intelligence?.infrastructure_projects;
+  const commuteHighlights = intelligenceData?.location_intelligence?.accessibility;
 
   return (
     <div className="space-y-6">
@@ -1571,13 +1934,17 @@ function NeighborhoodSection({
         <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl mb-4 flex items-center justify-center">
           <div className="text-center">
             <MapPinned className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-500">Interactive map coming soon</p>
+            <p className="text-sm text-gray-500">
+              {coordinates?.lat && coordinates?.lng
+                ? `${coordinates.lat}, ${coordinates.lng}`
+                : district || "Map coordinates not available"}
+            </p>
           </div>
         </div>
 
         {/* Location Cards */}
         <div className="grid md:grid-cols-2 gap-3">
-          {lifestyleData[lifestyleTab].map((place) => (
+          {(lifestyleData[lifestyleTab] || []).map((place) => (
             <div
               key={place.name}
               className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
@@ -1600,6 +1967,11 @@ function NeighborhoodSection({
               </div>
             </div>
           ))}
+          {lifestyleData[lifestyleTab].length === 0 && (
+            <div className="text-sm text-gray-600 md:col-span-2">
+              No nearby places were provided for this category.
+            </div>
+          )}
         </div>
       </div>
 
@@ -1608,25 +1980,35 @@ function NeighborhoodSection({
         <h3 className="font-semibold text-gray-900 mb-4">Community vibe & character</h3>
         <div className="space-y-4">
           {[
-            { label: "Family-Friendly", score: 8, color: "bg-green-500", desc: "Great for raising kids" },
-            { label: "Safety & Security", score: 9, color: "bg-blue-500", desc: "Well-secured estate" },
-            { label: "Social Scene", score: 6, color: "bg-purple-500", desc: "Moderate nightlife" },
-            { label: "Expat Community", score: 7, color: "bg-inda-teal", desc: "Diverse residents" },
-          ].map((vibe) => (
-            <div key={vibe.label}>
-              <div className="flex items-center justify-between mb-2">
-                <div>
-                  <span className="text-sm font-medium text-gray-900">{vibe.label}</span>
-                  <span className="text-xs text-gray-500 ml-2">· {vibe.desc}</span>
-                </div>
-                <span className="text-sm font-semibold text-gray-900">{vibe.score}/10</span>
-              </div>
-              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div
-                  className={`h-full ${vibe.color} rounded-full transition-all`}
-                  style={{ width: `${vibe.score * 10}%` }}
-                />
-              </div>
+            {
+              label: "District",
+              value: district || "Not available",
+            },
+            {
+              label: "Victoria Island commute",
+              value:
+                typeof commuteHighlights?.to_victoria_island_minutes === "number"
+                  ? `${commuteHighlights.to_victoria_island_minutes} min`
+                  : "Not available",
+            },
+            {
+              label: "Airport commute",
+              value:
+                typeof commuteHighlights?.to_airport_minutes === "number"
+                  ? `${commuteHighlights.to_airport_minutes} min`
+                  : "Not available",
+            },
+            {
+              label: "Marina commute",
+              value:
+                typeof commuteHighlights?.to_marina_minutes === "number"
+                  ? `${commuteHighlights.to_marina_minutes} min`
+                  : "Not available",
+            },
+          ].map((item) => (
+            <div key={item.label} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+              <span className="text-sm font-medium text-gray-900">{item.label}</span>
+              <span className="text-sm text-gray-600">{item.value}</span>
             </div>
           ))}
         </div>
@@ -1636,26 +2018,48 @@ function NeighborhoodSection({
       <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-100">
         <h3 className="font-semibold text-gray-900 mb-4">What makes this neighborhood special</h3>
         <div className="space-y-4">
-          {[
-            {
-              emoji: "🌊",
-              color: "bg-indigo-600",
-              title: "Waterfront Living",
-              desc: "Minutes from Elegushi Beach and Atlantic Ocean views. Weekend beach culture is strong here.",
-            },
-            {
-              emoji: "🍽️",
-              color: "bg-purple-600",
-              title: "Culinary Hub",
-              desc: "Diverse dining scene — from street food to upscale restaurants. Yellow Chilli, The Place, and local spots.",
-            },
-            {
-              emoji: "👨‍👩‍👧",
-              color: "bg-green-600",
-              title: "Young Professional Vibe",
-              desc: "Popular with Lagos professionals aged 28–45. Active community events, fitness groups, and networking.",
-            },
-          ].map(({ emoji, color, title, desc }) => (
+          {(infrastructureProjects && Object.keys(infrastructureProjects).length > 0
+            ? Object.entries(infrastructureProjects).map(([title, project]) => ({
+                emoji: "🏗️",
+                color: "bg-indigo-600",
+                title,
+                desc: [
+                  typeof project.distance_km === "number"
+                    ? `${project.distance_km} km away`
+                    : null,
+                  project.expected_value_increase_pct
+                    ? `Expected value impact: ${project.expected_value_increase_pct}`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(" · "),
+              }))
+            : [
+                {
+                  emoji: "📍",
+                  color: "bg-indigo-600",
+                  title: "District",
+                  desc: district || "Not available",
+                },
+                {
+                  emoji: "🛣️",
+                  color: "bg-purple-600",
+                  title: "Accessibility",
+                  desc:
+                    typeof commuteHighlights?.to_third_mainland_bridge_minutes === "number"
+                      ? `Third Mainland Bridge: ${commuteHighlights.to_third_mainland_bridge_minutes} min`
+                      : "Not available",
+                },
+                {
+                  emoji: "🏢",
+                  color: "bg-green-600",
+                  title: "Commercial Access",
+                  desc:
+                    typeof commuteHighlights?.to_lekki_ftz_minutes === "number"
+                      ? `Lekki FTZ: ${commuteHighlights.to_lekki_ftz_minutes} min`
+                      : "Not available",
+                },
+              ]).map(({ emoji, color, title, desc }) => (
             <div key={title} className="flex items-start gap-3">
               <div
                 className={`w-8 h-8 rounded-lg ${color} flex items-center justify-center flex-shrink-0`}
