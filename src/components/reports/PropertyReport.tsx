@@ -506,6 +506,20 @@ export function PropertyReport({
           isOpen={showAskAI}
           onClose={() => setShowAskAI(false)}
           propertyName={property.name}
+          propertyData={{
+            id: sourceListing?._id || sourceListing?.id || "unknown",
+            name: property.name,
+            location: property.location,
+            price: `₦${askingPrice.toLocaleString()}`,
+            priceNumeric: askingPrice,
+            bedrooms: property.bed || 0,
+            scannedData: {
+              bathrooms: property.bath ?? null,
+              propertyType: property.type ?? null,
+            },
+          }}
+          intelligenceData={intelligenceData ?? undefined}
+          agentName={sourceListing?.agentName || sourceListing?.snapshot?.agentName || undefined}
         />
         <MakeOfferModal
           isOpen={showMakeOffer}
@@ -635,6 +649,20 @@ export function PropertyReport({
         isOpen={showAskAI}
         onClose={() => setShowAskAI(false)}
         propertyName={property.name}
+        propertyData={{
+          id: sourceListing?._id || sourceListing?.id || "unknown",
+          name: property.name,
+          location: property.location,
+          price: `₦${askingPrice.toLocaleString()}`,
+          priceNumeric: askingPrice,
+          bedrooms: property.bed || 0,
+          scannedData: {
+            bathrooms: property.bath ?? null,
+            propertyType: property.type ?? null,
+          },
+        }}
+        intelligenceData={intelligenceData ?? undefined}
+        agentName={sourceListing?.agentName || sourceListing?.snapshot?.agentName || undefined}
       />
     </div>
   );

@@ -30,6 +30,7 @@ interface AskAIModalProps {
   propertyName: string;
   propertyData?: PropertyData;
   intelligenceData?: PropertyIntelligenceData;
+  agentName?: string;
 }
 
 const suggestedQuestions = [
@@ -46,7 +47,8 @@ export function AskAIModal({
   onClose,
   propertyName,
   propertyData,
-  intelligenceData
+  intelligenceData,
+  agentName,
 }: AskAIModalProps) {
   const [question, setQuestion] = useState("");
   const [conversation, setConversation] = useState<Array<{ type: "user" | "ai"; message: string }>>([]);
@@ -78,6 +80,7 @@ export function AskAIModal({
       bedrooms: propertyData?.bedrooms,
       bathrooms: propertyData?.scannedData?.bathrooms || undefined,
       features: propertyData?.scannedData?.features?.join(", ") || undefined,
+      agentName: agentName || undefined,
       intelligenceData: intelligenceData,
     };
   };

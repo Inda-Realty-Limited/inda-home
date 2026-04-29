@@ -18,6 +18,7 @@ export interface PropertyChatContext {
   bedrooms?: number;
   bathrooms?: number;
   features?: string;
+  agentName?: string;
   intelligenceData?: {
     property_details?: any;
     location_intelligence?: any;
