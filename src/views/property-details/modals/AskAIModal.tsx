@@ -8,6 +8,7 @@ interface PropertyData {
   location: string;
   price: string;
   priceNumeric: number;
+  priceNegotiable?: boolean;
   bedrooms: number;
   scannedData?: {
     bathrooms?: number | null;
@@ -34,12 +35,16 @@ interface AskAIModalProps {
 }
 
 const suggestedQuestions = [
-  "Is this property priced fairly compared to the area?",
-  "What's the expected ROI on this property?",
-  "What schools and hospitals are nearby?",
-  "How long would it take to get to Victoria Island?",
-  "What are the total costs including all fees?",
-  "What could this property be worth in 5 years?",
+  "Is the price negotiable?",
+  "Is this price fair for the area?",
+  "What documents does this property have?",
+  "Can I arrange a viewing this week?",
+  "Is this a safe area to live?",
+  "How is the commute from here?",
+  "Can I rent this property out?",
+  "Are there good schools nearby?",
+  "What amenities are included?",
+  "Can I get a mortgage for this?",
 ];
 
 export function AskAIModal({
@@ -76,6 +81,7 @@ export function AskAIModal({
       name: propertyData?.name || propertyName,
       location: propertyData?.location || "Unknown",
       price: propertyData?.priceNumeric || 0,
+      priceNegotiable: propertyData?.priceNegotiable,
       propertyType: propertyData?.scannedData?.propertyType || undefined,
       bedrooms: propertyData?.bedrooms,
       bathrooms: propertyData?.scannedData?.bathrooms || undefined,

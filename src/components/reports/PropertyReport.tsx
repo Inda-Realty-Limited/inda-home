@@ -516,10 +516,16 @@ export function PropertyReport({
                       Popular questions:
                     </div>
                     {[
-                      "What are the hidden costs?",
-                      "How does this compare?",
-                      "Good for rental income?",
-                      "What's the neighborhood like?",
+                      "Is the price negotiable?",
+                      "Is this price fair for the area?",
+                      "What documents does this property have?",
+                      "Can I arrange a viewing this week?",
+                      "Is this a safe area to live?",
+                      "How is the commute from here?",
+                      "Can I rent this property out?",
+                      "Are there good schools nearby?",
+                      "What amenities are included?",
+                      "Can I get a mortgage for this?",
                     ].map((question, idx) => (
                       <button
                         key={idx}
@@ -555,6 +561,7 @@ export function PropertyReport({
             location: property.location,
             price: `₦${askingPrice.toLocaleString()}`,
             priceNumeric: askingPrice,
+            priceNegotiable: sourceListing?.priceNegotiable ?? undefined,
             bedrooms: property.bed || 0,
             scannedData: {
               bathrooms: property.bath ?? null,

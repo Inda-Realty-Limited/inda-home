@@ -110,6 +110,7 @@ export function PropertyUploadWizard({
   // Computed legacy address for backward compatibility
   const [address, setAddress] = useState(initialData?.address || "");
   const [askingPrice, setAskingPrice] = useState(initialData?.askingPrice || 0);
+  const [priceNegotiable, setPriceNegotiable] = useState(false);
   const [bedrooms, setBedrooms] = useState(
     initialData?.confirmedData?.bedrooms || 0,
   );
@@ -600,6 +601,7 @@ export function PropertyUploadWizard({
       formData.append("propertyType", propertyType);
       formData.append("microlocation", addressCity);
       formData.append("purchasePrice", askingPrice.toString());
+      formData.append("priceNegotiable", priceNegotiable.toString());
       // Use state values directly - they are the source of truth from Phase 1
       formData.append("bedrooms", bedrooms.toString());
       formData.append("bathrooms", bathrooms.toString());
@@ -1150,6 +1152,7 @@ export function PropertyUploadWizard({
                 onAddressCityChange={handleAddressCityChange}
                 onAddressStreetChange={handleAddressStreetChange}
                 askingPrice={askingPrice}
+                priceNegotiable={priceNegotiable}
                 bedrooms={bedrooms}
                 bathrooms={bathrooms}
                 declaredDocuments={declaredDocuments}
@@ -1158,6 +1161,7 @@ export function PropertyUploadWizard({
                 propertyFlowType={propertyFlowType}
                 onPropertyFlowTypeChange={handlePropertyFlowTypeChange}
                 onPriceChange={handlePriceChange}
+                onPriceNegotiableChange={setPriceNegotiable}
                 onBedroomsChange={handleBedroomsChange}
                 onBathroomsChange={handleBathroomsChange}
                 onDeclareDocument={handleDeclareDocument}
