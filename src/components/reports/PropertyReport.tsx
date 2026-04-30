@@ -146,6 +146,36 @@ interface PropertyIntelligenceData {
       net_cash_flow?: number;
     };
   };
+  condition?: {
+    condition_label?: string | null;
+    condition_score?: number | null;
+    condition_stars?: number | null;
+    finish_quality_label?: string | null;
+    finish_quality_stars?: number | null;
+    construction_status_label?: string | null;
+    construction_status_stars?: number | null;
+  };
+  legal?: {
+    health_score?: number;
+    items?: Array<{ key: string; label: string; status: string; points: number }>;
+    overall_confidence?: number | null;
+    risk_level?: string | null;
+    flags?: Array<{ type: string; category: string; message: string }>;
+  };
+  nearby_places?: {
+    eat?: Array<{ name: string; rating?: number | null; address?: string | null; distance_meters?: number | null; place_type?: string | null }>;
+    work?: Array<{ name: string; rating?: number | null; address?: string | null; distance_meters?: number | null; place_type?: string | null }>;
+    relax?: Array<{ name: string; rating?: number | null; address?: string | null; distance_meters?: number | null; place_type?: string | null }>;
+  };
+  neighborhood?: {
+    name?: string;
+    safety_score?: number;
+    family_score?: number;
+    social_score?: number;
+    highlights?: string[];
+  } | null;
+  availability_status?: string;
+  virtual_tour_url?: string | null;
 }
 
 type ReportSection =
@@ -184,6 +214,7 @@ export function PropertyReport({
 
   const isLand = property.bed === 0 || property.type?.toLowerCase() === "land";
   const isOffPlan = property.isOffPlan ?? false;
+  const virtualTourUrl = intelligenceData?.virtual_tour_url ?? null;
 
   const askingPrice =
     typeof property.price === "string"
@@ -429,13 +460,25 @@ export function PropertyReport({
               <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
                 <h3 className="font-semibold text-gray-900 mb-4">Ready to take action?</h3>
                 <div className="grid md:grid-cols-3 gap-3">
-                  <button
-                    onClick={() => setShowVirtualTour(true)}
-                    className="px-4 py-3 border border-inda-gray rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
-                  >
-                    <Eye className="w-4 h-4" />
-                    Virtual Tour
-                  </button>
+                  {virtualTourUrl ? (
+                    <a
+                      href={virtualTourUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-4 py-3 border border-inda-gray rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Eye className="w-4 h-4" />
+                      Virtual Tour
+                    </a>
+                  ) : (
+                    <button
+                      onClick={() => setShowVirtualTour(true)}
+                      className="px-4 py-3 border border-inda-gray rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                    >
+                      <Eye className="w-4 h-4" />
+                      Virtual Tour
+                    </button>
+                  )}
                   <button
                     onClick={() => setShowSiteVisit(true)}
                     className="px-4 py-3 border border-inda-gray rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
@@ -527,16 +570,14 @@ export function PropertyReport({
           propertyName={property.name}
           propertyPrice={`₦${askingPrice.toLocaleString()}`}
           priceNumeric={askingPrice}
-          listingId={sourceListing?._id || sourceListing?.id}
-          agentUserId={sourceListing?.userId}
+          listingId={sourceListing?._id || sourceListing?.id || ""}
         />
         <ScheduleSiteVisitModal
           isOpen={showSiteVisit}
           onClose={() => setShowSiteVisit(false)}
           propertyName={property.name}
           propertyLocation={property.location}
-          listingId={sourceListing?._id || sourceListing?.id}
-          agentUserId={sourceListing?.userId}
+          listingId={sourceListing?._id || sourceListing?.id || ""}
         />
         <BookVirtualTourModal
           isOpen={showVirtualTour}
@@ -598,6 +639,7 @@ export function PropertyReport({
             isLand={isLand}
             isOffPlan={isOffPlan}
             sourceListing={sourceListing}
+            intelligenceData={intelligenceData}
           />
         )}
         {selectedSection === "pricing" && (
@@ -675,22 +717,27 @@ function OverviewSection({
   isLand,
   isOffPlan,
   sourceListing,
+  intelligenceData,
 }: {
   property: PropertyReportData;
   isLand: boolean;
   isOffPlan: boolean;
   sourceListing?: any;
+  intelligenceData?: PropertyIntelligenceData | null;
 }) {
   const photoAnalysis = sourceListing?.aiReport?.photoAnalysis;
   const documentAnalysis = sourceListing?.aiReport?.documentAnalysis;
-  const propertyCondition = toTitleCase(
-    photoAnalysis?.propertyCondition || sourceListing?.condition,
-  );
-  const finishQuality = toTitleCase(photoAnalysis?.finishingQuality);
-  const conditionScore = getConditionScore(
-    photoAnalysis?.propertyCondition || sourceListing?.condition,
-  );
-  const constructionStatus = toTitleCase(sourceListing?.constructionStatus);
+  const cd = intelligenceData?.condition;
+  const propertyCondition = cd?.condition_label
+    ? toTitleCase(cd.condition_label)
+    : toTitleCase(photoAnalysis?.propertyCondition || sourceListing?.condition);
+  const finishQuality = cd?.finish_quality_label
+    ? toTitleCase(cd.finish_quality_label)
+    : toTitleCase(photoAnalysis?.finishingQuality);
+  const conditionScore = cd?.condition_score ?? getConditionScore(photoAnalysis?.propertyCondition || sourceListing?.condition);
+  const constructionStatus = cd?.construction_status_label
+    ? toTitleCase(cd.construction_status_label)
+    : toTitleCase(sourceListing?.constructionStatus);
   const declaredDocumentCount = Array.isArray(sourceListing?.declaredDocumentTypes)
     ? sourceListing.declaredDocumentTypes.length
     : 0;
@@ -842,9 +889,16 @@ function OverviewSection({
               <div className="text-sm text-gray-600 mt-1">
                 {isOffPlan
                   ? `Expected completion: ${property.offPlanData?.expectedHandoverDate || "TBD"}`
-                  : isLand
-                  ? constructionStatus || "Availability not provided"
-                  : constructionStatus || "Availability not provided"}
+                  : (() => {
+                      const status = intelligenceData?.availability_status;
+                      const label = status === "available" ? "Available now"
+                        : status === "sold" ? "Sold"
+                        : status === "under_offer" ? "Under offer"
+                        : status === "let" ? "Let / Rented"
+                        : status ? toTitleCase(status.replace(/_/g, " "))
+                        : constructionStatus;
+                      return label || "Availability not provided";
+                    })()}
               </div>
             </div>
           </div>
@@ -930,17 +984,17 @@ function OverviewSection({
               {
                 label: "Condition",
                 rating: propertyCondition || "Not available",
-                stars: getConditionStars(photoAnalysis?.propertyCondition || sourceListing?.condition),
+                stars: cd?.condition_stars ?? getConditionStars(photoAnalysis?.propertyCondition || sourceListing?.condition),
               },
               {
                 label: "Finish Quality",
                 rating: finishQuality || "Not available",
-                stars: getFinishQualityStars(photoAnalysis?.finishingQuality),
+                stars: cd?.finish_quality_stars ?? getFinishQualityStars(photoAnalysis?.finishingQuality),
               },
               {
                 label: "Construction Status",
                 rating: constructionStatus || "Not available",
-                stars: getConstructionStatusStars(sourceListing?.constructionStatus),
+                stars: cd?.construction_status_stars ?? getConstructionStatusStars(sourceListing?.constructionStatus),
               },
             ].map(({ label, rating, stars }) => (
               <div
@@ -1432,68 +1486,42 @@ function buildLifestyleData(
   LifestyleTab,
   { name: string; category: string; distance: string; rating?: number }[]
 > {
-  const nearbyAmenities = intelligenceData?.location_intelligence?.nearby_amenities;
-  const amenityGroups =
-    Array.isArray(nearbyAmenities) && nearbyAmenities.length > 0
-      ? {
-          eat: nearbyAmenities
-            .filter((item) =>
-              (item.category || "").toLowerCase().includes("food") ||
-              (item.category || "").toLowerCase().includes("restaurant") ||
-              (item.category || "").toLowerCase().includes("shop"),
-            )
-            .map((item) => ({
-              name: item.name || "Unnamed place",
-              category: item.category || "Nearby amenity",
-              distance:
-                typeof item.distance_km === "number"
-                  ? `${item.distance_km} km`
-                  : "Distance not available",
-              rating: item.rating,
-            })),
-          work: nearbyAmenities
-            .filter((item) =>
-              (item.category || "").toLowerCase().includes("school") ||
-              (item.category || "").toLowerCase().includes("office") ||
-              (item.category || "").toLowerCase().includes("business"),
-            )
-            .map((item) => ({
-              name: item.name || "Unnamed place",
-              category: item.category || "Nearby amenity",
-              distance:
-                typeof item.distance_km === "number"
-                  ? `${item.distance_km} km`
-                  : "Distance not available",
-              rating: item.rating,
-            })),
-          relax: nearbyAmenities
-            .filter((item) =>
-              (item.category || "").toLowerCase().includes("hospital") ||
-              (item.category || "").toLowerCase().includes("park") ||
-              (item.category || "").toLowerCase().includes("leisure"),
-            )
-            .map((item) => ({
-              name: item.name || "Unnamed place",
-              category: item.category || "Nearby amenity",
-              distance:
-                typeof item.distance_km === "number"
-                  ? `${item.distance_km} km`
-                  : "Distance not available",
-              rating: item.rating,
-            })),
-        }
-      : null;
+  const mapGooglePlace = (p: { name: string; rating?: number | null; distance_meters?: number | null; place_type?: string | null }) => ({
+    name: p.name,
+    category: p.place_type ? toTitleCase(p.place_type.replace(/_/g, " ")) ?? "Place" : "Place",
+    distance: typeof p.distance_meters === "number"
+      ? `${(p.distance_meters / 1000).toFixed(1)} km`
+      : "Nearby",
+    rating: p.rating ?? undefined,
+  });
 
-  if (
-    amenityGroups &&
-    (amenityGroups.eat.length > 0 ||
-      amenityGroups.work.length > 0 ||
-      amenityGroups.relax.length > 0)
-  ) {
+  const np = intelligenceData?.nearby_places;
+  if (np && ((np.eat?.length ?? 0) + (np.work?.length ?? 0) + (np.relax?.length ?? 0)) > 0) {
     return {
-      eat: amenityGroups.eat,
-      work: amenityGroups.work,
-      relax: amenityGroups.relax,
+      eat: (np.eat ?? []).map(mapGooglePlace),
+      work: (np.work ?? []).map(mapGooglePlace),
+      relax: (np.relax ?? []).map(mapGooglePlace),
+    };
+  }
+
+  const nearbyAmenities = intelligenceData?.location_intelligence?.nearby_amenities;
+  if (Array.isArray(nearbyAmenities) && nearbyAmenities.length > 0) {
+    const mapAmenity = (item: any) => ({
+      name: item.name || "Unnamed place",
+      category: item.category || "Nearby amenity",
+      distance: typeof item.distance_km === "number" ? `${item.distance_km} km` : "Nearby",
+      rating: item.rating,
+    });
+    return {
+      eat: nearbyAmenities
+        .filter((i) => ["food", "restaurant", "shop"].some((k) => (i.category || "").toLowerCase().includes(k)))
+        .map(mapAmenity),
+      work: nearbyAmenities
+        .filter((i) => ["school", "office", "business"].some((k) => (i.category || "").toLowerCase().includes(k)))
+        .map(mapAmenity),
+      relax: nearbyAmenities
+        .filter((i) => ["hospital", "park", "leisure"].some((k) => (i.category || "").toLowerCase().includes(k)))
+        .map(mapAmenity),
     };
   }
 
@@ -1504,7 +1532,7 @@ function buildLifestyleData(
       distance:
         typeof intelligenceData?.location_intelligence?.nearby_shopping?.distance_km === "number"
           ? `${intelligenceData.location_intelligence.nearby_shopping.distance_km} km`
-          : "Distance not available",
+          : "Nearby",
     })),
     work: (intelligenceData?.location_intelligence?.nearby_schools?.names || []).map((name) => ({
       name,
@@ -1512,7 +1540,7 @@ function buildLifestyleData(
       distance:
         typeof intelligenceData?.location_intelligence?.nearby_schools?.distance_km === "number"
           ? `${intelligenceData.location_intelligence.nearby_schools.distance_km} km`
-          : "Distance not available",
+          : "Nearby",
     })),
     relax: (intelligenceData?.location_intelligence?.nearby_hospitals?.names || []).map((name) => ({
       name,
@@ -1520,7 +1548,7 @@ function buildLifestyleData(
       distance:
         typeof intelligenceData?.location_intelligence?.nearby_hospitals?.distance_km === "number"
           ? `${intelligenceData.location_intelligence.nearby_hospitals.distance_km} km`
-          : "Distance not available",
+          : "Nearby",
     })),
   };
 }
@@ -1681,21 +1709,24 @@ function LegalSection({
     sourceListing?.titleVerification ||
     firstMatchingDocumentType(uniqueDocumentTypes, ["title", "c of o", "deed"]) ||
     "Not available";
+  const legalIntelligence = intelligenceData?.legal;
   const verificationStatus =
     documentVerification?.verificationStatus ||
     sourceListing?.titleVerification ||
     "Not available";
   const confidence =
-    typeof documentVerification?.overallConfidence !== "undefined"
+    legalIntelligence?.overall_confidence ??
+    (typeof documentVerification?.overallConfidence !== "undefined"
       ? Number(documentVerification.overallConfidence)
-      : undefined;
-  const riskLevel = toTitleCase(documentVerification?.riskLevel);
+      : undefined);
+  const riskLevel = toTitleCase(legalIntelligence?.risk_level ?? documentVerification?.riskLevel);
+  const healthScore = legalIntelligence?.health_score;
   const recommendations = Array.isArray(documentVerification?.recommendations)
     ? documentVerification.recommendations
     : [];
-  const flags = Array.isArray(documentVerification?.flagsAndWarnings)
+  const flags = legalIntelligence?.flags ?? (Array.isArray(documentVerification?.flagsAndWarnings)
     ? documentVerification.flagsAndWarnings
-    : [];
+    : []);
   const legalCosts = [
     {
       label: "Governor's Consent",
@@ -1732,30 +1763,37 @@ function LegalSection({
   return (
     <div className="space-y-6">
       {/* Document Health Score */}
-      <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 text-white">
-        <div className="flex items-center justify-between mb-4">
+      <div className={`rounded-2xl p-6 text-white ${
+        typeof healthScore === "number"
+          ? healthScore >= 70 ? "bg-gradient-to-br from-green-500 to-green-600"
+            : healthScore >= 40 ? "bg-gradient-to-br from-amber-500 to-amber-600"
+            : "bg-gradient-to-br from-red-500 to-red-600"
+          : "bg-gradient-to-br from-green-500 to-green-600"
+      }`}>
+        <div className="flex items-center justify-between mb-3">
           <div>
             <div className="text-sm opacity-90 mb-1">Document Health Score</div>
-            <div className="text-3xl font-bold">
-              {riskLevel || toTitleCase(verificationStatus) || "Not available"}
+            <div className="text-4xl font-bold">
+              {typeof healthScore === "number" ? `${healthScore}/100` : riskLevel || toTitleCase(verificationStatus) || "Not available"}
             </div>
           </div>
-          <div className="flex gap-0.5">
-            {[1, 2, 3, 4].map((s) => (
-              <Star
-                key={s}
-                className={`w-8 h-8 ${
-                  confidence && s <= Math.max(1, Math.round(confidence / 25))
-                    ? "fill-white text-white"
-                    : "text-white/30"
-                }`}
-              />
-            ))}
+          <div className="text-right">
+            {riskLevel && <div className="text-sm font-semibold bg-white/20 px-3 py-1 rounded-full">{riskLevel} Risk</div>}
+            {typeof confidence === "number" && (
+              <div className="text-xs opacity-80 mt-1">{confidence.toFixed(0)}% confidence</div>
+            )}
           </div>
         </div>
+        {typeof healthScore === "number" && (
+          <div className="w-full bg-white/20 rounded-full h-2 mb-3">
+            <div
+              className="bg-white rounded-full h-2 transition-all"
+              style={{ width: `${Math.min(100, healthScore)}%` }}
+            />
+          </div>
+        )}
         <p className="text-sm opacity-90">
           {[
-            confidence ? `${confidence.toFixed(0)}% confidence` : null,
             uniqueDocumentTypes.length > 0
               ? `${uniqueDocumentTypes.length} document type(s) identified`
               : null,
@@ -1813,34 +1851,37 @@ function LegalSection({
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
         <h3 className="font-semibold text-gray-900 mb-4">Your legal checklist</h3>
         <div className="space-y-3">
-          {checklist.map((check) => (
-            <div
-              key={check.item}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-            >
-              <div className="flex items-center gap-3">
-                {check.status === "provided" && <CheckCircle2 className="w-5 h-5 text-green-600" />}
-                {check.status === "verify" && <AlertCircle className="w-5 h-5 text-amber-600" />}
-                {(check.status === "pending" || check.status === "recommended") && (
-                  <Clock className="w-5 h-5 text-blue-600" />
-                )}
-                <span className="text-sm text-gray-900">{check.item}</span>
-              </div>
-              <span
-                className={`text-xs px-2 py-1 rounded-full ${
-                  check.color === "green"
-                    ? "bg-green-100 text-green-700"
-                    : check.color === "amber"
-                      ? "bg-amber-100 text-amber-700"
-                      : check.color === "blue"
-                        ? "bg-blue-100 text-blue-700"
-                        : "bg-purple-100 text-purple-700"
-                }`}
+          {(legalIntelligence?.items ?? checklist.map((c) => ({
+            key: c.item,
+            label: c.item,
+            status: c.status === "provided" ? "verified" : c.status,
+            points: 0,
+          }))).map((item) => {
+            const statusConfig: Record<string, { icon: React.ReactNode; badge: string }> = {
+              verified: { icon: <CheckCircle2 className="w-5 h-5 text-green-600" />, badge: "bg-green-100 text-green-700" },
+              pending: { icon: <Clock className="w-5 h-5 text-blue-600" />, badge: "bg-blue-100 text-blue-700" },
+              missing: { icon: <AlertCircle className="w-5 h-5 text-gray-400" />, badge: "bg-gray-100 text-gray-600" },
+              issue_found: { icon: <AlertCircle className="w-5 h-5 text-red-600" />, badge: "bg-red-100 text-red-700" },
+            };
+            const cfg = statusConfig[item.status] ?? statusConfig.pending;
+            return (
+              <div
+                key={item.key ?? item.label}
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
               >
-                {check.status}
-              </span>
-            </div>
-          ))}
+                <div className="flex items-center gap-3">
+                  {cfg.icon}
+                  <div>
+                    <span className="text-sm text-gray-900">{item.label}</span>
+                    {item.points > 0 && <span className="text-xs text-gray-500 ml-2">({item.points} pts)</span>}
+                  </div>
+                </div>
+                <span className={`text-xs px-2 py-1 rounded-full ${cfg.badge}`}>
+                  {item.status.replace(/_/g, " ")}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -1871,7 +1912,7 @@ function LegalSection({
                   step: flag.category || "Verification flag",
                   detail: flag.message,
                 }))
-          ).map(({ step, detail }, idx) => (
+          ).map(({ step, detail }: { step: string; detail: string }, idx: number) => (
             <div key={step} className="flex items-start gap-3">
               <div className="w-6 h-6 rounded-full bg-inda-teal text-white flex items-center justify-center flex-shrink-0 text-xs font-semibold">
                 {idx + 1}
@@ -1930,9 +1971,53 @@ function NeighborhoodSection({
   const district = intelligenceData?.location_intelligence?.district;
   const infrastructureProjects = intelligenceData?.location_intelligence?.infrastructure_projects;
   const commuteHighlights = intelligenceData?.location_intelligence?.accessibility;
+  const hood = intelligenceData?.neighborhood;
 
   return (
     <div className="space-y-6">
+      {/* Neighborhood Profile */}
+      {hood && (
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
+          <div className="flex items-center justify-between mb-5">
+            <div>
+              <h3 className="font-semibold text-gray-900">{hood.name}</h3>
+              <p className="text-sm text-gray-500 mt-0.5">Neighborhood profile</p>
+            </div>
+            <div className="w-12 h-12 rounded-full bg-inda-teal/10 flex items-center justify-center">
+              <MapPin className="w-6 h-6 text-inda-teal" />
+            </div>
+          </div>
+          <div className="space-y-4">
+            {[
+              { label: "Safety", score: hood.safety_score, color: "bg-green-500" },
+              { label: "Family-Friendly", score: hood.family_score, color: "bg-blue-500" },
+              { label: "Social Scene", score: hood.social_score, color: "bg-purple-500" },
+            ].map(({ label, score, color }) =>
+              typeof score === "number" ? (
+                <div key={label}>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-sm text-gray-700">{label}</span>
+                    <span className="text-sm font-semibold text-gray-900">{score}/10</span>
+                  </div>
+                  <div className="w-full bg-gray-100 rounded-full h-2">
+                    <div className={`${color} rounded-full h-2 transition-all`} style={{ width: `${score * 10}%` }} />
+                  </div>
+                </div>
+              ) : null
+            )}
+          </div>
+          {(hood.highlights?.length ?? 0) > 0 && (
+            <div className="mt-5 flex flex-wrap gap-2">
+              {hood.highlights!.map((h) => (
+                <span key={h} className="px-3 py-1.5 bg-inda-teal/10 text-inda-teal text-xs font-medium rounded-full">
+                  {h}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Lifestyle Map */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
         <h3 className="font-semibold text-gray-900 mb-4">Interactive Lifestyle Map</h3>
@@ -2004,43 +2089,47 @@ function NeighborhoodSection({
       </div>
 
       {/* Community Vibe */}
-      <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
-        <h3 className="font-semibold text-gray-900 mb-4">Community vibe & character</h3>
-        <div className="space-y-4">
-          {[
-            {
-              label: "District",
-              value: district || "Not available",
-            },
-            {
-              label: "Victoria Island commute",
-              value:
-                typeof commuteHighlights?.to_victoria_island_minutes === "number"
-                  ? `${commuteHighlights.to_victoria_island_minutes} min`
-                  : "Not available",
-            },
-            {
-              label: "Airport commute",
-              value:
-                typeof commuteHighlights?.to_airport_minutes === "number"
-                  ? `${commuteHighlights.to_airport_minutes} min`
-                  : "Not available",
-            },
-            {
-              label: "Marina commute",
-              value:
-                typeof commuteHighlights?.to_marina_minutes === "number"
-                  ? `${commuteHighlights.to_marina_minutes} min`
-                  : "Not available",
-            },
-          ].map((item) => (
-            <div key={item.label} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-              <span className="text-sm font-medium text-gray-900">{item.label}</span>
-              <span className="text-sm text-gray-600">{item.value}</span>
-            </div>
-          ))}
+      {(district || commuteHighlights) && (
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
+          <h3 className="font-semibold text-gray-900 mb-4">Commutes & location</h3>
+          <div className="space-y-3">
+            {[
+              { label: "District", value: district ?? null },
+              {
+                label: "Victoria Island",
+                value: typeof commuteHighlights?.to_victoria_island_minutes === "number"
+                  ? `${commuteHighlights.to_victoria_island_minutes} min drive`
+                  : null,
+              },
+              {
+                label: "Airport",
+                value: typeof commuteHighlights?.to_airport_minutes === "number"
+                  ? `${commuteHighlights.to_airport_minutes} min drive`
+                  : null,
+              },
+              {
+                label: "Marina / CBD",
+                value: typeof commuteHighlights?.to_marina_minutes === "number"
+                  ? `${commuteHighlights.to_marina_minutes} min drive`
+                  : null,
+              },
+              {
+                label: "Lekki FTZ",
+                value: typeof commuteHighlights?.to_lekki_ftz_minutes === "number"
+                  ? `${commuteHighlights.to_lekki_ftz_minutes} min drive`
+                  : null,
+              },
+            ]
+              .filter((item) => item.value !== null)
+              .map((item) => (
+                <div key={item.label} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                  <span className="text-sm text-gray-600">{item.label}</span>
+                  <span className="text-sm font-medium text-gray-900">{item.value}</span>
+                </div>
+              ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* What Makes This Special */}
       <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-6 border border-indigo-100">
