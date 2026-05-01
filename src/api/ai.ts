@@ -14,16 +14,20 @@ export interface PropertyChatContext {
   name: string;
   location: string;
   price: number;
+  priceNegotiable?: boolean;
   propertyType?: string;
   bedrooms?: number;
   bathrooms?: number;
   features?: string;
+  agentName?: string;
   intelligenceData?: {
     property_details?: any;
     location_intelligence?: any;
     investment_analysis?: any;
     value_projection?: any;
     cash_flow_forecast?: any;
+    nearby_places?: any;
+    neighborhood?: any;
   };
 }
 
