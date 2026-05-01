@@ -1,56 +1,69 @@
-import { X, Calendar, Clock, User, Phone, Mail, AlertCircle, Loader2 } from "lucide-react";
+import { X, Video, Calendar, Clock, User, Phone, Mail, Globe, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { InquiriesService } from "@/api/inquiries";
 
-interface ScheduleSiteVisitModalProps {
+interface BookVirtualTourModalProps {
   isOpen: boolean;
   onClose: () => void;
   propertyName: string;
   propertyLocation: string;
-  listingId: string;
+  listingId?: string;
+  agentUserId?: string;
 }
 
-export function ScheduleSiteVisitModal({
+export function BookVirtualTourModal({
   isOpen,
   onClose,
   propertyName,
   propertyLocation,
   listingId,
-}: ScheduleSiteVisitModalProps) {
+}: BookVirtualTourModalProps) {
   const [formData, setFormData] = useState({
     fullName: "",
     phone: "",
     email: "",
     preferredDate: "",
     preferredTime: "",
-    visitType: "individual", // individual or group
-    numberOfPeople: "1",
-    specificQuestions: "",
+    platform: "whatsapp",
+    numberOfViewers: "1",
+    specificAreas: "",
     howDidYouHear: "",
+    location: "",
   });
 
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Get minimum date (tomorrow)
   const getMinDate = () => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split('T')[0];
+    return tomorrow.toISOString().split("T")[0];
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+
+    if (!listingId) {
+      setError("Unable to submit — listing information not available. Please try again.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const notes = [
-        `Visit Type: ${formData.visitType}`,
-        formData.visitType !== "individual" ? `Number of People: ${formData.numberOfPeople}` : null,
-        formData.specificQuestions ? `Questions/Focus Areas: ${formData.specificQuestions}` : null,
-        formData.howDidYouHear ? `How they heard about property: ${formData.howDidYouHear}` : null,
+      const platformLabel =
+        formData.platform === "whatsapp" ? "WhatsApp Video Call" :
+        formData.platform === "zoom" ? "Zoom" :
+        formData.platform === "google-meet" ? "Google Meet" : "FaceTime";
+
+      const tourDetails = [
+        `Virtual tour via ${platformLabel}`,
+        `Viewers: ${formData.numberOfViewers}`,
+        formData.location ? `Calling from: ${formData.location}` : null,
+        formData.specificAreas ? `Focus areas: ${formData.specificAreas}` : null,
+        formData.howDidYouHear ? `How they heard: ${formData.howDidYouHear}` : null,
       ].filter(Boolean).join("\n");
 
       await InquiriesService.createVisitRequest({
@@ -60,23 +73,22 @@ export function ScheduleSiteVisitModal({
         buyerPhone: formData.phone,
         preferredDate: formData.preferredDate,
         preferredTime: formData.preferredTime,
-        message: notes || undefined,
+        message: tourDetails,
       });
 
       setSubmitted(true);
     } catch (err: any) {
-      console.error("Failed to submit site visit request:", err);
+      console.error("Failed to submit virtual tour request:", err);
       setError(err?.response?.data?.message || "Failed to submit request. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const resetForm = () => {
@@ -86,10 +98,11 @@ export function ScheduleSiteVisitModal({
       email: "",
       preferredDate: "",
       preferredTime: "",
-      visitType: "individual",
-      numberOfPeople: "1",
-      specificQuestions: "",
+      platform: "whatsapp",
+      numberOfViewers: "1",
+      specificAreas: "",
       howDidYouHear: "",
+      location: "",
     });
     setSubmitted(false);
     setIsSubmitting(false);
@@ -109,16 +122,15 @@ export function ScheduleSiteVisitModal({
         <div className="bg-white rounded-2xl max-w-md w-full p-6">
           <div className="text-center">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Calendar className="w-8 h-8 text-green-600" />
+              <Video className="w-8 h-8 text-green-600" />
             </div>
-            <h2 className="text-gray-900 mb-2">Visit Request Submitted!</h2>
-            <p className="text-gray-600 mb-6">
-              The agent will contact you within 24 hours to confirm your site visit at {propertyName}.
+            <h2 className="text-gray-900 mb-2">Virtual Tour Booked!</h2>
+            <p className="text-gray-600 mb-4">
+              The agent will contact you within 24 hours to confirm your virtual tour of {propertyName}.
             </p>
             <p className="text-sm text-gray-500 mb-6">
               Check your email ({formData.email}) for confirmation details.
             </p>
-
             <button
               onClick={handleClose}
               className="w-full px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
@@ -137,25 +149,22 @@ export function ScheduleSiteVisitModal({
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <div>
-            <h2 className="text-gray-900 mb-1">Schedule Site Visit</h2>
+            <h2 className="text-gray-900 mb-1">Book Virtual Tour</h2>
             <p className="text-sm text-gray-600">{propertyName} • {propertyLocation}</p>
           </div>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
+          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Notice - No Same Day Visits */}
-        <div className="mx-6 mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+        {/* Info banner */}
+        <div className="mx-6 mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+            <Video className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
             <div>
-              <h4 className="text-gray-900 text-sm mb-1">Important Notice</h4>
+              <h4 className="text-gray-900 text-sm mb-1">Live Video Property Tour</h4>
               <p className="text-xs text-gray-700">
-                Site visits must be scheduled at least 24 hours in advance. Same-day bookings are not available to ensure proper preparation and security clearance.
+                Perfect for diaspora buyers or busy schedules. Our agent will walk through the property live via video call, showing you every room and answering questions in real-time.
               </p>
             </div>
           </div>
@@ -163,7 +172,6 @@ export function ScheduleSiteVisitModal({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Error Message */}
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
               {error}
@@ -185,7 +193,7 @@ export function ScheduleSiteVisitModal({
                   value={formData.fullName}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#50b8b1]"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-inda-teal"
                   placeholder="Enter your full name"
                 />
               </div>
@@ -193,7 +201,7 @@ export function ScheduleSiteVisitModal({
               <div>
                 <label className="block text-sm text-gray-700 mb-2">
                   <Phone className="w-4 h-4 inline mr-1" />
-                  Phone Number *
+                  Phone Number (WhatsApp preferred) *
                 </label>
                 <input
                   type="tel"
@@ -201,7 +209,7 @@ export function ScheduleSiteVisitModal({
                   value={formData.phone}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#50b8b1]"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-inda-teal"
                   placeholder="+234 xxx xxx xxxx"
                 />
               </div>
@@ -217,16 +225,32 @@ export function ScheduleSiteVisitModal({
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#50b8b1]"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-inda-teal"
                   placeholder="your.email@example.com"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-700 mb-2">
+                  <Globe className="w-4 h-4 inline mr-1" />
+                  Where are you calling from? *
+                </label>
+                <input
+                  type="text"
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  required
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-inda-teal"
+                  placeholder="E.g., London UK, Lagos Nigeria, New York USA"
                 />
               </div>
             </div>
           </div>
 
-          {/* Visit Details */}
+          {/* Tour Details */}
           <div>
-            <h3 className="text-gray-900 mb-4">Visit Details</h3>
+            <h3 className="text-gray-900 mb-4">Tour Details</h3>
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -241,68 +265,70 @@ export function ScheduleSiteVisitModal({
                     onChange={handleChange}
                     min={getMinDate()}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#50b8b1]"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-inda-teal"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm text-gray-700 mb-2">
                     <Clock className="w-4 h-4 inline mr-1" />
-                    Preferred Time *
+                    Preferred Time (WAT) *
                   </label>
                   <select
                     name="preferredTime"
                     value={formData.preferredTime}
                     onChange={handleChange}
                     required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#50b8b1]"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-inda-teal"
                   >
                     <option value="">Select time</option>
-                    <option value="9am-11am">9:00 AM - 11:00 AM</option>
-                    <option value="11am-1pm">11:00 AM - 1:00 PM</option>
-                    <option value="1pm-3pm">1:00 PM - 3:00 PM</option>
-                    <option value="3pm-5pm">3:00 PM - 5:00 PM</option>
+                    <option value="9am-11am">9:00 AM – 11:00 AM</option>
+                    <option value="11am-1pm">11:00 AM – 1:00 PM</option>
+                    <option value="1pm-3pm">1:00 PM – 3:00 PM</option>
+                    <option value="3pm-5pm">3:00 PM – 5:00 PM</option>
+                    <option value="5pm-7pm">5:00 PM – 7:00 PM (if available)</option>
                   </select>
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm text-gray-700 mb-2">
-                  Visit Type *
+                  <Video className="w-4 h-4 inline mr-1" />
+                  Preferred Video Platform *
                 </label>
                 <select
-                  name="visitType"
-                  value={formData.visitType}
+                  name="platform"
+                  value={formData.platform}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#50b8b1]"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-inda-teal"
                 >
-                  <option value="individual">Individual Visit (just me)</option>
-                  <option value="family">Family Visit (with family members)</option>
-                  <option value="agent">With Real Estate Agent</option>
-                  <option value="lawyer">With Lawyer/Legal Advisor</option>
+                  <option value="whatsapp">WhatsApp Video Call (Recommended)</option>
+                  <option value="zoom">Zoom</option>
+                  <option value="google-meet">Google Meet</option>
+                  <option value="facetime">FaceTime (iOS only)</option>
                 </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  WhatsApp is fastest and doesn&apos;t require app installation
+                </p>
               </div>
 
-              {formData.visitType !== "individual" && (
-                <div>
-                  <label className="block text-sm text-gray-700 mb-2">
-                    Number of People Attending *
-                  </label>
-                  <select
-                    name="numberOfPeople"
-                    value={formData.numberOfPeople}
-                    onChange={handleChange}
-                    required
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#50b8b1]"
-                  >
-                    <option value="2">2 people</option>
-                    <option value="3">3 people</option>
-                    <option value="4">4 people</option>
-                    <option value="5+">5+ people</option>
-                  </select>
-                </div>
-              )}
+              <div>
+                <label className="block text-sm text-gray-700 mb-2">
+                  Number of Viewers
+                </label>
+                <select
+                  name="numberOfViewers"
+                  value={formData.numberOfViewers}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-inda-teal"
+                >
+                  <option value="1">Just me</option>
+                  <option value="2">2 people (spouse/partner)</option>
+                  <option value="3">3 people</option>
+                  <option value="4+">4+ people (family/team)</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -312,15 +338,15 @@ export function ScheduleSiteVisitModal({
             <div className="space-y-4">
               <div>
                 <label className="block text-sm text-gray-700 mb-2">
-                  Specific Questions or Areas to Focus On (Optional)
+                  Specific Areas or Features to Focus On (Optional)
                 </label>
                 <textarea
-                  name="specificQuestions"
-                  value={formData.specificQuestions}
+                  name="specificAreas"
+                  value={formData.specificAreas}
                   onChange={handleChange}
                   rows={3}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#50b8b1]"
-                  placeholder="E.g., Want to see the master bedroom, check plumbing, assess natural lighting..."
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-inda-teal"
+                  placeholder="E.g., Show me the kitchen, master bedroom view, parking space..."
                 />
               </div>
 
@@ -333,14 +359,15 @@ export function ScheduleSiteVisitModal({
                   value={formData.howDidYouHear}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#50b8b1]"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-inda-teal"
                 >
                   <option value="">Select option</option>
                   <option value="inda-search">Inda search/browsing</option>
-                  <option value="social-media">Social media</option>
+                  <option value="social-media">Social media (Instagram, Twitter, etc.)</option>
                   <option value="friend-referral">Friend/family referral</option>
                   <option value="agent">Real estate agent</option>
                   <option value="google">Google search</option>
+                  <option value="whatsapp">WhatsApp link</option>
                   <option value="other">Other</option>
                 </select>
               </div>
@@ -348,16 +375,14 @@ export function ScheduleSiteVisitModal({
           </div>
 
           {/* Disclaimer */}
-          <div className="bg-gray-50 rounded-lg p-4 text-xs text-gray-600">
-            <p className="mb-2">
-              ✓ You&apos;ll receive a confirmation email within 24 hours with exact meeting point and security access details.
-            </p>
-            <p>
-              ✓ Please bring a valid ID for security clearance at the estate gate.
-            </p>
+          <div className="bg-gray-50 rounded-lg p-4 text-xs text-gray-600 space-y-1">
+            <p>✓ Tours typically last 20–30 minutes. Ask questions anytime during the tour.</p>
+            <p>✓ You&apos;ll receive a meeting link 1 hour before the scheduled time.</p>
+            <p>✓ Recording is allowed for personal reference only.</p>
+            <p>✓ Can&apos;t make the scheduled time? We&apos;ll work with you to reschedule.</p>
           </div>
 
-          {/* Submit Button */}
+          {/* Submit Buttons */}
           <div className="flex gap-3">
             <button
               type="button"
@@ -370,7 +395,7 @@ export function ScheduleSiteVisitModal({
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-1 px-6 py-3 bg-[#50b8b1] text-white rounded-lg hover:bg-[#45a69f] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="flex-1 px-6 py-3 bg-inda-teal text-white rounded-lg hover:bg-inda-teal/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <>
@@ -378,7 +403,7 @@ export function ScheduleSiteVisitModal({
                   Submitting...
                 </>
               ) : (
-                "Submit Request"
+                "Book Virtual Tour"
               )}
             </button>
           </div>

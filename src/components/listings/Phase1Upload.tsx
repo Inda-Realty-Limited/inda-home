@@ -62,6 +62,7 @@ interface Phase1UploadProps {
   onAddressCityChange: (value: string) => void;
   onAddressStreetChange: (value: string) => void;
   askingPrice: number;
+  priceNegotiable: boolean;
   declaredDocuments: DeclaredDocument[];
   photos: UploadedPhoto[];
   errors: { [key: string]: string };
@@ -69,6 +70,7 @@ interface Phase1UploadProps {
   onPropertyFlowTypeChange: (type: PropertyFlowType) => void;
 
   onPriceChange: (value: number) => void;
+  onPriceNegotiableChange: (value: boolean) => void;
   onDeclareDocument: (type: DocumentType) => void;
   onRemoveDeclaredDocument: (id: string) => void;
   onDocumentFileUpload: (declaredDocId: string, file: File) => void;
@@ -93,12 +95,14 @@ export function Phase1Upload({
   onAddressCityChange,
   onAddressStreetChange,
   askingPrice,
+  priceNegotiable,
   declaredDocuments,
   photos,
   errors,
   propertyFlowType,
   onPropertyFlowTypeChange,
   onPriceChange,
+  onPriceNegotiableChange,
   onDeclareDocument,
   onRemoveDeclaredDocument,
   onDocumentFileUpload,
@@ -253,6 +257,15 @@ export function Phase1Upload({
             &#8358;{askingPrice.toLocaleString()}
           </p>
         )}
+        <label className="flex items-center gap-3 mt-3 cursor-pointer select-none w-fit">
+          <div
+            onClick={() => onPriceNegotiableChange(!priceNegotiable)}
+            className={`relative w-10 h-5 rounded-full transition-colors ${priceNegotiable ? 'bg-[#4ea8a1]' : 'bg-gray-300'}`}
+          >
+            <span className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform ${priceNegotiable ? 'translate-x-5' : 'translate-x-0'}`} />
+          </div>
+          <span className="text-sm text-gray-700">Price is negotiable</span>
+        </label>
       </div>
 
       {/* Number of Bedrooms */}

@@ -5,7 +5,7 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
 import {
     Search, SlidersHorizontal, MapPin, TrendingUp, Building2,
-    Plus, ChevronDown, X, Bookmark, BookmarkCheck, Eye
+    Plus, ChevronDown, X, Bookmark, BookmarkCheck, Eye, Edit3
 } from 'lucide-react';
 import { ProListingsService, Listing } from '@/api/pro-listings';
 import { PropertyUploadModal } from '@/components/listings/PropertyUploadModal';
@@ -456,12 +456,21 @@ export default function ListingsHubPage() {
                                         {/* Actions */}
                                         <div className="flex items-center gap-2 justify-end">
                                             <button
-                                                onClick={() => router.push(`/listings/${item.indaTag || item.id || item._id}`)}
+                                                onClick={() => router.push(`/property/${item.indaTag || item.id || item._id}`)}
                                                 className="flex items-center gap-1.5 text-xs font-medium text-inda-teal border border-inda-teal/30 px-3 py-1.5 rounded-lg hover:bg-inda-teal/5 transition-colors"
                                             >
                                                 <Eye className="w-3.5 h-3.5" />
                                                 View
                                             </button>
+                                            {activeTab === 'mine' && (
+                                                <button
+                                                    onClick={() => router.push(`/listings/edit?id=${item.id || item._id}`)}
+                                                    className="flex items-center gap-1.5 text-xs font-medium text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:border-inda-teal hover:text-inda-teal transition-colors"
+                                                >
+                                                    <Edit3 className="w-3.5 h-3.5" />
+                                                    Edit
+                                                </button>
+                                            )}
                                             {activeTab === 'marketplace' && (
                                                 <button
                                                     onClick={() => toggleSaved(id)}

@@ -6,9 +6,76 @@ import { trackChannelClick } from "@/api/channels";
 import LoadingScreen from "@/views/result/sections/LoadingScreen";
 import NotFoundScreen from "@/views/result/sections/NotFoundScreen";
 import { mapListingToPropertyDetail } from "@/views/property-details/utils";
+import { useAuth } from "@/contexts/AuthContext";
+
+const toNumber = (value: unknown): number | undefined => {
+  if (value === null || typeof value === "undefined") return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+
+const buildIntelligenceDataFromRelations = (listing: any) => {
+  const source =
+    listing?.intelligenceData ||
+    listing?.snapshot?.intelligenceData;
+  if (source) return source;
+
+  const locationIntelligence = listing?.locationIntelligence;
+  const investmentAnalysis = listing?.investmentAnalysis;
+  const valueProjection = listing?.valueProjection;
+  const cashFlowForecast = listing?.cashFlowForecast;
+
+  if (
+    !locationIntelligence &&
+    !investmentAnalysis &&
+    !valueProjection &&
+    !cashFlowForecast
+  ) {
+    return null;
+  }
+
+  return {
+    location_intelligence: locationIntelligence
+      ? {
+          coordinates: locationIntelligence.coordinates,
+          district: locationIntelligence.district,
+          accessibility: locationIntelligence.accessibility,
+          nearby_schools: locationIntelligence.nearbySchools,
+          nearby_hospitals: locationIntelligence.nearbyHospitals,
+          nearby_shopping: locationIntelligence.nearbyShopping,
+          infrastructure_projects: locationIntelligence.infrastructureProjects,
+          nearby_amenities: locationIntelligence.nearbyAmenities,
+        }
+      : undefined,
+    investment_analysis: investmentAnalysis
+      ? {
+          total_investment_breakdown:
+            investmentAnalysis.totalInvestmentBreakdown,
+          annual_rental_income: investmentAnalysis.annualRentalIncome,
+          meta: investmentAnalysis.meta,
+        }
+      : undefined,
+    value_projection: valueProjection
+      ? {
+          annual_appreciation_pct: toNumber(
+            valueProjection.annualAppreciationPct,
+          ),
+          historical_avg_pct: toNumber(valueProjection.historicalAvgPct),
+          year_1: valueProjection.year1,
+          year_2: valueProjection.year2,
+          year_3: valueProjection.year3,
+          year_4: valueProjection.year4,
+          year_5: valueProjection.year5,
+          projected_gain_5_year: toNumber(valueProjection.projectGain5Year),
+        }
+      : undefined,
+    cash_flow_forecast: cashFlowForecast?.data,
+  };
+};
 
 const PropertyDetailsPage: React.FC = () => {
   const router = useRouter();
+  const { user } = useAuth();
   const { id, c: channel, agent } = router.query;
   const [loading, setLoading] = useState(true);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -87,6 +154,7 @@ const PropertyDetailsPage: React.FC = () => {
   }
 
   const mappedData = mapListingToPropertyDetail(listing);
+  const intelligenceData = buildIntelligenceDataFromRelations(listing);
 
   const property: PropertyReportData = {
     name: mappedData.name,
@@ -106,9 +174,20 @@ const PropertyDetailsPage: React.FC = () => {
           expectedHandoverDate: mappedData.offPlanData.expectedHandoverDate,
         }
       : undefined,
+    views: mappedData.socialProof.views || undefined,
   };
 
-  return <PropertyReport property={property} onBack={() => router.back()} />;
+  const isOwner = user && listing?.userId && user._id === listing.userId;
+
+  return (
+    <PropertyReport
+      property={property}
+      intelligenceData={intelligenceData}
+      sourceListing={listing}
+      onBack={() => router.back()}
+      onEdit={isOwner ? () => router.push(`/listings/edit?id=${listing.id || listing._id}`) : undefined}
+    />
+  );
 };
 
 export default PropertyDetailsPage;
