@@ -3,12 +3,21 @@
 export const mapListingToPropertyDetail = (listing: any) => {
   const snapshot = listing.snapshot || {};
   const analytics = listing.analytics || {};
-  // Use photosWithMeta (new structure) with fallback to legacy fields
+  // Use photosWithMeta when present, and fall back to raw listing photos.
+  const rawPhotos = Array.isArray(listing.photos)
+    ? listing.photos
+    : Array.isArray(snapshot.photos)
+      ? snapshot.photos
+      : [];
   const photosWithMeta =
-    listing.photosWithMeta || snapshot.photosWithMeta || [];
+    listing.photosWithMeta ||
+    snapshot.photosWithMeta ||
+    rawPhotos;
   const images =
     photosWithMeta.length > 0
-      ? photosWithMeta.map((p: any) => p.url)
+      ? photosWithMeta
+          .map((p: any) => (typeof p === "string" ? p : p?.url))
+          .filter(Boolean)
       : snapshot.imageUrls ||
         listing.imageUrls ||
         listing.images ||
