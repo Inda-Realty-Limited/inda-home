@@ -24,12 +24,14 @@ const buildIntelligenceDataFromRelations = (listing: any) => {
   const investmentAnalysis = listing?.investmentAnalysis;
   const valueProjection = listing?.valueProjection;
   const cashFlowForecast = listing?.cashFlowForecast;
+  const aiReport = listing?.aiReport;
 
   if (
     !locationIntelligence &&
     !investmentAnalysis &&
     !valueProjection &&
-    !cashFlowForecast
+    !cashFlowForecast &&
+    !aiReport
   ) {
     return null;
   }
@@ -70,6 +72,9 @@ const buildIntelligenceDataFromRelations = (listing: any) => {
         }
       : undefined,
     cash_flow_forecast: cashFlowForecast?.data,
+    special_highlights: Array.isArray(aiReport?.specialHighlights)
+      ? aiReport.specialHighlights
+      : undefined,
   };
 };
 
@@ -174,6 +179,7 @@ const PropertyDetailsPage: React.FC = () => {
           expectedHandoverDate: mappedData.offPlanData.expectedHandoverDate,
         }
       : undefined,
+    yearBuilt: mappedData.yearBuilt ?? undefined,
     views: mappedData.socialProof.views || undefined,
   };
 
