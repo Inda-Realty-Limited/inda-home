@@ -38,6 +38,7 @@ import { AskAIModal } from "@/views/property-details/modals/AskAIModal";
 import { MakeOfferModal } from "@/views/property-details/modals/MakeOfferModal";
 import { ScheduleSiteVisitModal } from "@/views/property-details/modals/ScheduleSiteVisitModal";
 import { BookVirtualTourModal } from "@/views/property-details/modals/BookVirtualTourModal";
+import GoogleMap from "@/components/inc/GoogleMap";
 
 export interface PropertyReportData {
   name: string;
@@ -2069,16 +2070,25 @@ function NeighborhoodSection({
           })}
         </div>
 
-        {/* Map placeholder */}
-        <div className="relative h-48 bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl mb-4 flex items-center justify-center">
-          <div className="text-center">
-            <MapPinned className="w-12 h-12 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-500">
-              {coordinates?.lat && coordinates?.lng
-                ? `${coordinates.lat}, ${coordinates.lng}`
-                : district || "Map coordinates not available"}
-            </p>
-          </div>
+        {/* Map */}
+        <div className="relative h-64 rounded-xl mb-4 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200">
+          {typeof coordinates?.lat === "number" && typeof coordinates?.lng === "number" ? (
+            <GoogleMap
+              lat={coordinates.lat}
+              lng={coordinates.lng}
+              zoom={15}
+              className="h-full"
+            />
+          ) : (
+            <div className="h-full flex items-center justify-center">
+              <div className="text-center">
+                <MapPinned className="w-12 h-12 text-gray-400 mx-auto mb-2" />
+                <p className="text-sm text-gray-500">
+                  {district || "Map coordinates not available"}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Location Cards */}

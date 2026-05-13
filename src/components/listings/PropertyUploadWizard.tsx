@@ -117,6 +117,7 @@ export function PropertyUploadWizard({
   const [bathrooms, setBathrooms] = useState(
     initialData?.confirmedData?.bathrooms || 0,
   );
+  const [amenities, setAmenities] = useState("");
   const [declaredDocuments, setDeclaredDocuments] = useState<
     DeclaredDocument[]
   >(initialData?.declaredDocuments || []);
@@ -593,11 +594,24 @@ export function PropertyUploadWizard({
     try {
       const formData = new FormData();
 
+      // Build a human-readable title. propertyType may fall back to the flow-type
+      // label ("Completed" / "Off-Plan" / "Land Only"), which is fine for the
+      // propertyType DB column but a poor noun for the title — pick a real noun
+      // separately.
+      const titleLocation = addressCity || addressLga;
+      const realPropertyType =
+        uploadData.confirmedData?.propertyType || aiData?.propertyType;
+      const isLand = propertyFlowType === "land-only";
+      const titleNoun = isLand
+        ? "Land"
+        : realPropertyType ||
+          (propertyFlowType === "off-plan" ? "Off-Plan Property" : "Property");
+      const title = isLand
+        ? `${titleNoun}${titleLocation ? ` in ${titleLocation}` : ""}`
+        : `${confirmedData.bedrooms ? `${confirmedData.bedrooms}-Bed ` : ""}${titleNoun}${titleLocation ? ` in ${titleLocation}` : ""}`;
+
       // Add basic listing data
-      formData.append(
-        "title",
-        `${confirmedData.bedrooms || ""}${propertyType} in ${addressCity || addressLga}`,
-      );
+      formData.append("title", title);
       formData.append("propertyType", propertyType);
       formData.append("microlocation", addressCity);
       formData.append("purchasePrice", askingPrice.toString());
@@ -613,8 +627,21 @@ export function PropertyUploadWizard({
 
       // Add AI-extracted data
       if (aiData) {
-        formData.append("features", JSON.stringify(aiData.amenities || []));
-        formData.append("amenities", JSON.stringify(aiData.amenities || []));
+        const typedAmenities = amenities
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean);
+        const aiAmenities = Array.isArray(aiData.amenities) ? aiData.amenities : [];
+        const seen = new Set<string>();
+        const mergedAmenities: string[] = [];
+        for (const item of [...typedAmenities, ...aiAmenities]) {
+          const key = item.toLowerCase();
+          if (seen.has(key)) continue;
+          seen.add(key);
+          mergedAmenities.push(item);
+        }
+        formData.append("features", JSON.stringify(mergedAmenities));
+        formData.append("amenities", JSON.stringify(mergedAmenities));
         if (aiData.yearBuilt)
           formData.append("buildYear", aiData.yearBuilt.toString());
 
@@ -1155,6 +1182,7 @@ export function PropertyUploadWizard({
                 priceNegotiable={priceNegotiable}
                 bedrooms={bedrooms}
                 bathrooms={bathrooms}
+                amenities={amenities}
                 declaredDocuments={declaredDocuments}
                 photos={photos}
                 errors={errors}
@@ -1164,6 +1192,7 @@ export function PropertyUploadWizard({
                 onPriceNegotiableChange={setPriceNegotiable}
                 onBedroomsChange={handleBedroomsChange}
                 onBathroomsChange={handleBathroomsChange}
+                onAmenitiesChange={setAmenities}
                 onDeclareDocument={handleDeclareDocument}
                 onRemoveDeclaredDocument={handleRemoveDeclaredDocument}
                 onDocumentFileUpload={handleDocumentFileUpload}
@@ -1186,6 +1215,9 @@ export function PropertyUploadWizard({
                   )
                   .map((d) => ({ id: d.id, file: d.file, type: d.type }))}
                 photos={photos}
+                typedAmenities={amenities}
+                microlocation={addressCity || addressLga}
+                propertyFlowType={propertyFlowType}
                 onComplete={handleAnalysisComplete}
                 onError={handleAnalysisError}
                 onBack={() => setCurrentPhase("upload")}
