@@ -22,10 +22,6 @@ const envVars: Record<string, EnvVarConfig> = {
     key: 'NEXT_PUBLIC_ENCRYPTION_SECRET',
     required: true,
   },
-  MAPBOX_TOKEN: {
-    key: 'NEXT_PUBLIC_MAPBOX_TOKEN',
-    required: false,
-  },
   GOOGLE_MAPS_API_KEY: {
     key: 'NEXT_PUBLIC_GOOGLE_MAPS_API_KEY',
     required: false,
@@ -99,7 +95,6 @@ const envVars: Record<string, EnvVarConfig> = {
 const clientEnv = {
   NEXT_PUBLIC_API_BASE_URL: process.env.NEXT_PUBLIC_API_BASE_URL,
   NEXT_PUBLIC_ENCRYPTION_SECRET: process.env.NEXT_PUBLIC_ENCRYPTION_SECRET,
-  NEXT_PUBLIC_MAPBOX_TOKEN: process.env.NEXT_PUBLIC_MAPBOX_TOKEN,
   NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY,
   NEXT_PUBLIC_MAP_DEFAULT_LAT: process.env.NEXT_PUBLIC_MAP_DEFAULT_LAT,
   NEXT_PUBLIC_MAP_DEFAULT_LNG: process.env.NEXT_PUBLIC_MAP_DEFAULT_LNG,
@@ -196,9 +191,6 @@ export const env = {
     },
   },
   maps: {
-    get mapboxToken() {
-      return getEnvVar(envVars.MAPBOX_TOKEN);
-    },
     get googleMapsApiKey() {
       return getEnvVar(envVars.GOOGLE_MAPS_API_KEY);
     },

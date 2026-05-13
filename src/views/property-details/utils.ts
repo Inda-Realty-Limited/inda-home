@@ -37,13 +37,29 @@ export const mapListingToPropertyDetail = (listing: any) => {
     return `₦${price.toLocaleString()}`;
   };
 
-  // Extract amenities/features
-  const amenities = snapshot.amenities || listing.amenities || [];
-  const features = Array.isArray(amenities)
-    ? amenities
-    : amenities
-      ? [amenities]
-      : [];
+  // Extract amenities/features. Backend may store as a JSON-stringified array,
+  // a CSV string, or already-parsed array depending on the upload path.
+  const parseAmenities = (raw: unknown): string[] => {
+    if (Array.isArray(raw)) {
+      return raw.filter((item): item is string => typeof item === "string" && !!item.trim());
+    }
+    if (typeof raw !== "string" || !raw.trim()) return [];
+    const trimmed = raw.trim();
+    if (trimmed.startsWith("[")) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          return parsed
+            .map((item) => (typeof item === "string" ? item.trim() : ""))
+            .filter(Boolean);
+        }
+      } catch {
+        // fall through to CSV parsing
+      }
+    }
+    return trimmed.split(",").map((item) => item.trim()).filter(Boolean);
+  };
+  const features = parseAmenities(snapshot.amenities ?? listing.amenities);
 
   // Check if it's a scanned listing (has listingUrl but might not have _id)
   const isScanned =

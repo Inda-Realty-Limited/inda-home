@@ -15,6 +15,9 @@ import { UploadedDocument, UploadedPhoto, AIInferredData } from "./types";
 interface Phase2ProcessingProps {
     documents: UploadedDocument[];
     photos: UploadedPhoto[];
+    typedAmenities?: string;
+    microlocation?: string;
+    propertyFlowType?: string;
     onComplete: (data: AIInferredData) => void;
     onError: (message: string) => void;
     onBack?: () => void;
@@ -28,7 +31,16 @@ interface AnalysisError {
     retryable: boolean;
 }
 
-export function Phase2Processing({ documents, photos, onComplete, onError, onBack }: Phase2ProcessingProps) {
+export function Phase2Processing({
+    documents,
+    photos,
+    typedAmenities,
+    microlocation,
+    propertyFlowType,
+    onComplete,
+    onError,
+    onBack,
+}: Phase2ProcessingProps) {
     const [progress, setProgress] = useState(10);
     const [step, setStep] = useState("Preparing files for analysis...");
     const [status, setStatus] = useState<AnalysisStatus>("idle");
@@ -54,6 +66,17 @@ export function Phase2Processing({ documents, photos, onComplete, onError, onBac
             photos.forEach(photo => {
                 formData.append("images", photo.file);
             });
+
+            // Add seller-supplied context to inform AI categorization
+            if (typedAmenities?.trim()) {
+                formData.append("typedAmenities", typedAmenities.trim());
+            }
+            if (microlocation?.trim()) {
+                formData.append("microlocation", microlocation.trim());
+            }
+            if (propertyFlowType) {
+                formData.append("propertyFlowType", propertyFlowType);
+            }
 
             setProgress(30);
             setStep("Sending to AI for processing...");
