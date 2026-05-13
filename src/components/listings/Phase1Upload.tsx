@@ -80,8 +80,10 @@ interface Phase1UploadProps {
   onPhotoRemove: (id: string) => void;
   bedrooms: number;
   bathrooms: number;
+  amenities: string;
   onBedroomsChange: (value: number) => void;
   onBathroomsChange: (value: number) => void;
+  onAmenitiesChange: (value: string) => void;
   onSubmit: () => void;
 }
 
@@ -112,8 +114,10 @@ export function Phase1Upload({
   onPhotoRemove,
   bedrooms,
   bathrooms,
+  amenities,
   onBedroomsChange,
   onBathroomsChange,
+  onAmenitiesChange,
   onSubmit,
 }: Phase1UploadProps) {
   const availableAreas = addressLga
@@ -307,6 +311,24 @@ export function Phase1Upload({
           </div>
         </div>
       )}
+
+      {/* Amenities */}
+      <div>
+        <label className="block text-sm font-medium text-gray-900 mb-2">
+          {propertyFlowType === "land-only" ? "5" : "7"}. Amenities & Features
+        </label>
+        <textarea
+          value={amenities}
+          onChange={(e) => onAmenitiesChange(e.target.value)}
+          placeholder="e.g., Swimming pool, gated community, 24/7 security, fitted kitchen, near beach"
+          rows={3}
+          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4ea8a1] focus:border-transparent"
+        />
+        <p className="text-xs text-gray-500 mt-1">
+          Separate items with commas. Used in the property report's amenities list
+          and helps Inda decide what makes this property special.
+        </p>
+      </div>
 
       {/* Submit Button */}
       <div className="flex items-center justify-between pt-4 border-t border-gray-200">

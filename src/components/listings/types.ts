@@ -164,7 +164,16 @@ export interface AIInferredData {
   specialHighlights?: Array<{
     icon?: string;
     title?: string;
-    dimension?: string;
+    category?:
+      | 'waterfront'
+      | 'business'
+      | 'dining'
+      | 'family'
+      | 'new_dev'
+      | 'luxury'
+      | 'schools'
+      | 'transport'
+      | 'security';
   }>;
   documentAnalysis?: {
     titleType?: string;
