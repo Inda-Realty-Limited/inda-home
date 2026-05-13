@@ -176,6 +176,10 @@ interface PropertyIntelligenceData {
   } | null;
   availability_status?: string;
   virtual_tour_url?: string | null;
+  special_highlights?: Array<{
+    icon?: string;
+    title?: string;
+  }>;
 }
 
 type ReportSection =
@@ -759,6 +763,12 @@ function OverviewSection({
   ]
     .filter(Boolean)
     .join(" · ");
+  const specialHighlights = (intelligenceData?.special_highlights || [])
+    .map((item) => ({
+      icon: typeof item?.icon === "string" && item.icon.trim() ? item.icon.trim() : "✨",
+      title: typeof item?.title === "string" ? item.title.trim() : "",
+    }))
+    .filter((item) => item.title.length > 0);
 
   return (
     <div className="space-y-6">
@@ -918,7 +928,16 @@ function OverviewSection({
           {isLand ? "Location advantages" : isOffPlan ? "Planned features" : "What makes this special"}
         </h3>
         <div className="flex flex-wrap gap-2">
-          {isLand
+          {specialHighlights.length > 0
+            ? specialHighlights.map((highlight) => (
+                <div
+                  key={`${highlight.icon}-${highlight.title}`}
+                  className="px-3 py-2 bg-inda-teal/10 text-inda-teal rounded-full text-sm font-medium"
+                >
+                  {highlight.icon} {highlight.title}
+                </div>
+              ))
+            : isLand
             ? (property.amenities || []).map((feature) => (
                 <div
                   key={feature}
@@ -935,7 +954,7 @@ function OverviewSection({
                   {feature}
                 </div>
               ))}
-          {!property.amenities?.length && (
+          {specialHighlights.length === 0 && !property.amenities?.length && (
             <div className="text-sm text-gray-600">No verified features available.</div>
           )}
         </div>

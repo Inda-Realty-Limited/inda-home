@@ -161,6 +161,11 @@ export interface AIInferredData {
   suggestedPriceRange?: { min: number; max: number };
   marketComparables?: Array<{ address: string; price: number }>;
   location?: string;
+  specialHighlights?: Array<{
+    icon?: string;
+    title?: string;
+    dimension?: string;
+  }>;
   documentAnalysis?: {
     titleType?: string;
     state?: string;
@@ -330,6 +335,10 @@ export interface PropertyIntelligenceData {
     year_4: { rental_income: number; expenses: number; net_cash_flow: number };
     year_5: { rental_income: number; expenses: number; net_cash_flow: number };
   };
+  special_highlights?: Array<{
+    icon?: string;
+    title?: string;
+  }>;
 }
 
 // Request payload for analysis API

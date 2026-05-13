@@ -88,6 +88,23 @@ export const mapListingToPropertyDetail = (listing: any) => {
     snapshot.status === "Off-Plan" ||
     listing.status === "Off-Plan";
 
+  // Resolve year built: AI-extracted int first, then user-entered string, then snapshot.
+  const parseYear = (value: unknown): number | null => {
+    if (typeof value === "number" && Number.isFinite(value)) {
+      return value >= 1800 && value <= 2100 ? Math.floor(value) : null;
+    }
+    if (typeof value === "string") {
+      const match = value.match(/\b(18|19|20|21)\d{2}\b/);
+      if (match) return Number(match[0]);
+    }
+    return null;
+  };
+  const yearBuilt =
+    parseYear(listing.aiReport?.aggregatedData?.yearBuilt) ??
+    parseYear(listing.buildYear) ??
+    parseYear(snapshot.buildYear) ??
+    null;
+
   // Developer rating from indaScore
   const indaScore =
     listing.indaScore?.finalScore || analytics.indaScore?.finalScore || null;
@@ -309,6 +326,7 @@ export const mapListingToPropertyDetail = (listing: any) => {
         : null,
     isOffPlan,
     offPlanData,
+    yearBuilt,
     // Include intelligence data if available
     intelligenceData:
       listing.intelligenceData || snapshot.intelligenceData || null,
@@ -357,5 +375,6 @@ export interface MappedProperty {
   } | null;
   isOffPlan: boolean;
   offPlanData?: any;
+  yearBuilt: number | null;
   intelligenceData?: any;
 }
