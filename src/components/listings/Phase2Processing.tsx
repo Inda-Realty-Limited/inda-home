@@ -98,6 +98,7 @@ export function Phase2Processing({ documents, photos, onComplete, onError, onBac
                     hasEncumbrances: apiData.aggregatedData?.hasEncumbrances,
                     hasDisputes: apiData.aggregatedData?.hasDisputes,
                     location: apiData.aggregatedData?.location,
+                    specialHighlights: apiData.specialHighlights,
 
                     // Map document analysis data
                     documentAnalysis: apiData.aggregatedData?.documentAnalysis || {
