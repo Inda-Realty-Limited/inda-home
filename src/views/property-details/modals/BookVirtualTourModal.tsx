@@ -118,25 +118,27 @@ export function BookVirtualTourModal({
 
   if (submitted) {
     return (
-      <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-        <div className="bg-white rounded-2xl max-w-md w-full p-6">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Video className="w-8 h-8 text-green-600" />
+      <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 p-4">
+        <div className="flex min-h-full items-center justify-center">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
+                <Video className="h-8 w-8 text-green-600" />
+              </div>
+              <h2 className="text-gray-900 mb-2">Virtual Tour Booked!</h2>
+              <p className="text-gray-600 mb-4">
+                The agent will contact you within 24 hours to confirm your virtual tour of {propertyName}.
+              </p>
+              <p className="text-sm text-gray-500 mb-6">
+                Check your email ({formData.email}) for confirmation details.
+              </p>
+              <button
+                onClick={handleClose}
+                className="w-full px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Close
+              </button>
             </div>
-            <h2 className="text-gray-900 mb-2">Virtual Tour Booked!</h2>
-            <p className="text-gray-600 mb-4">
-              The agent will contact you within 24 hours to confirm your virtual tour of {propertyName}.
-            </p>
-            <p className="text-sm text-gray-500 mb-6">
-              Check your email ({formData.email}) for confirmation details.
-            </p>
-            <button
-              onClick={handleClose}
-              className="w-full px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Close
-            </button>
           </div>
         </div>
       </div>
@@ -144,120 +146,122 @@ export function BookVirtualTourModal({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-      <div className="bg-white rounded-2xl max-w-2xl w-full my-8">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div>
-            <h2 className="text-gray-900 mb-1">Book Virtual Tour</h2>
-            <p className="text-sm text-gray-600">{propertyName} • {propertyLocation}</p>
-          </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Info banner */}
-        <div className="mx-6 mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-start gap-3">
-            <Video className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/50 p-3 sm:p-6">
+      <div className="flex min-h-full items-start justify-center py-4 sm:items-center sm:py-8">
+        <div className="w-full max-w-3xl overflow-hidden rounded-2xl bg-white shadow-2xl sm:max-h-[calc(100vh-4rem)]">
+          {/* Header */}
+          <div className="sticky top-0 z-10 flex items-start justify-between border-b border-gray-200 bg-white px-5 py-4 sm:px-6">
             <div>
-              <h4 className="text-gray-900 text-sm mb-1">Live Video Property Tour</h4>
-              <p className="text-xs text-gray-700">
-                Perfect for diaspora buyers or busy schedules. Our agent will walk through the property live via video call, showing you every room and answering questions in real-time.
-              </p>
+              <h2 className="text-gray-900 mb-1">Book Virtual Tour</h2>
+              <p className="text-sm text-gray-600">{propertyName} • {propertyLocation}</p>
             </div>
-          </div>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-              {error}
-            </div>
-          )}
-
-          {/* Contact Information */}
-          <div>
-            <h3 className="text-gray-900 mb-4">Your Contact Information</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-gray-700 mb-2">
-                  <User className="w-4 h-4 inline mr-1" />
-                  Full Name *
-                </label>
-                <input
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-inda-teal"
-                  placeholder="Enter your full name"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm text-gray-700 mb-2">
-                  <Phone className="w-4 h-4 inline mr-1" />
-                  Phone Number (WhatsApp preferred) *
-                </label>
-                <input
-                  type="tel"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-inda-teal"
-                  placeholder="+234 xxx xxx xxxx"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm text-gray-700 mb-2">
-                  <Mail className="w-4 h-4 inline mr-1" />
-                  Email Address *
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-inda-teal"
-                  placeholder="your.email@example.com"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm text-gray-700 mb-2">
-                  <Globe className="w-4 h-4 inline mr-1" />
-                  Where are you calling from? *
-                </label>
-                <input
-                  type="text"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-inda-teal"
-                  placeholder="E.g., London UK, Lagos Nigeria, New York USA"
-                />
-              </div>
-            </div>
+            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
-          {/* Tour Details */}
-          <div>
-            <h3 className="text-gray-900 mb-4">Tour Details</h3>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+          <div className="max-h-[calc(100vh-8rem)] overflow-y-auto px-5 py-5 sm:px-6 sm:py-6">
+            {/* Info banner */}
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+              <div className="flex items-start gap-3">
+                <Video className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-600" />
                 <div>
-                  <label className="block text-sm text-gray-700 mb-2">
-                    <Calendar className="w-4 h-4 inline mr-1" />
-                    Preferred Date *
-                  </label>
+                  <h4 className="text-gray-900 text-sm mb-1">Live Video Property Tour</h4>
+                  <p className="text-xs text-gray-700">
+                    Perfect for diaspora buyers or busy schedules. Our agent will walk through the property live via video call, showing you every room and answering questions in real-time.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Form */}
+            <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                  {error}
+                </div>
+              )}
+
+              {/* Contact Information */}
+              <div>
+                <h3 className="text-gray-900 mb-4">Your Contact Information</h3>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-2">
+                      <User className="w-4 h-4 inline mr-1" />
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      name="fullName"
+                      value={formData.fullName}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-inda-teal"
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-2">
+                      <Phone className="w-4 h-4 inline mr-1" />
+                      Phone Number (WhatsApp preferred) *
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-inda-teal"
+                      placeholder="+234 xxx xxx xxxx"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-2">
+                      <Mail className="w-4 h-4 inline mr-1" />
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-inda-teal"
+                      placeholder="your.email@example.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm text-gray-700 mb-2">
+                      <Globe className="w-4 h-4 inline mr-1" />
+                      Where are you calling from? *
+                    </label>
+                    <input
+                      type="text"
+                      name="location"
+                      value={formData.location}
+                      onChange={handleChange}
+                      required
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-inda-teal"
+                      placeholder="E.g., London UK, Lagos Nigeria, New York USA"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Tour Details */}
+              <div>
+                <h3 className="text-gray-900 mb-4">Tour Details</h3>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="block text-sm text-gray-700 mb-2">
+                        <Calendar className="w-4 h-4 inline mr-1" />
+                        Preferred Date *
+                      </label>
                   <input
                     type="date"
                     name="preferredDate"
@@ -408,6 +412,8 @@ export function BookVirtualTourModal({
             </button>
           </div>
         </form>
+        </div>
+      </div>
       </div>
     </div>
   );
