@@ -66,9 +66,16 @@ export const AiService = {
       return response.data;
     } catch (error: any) {
       console.error("AI chat error:", error);
+      const rawMessage = error.response?.data?.message;
+      const validationMessage = Array.isArray(rawMessage)
+        ? rawMessage.join(", ")
+        : rawMessage;
       return {
         success: false,
-        error: error.response?.data?.error || "Failed to get AI response. Please try again.",
+        error:
+          error.response?.data?.error ||
+          validationMessage ||
+          "Failed to get AI response. Please try again.",
       };
     }
   },
