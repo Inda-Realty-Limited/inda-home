@@ -32,6 +32,8 @@ interface AskAIModalProps {
   propertyData?: PropertyData;
   intelligenceData?: PropertyIntelligenceData;
   agentName?: string;
+  initialQuestion?: string | null;
+  onInitialQuestionHandled?: () => void;
 }
 
 const suggestedQuestions = [
@@ -54,12 +56,15 @@ export function AskAIModal({
   propertyData,
   intelligenceData,
   agentName,
+  initialQuestion,
+  onInitialQuestionHandled,
 }: AskAIModalProps) {
   const [question, setQuestion] = useState("");
   const [conversation, setConversation] = useState<Array<{ type: "user" | "ai"; message: string }>>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const lastAutoSubmittedQuestionRef = useRef<string | null>(null);
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
@@ -72,8 +77,6 @@ export function AskAIModal({
       // Keep conversation for when modal reopens
     }
   }, [isOpen]);
-
-  if (!isOpen) return null;
 
   const buildPropertyContext = (): PropertyChatContext => {
     return {
@@ -137,10 +140,26 @@ export function AskAIModal({
     }
   };
 
+  useEffect(() => {
+    if (!isOpen) {
+      lastAutoSubmittedQuestionRef.current = null;
+      return;
+    }
+
+    if (!initialQuestion || isLoading) return;
+    if (initialQuestion === lastAutoSubmittedQuestionRef.current) return;
+
+    lastAutoSubmittedQuestionRef.current = initialQuestion;
+    onInitialQuestionHandled?.();
+    void handleSubmit(initialQuestion);
+  }, [initialQuestion, isLoading, isOpen, onInitialQuestionHandled]);
+
   const handleClearConversation = () => {
     setConversation([]);
     setError(null);
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-end md:items-center justify-center">
