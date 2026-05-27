@@ -49,6 +49,7 @@ export interface PropertyReportData {
   size?: string;
   type?: string;
   image?: string;
+  images?: string[];
   yearBuilt?: number;
   amenities?: string[];
   views?: number;
@@ -217,6 +218,7 @@ export function PropertyReport({
   const [showVirtualTour, setShowVirtualTour] = useState(false);
   const [lifestyleTab, setLifestyleTab] = useState<LifestyleTab>("eat");
   const [roiYears, setRoiYears] = useState(5);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
 
   const openAskAI = (initialQuestion?: string) => {
     setPendingAskQuestion(initialQuestion ?? null);
@@ -226,6 +228,11 @@ export function PropertyReport({
   const isLand = property.bed === 0 || property.type?.toLowerCase() === "land";
   const isOffPlan = property.isOffPlan ?? false;
   const virtualTourUrl = intelligenceData?.virtual_tour_url ?? null;
+  const galleryImages = property.images?.filter(Boolean) ?? [];
+  const activeImage =
+    galleryImages[activeImageIndex] ||
+    galleryImages[0] ||
+    property.image;
 
   const askingPrice =
     typeof property.price === "string"
@@ -363,24 +370,52 @@ export function PropertyReport({
             {/* Left - Main Content */}
             <div className="lg:col-span-2 space-y-6">
               {/* Hero Image */}
-              <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-gray-200">
-                {property.image ? (
-                  <img
-                    src={property.image}
-                    alt={property.name}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-sm text-gray-500">
-                    No image available
-                  </div>
-                )}
-                {typeof property.views === "number" && property.views > 0 && (
-                  <div className="absolute top-4 right-4">
-                    <div className="px-3 py-1.5 bg-black/50 backdrop-blur-sm text-white rounded-full text-sm flex items-center gap-2">
-                      <Eye className="w-4 h-4" />
-                      {property.views} views
+              <div className="space-y-3">
+                <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-gray-200">
+                  {activeImage ? (
+                    <img
+                      src={activeImage}
+                      alt={property.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-sm text-gray-500">
+                      No image available
                     </div>
+                  )}
+                  {typeof property.views === "number" && property.views > 0 && (
+                    <div className="absolute top-4 right-4">
+                      <div className="px-3 py-1.5 bg-black/50 backdrop-blur-sm text-white rounded-full text-sm flex items-center gap-2">
+                        <Eye className="w-4 h-4" />
+                        {property.views} views
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {galleryImages.length > 1 && (
+                  <div className="flex gap-3 overflow-x-auto pb-1">
+                    {galleryImages.map((image, index) => {
+                      const isActive = index === activeImageIndex;
+                      return (
+                        <button
+                          key={`${image}-${index}`}
+                          type="button"
+                          onClick={() => setActiveImageIndex(index)}
+                          className={`relative h-20 w-24 flex-shrink-0 overflow-hidden rounded-xl border-2 transition-all ${
+                            isActive
+                              ? "border-inda-teal shadow-sm"
+                              : "border-transparent hover:border-inda-teal/40"
+                          }`}
+                        >
+                          <img
+                            src={image}
+                            alt={`${property.name} ${index + 1}`}
+                            className="h-full w-full object-cover"
+                          />
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
