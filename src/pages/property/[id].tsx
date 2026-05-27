@@ -170,6 +170,7 @@ const PropertyDetailsPage: React.FC = () => {
     size: mappedData.scannedData.landSize || undefined,
     type: mappedData.scannedData.propertyType || undefined,
     image: mappedData.images[0] || undefined,
+    images: mappedData.images,
     amenities: mappedData.scannedData.features.length > 0 ? mappedData.scannedData.features : undefined,
     isOffPlan: mappedData.isOffPlan,
     offPlanData: mappedData.offPlanData
