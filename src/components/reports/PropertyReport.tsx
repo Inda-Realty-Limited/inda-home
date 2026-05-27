@@ -211,11 +211,17 @@ export function PropertyReport({
 
   const [selectedSection, setSelectedSection] = useState<ReportSection | null>(null);
   const [showAskAI, setShowAskAI] = useState(false);
+  const [pendingAskQuestion, setPendingAskQuestion] = useState<string | null>(null);
   const [showMakeOffer, setShowMakeOffer] = useState(false);
   const [showSiteVisit, setShowSiteVisit] = useState(false);
   const [showVirtualTour, setShowVirtualTour] = useState(false);
   const [lifestyleTab, setLifestyleTab] = useState<LifestyleTab>("eat");
   const [roiYears, setRoiYears] = useState(5);
+
+  const openAskAI = (initialQuestion?: string) => {
+    setPendingAskQuestion(initialQuestion ?? null);
+    setShowAskAI(true);
+  };
 
   const isLand = property.bed === 0 || property.type?.toLowerCase() === "land";
   const isOffPlan = property.isOffPlan ?? false;
@@ -305,7 +311,7 @@ export function PropertyReport({
         {/* Floating Ask AI - Mobile Only */}
         <div className="fixed bottom-8 right-8 z-30 lg:hidden">
           <button
-            onClick={() => setShowAskAI(true)}
+            onClick={() => openAskAI()}
             className="flex items-center gap-3 px-5 py-4 bg-inda-teal text-white rounded-full shadow-2xl hover:bg-inda-teal/90 transition-all hover:scale-105"
           >
             <MessageCircle className="w-6 h-6 animate-pulse" />
@@ -534,7 +540,7 @@ export function PropertyReport({
                     ].map((question, idx) => (
                       <button
                         key={idx}
-                        onClick={() => setShowAskAI(true)}
+                        onClick={() => openAskAI(question)}
                         className="w-full text-left px-3 py-2.5 bg-white hover:bg-inda-teal/5 border border-inda-gray hover:border-inda-teal/30 rounded-lg text-xs text-gray-700 transition-all group"
                       >
                         <span className="group-hover:text-inda-teal">{question}</span>
@@ -543,7 +549,7 @@ export function PropertyReport({
                   </div>
 
                   <button
-                    onClick={() => setShowAskAI(true)}
+                    onClick={() => openAskAI()}
                     className="w-full px-4 py-3 bg-inda-teal text-white rounded-xl font-semibold hover:bg-inda-teal/90 transition-all flex items-center justify-center gap-2"
                   >
                     <MessageCircle className="w-5 h-5" />
@@ -558,7 +564,10 @@ export function PropertyReport({
         {/* Modals */}
         <AskAIModal
           isOpen={showAskAI}
-          onClose={() => setShowAskAI(false)}
+          onClose={() => {
+            setShowAskAI(false);
+            setPendingAskQuestion(null);
+          }}
           propertyName={property.name}
           propertyData={{
             id: sourceListing?._id || sourceListing?.id || "unknown",
@@ -575,6 +584,8 @@ export function PropertyReport({
           }}
           intelligenceData={intelligenceData ?? undefined}
           agentName={sourceListing?.agentName || sourceListing?.snapshot?.agentName || undefined}
+          initialQuestion={pendingAskQuestion}
+          onInitialQuestionHandled={() => setPendingAskQuestion(null)}
         />
         <MakeOfferModal
           isOpen={showMakeOffer}
@@ -612,7 +623,7 @@ export function PropertyReport({
       {/* Floating Ask AI */}
       <div className="fixed bottom-8 right-8 z-30">
         <button
-          onClick={() => setShowAskAI(true)}
+          onClick={() => openAskAI()}
           className="flex items-center gap-3 px-5 py-4 bg-inda-teal text-white rounded-full shadow-2xl hover:bg-inda-teal/90 transition-all hover:scale-105"
         >
           <MessageCircle className="w-6 h-6 animate-pulse" />
@@ -701,7 +712,10 @@ export function PropertyReport({
 
       <AskAIModal
         isOpen={showAskAI}
-        onClose={() => setShowAskAI(false)}
+        onClose={() => {
+          setShowAskAI(false);
+          setPendingAskQuestion(null);
+        }}
         propertyName={property.name}
         propertyData={{
           id: sourceListing?._id || sourceListing?.id || "unknown",
@@ -717,6 +731,8 @@ export function PropertyReport({
         }}
         intelligenceData={intelligenceData ?? undefined}
         agentName={sourceListing?.agentName || sourceListing?.snapshot?.agentName || undefined}
+        initialQuestion={pendingAskQuestion}
+        onInitialQuestionHandled={() => setPendingAskQuestion(null)}
       />
     </div>
   );
