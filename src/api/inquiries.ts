@@ -19,6 +19,17 @@ export interface CreateOfferPayload {
   message?: string;
 }
 
+export interface CreateLegalPartnerRequestPayload {
+  listingId?: string;
+  propertyName?: string;
+  propertyAddress?: string;
+  name: string;
+  phone: string;
+  email?: string;
+  needs?: string;
+  agreed: boolean;
+}
+
 export const InquiriesService = {
   createVisitRequest: async (payload: CreateVisitRequestPayload) => {
     const res = await apiClient.post("/inquiries/visit", payload);
@@ -26,6 +37,10 @@ export const InquiriesService = {
   },
   createOffer: async (payload: CreateOfferPayload) => {
     const res = await apiClient.post("/inquiries/offer", payload);
+    return res.data;
+  },
+  createLegalPartnerRequest: async (payload: CreateLegalPartnerRequestPayload) => {
+    const res = await apiClient.post("/inquiries/legal-partner", payload);
     return res.data;
   },
 };
