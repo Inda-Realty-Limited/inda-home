@@ -38,6 +38,7 @@ import { AskAIModal } from "@/views/property-details/modals/AskAIModal";
 import { MakeOfferModal } from "@/views/property-details/modals/MakeOfferModal";
 import { ScheduleSiteVisitModal } from "@/views/property-details/modals/ScheduleSiteVisitModal";
 import { BookVirtualTourModal } from "@/views/property-details/modals/BookVirtualTourModal";
+import { LegalPartnerModal } from "@/views/property-details/modals/LegalPartnerModal";
 import GoogleMap from "@/components/inc/GoogleMap";
 
 export interface PropertyReportData {
@@ -731,6 +732,7 @@ export function PropertyReport({
         )}
         {selectedSection === "legal" && (
           <LegalSection
+            property={property}
             intelligenceData={intelligenceData}
             sourceListing={sourceListing}
           />
@@ -1762,12 +1764,15 @@ function formatCurrency(value?: number) {
 }
 
 function LegalSection({
+  property,
   intelligenceData,
   sourceListing,
 }: {
+  property: PropertyReportData;
   intelligenceData?: PropertyIntelligenceData | null;
   sourceListing?: any;
 }) {
+  const [showLegalPartnerModal, setShowLegalPartnerModal] = useState(false);
   const documentVerification = sourceListing?.documentVerification;
   const aggregatedData = documentVerification?.aggregatedData;
   const documentAnalysis = sourceListing?.aiReport?.documentAnalysis || {};
@@ -2019,12 +2024,25 @@ function LegalSection({
               We partner with trusted property lawyers for title search, document verification, and
               closing.
             </p>
-            <button className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+            <button
+              onClick={() => setShowLegalPartnerModal(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+            >
               Connect with Legal Partner
             </button>
           </div>
         </div>
       </div>
+
+      <LegalPartnerModal
+        isOpen={showLegalPartnerModal}
+        onClose={() => setShowLegalPartnerModal(false)}
+        property={{
+          id: sourceListing?._id || sourceListing?.id,
+          name: property.name,
+          location: property.location,
+        }}
+      />
     </div>
   );
 }
