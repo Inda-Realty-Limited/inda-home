@@ -2,6 +2,7 @@ import DashboardLayout from '@/components/dashboard/DashboardLayout';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/router';
+import Image from 'next/image';
 import {
     DollarSign, Users, Target, Eye, Share2, BarChart3,
     FileText, CheckCircle2, TrendingUp, TrendingDown, ArrowRight
@@ -20,16 +21,16 @@ export default function DashboardPage() {
     const [leadTrendPercentage, setLeadTrendPercentage] = useState(0);
 
     const fetchStats = useCallback(async () => {
-        if (!user?.id) {
+        if (!user) {
             setLoading(false);
             return;
         }
 
         try {
-            const [statsResult, leadStatsResult, userListingsResult] = await Promise.allSettled([
+            const [statsResult, leadStatsResult, listingsResult] = await Promise.allSettled([
                 apiClient.get('/listings/dashboard/stats'),
                 leadsApi.getStats(),
-                ProListingsService.getUserListings(user.id),
+                ProListingsService.getAllListings(1, 100),
             ]);
 
             if (statsResult.status === 'fulfilled') {
@@ -40,15 +41,18 @@ export default function DashboardPage() {
                 setLeadTrendPercentage(leadStatsResult.value.data.monthOverMonthChangePct ?? 0);
             }
 
-            if (userListingsResult.status === 'fulfilled') {
-                setProperties(userListingsResult.value.data ?? []);
+            if (listingsResult.status === 'fulfilled') {
+                const data = Array.isArray(listingsResult.value)
+                    ? listingsResult.value
+                    : (listingsResult.value?.data ?? []);
+                setProperties(data);
             }
         } catch (error) {
             console.error(error);
         } finally {
             setLoading(false);
         }
-    }, [user?.id]);
+    }, [user]);
 
     useEffect(() => {
         fetchStats();
@@ -56,6 +60,7 @@ export default function DashboardPage() {
 
     const totalLeads = stats?.metrics?.totalLeads ?? 0;
     const totalListings = properties.length;
+    const dashboardProperties = properties;
     const dealProgress = stats?.metrics?.dealProgress ?? 0;
     const conversionRate = stats?.metrics?.conversionRate ?? 0;
     const leadTrendPrefix = leadTrendPercentage > 0 ? '+' : '';
@@ -309,13 +314,23 @@ export default function DashboardPage() {
                                         </div>
                                     </div>
                                 ))
-                            ) : properties.length > 0 ? properties.slice(0, 3).map((property: any, idx: number) => (
+                            ) : dashboardProperties.length > 0 ? dashboardProperties.slice(0, 3).map((property: any, idx: number) => (
                                 <div
-                                    key={idx}
+                                    key={property.id || property._id || property.indaTag || idx}
                                     className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-lg transition-all cursor-pointer"
                                     onClick={() => router.push(`/property/${property.indaTag || property.id || property._id}`)}
                                 >
-                                    <div className="h-32 bg-gradient-to-br from-[#4ea8a1]/20 to-[#3d8780]/30" />
+                                    <div className="relative h-32 bg-gradient-to-br from-[#4ea8a1]/20 to-[#3d8780]/30">
+                                        {(property.imageUrls?.[0] || property.imageUrl || property.images?.[0] || property.primaryImageUrl || property.photos?.[0]?.url) ? (
+                                            <Image
+                                                src={property.imageUrls?.[0] || property.imageUrl || property.images?.[0] || property.primaryImageUrl || property.photos?.[0]?.url}
+                                                alt={property.title || 'Property image'}
+                                                fill
+                                                unoptimized
+                                                className="object-cover"
+                                            />
+                                        ) : null}
+                                    </div>
                                     <div className="p-4">
                                         <h4 className="font-semibold text-gray-900 mb-1">{property.title || 'Untitled Property'}</h4>
                                         <p className="text-sm text-gray-600 mb-2">{property.microlocationStd || property.lga || 'Lagos'}</p>

@@ -44,7 +44,10 @@ export interface PropertyChatRequest {
 
 export interface PropertyChatResponse {
   success: boolean;
-  response?: string;
+  answer?: string;
+  usedWebSearch?: boolean;
+  confidence?: "high" | "medium" | "low";
+  missingData?: string[];
   error?: string;
 }
 

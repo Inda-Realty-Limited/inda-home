@@ -1,6 +1,6 @@
 import { useAuth } from '@/contexts/AuthContext';
 import AppSidebar from './AppSidebar';
-import { Bell } from 'lucide-react';
+import { Bell, Menu } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import notificationsApi, { NotificationItem } from '@/api/notifications';
@@ -17,6 +17,7 @@ export default function DashboardLayout({ children, showHeader = true }: Dashboa
     const [showNotifications, setShowNotifications] = useState(false);
     const [notificationCount, setNotificationCount] = useState(0);
     const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+    const [showMobileSidebar, setShowMobileSidebar] = useState(false);
 
     useEffect(() => {
         if (isAuthenticated && user) {
@@ -83,6 +84,17 @@ export default function DashboardLayout({ children, showHeader = true }: Dashboa
         };
     }, [isAuthenticated, user]);
 
+    useEffect(() => {
+        const handleResize = () => {
+            if (window.innerWidth >= 1024) {
+                setShowMobileSidebar(false);
+            }
+        };
+
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const getInitials = () => {
         if (!user) return 'U';
         const first = user.firstName?.[0] || '';
@@ -133,18 +145,33 @@ export default function DashboardLayout({ children, showHeader = true }: Dashboa
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans">
+            {showMobileSidebar && (
+                <button
+                    type="button"
+                    aria-label="Close sidebar overlay"
+                    onClick={() => setShowMobileSidebar(false)}
+                    className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+                />
+            )}
 
             {/* Full-width top header */}
             {showHeader && (
-                <header className="bg-white h-16 fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-8 border-b border-gray-200">
+                <header className="fixed top-0 left-0 right-0 z-40 flex h-16 items-center justify-between border-b border-gray-200 bg-white px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setShowMobileSidebar(true)}
+                            className="rounded-lg p-2 text-gray-600 transition-colors hover:bg-gray-100 hover:text-gray-900 lg:hidden"
+                            aria-label="Open sidebar"
+                        >
+                            <Menu className="h-5 w-5" />
+                        </button>
                         <div className="bg-[#4ea8a1] rounded-lg px-3 py-2 flex items-center justify-center">
                             <span className="text-white font-bold text-base">I</span>
                         </div>
-                        <span className="text-gray-900 font-bold text-lg">Inda Pro</span>
+                        <span className="text-gray-900 font-bold text-base sm:text-lg">Inda Pro</span>
                     </div>
 
-                    <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-3 sm:gap-6">
                         <div className="relative">
                             <button
                                 className="relative group"
@@ -159,7 +186,7 @@ export default function DashboardLayout({ children, showHeader = true }: Dashboa
                             </button>
 
                             {showNotifications && (
-                                <div className="absolute right-0 mt-3 w-[360px] bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden">
+                                <div className="absolute right-0 mt-3 w-[calc(100vw-2rem)] max-w-[360px] overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xl">
                                     <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
                                         <div>
                                             <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
@@ -218,10 +245,14 @@ export default function DashboardLayout({ children, showHeader = true }: Dashboa
                 </header>
             )}
 
-            <AppSidebar headerVisible={showHeader} />
+            <AppSidebar
+                headerVisible={showHeader}
+                isMobileOpen={showMobileSidebar}
+                onCloseMobile={() => setShowMobileSidebar(false)}
+            />
 
-            <div className={`ml-[277px] ${showHeader ? 'pt-16' : ''}`}>
-                <main className="p-8 pb-20 min-h-screen">
+            <div className={`lg:ml-[277px] ${showHeader ? 'pt-16' : ''}`}>
+                <main className="min-h-screen p-4 pb-20 sm:p-6 lg:p-8">
                     {children}
                 </main>
             </div>
