@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { X, Send, Sparkles, MessageCircle, AlertCircle } from "lucide-react";
-import { AiService, ChatMessage, PropertyChatContext } from "@/api/ai";
+import { AiService, ChatMessage, PropertyChatContext, PropertyChatResponse } from "@/api/ai";
 
 interface PropertyData {
   id: string;
@@ -61,6 +61,7 @@ export function AskAIModal({
 }: AskAIModalProps) {
   const [question, setQuestion] = useState("");
   const [conversation, setConversation] = useState<Array<{ type: "user" | "ai"; message: string }>>([]);
+  const [lastResponseMeta, setLastResponseMeta] = useState<PropertyChatResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -118,10 +119,12 @@ export function AskAIModal({
         conversationHistory: buildConversationHistory(),
       });
 
-      if (response.success && response.response) {
-        setConversation((prev) => [...prev, { type: "ai", message: response.response! }]);
+      if (response.success && response.answer) {
+        setLastResponseMeta(response);
+        setConversation((prev) => [...prev, { type: "ai", message: response.answer! }]);
       } else {
         setError(response.error || "Failed to get response");
+        setLastResponseMeta(null);
         // Add error message to conversation
         setConversation((prev) => [
           ...prev,
@@ -156,6 +159,7 @@ export function AskAIModal({
 
   const handleClearConversation = () => {
     setConversation([]);
+    setLastResponseMeta(null);
     setError(null);
   };
 
@@ -257,6 +261,25 @@ export function AskAIModal({
                       </div>
                     )}
                     <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
+                    {msg.type === "ai" &&
+                      index === conversation.length - 1 &&
+                      lastResponseMeta?.success && (
+                        <div className="mt-3 flex flex-wrap gap-2 text-[11px] text-gray-500">
+                          {lastResponseMeta.confidence && (
+                            <span className="px-2 py-1 bg-white/60 rounded-full">
+                              Confidence: {lastResponseMeta.confidence}
+                            </span>
+                          )}
+                          <span className="px-2 py-1 bg-white/60 rounded-full">
+                            Source: {lastResponseMeta.usedWebSearch ? "Property data + web" : "Property data"}
+                          </span>
+                          {lastResponseMeta.missingData && lastResponseMeta.missingData.length > 0 && (
+                            <span className="px-2 py-1 bg-white/60 rounded-full">
+                              Missing: {lastResponseMeta.missingData.join(", ")}
+                            </span>
+                          )}
+                        </div>
+                      )}
                   </div>
                 </div>
               ))}

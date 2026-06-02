@@ -4,7 +4,7 @@ import {
   Mail, Megaphone, Camera, Video, Box, BarChart3, Sparkles, TrendingUp,
   ChevronRight, ChevronLeft, Instagram, Facebook, Youtube, Linkedin,
   ArrowLeft, Zap, Target, CheckCircle2, Layout, Globe, Hash, Palette,
-  ImageIcon, AlertCircle
+  ImageIcon
 } from 'lucide-react';
 import { MarketingService, MarketingCredits, MarketingStats } from '@/api/marketing';
 import { cn } from '@/lib/utils';
@@ -211,21 +211,21 @@ export default function MarketingPage() {
         <DashboardLayout>
           <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <button
                 onClick={() => { if (createStep === 1) { setStep('main'); resetCreate(); } else { setCreateStep(s => s - 1); } }}
                 className="flex items-center gap-2 text-sm text-gray-600 border border-gray-200 px-3 py-2 rounded-lg hover:border-gray-300">
                 <ArrowLeft className="w-4 h-4" />
                 {createStep === 1 ? 'Back to Marketing' : 'Previous Step'}
               </button>
-              <div className="flex items-center gap-2">
+              <div className="flex w-full items-center gap-2 sm:w-auto">
                 {[1, 2, 3, 4, 5].map(s => (
-                  <div key={s} className={cn('h-2 w-12 rounded-full transition-all', s <= createStep ? 'bg-inda-teal' : 'bg-gray-200')} />
+                  <div key={s} className={cn('h-2 flex-1 rounded-full transition-all sm:w-12 sm:flex-none', s <= createStep ? 'bg-inda-teal' : 'bg-gray-200')} />
                 ))}
               </div>
             </div>
 
-            <div className="bg-white rounded-xl border border-gray-100 p-8">
+            <div className="rounded-xl border border-gray-100 bg-white p-5 sm:p-8">
 
               {/* Step 1: Platform Selection */}
               {createStep === 1 && (
@@ -328,9 +328,9 @@ export default function MarketingPage() {
                       );
                     })()}
                   </div>
-                  <div className="flex justify-end pt-6 border-t border-gray-200">
+                  <div className="flex justify-end border-t border-gray-200 pt-6">
                     <button onClick={() => setCreateStep(2)} disabled={selectedPlatforms.length === 0}
-                      className="flex items-center gap-2 bg-inda-teal text-white px-5 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-50 hover:bg-teal-700">
+                      className="flex w-full items-center justify-center gap-2 rounded-lg bg-inda-teal px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-50 hover:bg-teal-700 sm:w-auto">
                       Continue to Property <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>
@@ -755,8 +755,8 @@ export default function MarketingPage() {
           </div>
 
           {/* Main CTA */}
-          <div className="bg-gradient-to-br from-inda-teal to-teal-700 rounded-xl p-8 text-white">
-            <div className="flex items-center justify-between">
+          <div className="rounded-xl bg-gradient-to-br from-inda-teal to-teal-700 p-6 text-white sm:p-8">
+            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <Sparkles className="w-6 h-6" />
@@ -764,7 +764,7 @@ export default function MarketingPage() {
                 </div>
                 <p className="text-white/90 mb-4">Generate professional social media posts, reels, stories with your branding in minutes</p>
                 <button onClick={() => { resetCreate(); setStep('create'); }}
-                  className="flex items-center gap-2 bg-white text-inda-teal hover:bg-gray-100 font-semibold px-5 py-2.5 rounded-lg text-sm transition-colors">
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-inda-teal transition-colors hover:bg-gray-100 sm:w-auto">
                   <Layout className="w-5 h-5" /> Start Creating
                 </button>
               </div>

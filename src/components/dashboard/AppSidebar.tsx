@@ -3,7 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/router';
 import {
     Home, Briefcase, Users, Megaphone, GraduationCap,
-    MessageCircle, Database, Gift, Headphones, Settings, LogOut
+    MessageCircle, Database, Gift, Headphones, Settings, LogOut, X
 } from 'lucide-react';
 
 const MENU_ITEMS = [
@@ -21,14 +21,36 @@ const MENU_ITEMS = [
 
 interface AppSidebarProps {
     headerVisible?: boolean;
+    isMobileOpen?: boolean;
+    onCloseMobile?: () => void;
 }
 
-export default function AppSidebar({ headerVisible = true }: AppSidebarProps) {
+export default function AppSidebar({
+    headerVisible = true,
+    isMobileOpen = false,
+    onCloseMobile,
+}: AppSidebarProps) {
     const router = useRouter();
     const { logout } = useAuth();
 
     return (
-        <aside className={`w-[277px] bg-white border-r border-gray-200 flex flex-col fixed left-0 bottom-0 z-30 ${headerVisible ? 'top-16' : 'top-0'}`}>
+        <aside
+            className={`fixed left-0 bottom-0 z-50 flex w-[277px] flex-col border-r border-gray-200 bg-white transition-transform duration-300 lg:z-30 ${
+                headerVisible ? 'top-16 lg:top-16' : 'top-0'
+            } ${
+                isMobileOpen ? 'translate-x-0' : '-translate-x-full'
+            } lg:translate-x-0`}
+        >
+            <div className="flex items-center justify-between border-b border-gray-100 px-4 py-4 lg:hidden">
+                <span className="text-sm font-semibold text-gray-900">Menu</span>
+                <button
+                    onClick={onCloseMobile}
+                    className="rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                    aria-label="Close sidebar"
+                >
+                    <X className="h-5 w-5" />
+                </button>
+            </div>
             <nav className="flex-1 py-6 overflow-y-auto">
                 <div className="space-y-1 px-4">
                     {MENU_ITEMS.map((item) => {
@@ -38,6 +60,7 @@ export default function AppSidebar({ headerVisible = true }: AppSidebarProps) {
                             <Link
                                 key={item.label}
                                 href={item.href}
+                                onClick={onCloseMobile}
                                 className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                                     isActive
                                         ? 'bg-[#4ea8a1] text-white shadow-sm'
@@ -54,7 +77,10 @@ export default function AppSidebar({ headerVisible = true }: AppSidebarProps) {
 
             <div className="p-4 border-t border-gray-200">
                 <button
-                    onClick={logout}
+                    onClick={() => {
+                        onCloseMobile?.();
+                        logout();
+                    }}
                     className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-100 transition-all duration-200"
                 >
                     <LogOut className="w-5 h-5" />

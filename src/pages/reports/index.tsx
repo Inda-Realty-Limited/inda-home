@@ -217,7 +217,7 @@ export default function ReportsHubPage() {
 
                 {/* Top summary - Replicated from orders.tsx */}
                 {data && (
-                    <div className="mb-6 grid grid-cols-3 gap-3 sm:gap-4">
+                    <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
                         <div className="rounded-xl bg-white border border-black/10 p-4 shadow-sm">
                             <div className="text-xs text-[#6B7280]">Total orders</div>
                             <div className="text-2xl font-bold">{data.summary.totalOrders}</div>
@@ -235,7 +235,7 @@ export default function ReportsHubPage() {
 
                 {/* Tabs - Underlined system from orders.tsx */}
                 <div className="mb-8 border-b border-gray-200">
-                    <nav className="-mb-px flex space-x-8">
+                    <nav className="-mb-px flex gap-6 overflow-x-auto whitespace-nowrap pb-1">
                         <button
                             onClick={() => handleTabChange('library')}
                             className={`flex items-center gap-2 py-4 px-1 border-b-2 font-bold text-sm transition-all ${activeTab === 'library'
