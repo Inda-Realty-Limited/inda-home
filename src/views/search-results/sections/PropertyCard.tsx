@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { Bed, MapPin, Eye, BadgeCheck } from 'lucide-react';
+import { Bed, Bath, Ruler, MapPin, Eye, BadgeCheck } from 'lucide-react';
 
 interface PropertyCardProps {
   id: string;
@@ -8,7 +8,8 @@ interface PropertyCardProps {
   title: string;
   location: string;
   beds: number;
-  trustScore: number;
+  baths?: number;
+  size?: string;
   price: string;
   priceValue: number;
   fmv?: string;
@@ -24,7 +25,8 @@ export function PropertyCard({
   title,
   location,
   beds,
-  trustScore,
+  baths,
+  size,
   price,
   fmv,
   verified,
@@ -32,13 +34,6 @@ export function PropertyCard({
   onMakeOffer
 }: PropertyCardProps) {
   const [isHovered, setIsHovered] = useState(false);
-
-  const getTrustScoreColor = (score: number) => {
-    if (score >= 90) return 'from-emerald-500 to-teal-600';
-    if (score >= 80) return 'from-teal-500 to-emerald-500';
-    if (score >= 70) return 'from-yellow-500 to-teal-500';
-    return 'from-orange-500 to-yellow-500';
-  };
 
   return (
     <div
@@ -93,38 +88,40 @@ export function PropertyCard({
           </div>
         </div>
 
-        {/* Beds & Inda Score Info */}
-        <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-100">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center">
-              <Bed className="w-4 h-4 text-gray-600" />
+        {/* Property Specs */}
+        <div className="mb-4 pb-4 border-b border-gray-100">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center">
+                <Bed className="w-4 h-4 text-gray-600" />
+              </div>
+              <div>
+                <p className="text-[11px] text-gray-500 uppercase tracking-wide">Bedrooms</p>
+                <p className="text-[14px] font-medium">{beds}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-[11px] text-gray-500 uppercase tracking-wide">Bedrooms</p>
-              <p className="text-[14px] font-medium">{beds}</p>
-            </div>
-          </div>
-
-          <div className="text-right">
-            <p className="text-[11px] text-gray-500 uppercase tracking-wide">Inda Score</p>
-            <p className="text-[14px] font-medium text-[#4ea8a1]">{trustScore}%</p>
-          </div>
-        </div>
-
-        {/* Inda Score Progress */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[12px] text-gray-500">Inda Score</span>
-            <span className="text-[13px] font-medium text-gray-900">{trustScore}/100</span>
-          </div>
-          <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
-            <div
-              className={`h-full bg-gradient-to-r ${getTrustScoreColor(trustScore)} rounded-full transition-all duration-700`}
-              style={{
-                width: `${trustScore}%`,
-                boxShadow: '0 0 8px rgba(78, 168, 161, 0.4)'
-              }}
-            />
+            {typeof baths === 'number' && baths > 0 && (
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center">
+                  <Bath className="w-4 h-4 text-gray-600" />
+                </div>
+                <div>
+                  <p className="text-[11px] text-gray-500 uppercase tracking-wide">Bathrooms</p>
+                  <p className="text-[14px] font-medium">{baths}</p>
+                </div>
+              </div>
+            )}
+            {size && (
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center">
+                  <Ruler className="w-4 h-4 text-gray-600" />
+                </div>
+                <div>
+                  <p className="text-[11px] text-gray-500 uppercase tracking-wide">Size</p>
+                  <p className="text-[14px] font-medium">{size}</p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

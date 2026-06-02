@@ -31,6 +31,8 @@ interface Property {
   latitude?: number;
   longitude?: number;
   beds: number;
+  baths?: number;
+  size?: string;
   trustScore: number;
   price: string;
   priceValue: number;
@@ -97,6 +99,8 @@ const mapListingToProperty = (listing: any): Property => {
       ? images[0]
       : "https://images.unsplash.com/photo-1662454419736-de132ff75638?w=800";
   const bedroomCount = parseInt(listing.bedrooms) || listing.bedrooms || 0;
+  const bathroomCount = parseInt(listing.bathrooms) || listing.bathrooms || 0;
+  const sizeSqm = listing.sizeSqm ? Number(listing.sizeSqm) : null;
   const priceValue = Number(listing.purchasePrice) || listing.priceNGN || 0;
 
   return {
@@ -117,6 +121,14 @@ const mapListingToProperty = (listing: any): Property => {
       typeof bedroomCount === "number"
         ? bedroomCount
         : parseInt(bedroomCount) || 0,
+    baths:
+      typeof bathroomCount === "number" && bathroomCount > 0
+        ? bathroomCount
+        : undefined,
+    size:
+      typeof sizeSqm === "number" && Number.isFinite(sizeSqm) && sizeSqm > 0
+        ? `${sizeSqm} sqm`
+        : undefined,
     trustScore:
       listing.indaScore ||
       listing.analytics?.indaScore ||

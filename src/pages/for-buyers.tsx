@@ -32,7 +32,7 @@ import {
   TabsContent,
 } from "../views/index/sections/ui/tabs";
 import { PropertyCard } from "../views/search-results/sections/PropertyCard";
-import { MakeOfferModal } from "../views/search-results/sections/MakeOfferModal";
+import { MakeOfferModal } from "../views/property-details/modals/MakeOfferModal";
 import { useDebounce } from "@/hooks/useDebounce";
 import apiClient from "@/api";
 
@@ -41,10 +41,12 @@ interface Property {
   image: string;
   title: string;
   location: string;
+  propertyType: string;
   latitude?: number;
   longitude?: number;
   beds: number;
-  trustScore: number;
+  baths?: number;
+  size?: string;
   price: string;
   priceValue: number;
   fmv: string;
@@ -52,17 +54,19 @@ interface Property {
   whatsapp: string;
 }
 
+const FALLBACK_PROPERTY_IMAGE =
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1200 800'><rect width='1200' height='800' fill='%23e5e7eb'/><text x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%236b7280' font-family='Arial,sans-serif' font-size='42'>No property image</text></svg>";
+
 const filterOptions = [
   "Price Range",
   "Bedrooms",
-  "Inda Score",
   "Location",
   "Property Type",
 ];
 
 const bedroomOptions = ["1 Bed", "2 Beds", "3 Beds", "4 Beds", "5+ Beds"];
 
-const propertyTypes = [
+const PROPERTY_TYPE_PREFERENCE = [
   "Apartment",
   "Duplex",
   "Terrace",
@@ -72,6 +76,28 @@ const propertyTypes = [
   "Studio",
   "Land",
 ];
+
+const STATUS_LIKE_TYPES = new Set([
+  "completed",
+  "off-plan",
+  "off plan",
+  "active",
+  "pending",
+]);
+
+const PROPERTY_TYPE_LABELS: Record<string, string> = {
+  apartment: "Apartment",
+  duplex: "Duplex",
+  terrace: "Terrace",
+  "semi-detached": "Semi-Detached",
+  semidetached: "Semi-Detached",
+  "semi detached": "Semi-Detached",
+  "detached house": "Detached House",
+  detached: "Detached House",
+  penthouse: "Penthouse",
+  studio: "Studio",
+  land: "Land",
+};
 
 const formatPriceDisplay = (priceNGN: number | null | undefined): string => {
   if (!priceNGN) return "₦0";
@@ -96,27 +122,66 @@ const getFmvStatus = (listing: any): string => {
   return "At FMV";
 };
 
+const normalizePropertyTypeValue = (value: string | null | undefined) => {
+  if (!value) return null;
+
+  const normalized = value.trim().toLowerCase();
+  if (!normalized || STATUS_LIKE_TYPES.has(normalized)) {
+    return null;
+  }
+
+  return PROPERTY_TYPE_LABELS[normalized] ?? value.trim();
+};
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const getDisplayPropertyType = (listing: any): string => {
+  const normalizedStandardType = normalizePropertyTypeValue(listing.propertyTypeStd);
+  if (normalizedStandardType) {
+    return normalizedStandardType;
+  }
+
+  const normalizedLegacyType = normalizePropertyTypeValue(listing.propertyType);
+  if (normalizedLegacyType) {
+    return normalizedLegacyType;
+  }
+
+  const constructionStatus = String(listing.constructionStatus || "").trim();
+  if (constructionStatus) {
+    return constructionStatus;
+  }
+
+  return "Property";
+};
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const mapListingToProperty = (listing: any): Property => {
-  // Use photosWithMeta (new structure) with fallback to legacy fields
-  const photosWithMeta = listing.photosWithMeta || [];
-  const images =
-    photosWithMeta.length > 0
-      ? photosWithMeta.map((p: any) => p.url)
-      : listing.imageUrls || listing.images || listing.propertyImages || [];
+  const photoUrls = Array.isArray(listing.photos)
+    ? listing.photos
+        .map((photo: { url?: string | null }) => photo?.url)
+        .filter((url: string | null | undefined): url is string => Boolean(url))
+    : [];
+  const images = [
+    listing.primaryImageUrl,
+    ...photoUrls,
+    ...(Array.isArray(listing.images) ? listing.images : []),
+  ].filter((url: string | null | undefined): url is string => Boolean(url));
   const firstImage =
     images.length > 0
       ? images[0]
-      : "https://images.unsplash.com/photo-1662454419736-de132ff75638?w=800";
+      : FALLBACK_PROPERTY_IMAGE;
+  const displayPropertyType = getDisplayPropertyType(listing);
   const bedroomCount = parseInt(listing.bedrooms) || listing.bedrooms || 0;
+  const bathroomCount = parseInt(listing.bathrooms) || listing.bathrooms || 0;
+  const sizeSqm = listing.sizeSqm ? Number(listing.sizeSqm) : null;
   const priceValue = Number(listing.purchasePrice) || listing.priceNGN || 0;
 
   return {
-    id: listing._id || listing.id || listing.indaTag || String(Math.random()),
+    id: listing._id || listing.id || listing.indaTag,
     image: firstImage,
+    propertyType: displayPropertyType,
     title:
       listing.title ||
-      `${bedroomCount}-Bed ${listing.propertyType || listing.propertyTypeStd || "Property"}`,
+      `${bedroomCount}-Bed ${displayPropertyType}`,
     location:
       listing.microlocation ||
       listing.microlocationStd ||
@@ -129,15 +194,20 @@ const mapListingToProperty = (listing: any): Property => {
       typeof bedroomCount === "number"
         ? bedroomCount
         : parseInt(bedroomCount) || 0,
-    trustScore:
-      listing.indaScore ||
-      listing.analytics?.indaScore ||
-      Math.floor(Math.random() * 20) + 70,
+    baths:
+      typeof bathroomCount === "number" && bathroomCount > 0
+        ? bathroomCount
+        : undefined,
+    size:
+      typeof sizeSqm === "number" && Number.isFinite(sizeSqm) && sizeSqm > 0
+        ? `${sizeSqm} sqm`
+        : undefined,
     price: formatPriceDisplay(priceValue),
     priceValue: priceValue,
     fmv: getFmvStatus(listing),
-    verified: listing.verified !== false && listing.status === "Active",
-    whatsapp: listing.sellerPhone || "2347084960775",
+    verified:
+      listing.verifiedStatus === true || listing.listingStatus === "ACTIVE",
+    whatsapp: listing.agentWhatsappE164 || listing.agentPhoneE164 || "",
   };
 };
 
@@ -154,7 +224,7 @@ export function ForBuyers() {
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState("Highest Inda Score");
+  const [sortBy, setSortBy] = useState("Newest");
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [priceRange, setPriceRange] = useState<[number, number]>([
     0, 5000000000,
@@ -181,8 +251,8 @@ export function ForBuyers() {
     useState<string>("");
   const [selectedPropertyPrice, setSelectedPropertyPrice] =
     useState<string>("");
-  const [selectedPropertyWhatsapp, setSelectedPropertyWhatsapp] =
-    useState<string>("");
+  const [selectedPropertyPriceValue, setSelectedPropertyPriceValue] =
+    useState<number | undefined>(undefined);
 
   const isValidUrl = useMemo(
     () => (value: string) => {
@@ -330,7 +400,7 @@ export function ForBuyers() {
             setProperties((prev) => [...prev, ...mappedProperties]);
           }
 
-          const pagination = data.data?.pagination;
+          const pagination = data.meta;
           if (pagination) {
             setHasMore(pagination.page < pagination.totalPages);
           } else {
@@ -395,7 +465,7 @@ export function ForBuyers() {
     if (property) {
       setSelectedPropertyTitle(property.title);
       setSelectedPropertyPrice(property.price);
-      setSelectedPropertyWhatsapp(property.whatsapp || "");
+      setSelectedPropertyPriceValue(property.priceValue);
     }
     setShowMakeOfferModal(true);
   };
@@ -595,18 +665,25 @@ export function ForBuyers() {
     }
   };
 
-  const sortedProperties = useMemo(() => {
-    const sorted = [...properties];
+  const filteredProperties = useMemo(() => [...properties], [properties]);
+  const propertyTypes = useMemo(() => {
+    const availableTypes = new Set(
+      properties
+        .map((property) => property.propertyType)
+        .filter(
+          (type) => type && type !== "Property" && !STATUS_LIKE_TYPES.has(type.toLowerCase()),
+        ),
+    );
 
-    switch (sortBy) {
-      case "Highest Inda Score":
-        return sorted.sort((a, b) => b.trustScore - a.trustScore);
-      default:
-        return sorted;
-    }
-  }, [sortBy, properties]);
+    const orderedTypes = PROPERTY_TYPE_PREFERENCE.filter((type) =>
+      availableTypes.has(type),
+    );
+    const extraTypes = Array.from(availableTypes).filter(
+      (type) => !PROPERTY_TYPE_PREFERENCE.includes(type),
+    );
 
-  const filteredProperties = sortedProperties;
+    return [...orderedTypes, ...extraTypes];
+  }, [properties]);
 
   return (
     <>
@@ -631,7 +708,7 @@ export function ForBuyers() {
               }
               className="w-full"
             >
-              <TabsList className="w-full mb-6 bg-white rounded-2xl shadow-lg p-1.5 max-w-2xl mx-auto">
+              <TabsList className="hidden w-full mb-6 bg-white rounded-2xl shadow-lg p-1.5 max-w-2xl mx-auto">
                 <TabsTrigger
                   value="ai"
                   className="flex-1 data-[state=active]:bg-[#4ea8a1] data-[state=active]:text-white"
@@ -640,13 +717,13 @@ export function ForBuyers() {
                 </TabsTrigger>
                 <TabsTrigger
                   value="link"
-                  className="flex-1 data-[state=active]:bg-[#4ea8a1] data-[state=active]:text-white"
+                  className="hidden flex-1 data-[state=active]:bg-[#4ea8a1] data-[state=active]:text-white"
                 >
                   Scan External Listing
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="link" className="mt-0">
+              <TabsContent value="link" className="hidden mt-0">
                 <div className="max-w-4xl mx-auto">
                   <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
                     <div className="flex items-center gap-3">
@@ -930,7 +1007,7 @@ export function ForBuyers() {
                                 onChange={(e) => setSortBy(e.target.value)}
                                 className="appearance-none px-4 py-2 pr-10 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer text-[14px] bg-white"
                               >
-                                <option>Highest Inda Score</option>
+                                <option>Newest</option>
                                 <option>Lowest Price</option>
                                 <option>Highest Price</option>
                                 <option>Newest</option>
@@ -1105,10 +1182,10 @@ export function ForBuyers() {
       <MakeOfferModal
         isOpen={showMakeOfferModal}
         onClose={() => setShowMakeOfferModal(false)}
-        propertyId={selectedPropertyId}
-        propertyTitle={selectedPropertyTitle}
+        listingId={selectedPropertyId || ""}
+        propertyName={selectedPropertyTitle}
         propertyPrice={selectedPropertyPrice}
-        propertyWhatsapp={selectedPropertyWhatsapp}
+        priceNumeric={selectedPropertyPriceValue}
       />
     </>
   );

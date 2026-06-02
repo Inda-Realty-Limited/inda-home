@@ -139,6 +139,14 @@ export default function CRMPage() {
         return matchSearch && matchStage;
     });
 
+    const searchScopedDeals = deals.filter(d => {
+        const q = searchQuery.toLowerCase();
+        return !q ||
+            d.buyerName.toLowerCase().includes(q) ||
+            d.propertyName.toLowerCase().includes(q) ||
+            (d.propertyLocation ?? '').toLowerCase().includes(q);
+    });
+
     const byStage = (s: LocalStage) => filtered.filter(d => localStage(d) === s);
 
     // ── Actions ────────────────────────────────────────────────────────────────
@@ -220,14 +228,14 @@ export default function CRMPage() {
                 <div className="space-y-6">
 
                     {/* Header */}
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div>
                             <h1 className="text-2xl font-bold bg-gradient-to-r from-inda-teal to-teal-700 bg-clip-text text-transparent">
                                 Deal Pipeline
                             </h1>
                             <p className="text-sm text-gray-500 mt-0.5">Manage buyer relationships and track deals</p>
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                             <div className="bg-white border border-gray-200 rounded-lg p-1 flex">
                                 <button
                                     onClick={() => setView('kanban')}
@@ -246,7 +254,7 @@ export default function CRMPage() {
                             </div>
                             <button
                                 onClick={() => setShowAddDeal(true)}
-                                className="flex items-center gap-2 bg-inda-teal text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-teal-700 transition-colors shadow-sm"
+                                className="flex w-full items-center justify-center gap-2 bg-inda-teal text-white px-4 py-2.5 rounded-lg text-sm font-semibold hover:bg-teal-700 transition-colors shadow-sm sm:w-auto"
                             >
                                 <Plus className="w-4 h-4" /> Add Deal
                             </button>
@@ -278,7 +286,7 @@ export default function CRMPage() {
                     </div>
 
                     {/* Search + Filter */}
-                    <div className="bg-white rounded-xl border border-gray-200 p-4 flex gap-3 flex-wrap">
+                    <div className="bg-white rounded-xl border border-gray-200 p-4 space-y-3">
                         <div className="relative flex-1 min-w-[200px]">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                             <input
@@ -288,16 +296,51 @@ export default function CRMPage() {
                                 className="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-inda-teal/30 focus:border-inda-teal"
                             />
                         </div>
-                        <select
-                            value={filterStage}
-                            onChange={e => setFilterStage(e.target.value as LocalStage | 'all')}
-                            className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-inda-teal/30"
-                        >
-                            <option value="all">All Stages</option>
-                            {(Object.keys(stageConfig) as LocalStage[]).map(s => (
-                                <option key={s} value={s}>{stageConfig[s].label}</option>
-                            ))}
-                        </select>
+                        <div className="overflow-x-auto -mx-1 px-1">
+                            <div className="flex gap-2 min-w-max">
+                                <button
+                                    onClick={() => setFilterStage('all')}
+                                    className={cn(
+                                        'inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition-colors',
+                                        filterStage === 'all'
+                                            ? 'border-inda-teal bg-inda-teal text-white'
+                                            : 'border-gray-200 bg-white text-gray-600 hover:border-inda-teal hover:text-inda-teal'
+                                    )}
+                                >
+                                    <span>All Stages</span>
+                                    <span className={cn(
+                                        'rounded-full px-2 py-0.5 text-xs font-semibold',
+                                        filterStage === 'all' ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'
+                                    )}>
+                                        {searchScopedDeals.length}
+                                    </span>
+                                </button>
+                                {(Object.keys(stageConfig) as LocalStage[]).map((stage) => {
+                                    const cfg = stageConfig[stage];
+                                    const count = searchScopedDeals.filter((deal) => localStage(deal) === stage).length;
+                                    return (
+                                        <button
+                                            key={stage}
+                                            onClick={() => setFilterStage(stage)}
+                                            className={cn(
+                                                'inline-flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition-colors whitespace-nowrap',
+                                                filterStage === stage
+                                                    ? 'border-inda-teal bg-inda-teal text-white'
+                                                    : 'border-gray-200 bg-white text-gray-600 hover:border-inda-teal hover:text-inda-teal'
+                                            )}
+                                        >
+                                            <span>{cfg.label}</span>
+                                            <span className={cn(
+                                                'rounded-full px-2 py-0.5 text-xs font-semibold',
+                                                filterStage === stage ? 'bg-white/20 text-white' : 'bg-gray-100 text-gray-600'
+                                            )}>
+                                                {count}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
                     </div>
 
                     {/* Loading skeleton */}
@@ -393,7 +436,56 @@ export default function CRMPage() {
 
                     {/* ── LIST VIEW ── */}
                     {!loading && view === 'list' && (
-                        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                        <>
+                        <div className="space-y-4 md:hidden">
+                            {filtered.length === 0 ? (
+                                <div className="bg-white rounded-xl border border-gray-200 p-8 text-center text-gray-400 text-sm">No deals found</div>
+                            ) : filtered.map(deal => {
+                                const cfg = stageConfig[localStage(deal)];
+                                const Icon = cfg.icon;
+                                return (
+                                    <div
+                                        key={deal.id}
+                                        onClick={() => openDeal(deal)}
+                                        className="bg-white rounded-xl border border-gray-200 p-4 space-y-3"
+                                    >
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-semibold text-gray-900">{deal.buyerName}</p>
+                                                <p className="text-xs text-gray-500 mt-0.5">{deal.buyerPhone || deal.buyerEmail || 'No contact info'}</p>
+                                            </div>
+                                            <span className={cn('inline-flex shrink-0 items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border', cfg.color)}>
+                                                <Icon className="w-3 h-3" />{cfg.label}
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-gray-900">{deal.propertyName}</p>
+                                            <p className="text-xs text-gray-500">{deal.propertyLocation || 'No location set'}</p>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2 text-xs text-gray-600">
+                                            {deal.budget && <span className="rounded-full bg-gray-100 px-2 py-1">Budget: {deal.budget}</span>}
+                                            {deal.timeline && <span className="rounded-full bg-gray-100 px-2 py-1">Timeline: {deal.timeline}</span>}
+                                            <span className="rounded-full bg-gray-100 px-2 py-1">{relativeTime(deal.lastActivityAt)}</span>
+                                        </div>
+                                        {deal.nextAction && (
+                                            <p className="text-xs text-gray-600">
+                                                <span className="font-medium">Next:</span> {deal.nextAction}
+                                            </p>
+                                        )}
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                openDeal(deal);
+                                            }}
+                                            className="w-full rounded-lg border border-inda-teal/30 px-3 py-2 text-sm font-medium text-inda-teal hover:bg-inda-teal/5 transition-colors"
+                                        >
+                                            Open Deal
+                                        </button>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <div className="hidden bg-white rounded-xl border border-gray-200 overflow-hidden md:block">
                             <table className="w-full">
                                 <thead className="bg-gray-50 border-b border-gray-200">
                                     <tr>
@@ -436,6 +528,7 @@ export default function CRMPage() {
                                 </tbody>
                             </table>
                         </div>
+                        </>
                     )}
                 </div>
 
@@ -443,7 +536,7 @@ export default function CRMPage() {
                 {selectedDeal && (
                     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-stretch justify-end">
                         <div className="w-full max-w-xl bg-white shadow-2xl flex flex-col overflow-hidden">
-                            <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0">
+                            <div className="border-b border-gray-200 px-4 py-4 sm:px-6 flex items-center justify-between flex-shrink-0">
                                 <div>
                                     <h2 className="text-lg font-bold text-gray-900">{selectedDeal.buyerName}</h2>
                                     <span className={cn('inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium border mt-1', stageConfig[localStage(selectedDeal)].color)}>
@@ -455,9 +548,9 @@ export default function CRMPage() {
                                 </button>
                             </div>
 
-                            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
                                 {/* Quick actions */}
-                                <div className="flex gap-2">
+                                <div className="flex flex-col gap-2 sm:flex-row">
                                     <a href={`tel:${selectedDeal.buyerPhone}`} className="flex-1 flex items-center justify-center gap-2 bg-inda-teal text-white px-3 py-2 rounded-lg text-sm font-medium hover:bg-teal-700 transition-colors">
                                         <Phone className="w-4 h-4" /> Call
                                     </a>
@@ -496,10 +589,10 @@ export default function CRMPage() {
                                     <div className="bg-gray-50 rounded-lg p-4 border border-gray-100">
                                         <p className="font-semibold text-gray-900">{selectedDeal.propertyName}</p>
                                         {selectedDeal.propertyLocation && <p className="text-sm text-gray-500">{selectedDeal.propertyLocation}</p>}
-                                        <div className="flex items-center gap-4 mt-2 text-sm flex-wrap">
-                                            {selectedDeal.budget && <span><span className="text-gray-500">Budget:</span> <span className="font-semibold text-inda-teal">{selectedDeal.budget}</span></span>}
-                                            {selectedDeal.timeline && <span><span className="text-gray-500">Timeline:</span> {selectedDeal.timeline}</span>}
-                                        </div>
+                                    <div className="flex items-center gap-4 mt-2 text-sm flex-wrap">
+                                        {selectedDeal.budget && <span><span className="text-gray-500">Budget:</span> <span className="font-semibold text-inda-teal">{selectedDeal.budget}</span></span>}
+                                        {selectedDeal.timeline && <span><span className="text-gray-500">Timeline:</span> {selectedDeal.timeline}</span>}
+                                    </div>
                                     </div>
                                 </div>
 
@@ -609,16 +702,16 @@ export default function CRMPage() {
 
                 {/* ── ADD DEAL MODAL ── */}
                 {showAddDeal && (
-                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-3 sm:p-4">
                         <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
-                            <div className="border-b border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0">
+                            <div className="border-b border-gray-200 px-4 py-4 sm:px-6 flex items-center justify-between flex-shrink-0">
                                 <h2 className="text-lg font-bold text-gray-900">Add New Deal</h2>
                                 <button onClick={() => setShowAddDeal(false)} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
                                     <X className="w-5 h-5 text-gray-500" />
                                 </button>
                             </div>
 
-                            <form onSubmit={handleAddDeal} className="flex-1 overflow-y-auto p-6 space-y-5">
+                            <form onSubmit={handleAddDeal} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
                                 {/* Buyer info */}
                                 <div>
                                     <h3 className="text-sm font-semibold text-gray-700 mb-3">Buyer Information</h3>
@@ -644,7 +737,7 @@ export default function CRMPage() {
                                     <div className="space-y-3">
                                         <input required type="text" value={form.propertyName} onChange={e => setForm({ ...form, propertyName: e.target.value })} placeholder="Property Name" className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-inda-teal/30" />
                                         <input type="text" value={form.propertyLocation} onChange={e => setForm({ ...form, propertyLocation: e.target.value })} placeholder="Location (e.g. Lekki, Lagos)" className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-inda-teal/30" />
-                                        <div className="grid grid-cols-2 gap-3">
+                                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                             <input type="text" value={form.budget} onChange={e => setForm({ ...form, budget: e.target.value })} placeholder="Budget (e.g. ₦50M)" className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-inda-teal/30" />
                                             <input type="text" value={form.timeline} onChange={e => setForm({ ...form, timeline: e.target.value })} placeholder="Timeline (e.g. 3 months)" className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-inda-teal/30" />
                                         </div>
@@ -654,7 +747,7 @@ export default function CRMPage() {
                                 {/* Stage */}
                                 <div>
                                     <h3 className="text-sm font-semibold text-gray-700 mb-3">Initial Stage</h3>
-                                    <div className="grid grid-cols-2 gap-2">
+                                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                                         {(Object.keys(stageConfig) as LocalStage[]).filter(s => s !== 'closing' && s !== 'lost').map(s => {
                                             const Icon = stageConfig[s].icon;
                                             return (
@@ -675,7 +768,7 @@ export default function CRMPage() {
                                     <textarea value={form.notes} onChange={e => setForm({ ...form, notes: e.target.value })} rows={3} placeholder="Add notes about this deal..." className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-inda-teal/30" />
                                 </div>
 
-                                <div className="flex gap-3 pt-2">
+                                <div className="flex flex-col gap-3 pt-2 sm:flex-row">
                                     <button type="button" onClick={() => setShowAddDeal(false)} className="flex-1 px-4 py-2.5 border border-gray-200 rounded-lg text-sm font-medium text-gray-700 hover:border-gray-300 transition-colors">Cancel</button>
                                     <button type="submit" disabled={saving} className="flex-1 px-4 py-2.5 bg-inda-teal text-white rounded-lg text-sm font-semibold hover:bg-teal-700 transition-colors disabled:opacity-60">
                                         {saving ? 'Saving...' : 'Add Deal'}

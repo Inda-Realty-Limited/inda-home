@@ -317,12 +317,12 @@ export function PropertyReport({
     return (
       <div className="min-h-screen bg-gray-50">
         {/* Floating Ask AI - Mobile Only */}
-        <div className="fixed bottom-8 right-8 z-30 lg:hidden">
+        <div className="fixed bottom-4 right-4 z-30 lg:hidden sm:bottom-6 sm:right-6">
           <button
             onClick={() => openAskAI()}
-            className="flex items-center gap-3 px-5 py-4 bg-inda-teal text-white rounded-full shadow-2xl hover:bg-inda-teal/90 transition-all hover:scale-105"
+            className="flex items-center gap-2 px-4 py-3 bg-inda-teal text-white rounded-full shadow-2xl hover:bg-inda-teal/90 transition-all hover:scale-105 sm:gap-3 sm:px-5 sm:py-4"
           >
-            <MessageCircle className="w-6 h-6 animate-pulse" />
+            <MessageCircle className="w-5 h-5 animate-pulse sm:w-6 sm:h-6" />
             <span className="font-semibold text-sm">Ask Inda AI</span>
           </button>
         </div>
@@ -344,14 +344,14 @@ export function PropertyReport({
                   <span>{property.location}</span>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2">
                 {onEdit && (
                   <button
                     onClick={onEdit}
-                    className="flex items-center gap-1.5 text-sm font-medium text-gray-600 border border-gray-200 px-3 py-1.5 rounded-lg hover:border-inda-teal hover:text-inda-teal transition-colors"
+                    className="flex items-center gap-1.5 text-xs font-medium text-gray-600 border border-gray-200 px-2.5 py-2 rounded-lg hover:border-inda-teal hover:text-inda-teal transition-colors sm:text-sm sm:px-3 sm:py-1.5"
                   >
                     <Edit3 className="w-4 h-4" />
-                    Edit
+                    <span className="hidden sm:inline">Edit</span>
                   </button>
                 )}
                 <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
@@ -422,17 +422,17 @@ export function PropertyReport({
               </div>
 
               {/* Quick Stats */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
-                <div className={`grid gap-6 ${isLand ? "grid-cols-2" : "grid-cols-4"}`}>
+              <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-inda-gray">
+                <div className={`grid gap-4 sm:gap-6 ${isLand ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-2 lg:grid-cols-4"}`}>
                   <div className="text-center">
-                    <div className="text-2xl font-semibold text-gray-900">
+                    <div className="text-xl font-semibold text-gray-900 sm:text-2xl">
                       ₦{(askingPrice / 1000000).toFixed(1)}M
                     </div>
                     <div className="text-sm text-gray-600 mt-1">Asking Price</div>
                   </div>
                   {!isLand && (
                     <div className="text-center">
-                      <div className="flex items-center justify-center gap-1 text-2xl font-semibold text-gray-900">
+                      <div className="flex items-center justify-center gap-1 text-xl font-semibold text-gray-900 sm:text-2xl">
                         <Bed className="w-5 h-5" />
                         {property.bed ?? "—"}
                       </div>
@@ -441,7 +441,7 @@ export function PropertyReport({
                   )}
                   {!isLand && (
                     <div className="text-center">
-                      <div className="flex items-center justify-center gap-1 text-2xl font-semibold text-gray-900">
+                      <div className="flex items-center justify-center gap-1 text-xl font-semibold text-gray-900 sm:text-2xl">
                         <Bath className="w-5 h-5" />
                         {property.bath ?? "—"}
                       </div>
@@ -449,7 +449,7 @@ export function PropertyReport({
                     </div>
                   )}
                   <div className="text-center">
-                    <div className="text-2xl font-semibold text-gray-900">
+                    <div className="text-xl font-semibold text-gray-900 sm:text-2xl break-words">
                       {property.size || "—"}
                     </div>
                     <div className="text-sm text-gray-600 mt-1">{isLand ? "Plot Size" : "Size"}</div>
@@ -458,7 +458,7 @@ export function PropertyReport({
               </div>
 
               {/* AI Intro */}
-              <div className="bg-inda-teal/5 border border-inda-teal/20 rounded-2xl p-6">
+              <div className="bg-inda-teal/5 border border-inda-teal/20 rounded-2xl p-4 sm:p-6">
                 <div className="flex gap-3">
                   <div className="w-10 h-10 rounded-full bg-inda-teal/10 flex items-center justify-center flex-shrink-0">
                     <Sparkles className="w-5 h-5 text-inda-teal" />
@@ -468,7 +468,7 @@ export function PropertyReport({
                       Your AI-Powered Property Report
                     </h3>
                     <p className="text-sm text-gray-600 leading-relaxed">
-                      We've analyzed this property across 6 key areas. Tap any card to explore
+                      We&apos;ve analyzed this property across 6 key areas. Tap any card to explore
                       interactive tools, calculators, and insights — no jargon, just what you need
                       to decide.
                     </p>
@@ -477,14 +477,14 @@ export function PropertyReport({
               </div>
 
               {/* Section Cards */}
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {reportCards.map((card) => {
                   const Icon = card.icon;
                   return (
                     <button
                       key={card.id}
                       onClick={() => setSelectedSection(card.id)}
-                      className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray hover:shadow-md hover:border-gray-200 transition-all text-left group"
+                      className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-inda-gray hover:shadow-md hover:border-gray-200 transition-all text-left group"
                     >
                       <div className="flex items-start gap-4">
                         <div
@@ -503,10 +503,45 @@ export function PropertyReport({
                 })}
               </div>
 
+              {/* Mobile Ask AI */}
+              <div className="bg-inda-teal/5 border border-inda-teal/20 rounded-2xl p-4 sm:p-6 lg:hidden">
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-full bg-inda-teal flex items-center justify-center flex-shrink-0">
+                    <MessageCircle className="w-5 h-5 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-gray-900 mb-1">Ask Inda Anything</h3>
+                    <p className="text-sm text-gray-600">Tap a question or start a chat.</p>
+                  </div>
+                </div>
+                <div className="space-y-2 mb-4">
+                  {[
+                    "Is the price fair for the area?",
+                    "What documents does this property have?",
+                    "Can I arrange a viewing this week?",
+                    "How is the commute from here?",
+                  ].map((question) => (
+                    <button
+                      key={question}
+                      onClick={() => openAskAI(question)}
+                      className="w-full rounded-lg border border-inda-gray bg-white px-3 py-2.5 text-left text-sm text-gray-700 transition-all hover:border-inda-teal/30 hover:bg-inda-teal/5 hover:text-inda-teal"
+                    >
+                      {question}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => openAskAI()}
+                  className="w-full rounded-xl bg-inda-teal px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-inda-teal/90"
+                >
+                  Start Chat
+                </button>
+              </div>
+
               {/* Action CTAs */}
-              <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
+              <div className="bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-inda-gray">
                 <h3 className="font-semibold text-gray-900 mb-4">Ready to take action?</h3>
-                <div className="grid md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   {virtualTourUrl ? (
                     <a
                       href={virtualTourUrl}
@@ -657,15 +692,15 @@ export function PropertyReport({
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Floating Ask AI */}
-      <div className="fixed bottom-8 right-8 z-30">
-        <button
-          onClick={() => openAskAI()}
-          className="flex items-center gap-3 px-5 py-4 bg-inda-teal text-white rounded-full shadow-2xl hover:bg-inda-teal/90 transition-all hover:scale-105"
-        >
-          <MessageCircle className="w-6 h-6 animate-pulse" />
-          <span className="font-semibold text-sm">Ask AI</span>
-        </button>
-      </div>
+        <div className="fixed bottom-4 right-4 z-30 sm:bottom-6 sm:right-6">
+          <button
+            onClick={() => openAskAI()}
+            className="flex items-center gap-2 px-4 py-3 bg-inda-teal text-white rounded-full shadow-2xl hover:bg-inda-teal/90 transition-all hover:scale-105 sm:gap-3 sm:px-5 sm:py-4"
+          >
+            <MessageCircle className="w-5 h-5 animate-pulse sm:w-6 sm:h-6" />
+            <span className="font-semibold text-sm">Ask AI</span>
+          </button>
+        </div>
 
       {/* Section Header */}
       <div className="bg-white border-b border-inda-gray sticky top-0 z-20">
@@ -760,6 +795,7 @@ export function PropertyReport({
           location: property.location,
           price: `₦${askingPrice.toLocaleString()}`,
           priceNumeric: askingPrice,
+          priceNegotiable: sourceListing?.priceNegotiable ?? undefined,
           bedrooms: property.bed || 0,
           scannedData: {
             bathrooms: property.bath ?? null,
@@ -2119,18 +2155,18 @@ function NeighborhoodSection({
         <h3 className="font-semibold text-gray-900 mb-4">Interactive Lifestyle Map</h3>
 
         {/* Tabs */}
-        <div className="flex gap-2 mb-6">
-          {tabs.map((tab) => {
-            const TabIcon = tab.icon;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setLifestyleTab(tab.id)}
-                className={`flex-1 px-4 py-3 rounded-xl font-medium text-sm transition-all ${
-                  lifestyleTab === tab.id
-                    ? "bg-inda-teal text-white shadow-md"
-                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                }`}
+                <div className="flex gap-2 mb-6 overflow-x-auto pb-1">
+                  {tabs.map((tab) => {
+                    const TabIcon = tab.icon;
+                    return (
+                      <button
+                        key={tab.id}
+                        onClick={() => setLifestyleTab(tab.id)}
+                        className={`flex-shrink-0 whitespace-nowrap px-4 py-3 rounded-xl font-medium text-sm transition-all ${
+                          lifestyleTab === tab.id
+                            ? "bg-inda-teal text-white shadow-md"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                        }`}
               >
                 <TabIcon className="w-4 h-4 inline mr-2" />
                 {tab.label}
