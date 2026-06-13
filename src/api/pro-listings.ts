@@ -27,6 +27,16 @@ export interface Listing extends ListingPayload {
   [key: string]: any;
 }
 
+export interface AddressAutocompleteSuggestion {
+  formatted: string;
+  street: string;
+  state?: string | null;
+  lga?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+  resultId?: string | null;
+}
+
 export const ProListingsService = {
   getUserListings: async (userId: string) => {
     const response = await apiClient.get(`/listings/user/${userId}`);
@@ -46,6 +56,17 @@ export const ProListingsService = {
 
   getListing: async (indaTag: string) => {
     const response = await apiClient.get(`/listings/${indaTag}`);
+    return response.data;
+  },
+
+  autocompleteAddresses: async (params: {
+    q: string;
+    state?: string;
+    lga?: string;
+  }) => {
+    const response = await apiClient.get("/listings/address-autocomplete", {
+      params,
+    });
     return response.data;
   },
 
