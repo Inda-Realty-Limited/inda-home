@@ -8,6 +8,10 @@ export interface CreateVisitRequestPayload {
   preferredDate: string;
   preferredTime: string;
   message?: string;
+  requestType?: "PHYSICAL_VISIT" | "VIRTUAL_TOUR";
+  visitorId?: string;
+  sessionId?: string;
+  source?: string;
 }
 
 export interface CreateOfferPayload {
@@ -17,6 +21,9 @@ export interface CreateOfferPayload {
   buyerPhone: string;
   offerAmount: number;
   message?: string;
+  visitorId?: string;
+  sessionId?: string;
+  source?: string;
 }
 
 export interface CreateLegalPartnerRequestPayload {
@@ -28,6 +35,9 @@ export interface CreateLegalPartnerRequestPayload {
   email?: string;
   needs?: string;
   agreed: boolean;
+  visitorId?: string;
+  sessionId?: string;
+  source?: string;
 }
 
 export const InquiriesService = {

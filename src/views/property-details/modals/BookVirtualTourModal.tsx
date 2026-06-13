@@ -1,6 +1,7 @@
 import { X, Video, Calendar, Clock, User, Phone, Mail, Globe, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { InquiriesService } from "@/api/inquiries";
+import { getAnalyticsContext } from "@/utils/analytics";
 
 interface BookVirtualTourModalProps {
   isOpen: boolean;
@@ -53,6 +54,7 @@ export function BookVirtualTourModal({
     setIsSubmitting(true);
 
     try {
+      const analytics = getAnalyticsContext(listingId);
       const platformLabel =
         formData.platform === "whatsapp" ? "WhatsApp Video Call" :
         formData.platform === "zoom" ? "Zoom" :
@@ -74,6 +76,10 @@ export function BookVirtualTourModal({
         preferredDate: formData.preferredDate,
         preferredTime: formData.preferredTime,
         message: tourDetails,
+        requestType: "VIRTUAL_TOUR",
+        visitorId: analytics.visitorId,
+        sessionId: analytics.sessionId,
+        source: analytics.source,
       });
 
       setSubmitted(true);

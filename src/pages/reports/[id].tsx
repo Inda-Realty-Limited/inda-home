@@ -8,6 +8,7 @@ import DeepDiveReport from '@/components/dashboard/reports/DeepDiveReport';
 import DeeperDiveReport from '@/components/dashboard/reports/DeeperDiveReport';
 import { ProReportsService } from '@/api/pro-reports';
 import { getOrCreateReportSessionId } from '@/utils/reportTracking';
+import { trackWebsiteVisit } from '@/utils/analytics';
 
 const SAMPLE_REPORT_ID = 'IND-8827';
 
@@ -25,6 +26,13 @@ export default function ReportDetailsPage() {
         () => (reportId ? getOrCreateReportSessionId(reportId) : undefined),
         [reportId],
     );
+
+    useEffect(() => {
+        if (!router.isReady || !reportId) return;
+        void trackWebsiteVisit({
+            path: router.asPath,
+        });
+    }, [router.isReady, router.asPath, reportId]);
 
     useEffect(() => {
         if (!reportId) return;
