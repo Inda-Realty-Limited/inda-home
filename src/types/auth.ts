@@ -13,6 +13,10 @@ export type StoredUser = {
   subscriptionPlan?: "starter" | "growth" | "elite" | "partner";
   subscriptionStatus?: "active" | "expired" | "none";
   subscriptionExpiresAt?: string;
+  publicProfileEnabled?: boolean;
+  publicProfileSlug?: string | null;
+  publicProfileTitle?: string | null;
+  publicProfileBio?: string | null;
   [key: string]: any;
 };
 
@@ -28,4 +32,3 @@ export interface AuthContextType extends AuthState {
   logout: () => void;
   setUser: (user: StoredUser | null, token?: string) => void;
 }
-
