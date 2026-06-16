@@ -270,6 +270,30 @@ export interface PropertyIntelligenceData {
     };
     district: string;
     accessibility: {
+      to_victoria_island?: {
+        morning_peak_minutes?: number;
+        evening_peak_minutes?: number;
+      };
+      to_airport?: {
+        morning_peak_minutes?: number;
+        evening_peak_minutes?: number;
+      };
+      to_lekki_ftz?: {
+        morning_peak_minutes?: number;
+        evening_peak_minutes?: number;
+      };
+      to_ikeja_mall?: {
+        morning_peak_minutes?: number;
+        evening_peak_minutes?: number;
+      };
+      to_marina?: {
+        morning_peak_minutes?: number;
+        evening_peak_minutes?: number;
+      };
+      to_third_mainland_bridge?: {
+        morning_peak_minutes?: number;
+        evening_peak_minutes?: number;
+      };
       to_victoria_island_minutes: number;
       to_airport_minutes: number;
       to_lekki_ftz_minutes: number;
@@ -297,6 +321,14 @@ export interface PropertyIntelligenceData {
         distance_km: number;
         expected_value_increase_pct: string;
       };
+    };
+    flood_risk?: {
+      risk_level?: string;
+      elevation_metres?: number;
+      elevation_risk?: string;
+      flood_history_summary?: string;
+      drainage_assessment?: string;
+      assessment_note?: string;
     };
   };
   investment_analysis: {

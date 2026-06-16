@@ -1,6 +1,7 @@
 import { X, Calendar, Clock, User, Phone, Mail, AlertCircle, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { InquiriesService } from "@/api/inquiries";
+import { getAnalyticsContext } from "@/utils/analytics";
 
 interface ScheduleSiteVisitModalProps {
   isOpen: boolean;
@@ -45,6 +46,7 @@ export function ScheduleSiteVisitModal({
     setIsSubmitting(true);
 
     try {
+      const analytics = getAnalyticsContext(listingId);
       const notes = [
         `Visit Type: ${formData.visitType}`,
         formData.visitType !== "individual" ? `Number of People: ${formData.numberOfPeople}` : null,
@@ -62,6 +64,10 @@ export function ScheduleSiteVisitModal({
         preferredDate: formData.preferredDate,
         preferredTime: formData.preferredTime,
         message: notes || undefined,
+        requestType: "PHYSICAL_VISIT",
+        visitorId: analytics.visitorId,
+        sessionId: analytics.sessionId,
+        source: analytics.source,
       });
 
       setSubmitted(true);

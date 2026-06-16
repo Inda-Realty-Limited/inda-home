@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X, User, Mail, Phone as PhoneIcon, MessageSquare, CheckCircle, Loader2 } from "lucide-react";
 import { InquiriesService } from "@/api/inquiries";
+import { getAnalyticsContext } from "@/utils/analytics";
 
 interface MakeOfferModalProps {
   isOpen: boolean;
@@ -58,6 +59,7 @@ export function MakeOfferModal({
     setError(null);
 
     try {
+      const analytics = getAnalyticsContext(listingId);
       await InquiriesService.createOffer({
         listingId,
         buyerName: fullName,
@@ -65,6 +67,9 @@ export function MakeOfferModal({
         buyerPhone: phone,
         offerAmount: parseInt(offerAmount),
         message: message || undefined,
+        visitorId: analytics.visitorId,
+        sessionId: analytics.sessionId,
+        source: analytics.source,
       });
       setIsSuccess(true);
     } catch (err: any) {

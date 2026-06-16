@@ -75,6 +75,30 @@ interface PropertyIntelligenceData {
     };
     district: string;
     accessibility: {
+      to_victoria_island?: {
+        morning_peak_minutes?: number;
+        evening_peak_minutes?: number;
+      };
+      to_airport?: {
+        morning_peak_minutes?: number;
+        evening_peak_minutes?: number;
+      };
+      to_lekki_ftz?: {
+        morning_peak_minutes?: number;
+        evening_peak_minutes?: number;
+      };
+      to_ikeja_mall?: {
+        morning_peak_minutes?: number;
+        evening_peak_minutes?: number;
+      };
+      to_marina?: {
+        morning_peak_minutes?: number;
+        evening_peak_minutes?: number;
+      };
+      to_third_mainland_bridge?: {
+        morning_peak_minutes?: number;
+        evening_peak_minutes?: number;
+      };
       to_victoria_island_minutes: number;
       to_airport_minutes: number;
       to_lekki_ftz_minutes: number;
@@ -184,6 +208,18 @@ interface PropertyIntelligenceData {
       net_cash_flow: number;
     };
   };
+}
+
+function getCommuteMinutes(accessibility: any, route: string) {
+  if (!accessibility) return null;
+  if (typeof accessibility[`${route}_minutes`] === "number") {
+    return accessibility[`${route}_minutes`];
+  }
+  const nested = accessibility[route];
+  if (!nested || typeof nested !== "object") return null;
+  if (typeof nested.morning_peak_minutes === "number") return nested.morning_peak_minutes;
+  if (typeof nested.evening_peak_minutes === "number") return nested.evening_peak_minutes;
+  return null;
 }
 
 interface PropertyDetailProps {
@@ -346,7 +382,7 @@ export function PropertyDetail({
           answer: `${intelligenceData.location_intelligence.district} location with excellent connectivity.`,
           confidence: "high",
           dataSource: "GPS coordinates and route analysis",
-          details: `• To Victoria Island: ${intelligenceData.location_intelligence.accessibility.to_victoria_island_minutes} minutes\n• To Airport: ${intelligenceData.location_intelligence.accessibility.to_airport_minutes} minutes\n• To Lekki FTZ: ${intelligenceData.location_intelligence.accessibility.to_lekki_ftz_minutes} minutes\n• To Ikeja Mall: ${intelligenceData.location_intelligence.accessibility.to_ikeja_mall_minutes} minutes\n• To Marina: ${intelligenceData.location_intelligence.accessibility.to_marina_minutes} minutes\n• To Third Mainland Bridge: ${intelligenceData.location_intelligence.accessibility.to_third_mainland_bridge_minutes} minutes`
+          details: `• To Victoria Island: ${getCommuteMinutes(intelligenceData.location_intelligence.accessibility, 'to_victoria_island')} minutes\n• To Airport: ${getCommuteMinutes(intelligenceData.location_intelligence.accessibility, 'to_airport')} minutes\n• To Lekki FTZ: ${getCommuteMinutes(intelligenceData.location_intelligence.accessibility, 'to_lekki_ftz')} minutes\n• To Ikeja Mall: ${getCommuteMinutes(intelligenceData.location_intelligence.accessibility, 'to_ikeja_mall')} minutes\n• To Marina: ${getCommuteMinutes(intelligenceData.location_intelligence.accessibility, 'to_marina')} minutes\n• To Third Mainland Bridge: ${getCommuteMinutes(intelligenceData.location_intelligence.accessibility, 'to_third_mainland_bridge')} minutes`
         },
         {
           question: "What schools are nearby?",
