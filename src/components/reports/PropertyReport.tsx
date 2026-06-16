@@ -63,6 +63,19 @@ export interface PropertyReportData {
 }
 
 interface PropertyIntelligenceData {
+  property_details?: {
+    price?: number;
+    location?: string;
+    specs?: {
+      bed?: number;
+      bath?: number;
+      size?: string;
+    };
+    userId?: string;
+    title?: string;
+    features?: string;
+    size_sqm_parsed?: number;
+  };
   location_intelligence?: {
     coordinates?: {
       lat?: number;
@@ -70,6 +83,30 @@ interface PropertyIntelligenceData {
     };
     district?: string;
     accessibility?: {
+      to_victoria_island?: {
+        morning_peak_minutes?: number;
+        evening_peak_minutes?: number;
+      };
+      to_airport?: {
+        morning_peak_minutes?: number;
+        evening_peak_minutes?: number;
+      };
+      to_lekki_ftz?: {
+        morning_peak_minutes?: number;
+        evening_peak_minutes?: number;
+      };
+      to_ikeja_mall?: {
+        morning_peak_minutes?: number;
+        evening_peak_minutes?: number;
+      };
+      to_marina?: {
+        morning_peak_minutes?: number;
+        evening_peak_minutes?: number;
+      };
+      to_third_mainland_bridge?: {
+        morning_peak_minutes?: number;
+        evening_peak_minutes?: number;
+      };
       to_victoria_island_minutes?: number;
       to_airport_minutes?: number;
       to_lekki_ftz_minutes?: number;
@@ -96,12 +133,49 @@ interface PropertyIntelligenceData {
       string,
       { distance_km?: number; expected_value_increase_pct?: string }
     >;
+    flood_risk?: {
+      risk_level?: string;
+      elevation_metres?: number;
+      elevation_risk?: string;
+      flood_history_summary?: string;
+      drainage_assessment?: string;
+      assessment_note?: string;
+      sources_checked?: string;
+    };
     nearby_amenities?: Array<{
       name?: string;
       category?: string;
       distance_km?: number;
       rating?: number;
     }>;
+  };
+  market_intelligence?: {
+    price_per_sqm?: {
+      subject_property?: number;
+      area_range_min?: number;
+      area_range_max?: number;
+      price_position?: string;
+    };
+    appreciation?: {
+      annual_rate_pct?: number;
+      basis?: string;
+      outlook_10_year?: string;
+    };
+  };
+  rental_intelligence?: {
+    long_let?: {
+      annual?: number;
+      monthly?: number;
+    };
+    short_let?: {
+      nightly_naira?: number;
+      nightly_usd?: number;
+      occupancy_rate_pct?: number;
+      annual_projection?: number;
+    };
+    recommended_strategy?: string;
+    recommendation_reason?: string;
+    data_sources?: string;
   };
   investment_analysis?: {
     total_investment_breakdown?: {
@@ -117,6 +191,7 @@ interface PropertyIntelligenceData {
       land_registration?: number;
       governors_consent?: number;
       governors_consent_pct?: number;
+      annual_service_charge?: number;
       total_investment?: number;
       additional_costs_pct?: number;
     };
@@ -127,6 +202,24 @@ interface PropertyIntelligenceData {
       rental_range_min?: number;
       rental_range_max?: number;
     };
+    yields?: {
+      long_let?: {
+        annual_income?: number;
+        net_income?: number;
+        gross_yield_pct?: number;
+        net_yield_pct?: number;
+        income_range_min?: number;
+        income_range_max?: number;
+      };
+      short_let?: {
+        annual_income?: number;
+        net_income?: number;
+        gross_yield_pct?: number;
+        net_yield_pct?: number;
+        income_range_min?: number;
+        income_range_max?: number;
+      };
+    };
   };
   value_projection?: {
     annual_appreciation_pct?: number;
@@ -135,7 +228,12 @@ interface PropertyIntelligenceData {
       value?: number;
       gain_pct?: number;
     };
+    year_10?: {
+      value?: number;
+      gain_pct?: number;
+    };
     projected_gain_5_year?: number;
+    projected_gain_10_year?: number;
   };
   cash_flow_forecast?: {
     year_1?: {
@@ -148,6 +246,12 @@ interface PropertyIntelligenceData {
       expenses?: number;
       net_cash_flow?: number;
     };
+    year_10?: {
+      rental_income?: number;
+      expenses?: number;
+      net_cash_flow?: number;
+    };
+    recommended?: string;
   };
   condition?: {
     condition_label?: string | null;
@@ -194,6 +298,50 @@ type ReportSection =
   | "neighborhood";
 
 type LifestyleTab = "eat" | "work" | "relax";
+
+function resolveCommuteMinutes(
+  accessibility: PropertyIntelligenceData["location_intelligence"] extends { accessibility?: infer T }
+    ? T
+    : never,
+  route:
+    | "to_victoria_island"
+    | "to_airport"
+    | "to_lekki_ftz"
+    | "to_ikeja_mall"
+    | "to_marina"
+    | "to_third_mainland_bridge",
+) {
+  if (!accessibility) return undefined;
+
+  const flatKey = `${route}_minutes` as const;
+  const flatValue = accessibility[flatKey as keyof typeof accessibility];
+  if (typeof flatValue === "number") return flatValue;
+
+  const nestedValue = accessibility[route];
+  if (!nestedValue || typeof nestedValue !== "object") return undefined;
+
+  return (
+    (typeof nestedValue.morning_peak_minutes === "number"
+      ? nestedValue.morning_peak_minutes
+      : undefined) ??
+    (typeof nestedValue.evening_peak_minutes === "number"
+      ? nestedValue.evening_peak_minutes
+      : undefined)
+  );
+}
+
+function formatStrategyLabel(strategy?: string | null) {
+  if (!strategy) return "Not available";
+  return strategy.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+function formatMarketPosition(position?: string | null) {
+  if (!position) return "Not available";
+  if (position === "below_market") return "Below market";
+  if (position === "above_market") return "Above market";
+  if (position === "within_market") return "Within market";
+  return formatStrategyLabel(position);
+}
 
 export function PropertyReport({
   property,
@@ -859,6 +1007,35 @@ function OverviewSection({
       title: typeof item?.title === "string" ? item.title.trim() : "",
     }))
     .filter((item) => item.title.length > 0);
+  const marketPsm = intelligenceData?.market_intelligence?.price_per_sqm;
+  const rentalIntelligence = intelligenceData?.rental_intelligence;
+  const recommendedStrategy = formatStrategyLabel(rentalIntelligence?.recommended_strategy);
+  const strategyRevenue =
+    rentalIntelligence?.recommended_strategy === "long_let"
+      ? rentalIntelligence?.long_let?.annual
+      : rentalIntelligence?.short_let?.annual_projection;
+  const sizeSqmParsed = intelligenceData?.property_details?.size_sqm_parsed;
+  const marketSnapshot = [
+    typeof marketPsm?.subject_property === "number"
+      ? { label: "Price / sqm", value: formatCurrency(marketPsm.subject_property) }
+      : null,
+    marketPsm?.price_position
+      ? { label: "Market position", value: formatMarketPosition(marketPsm.price_position) }
+      : null,
+    rentalIntelligence?.recommended_strategy
+      ? { label: "Best rental play", value: recommendedStrategy }
+      : null,
+    typeof strategyRevenue === "number"
+      ? {
+          label: "Projected annual income",
+          value: formatCurrency(strategyRevenue),
+        }
+      : null,
+    typeof sizeSqmParsed === "number"
+      ? { label: "Measured area", value: `${sizeSqmParsed.toFixed(0)} sqm` }
+      : null,
+  ].filter(Boolean) as Array<{ label: string; value: string }>;
+  const appreciationOutlook = intelligenceData?.market_intelligence?.appreciation?.outlook_10_year;
 
   return (
     <div className="space-y-6">
@@ -1050,6 +1227,27 @@ function OverviewSection({
         </div>
       </div>
 
+      {marketSnapshot.length > 0 && (
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
+          <h3 className="font-semibold text-gray-900 mb-4">Quick intelligence snapshot</h3>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {marketSnapshot.map((item) => (
+              <div key={item.label} className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+                <div className="text-xs uppercase tracking-wide text-gray-500">{item.label}</div>
+                <div className="text-base font-semibold text-gray-900 mt-1">{item.value}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {appreciationOutlook && (
+        <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl p-6 border border-blue-100">
+          <h3 className="font-semibold text-gray-900 mb-3">10-year area outlook</h3>
+          <p className="text-sm text-gray-700 leading-relaxed">{appreciationOutlook}</p>
+        </div>
+      )}
+
       {/* Amenities (buildings) / Infrastructure (land) */}
       {!isLand && (
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
@@ -1177,6 +1375,10 @@ function PricingSection({
   const projectedGain = valueProjection?.projected_gain_5_year;
   const annualAppreciationPct = valueProjection?.annual_appreciation_pct;
   const historicalAvgPct = valueProjection?.historical_avg_pct;
+  const pricePerSqm = intelligenceData?.market_intelligence?.price_per_sqm;
+  const marketAppreciation = intelligenceData?.market_intelligence?.appreciation;
+  const projectedValue10Year = valueProjection?.year_10?.value;
+  const projectedGain10Year = valueProjection?.projected_gain_10_year;
 
   return (
     <div className="space-y-6">
@@ -1235,6 +1437,83 @@ function PricingSection({
           )}
         </div>
       </div>
+
+      {pricePerSqm && (
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
+          <h3 className="font-semibold text-gray-900 mb-4">Market comparison</h3>
+          <div className="grid sm:grid-cols-3 gap-4">
+            {typeof pricePerSqm.subject_property === "number" && (
+              <div className="p-4 rounded-xl bg-blue-50 border border-blue-100">
+                <div className="text-xs uppercase tracking-wide text-blue-700">This property</div>
+                <div className="text-xl font-bold text-gray-900 mt-1">
+                  {formatCurrency(pricePerSqm.subject_property)}
+                </div>
+                <div className="text-sm text-gray-600 mt-1">per sqm</div>
+              </div>
+            )}
+            {(typeof pricePerSqm.area_range_min === "number" || typeof pricePerSqm.area_range_max === "number") && (
+              <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+                <div className="text-xs uppercase tracking-wide text-gray-500">Area range</div>
+                <div className="text-xl font-bold text-gray-900 mt-1">
+                  {typeof pricePerSqm.area_range_min === "number" && typeof pricePerSqm.area_range_max === "number"
+                    ? `${formatCurrency(pricePerSqm.area_range_min)} - ${formatCurrency(pricePerSqm.area_range_max)}`
+                    : typeof pricePerSqm.area_range_min === "number"
+                      ? formatCurrency(pricePerSqm.area_range_min)
+                      : formatCurrency(pricePerSqm.area_range_max)}
+                </div>
+                <div className="text-sm text-gray-600 mt-1">per sqm</div>
+              </div>
+            )}
+            {pricePerSqm.price_position && (
+              <div className="p-4 rounded-xl bg-green-50 border border-green-100">
+                <div className="text-xs uppercase tracking-wide text-green-700">Positioning</div>
+                <div className="text-xl font-bold text-gray-900 mt-1">
+                  {formatMarketPosition(pricePerSqm.price_position)}
+                </div>
+                <div className="text-sm text-gray-600 mt-1">versus current area pricing</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {(marketAppreciation?.basis || marketAppreciation?.outlook_10_year || typeof projectedValue10Year === "number") && (
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
+          <h3 className="font-semibold text-gray-900 mb-4">Market narrative</h3>
+          <div className="space-y-4">
+            {marketAppreciation?.basis && (
+              <div>
+                <div className="text-sm font-medium text-gray-900 mb-1">Why this pricing looks the way it does</div>
+                <p className="text-sm text-gray-700 leading-relaxed">{marketAppreciation.basis}</p>
+              </div>
+            )}
+            {marketAppreciation?.outlook_10_year && (
+              <div>
+                <div className="text-sm font-medium text-gray-900 mb-1">10-year outlook</div>
+                <p className="text-sm text-gray-700 leading-relaxed">{marketAppreciation.outlook_10_year}</p>
+              </div>
+            )}
+            {typeof projectedValue10Year === "number" && (
+              <div className="grid sm:grid-cols-2 gap-3 pt-2">
+                <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+                  <div className="text-xs uppercase tracking-wide text-gray-500">Projected value in 10 years</div>
+                  <div className="text-lg font-semibold text-gray-900 mt-1">
+                    {formatCurrency(projectedValue10Year)}
+                  </div>
+                </div>
+                {typeof projectedGain10Year === "number" && (
+                  <div className="p-4 rounded-xl bg-green-50 border border-green-100">
+                    <div className="text-xs uppercase tracking-wide text-green-700">Projected 10-year gain</div>
+                    <div className="text-lg font-semibold text-gray-900 mt-1">
+                      {formatCurrency(projectedGain10Year)}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1292,6 +1571,14 @@ function FinancialsSection({
     Math.max(projectedValue - purchasePrice, 0);
   const year1CashFlow = intelligenceData?.cash_flow_forecast?.year_1?.net_cash_flow;
   const year5CashFlow = intelligenceData?.cash_flow_forecast?.year_5?.net_cash_flow;
+  const year10CashFlow = intelligenceData?.cash_flow_forecast?.year_10?.net_cash_flow;
+  const annualServiceCharge =
+    intelligenceData?.investment_analysis?.total_investment_breakdown?.annual_service_charge;
+  const rentalIntelligence = intelligenceData?.rental_intelligence;
+  const yieldComparison = intelligenceData?.investment_analysis?.yields;
+  const recommendedStrategy = formatStrategyLabel(
+    rentalIntelligence?.recommended_strategy ?? intelligenceData?.cash_flow_forecast?.recommended,
+  );
   const landAppreciationRate = 0.12;
   const roiProjectionValue = isLand
     ? purchasePrice * Math.pow(1 + landAppreciationRate, roiYears)
@@ -1411,6 +1698,124 @@ function FinancialsSection({
                 </div>
               </div>
             )}
+            {typeof year10CashFlow === "number" && (
+              <div className="pt-4 border-t border-gray-100">
+                <div className="text-sm text-gray-600 mb-1">Year 10 net cash flow</div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {formatCurrency(year10CashFlow)}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {!isLand && (
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
+          <h3 className="font-semibold text-gray-900 mb-4">Rental strategy comparison</h3>
+          <div className="grid md:grid-cols-2 gap-4">
+            {[
+              {
+                key: "long",
+                title: "Long-let",
+                annual:
+                  rentalIntelligence?.long_let?.annual ??
+                  yieldComparison?.long_let?.annual_income,
+                secondary:
+                  rentalIntelligence?.long_let?.monthly
+                    ? `${formatCurrency(rentalIntelligence.long_let.monthly)} / month`
+                    : null,
+                netYield: yieldComparison?.long_let?.net_yield_pct,
+              },
+              {
+                key: "short",
+                title: "Short-let",
+                annual:
+                  rentalIntelligence?.short_let?.annual_projection ??
+                  yieldComparison?.short_let?.annual_income,
+                secondary:
+                  rentalIntelligence?.short_let?.nightly_naira
+                    ? `${formatCurrency(rentalIntelligence.short_let.nightly_naira)} / night`
+                    : null,
+                netYield: yieldComparison?.short_let?.net_yield_pct,
+              },
+            ].map((option) => (
+              <div
+                key={option.key}
+                className={`rounded-xl border p-4 ${
+                  recommendedStrategy.toLowerCase().includes(option.key)
+                    ? "border-inda-teal bg-inda-teal/5"
+                    : "border-gray-200 bg-gray-50"
+                }`}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="font-semibold text-gray-900">{option.title}</div>
+                  {recommendedStrategy.toLowerCase().includes(option.key) && (
+                    <span className="text-xs font-semibold uppercase tracking-wide text-inda-teal">
+                      Recommended
+                    </span>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  {typeof option.annual === "number" && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Annual income</span>
+                      <span className="text-sm font-semibold text-gray-900">
+                        {formatCurrency(option.annual)}
+                      </span>
+                    </div>
+                  )}
+                  {option.secondary && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Rate</span>
+                      <span className="text-sm font-semibold text-gray-900">{option.secondary}</span>
+                    </div>
+                  )}
+                  {typeof option.netYield === "number" && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Net yield</span>
+                      <span className="text-sm font-semibold text-gray-900">{option.netYield}%</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          {(rentalIntelligence?.recommendation_reason || rentalIntelligence?.data_sources) && (
+            <div className="mt-4 space-y-2">
+              {rentalIntelligence?.recommendation_reason && (
+                <p className="text-sm text-gray-700 leading-relaxed">
+                  {rentalIntelligence.recommendation_reason}
+                </p>
+              )}
+              {rentalIntelligence?.data_sources && (
+                <p className="text-xs text-gray-500 leading-relaxed">
+                  Sources: {rentalIntelligence.data_sources}
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {typeof annualServiceCharge === "number" && annualServiceCharge > 0 && (
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
+          <h3 className="font-semibold text-gray-900 mb-4">Running costs to keep in mind</h3>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+              <div className="text-xs uppercase tracking-wide text-gray-500">Annual service charge</div>
+              <div className="text-xl font-semibold text-gray-900 mt-1">
+                {formatCurrency(annualServiceCharge)}
+              </div>
+            </div>
+            {typeof totalInvestment === "number" && typeof annualServiceCharge === "number" && (
+              <div className="p-4 rounded-xl bg-gray-50 border border-gray-100">
+                <div className="text-xs uppercase tracking-wide text-gray-500">Share of total investment</div>
+                <div className="text-xl font-semibold text-gray-900 mt-1">
+                  {((annualServiceCharge / totalInvestment) * 100).toFixed(2)}%
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -1456,28 +1861,29 @@ function LocationSection({
   intelligenceData?: PropertyIntelligenceData | null;
 }) {
   const locationIntelligence = intelligenceData?.location_intelligence;
+  const coordinates = locationIntelligence?.coordinates;
   const commuteRoutes = [
     {
       destination: "Victoria Island",
-      time: locationIntelligence?.accessibility?.to_victoria_island_minutes,
+      time: resolveCommuteMinutes(locationIntelligence?.accessibility, "to_victoria_island"),
       icon: "💼",
       type: "Business District",
     },
     {
       destination: "Murtala Muhammed Airport",
-      time: locationIntelligence?.accessibility?.to_airport_minutes,
+      time: resolveCommuteMinutes(locationIntelligence?.accessibility, "to_airport"),
       icon: "✈️",
       type: "International Airport",
     },
     {
       destination: "Lekki FTZ",
-      time: locationIntelligence?.accessibility?.to_lekki_ftz_minutes,
+      time: resolveCommuteMinutes(locationIntelligence?.accessibility, "to_lekki_ftz"),
       icon: "🏭",
       type: "Trade & Industry",
     },
     {
       destination: "Marina",
-      time: locationIntelligence?.accessibility?.to_marina_minutes,
+      time: resolveCommuteMinutes(locationIntelligence?.accessibility, "to_marina"),
       icon: "🏙️",
       type: "Island CBD",
     },
@@ -1543,9 +1949,66 @@ function LocationSection({
                 District: {locationIntelligence.district}
               </div>
             )}
+            {typeof coordinates?.lat === "number" && typeof coordinates?.lng === "number" && (
+              <div className="text-xs text-gray-500 mt-2">
+                Map pin: {coordinates.lat.toFixed(4)}, {coordinates.lng.toFixed(4)}
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {locationIntelligence?.flood_risk && (
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
+          <div className="flex items-start justify-between gap-4 mb-4">
+            <div>
+              <h3 className="font-semibold text-gray-900">Flood risk</h3>
+              <p className="text-sm text-gray-600 mt-1">
+                External location intelligence assessment for this area.
+              </p>
+            </div>
+            {locationIntelligence.flood_risk.risk_level && (
+              <span className="px-3 py-1 text-xs font-semibold rounded-full bg-amber-50 text-amber-700 border border-amber-200">
+                {locationIntelligence.flood_risk.risk_level}
+              </span>
+            )}
+          </div>
+          <div className="grid sm:grid-cols-2 gap-3 mb-4">
+            {typeof locationIntelligence.flood_risk.elevation_metres === "number" && (
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <div className="text-xs uppercase tracking-wide text-gray-500">Elevation</div>
+                <div className="text-lg font-semibold text-gray-900 mt-1">
+                  {locationIntelligence.flood_risk.elevation_metres.toFixed(2)} m
+                </div>
+              </div>
+            )}
+            {locationIntelligence.flood_risk.elevation_risk && (
+              <div className="p-4 bg-gray-50 rounded-lg">
+                <div className="text-xs uppercase tracking-wide text-gray-500">Elevation risk</div>
+                <div className="text-lg font-semibold text-gray-900 mt-1">
+                  {locationIntelligence.flood_risk.elevation_risk}
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="space-y-3 text-sm text-gray-700">
+            {locationIntelligence.flood_risk.flood_history_summary && (
+              <p>{locationIntelligence.flood_risk.flood_history_summary}</p>
+            )}
+            {locationIntelligence.flood_risk.drainage_assessment && (
+              <p>{locationIntelligence.flood_risk.drainage_assessment}</p>
+            )}
+            {locationIntelligence.flood_risk.assessment_note && (
+              <p className="text-gray-500">{locationIntelligence.flood_risk.assessment_note}</p>
+            )}
+            {locationIntelligence.flood_risk.sources_checked && (
+              <p className="text-xs text-gray-500 leading-relaxed">
+                Sources checked: {locationIntelligence.flood_risk.sources_checked}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
 
       {commuteRoutes.length > 0 && (
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-inda-gray">
@@ -2238,26 +2701,26 @@ function NeighborhoodSection({
               { label: "District", value: district ?? null },
               {
                 label: "Victoria Island",
-                value: typeof commuteHighlights?.to_victoria_island_minutes === "number"
-                  ? `${commuteHighlights.to_victoria_island_minutes} min drive`
+                value: typeof resolveCommuteMinutes(commuteHighlights, "to_victoria_island") === "number"
+                  ? `${resolveCommuteMinutes(commuteHighlights, "to_victoria_island")} min drive`
                   : null,
               },
               {
                 label: "Airport",
-                value: typeof commuteHighlights?.to_airport_minutes === "number"
-                  ? `${commuteHighlights.to_airport_minutes} min drive`
+                value: typeof resolveCommuteMinutes(commuteHighlights, "to_airport") === "number"
+                  ? `${resolveCommuteMinutes(commuteHighlights, "to_airport")} min drive`
                   : null,
               },
               {
                 label: "Marina / CBD",
-                value: typeof commuteHighlights?.to_marina_minutes === "number"
-                  ? `${commuteHighlights.to_marina_minutes} min drive`
+                value: typeof resolveCommuteMinutes(commuteHighlights, "to_marina") === "number"
+                  ? `${resolveCommuteMinutes(commuteHighlights, "to_marina")} min drive`
                   : null,
               },
               {
                 label: "Lekki FTZ",
-                value: typeof commuteHighlights?.to_lekki_ftz_minutes === "number"
-                  ? `${commuteHighlights.to_lekki_ftz_minutes} min drive`
+                value: typeof resolveCommuteMinutes(commuteHighlights, "to_lekki_ftz") === "number"
+                  ? `${resolveCommuteMinutes(commuteHighlights, "to_lekki_ftz")} min drive`
                   : null,
               },
             ]
@@ -2304,8 +2767,8 @@ function NeighborhoodSection({
                   color: "bg-purple-600",
                   title: "Accessibility",
                   desc:
-                    typeof commuteHighlights?.to_third_mainland_bridge_minutes === "number"
-                      ? `Third Mainland Bridge: ${commuteHighlights.to_third_mainland_bridge_minutes} min`
+                    typeof resolveCommuteMinutes(commuteHighlights, "to_third_mainland_bridge") === "number"
+                      ? `Third Mainland Bridge: ${resolveCommuteMinutes(commuteHighlights, "to_third_mainland_bridge")} min`
                       : "Not available",
                 },
                 {
@@ -2313,8 +2776,8 @@ function NeighborhoodSection({
                   color: "bg-green-600",
                   title: "Commercial Access",
                   desc:
-                    typeof commuteHighlights?.to_lekki_ftz_minutes === "number"
-                      ? `Lekki FTZ: ${commuteHighlights.to_lekki_ftz_minutes} min`
+                    typeof resolveCommuteMinutes(commuteHighlights, "to_lekki_ftz") === "number"
+                      ? `Lekki FTZ: ${resolveCommuteMinutes(commuteHighlights, "to_lekki_ftz")} min`
                       : "Not available",
                 },
               ]).map(({ emoji, color, title, desc }) => (

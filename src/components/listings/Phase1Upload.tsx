@@ -6,6 +6,7 @@ import {
   Building,
   Home,
 } from "lucide-react";
+import { KeyboardEvent } from "react";
 import { SimpleDocumentUpload } from "./SimpleDocumentUpload";
 import { SimplePhotoUpload } from "./SimplePhotoUpload";
 import {
@@ -15,6 +16,7 @@ import {
   PhotoLabel,
   PropertyFlowType,
 } from "./types";
+import { AddressAutocompleteSuggestion } from "@/api/pro-listings";
 
 const LAGOS_LOCATIONS_BY_LGA: Record<string, string[]> = {
   Agege: ["Agbotikuyo", "Capitol", "Cement", "Fagba", "Ifako", "Iju", "Iju-Ishaga", "LSDPC Estate", "Magbon", "Meiran", "Mulero", "New Oko Oba", "Oke-Odo", "Oko-Oba", "Pen Cinema"],
@@ -61,6 +63,10 @@ interface Phase1UploadProps {
   onAddressLgaChange: (value: string) => void;
   onAddressCityChange: (value: string) => void;
   onAddressStreetChange: (value: string) => void;
+  addressSuggestions: AddressAutocompleteSuggestion[];
+  addressSuggestionsLoading: boolean;
+  onAddressSuggestionSelect: (suggestion: AddressAutocompleteSuggestion) => void;
+  onAddressSuggestionsDismiss: () => void;
   askingPrice: number;
   priceNegotiable: boolean;
   declaredDocuments: DeclaredDocument[];
@@ -96,6 +102,10 @@ export function Phase1Upload({
   onAddressLgaChange,
   onAddressCityChange,
   onAddressStreetChange,
+  addressSuggestions,
+  addressSuggestionsLoading,
+  onAddressSuggestionSelect,
+  onAddressSuggestionsDismiss,
   askingPrice,
   priceNegotiable,
   declaredDocuments,
@@ -123,6 +133,13 @@ export function Phase1Upload({
   const availableAreas = addressLga
     ? (LAGOS_LOCATIONS_BY_LGA[addressLga] ?? []).slice().sort()
     : [];
+
+  const handleStreetKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Escape") {
+      onAddressSuggestionsDismiss();
+      event.currentTarget.blur();
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -225,9 +242,34 @@ export function Phase1Upload({
               type="text"
               value={addressStreet}
               onChange={(e) => onAddressStreetChange(e.target.value)}
+              onBlur={() => {
+                window.setTimeout(() => onAddressSuggestionsDismiss(), 100);
+              }}
+              onKeyDown={handleStreetKeyDown}
               placeholder="Street Address (e.g., 123 Admiralty Way)"
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#4ea8a1] focus:border-transparent"
             />
+            {addressSuggestionsLoading && (
+              <div className="mt-2 text-xs text-gray-500">Searching addresses...</div>
+            )}
+            {!addressSuggestionsLoading && addressSuggestions.length > 0 && (
+              <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-lg border border-gray-200 bg-white shadow-lg">
+                {addressSuggestions.map((suggestion) => (
+                  <button
+                    key={`${suggestion.resultId ?? suggestion.formatted}-${suggestion.street}`}
+                    type="button"
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      onAddressSuggestionSelect(suggestion);
+                    }}
+                    className="block w-full border-b border-gray-100 px-4 py-3 text-left last:border-b-0 hover:bg-gray-50"
+                  >
+                    <div className="text-sm font-medium text-gray-900">{suggestion.street}</div>
+                    <div className="mt-1 text-xs text-gray-500">{suggestion.formatted}</div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

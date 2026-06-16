@@ -35,7 +35,7 @@
  * - File upload: Currently uses local state (integrate with cloud storage)
  */
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/router";
 import {
   CheckCircle2,
@@ -53,7 +53,10 @@ import { Phase4Enhancement } from "./Phase4Enhancement";
 import { Phase5Complete } from "./Phase5Complete";
 import { ReviewExtractedInfo } from "./ReviewExtractedInfo";
 import { BuyerReportPreview } from "./BuyerReportPreview";
-import { ProListingsService } from "@/api/pro-listings";
+import {
+  AddressAutocompleteSuggestion,
+  ProListingsService,
+} from "@/api/pro-listings";
 
 // ============================================================================
 // TYPE DEFINITIONS
@@ -144,6 +147,11 @@ export function PropertyUploadWizard({
 
   // Location intelligence warning state
   const [showLocationWarning, setShowLocationWarning] = useState(false);
+  const [addressSuggestions, setAddressSuggestions] = useState<
+    AddressAutocompleteSuggestion[]
+  >([]);
+  const [addressSuggestionsLoading, setAddressSuggestionsLoading] =
+    useState(false);
 
   // ============================================================================
   // PHASE 1: SMART UPLOAD HANDLERS
@@ -294,6 +302,7 @@ export function PropertyUploadWizard({
   const handleAddressStateChange = useCallback(
     (value: string) => {
       setAddressState(value);
+      setAddressSuggestions([]);
       const newAddress = [addressStreet, addressCity, addressLga, value]
         .filter(Boolean)
         .join(", ");
@@ -306,6 +315,7 @@ export function PropertyUploadWizard({
     (value: string) => {
       setAddressLga(value);
       setAddressCity("");
+      setAddressSuggestions([]);
       const newAddress = [addressStreet, value, addressState]
         .filter(Boolean)
         .join(", ");
@@ -317,6 +327,7 @@ export function PropertyUploadWizard({
   const handleAddressCityChange = useCallback(
     (value: string) => {
       setAddressCity(value);
+      setAddressSuggestions([]);
       const newAddress = [addressStreet, value, addressLga, addressState]
         .filter(Boolean)
         .join(", ");
@@ -335,6 +346,53 @@ export function PropertyUploadWizard({
     },
     [addressCity, addressLga, addressState],
   );
+
+  const handleAddressSuggestionSelect = useCallback(
+    (suggestion: AddressAutocompleteSuggestion) => {
+      const streetValue = suggestion.street.trim();
+      setAddressStreet(streetValue);
+      setAddress(
+        [streetValue, addressCity, addressLga, addressState]
+          .filter(Boolean)
+          .join(", "),
+      );
+      setAddressSuggestions([]);
+    },
+    [addressCity, addressLga, addressState],
+  );
+
+  const handleDismissAddressSuggestions = useCallback(() => {
+    setAddressSuggestions([]);
+  }, []);
+
+  useEffect(() => {
+    const query = addressStreet.trim();
+
+    if (query.length < 3 || !addressLga || !addressState) {
+      setAddressSuggestions([]);
+      setAddressSuggestionsLoading(false);
+      return;
+    }
+
+    const timer = window.setTimeout(async () => {
+      setAddressSuggestionsLoading(true);
+      try {
+        const response = await ProListingsService.autocompleteAddresses({
+          q: query,
+          state: addressState,
+          lga: addressLga,
+        });
+        setAddressSuggestions(response?.data ?? []);
+      } catch (error) {
+        console.error("Failed to fetch address suggestions:", error);
+        setAddressSuggestions([]);
+      } finally {
+        setAddressSuggestionsLoading(false);
+      }
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, [addressStreet, addressLga, addressState]);
 
   /**
    * USE CASE 4: Smart Price Suggestions
@@ -1178,6 +1236,10 @@ export function PropertyUploadWizard({
                 onAddressLgaChange={handleAddressLgaChange}
                 onAddressCityChange={handleAddressCityChange}
                 onAddressStreetChange={handleAddressStreetChange}
+                addressSuggestions={addressSuggestions}
+                addressSuggestionsLoading={addressSuggestionsLoading}
+                onAddressSuggestionSelect={handleAddressSuggestionSelect}
+                onAddressSuggestionsDismiss={handleDismissAddressSuggestions}
                 askingPrice={askingPrice}
                 priceNegotiable={priceNegotiable}
                 bedrooms={bedrooms}

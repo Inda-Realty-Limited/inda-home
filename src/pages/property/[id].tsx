@@ -7,6 +7,7 @@ import LoadingScreen from "@/views/result/sections/LoadingScreen";
 import NotFoundScreen from "@/views/result/sections/NotFoundScreen";
 import { mapListingToPropertyDetail } from "@/views/property-details/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { trackWebsiteVisit } from "@/utils/analytics";
 
 const toNumber = (value: unknown): number | undefined => {
   if (value === null || typeof value === "undefined") return undefined;
@@ -149,6 +150,15 @@ const PropertyDetailsPage: React.FC = () => {
 
     fetchListing();
   }, [router.isReady, id]);
+
+  useEffect(() => {
+    const listingId = listing?.id || listing?._id;
+    if (!router.isReady || !listingId) return;
+    void trackWebsiteVisit({
+      path: router.asPath,
+      listingId,
+    });
+  }, [router.isReady, router.asPath, listing?.id, listing?._id]);
 
   if (loading) {
     return <LoadingScreen currentStep={0} />;

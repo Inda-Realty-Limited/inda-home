@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X, Check, Phone } from "lucide-react";
 import { InquiriesService } from "@/api/inquiries";
+import { getAnalyticsContext } from "@/utils/analytics";
 
 interface LegalPartnerProperty {
   id?: string;
@@ -32,6 +33,7 @@ export function LegalPartnerModal({ isOpen, onClose, property }: LegalPartnerMod
     setIsSubmitting(true);
 
     try {
+      const analytics = getAnalyticsContext(property.id);
       await InquiriesService.createLegalPartnerRequest({
         listingId: property.id,
         propertyName: property.name,
@@ -41,6 +43,9 @@ export function LegalPartnerModal({ isOpen, onClose, property }: LegalPartnerMod
         email: formData.email || undefined,
         needs: formData.needs || undefined,
         agreed: formData.agreed,
+        visitorId: analytics.visitorId,
+        sessionId: analytics.sessionId,
+        source: analytics.source,
       });
 
       setSubmitted(true);

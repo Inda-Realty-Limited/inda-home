@@ -35,6 +35,7 @@ import { PropertyCard } from "../views/search-results/sections/PropertyCard";
 import { MakeOfferModal } from "../views/property-details/modals/MakeOfferModal";
 import { useDebounce } from "@/hooks/useDebounce";
 import apiClient from "@/api";
+import { LandingPageBuyers } from "@/views/for-buyers/LandingPageBuyers";
 
 interface Property {
   id: string;
@@ -214,6 +215,7 @@ const mapListingToProperty = (listing: any): Property => {
 export function ForBuyers() {
   const router = useRouter();
   const { isLoading } = useAuth();
+  const showMarketplace = router.query.view === "properties";
   const [search, setSearch] = useState("");
   const [searchMode, setSearchMode] = useState<"link" | "ai">("ai");
   const [searchPending, setSearchPending] = useState(false);
@@ -288,11 +290,12 @@ export function ForBuyers() {
   }, [searchMode, search]);
 
   useEffect(() => {
+    if (!showMarketplace) return;
     if (!isLoading && searchPending) {
       handleSearch();
       setSearchPending(false);
     }
-  }, [handleSearch, isLoading, searchPending]);
+  }, [handleSearch, isLoading, searchPending, showMarketplace]);
 
   const lastPropertyElementRef = useCallback(
     (node: HTMLDivElement | null) => {
@@ -309,6 +312,7 @@ export function ForBuyers() {
   );
 
   useEffect(() => {
+    if (!showMarketplace) return;
     isResettingRef.current = true;
     setPage(1);
     setHasMore(true);
@@ -319,9 +323,11 @@ export function ForBuyers() {
     selectedPropertyTypes,
     debouncedLocationSearch,
     sortBy,
+    showMarketplace,
   ]);
 
   useEffect(() => {
+    if (!showMarketplace) return;
     if (searchMode !== "ai") {
       setProperties([]);
       return;
@@ -453,6 +459,7 @@ export function ForBuyers() {
     debouncedLocationSearch,
     sortBy,
     page,
+    showMarketplace,
   ]);
 
   const handleViewProperty = (propertyId: string) => {
@@ -685,14 +692,47 @@ export function ForBuyers() {
     return [...orderedTypes, ...extraTypes];
   }, [properties]);
 
+  const handleShowMarketplace = useCallback(() => {
+    router.push("/for-buyers?view=properties");
+  }, [router]);
+
+  const handleSignIn = useCallback(() => {
+    router.push("/auth/signin?returnTo=%2Ffor-buyers%3Fview%3Dproperties");
+  }, [router]);
+
+  const handleViewProfessionals = useCallback(() => {
+    router.push("/for-professionals");
+  }, [router]);
+
+  const handleBackToOverview = useCallback(() => {
+    router.push("/for-buyers");
+  }, [router]);
+
+  if (!showMarketplace) {
+    return (
+      <LandingPageBuyers
+        onGetStarted={handleShowMarketplace}
+        onSignIn={handleSignIn}
+        onViewProfessionals={handleViewProfessionals}
+      />
+    );
+  }
+
   return (
     <>
       <Navbar />
       <div className="min-h-screen bg-slate-50">
-        <section className="relative pt-32 pb-8 px-6 bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
+        <section className="relative bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 px-4 pb-8 pt-28 sm:px-6 md:pt-32">
           <div className="max-w-7xl mx-auto relative">
+            <button
+              onClick={handleBackToOverview}
+              className="mb-6 inline-flex items-center gap-2 text-sm text-gray-500 transition-colors hover:text-gray-900"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to overview
+            </button>
             <div className="mb-8 text-center">
-              <h1 className="text-4xl lg:text-5xl mb-4 leading-tight text-gray-900">
+              <h1 className="mb-4 text-3xl leading-tight text-gray-900 sm:text-4xl lg:text-5xl">
                 Buy with certainty. Get the truth about{" "}
                 <span className="bg-gradient-to-r from-[#4ea8a1] to-teal-600 bg-clip-text text-transparent">
                   any property.
@@ -725,8 +765,8 @@ export function ForBuyers() {
 
               <TabsContent value="link" className="hidden mt-0">
                 <div className="max-w-4xl mx-auto">
-                  <div className="bg-white rounded-2xl shadow-xl p-6 mb-8">
-                    <div className="flex items-center gap-3">
+                  <div className="mb-8 rounded-2xl bg-white p-4 shadow-xl sm:p-6">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                       <Search className="w-5 h-5 text-gray-400" />
                       <input
                         id="buyer-search-input"
@@ -739,20 +779,20 @@ export function ForBuyers() {
                           }
                         }}
                         placeholder="Paste property link..."
-                        className="flex-1 outline-none text-gray-900"
+                        className="min-w-0 flex-1 outline-none text-gray-900"
                       />
                       <Button
                         onClick={handleSearch}
                         disabled={!isValidUrl(search)}
-                        className={`bg-[#4ea8a1] hover:bg-[#3d8680] px-6 ${!isValidUrl(search) ? "opacity-60 cursor-not-allowed hover:bg-[#4ea8a1]" : ""}`}
+                        className={`w-full bg-[#4ea8a1] px-6 hover:bg-[#3d8680] sm:w-auto ${!isValidUrl(search) ? "cursor-not-allowed opacity-60 hover:bg-[#4ea8a1]" : ""}`}
                       >
                         Scan
                       </Button>
                     </div>
                   </div>
 
-                  <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                  <div className="mb-8 rounded-2xl bg-white p-6 shadow-xl sm:p-8">
+                    <h2 className="mb-6 text-xl font-bold text-gray-900 sm:text-2xl">
                       How External Scanning Works
                     </h2>
                     <div className="space-y-6">
@@ -849,8 +889,8 @@ export function ForBuyers() {
                     </div>
                   </div>
 
-                  <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-6">
+                  <div className="mb-8 rounded-2xl bg-white p-6 shadow-xl sm:p-8">
+                    <h2 className="mb-6 text-xl font-bold text-gray-900 sm:text-2xl">
                       Supported Property Sites
                     </h2>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
@@ -903,8 +943,8 @@ export function ForBuyers() {
                     </div>
                   </div>
 
-                  <div className="bg-white rounded-2xl shadow-xl p-8">
-                    <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                  <div className="rounded-2xl bg-white p-6 shadow-xl sm:p-8">
+                    <h2 className="mb-4 text-xl font-bold text-gray-900 sm:text-2xl">
                       Example URLs to try:
                     </h2>
                     <div className="space-y-3">
@@ -947,8 +987,8 @@ export function ForBuyers() {
               </TabsContent>
 
               <TabsContent value="ai" className="mt-0">
-                <div className="bg-white rounded-2xl shadow-xl p-6 max-w-2xl mx-auto mb-8">
-                  <div className="flex items-center gap-3">
+                <div className="mx-auto mb-8 max-w-2xl rounded-2xl bg-white p-4 shadow-xl sm:p-6">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                     <Search className="w-5 h-5 text-gray-400" />
                     <input
                       id="buyer-search-input"
@@ -961,12 +1001,12 @@ export function ForBuyers() {
                         }
                       }}
                       placeholder="e.g. 3 bedroom flat in Ikoyi"
-                      className="flex-1 outline-none text-gray-900"
+                      className="min-w-0 flex-1 outline-none text-gray-900"
                     />
                     <Button
                       onClick={handleAiSearch}
                       disabled={!search.trim()}
-                      className={`bg-[#4ea8a1] hover:bg-[#3d8680] px-6 ${!search.trim() ? "opacity-60 cursor-not-allowed hover:bg-[#4ea8a1]" : ""}`}
+                      className={`w-full bg-[#4ea8a1] px-6 hover:bg-[#3d8680] sm:w-auto ${!search.trim() ? "cursor-not-allowed opacity-60 hover:bg-[#4ea8a1]" : ""}`}
                     >
                       Search
                     </Button>
@@ -975,37 +1015,37 @@ export function ForBuyers() {
 
                 {searchMode === "ai" && (
                   <div className="max-w-7xl mx-auto">
-                    <div className="bg-white border-b border-gray-200 sticky top-0 z-10 mb-6">
-                      <div className="px-6 py-4">
-                        <div className="flex items-center justify-between mb-4">
+                    <div className="mb-6 border-b border-gray-200 bg-white md:sticky md:top-[110px] md:z-10">
+                      <div className="px-4 py-4 sm:px-6">
+                        <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                           <div>
-                            <h2 className="text-xl font-bold text-gray-900">
+                            <h2 className="text-lg font-bold text-gray-900 sm:text-xl">
                               {filteredProperties.length} Properties Found
                               {search && (
-                                <span className="text-gray-500 font-normal ml-2">
+                                <span className="ml-0 block font-normal text-gray-500 sm:ml-2 sm:inline">
                                   for &quot;{search}&quot;
                                 </span>
                               )}
                             </h2>
                           </div>
 
-                          <div className="flex items-center gap-3">
+                          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                             <button
                               onClick={() =>
                                 setActiveFilter(
                                   activeFilter ? null : "Price Range",
                                 )
                               }
-                              className="px-4 py-2 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+                              className="flex items-center justify-center gap-2 rounded-lg border border-gray-200 px-4 py-2 transition-colors hover:bg-gray-50 sm:justify-start"
                             >
                               <SlidersHorizontal className="w-4 h-4" />
                               <span className="text-[14px]">Filters</span>
                             </button>
-                            <div className="relative">
+                            <div className="relative w-full sm:w-auto">
                               <select
                                 value={sortBy}
                                 onChange={(e) => setSortBy(e.target.value)}
-                                className="appearance-none px-4 py-2 pr-10 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer text-[14px] bg-white"
+                                className="w-full cursor-pointer appearance-none rounded-lg border border-gray-200 bg-white px-4 py-2 pr-10 text-[14px] transition-colors hover:bg-gray-50 sm:min-w-[180px]"
                               >
                                 <option>Newest</option>
                                 <option>Lowest Price</option>
@@ -1017,17 +1057,17 @@ export function ForBuyers() {
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
                           <span className="text-[14px] text-muted-foreground">
                             Searching for:
                           </span>
-                          <div className="px-4 py-2 bg-[#4ea8a1]/10 text-[#4ea8a1] rounded-full text-[14px] border border-[#4ea8a1]/20">
+                          <div className="w-fit max-w-full rounded-full border border-[#4ea8a1]/20 bg-[#4ea8a1]/10 px-4 py-2 text-[14px] text-[#4ea8a1]">
                             {search || "All properties"}
                           </div>
                         </div>
                       </div>
 
-                      <div className="border-t border-gray-200 px-6 py-3 overflow-x-auto">
+                      <div className="overflow-x-auto border-t border-gray-200 px-4 py-3 sm:px-6">
                         <div className="flex gap-2 min-w-max">
                           {filterOptions.map((filter, index) => (
                             <button
@@ -1042,7 +1082,7 @@ export function ForBuyers() {
                       </div>
                     </div>
 
-                    <div className="px-6 pb-8">
+                    <div className="px-4 pb-8 sm:px-6">
                       {loading && page === 1 ? (
                         <div className="flex items-center justify-center py-20">
                           <Loader2 className="w-10 h-10 text-[#4ea8a1] animate-spin" />
@@ -1077,7 +1117,7 @@ export function ForBuyers() {
                               <h3 className="text-lg font-semibold text-gray-700 mb-4">
                                 You might also like
                               </h3>
-                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                              <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
                                 {suggestedProperties.map((property) => (
                                   <PropertyCard
                                     key={property.id}
@@ -1092,7 +1132,7 @@ export function ForBuyers() {
                         </div>
                       ) : (
                         <>
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                          <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
                             {filteredProperties.map((property, index) => {
                               const isLastElement =
                                 filteredProperties.length === index + 1;
@@ -1145,8 +1185,8 @@ export function ForBuyers() {
             onClick={() => setActiveFilter(null)}
           />
 
-          <div className="fixed top-0 right-0 bottom-0 w-96 bg-white shadow-2xl z-50 overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-5 flex items-center justify-between">
+          <div className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto bg-white shadow-2xl sm:w-96">
+            <div className="sticky top-0 flex items-center justify-between border-b border-gray-200 bg-white p-4 sm:p-5">
               <h3>{activeFilter}</h3>
               <button
                 onClick={() => setActiveFilter(null)}
@@ -1155,8 +1195,8 @@ export function ForBuyers() {
                 <ArrowLeft className="w-5 h-5" />
               </button>
             </div>
-            <div className="p-5">{getFilterContent(activeFilter)}</div>
-            <div className="sticky bottom-0 bg-white border-t border-gray-200 p-5 flex gap-3">
+            <div className="p-4 sm:p-5">{getFilterContent(activeFilter)}</div>
+            <div className="sticky bottom-0 flex gap-3 border-t border-gray-200 bg-white p-4 sm:p-5">
               <button
                 onClick={() => {
                   setPriceRange([0, 5000000000]);
