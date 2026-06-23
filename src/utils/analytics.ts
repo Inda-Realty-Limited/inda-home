@@ -3,6 +3,23 @@ import apiClient from "@/api";
 const VISITOR_KEY = "inda_visitor_id";
 const SESSION_KEY = "inda_analytics_session_id";
 const TRACKED_PATH_PREFIX = "inda_analytics_tracked_";
+const PRIVATE_PATH_PREFIXES = [
+  "/crm",
+  "/dashboard",
+  "/insights",
+  "/leads",
+  "/listings",
+  "/logout",
+  "/marketing",
+  "/orders",
+  "/perks",
+  "/profile",
+  "/rentals",
+  "/settings",
+  "/source",
+  "/support",
+  "/training",
+];
 
 function generateId(prefix: string) {
   return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
@@ -44,11 +61,31 @@ export function getAnalyticsContext(listingId?: string) {
   };
 }
 
+export function normalizeTrackedPath(path: string): string {
+  const [withoutHash] = path.split("#");
+  return withoutHash || "/";
+}
+
+export function shouldTrackWebsitePath(path: string): boolean {
+  const normalizedPath = normalizeTrackedPath(path);
+
+  if (!normalizedPath || normalizedPath.startsWith("/_next")) {
+    return false;
+  }
+
+  return !PRIVATE_PATH_PREFIXES.some((prefix) => normalizedPath === prefix || normalizedPath.startsWith(`${prefix}/`));
+}
+
 export async function trackWebsiteVisit(params: { path: string; listingId?: string }) {
   if (typeof window === "undefined") return;
 
+  const normalizedPath = normalizeTrackedPath(params.path);
+  if (!shouldTrackWebsitePath(normalizedPath)) {
+    return;
+  }
+
   const sessionId = getOrCreateAnalyticsSessionId();
-  const trackingKey = `${TRACKED_PATH_PREFIX}${sessionId}:${params.path}`;
+  const trackingKey = `${TRACKED_PATH_PREFIX}${sessionId}:${normalizedPath}`;
   if (window.sessionStorage.getItem(trackingKey)) {
     return;
   }
@@ -61,10 +98,10 @@ export async function trackWebsiteVisit(params: { path: string; listingId?: stri
       visitorId: getOrCreateVisitorId(),
       sessionId,
       listingId: params.listingId,
-      path: params.path,
+      path: normalizedPath,
       source: getAnalyticsSource(),
       metadata: {
-        pathname: params.path,
+        pathname: normalizedPath,
       },
     });
   } catch (error) {
