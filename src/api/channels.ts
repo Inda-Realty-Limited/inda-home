@@ -11,8 +11,10 @@ export interface ChannelStatsItem {
 }
 
 export interface PublicListing {
+    _id?: string;
     id: string;
-    title: string;
+    description?: string | null;
+    title: string | null;
     priceNGN?: number;
     priceOriginal?: number;
     state?: string;
@@ -24,6 +26,19 @@ export interface PublicListing {
     sizeSqm?: number;
     images?: string[];
     listingUrl?: string;
+}
+
+export interface PublicAgentProfile {
+    id: string;
+    slug: string;
+    displayName: string;
+    companyName?: string | null;
+    phoneNumber?: string | null;
+    title?: string | null;
+    bio?: string | null;
+    avatarUrl?: string;
+    logoLightUrl?: string;
+    listingCount: number;
 }
 
 export const getChannelStats = async (): Promise<ChannelStatsItem[]> => {
@@ -60,6 +75,16 @@ export const getPublicListings = async (userId: string): Promise<PublicListing[]
     return (res.data?.data || []) as PublicListing[];
 };
 
+export const getPublicProfileBySlug = async (slug: string): Promise<PublicAgentProfile> => {
+    const res = await apiClient.get(`/channels/profile/${slug}`);
+    return res.data?.data as PublicAgentProfile;
+};
+
+export const getPublicListingsBySlug = async (slug: string): Promise<PublicListing[]> => {
+    const res = await apiClient.get(`/channels/profile/${slug}/listings`);
+    return (res.data?.data || []) as PublicListing[];
+};
+
 export interface InquiryPayload {
     agentUserId: string;
     channel: string;
@@ -82,5 +107,10 @@ export const submitInquiry = async (payload: InquiryPayload): Promise<InquiryRes
 
 export const getPublicListingById = async (listingId: string): Promise<PublicListing | null> => {
     const res = await apiClient.get(`/channels/listing/${listingId}`);
+    return (res.data?.data || null) as PublicListing | null;
+};
+
+export const getPublicListingBySlug = async (slug: string, listingId: string): Promise<PublicListing | null> => {
+    const res = await apiClient.get(`/channels/profile/${slug}/listings/${listingId}`);
     return (res.data?.data || null) as PublicListing | null;
 };

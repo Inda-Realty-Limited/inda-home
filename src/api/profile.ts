@@ -5,6 +5,10 @@ export interface UserProfileUpdatePayload {
   lastName?: string;
   phoneNumber?: string;
   companyName?: string;
+  publicProfileEnabled?: boolean;
+  publicProfileSlug?: string | null;
+  publicProfileTitle?: string;
+  publicProfileBio?: string;
 }
 
 export interface NotificationPreferences {

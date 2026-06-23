@@ -23,6 +23,10 @@ interface ProfileForm {
   email: string;
   company: string;
   role: string;
+  publicProfileEnabled: boolean;
+  publicProfileSlug: string;
+  publicProfileTitle: string;
+  publicProfileBio: string;
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -47,6 +51,16 @@ function SectionTitle({ icon: Icon, title }: { icon: React.ElementType; title: s
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return <label className="block text-sm font-semibold text-gray-700 mb-2">{children}</label>;
 }
+
+const PUBLIC_PROFILE_ALLOWED_ROLES = new Set(['AGENT', 'DEVELOPER', 'ADMIN', 'SUPER_ADMIN']);
+
+const slugifyPublicProfile = (value: string) =>
+  value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9-]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
 
 function SaveButton({
   onClick,
@@ -159,6 +173,8 @@ const SOCIAL_PLATFORMS = [
 export default function SettingsPage() {
   const { user, setUser } = useAuth();
   const [loading, setLoading] = useState(false);
+  const profileFormDirtyRef = useRef(false);
+  const lastLoadedUserIdRef = useRef<string | null>(null);
 
   // Profile form
   const [form, setForm] = useState<ProfileForm>({
@@ -168,6 +184,10 @@ export default function SettingsPage() {
     email: '',
     company: '',
     role: '',
+    publicProfileEnabled: false,
+    publicProfileSlug: '',
+    publicProfileTitle: '',
+    publicProfileBio: '',
   });
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileToast, setProfileToast] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -212,6 +232,11 @@ export default function SettingsPage() {
   // Social connected state (UI-only)
   const [connected, setConnected] = useState<Record<string, boolean>>({ facebook: true });
 
+  const updateProfileForm = <K extends keyof ProfileForm>(field: K, value: ProfileForm[K]) => {
+    profileFormDirtyRef.current = true;
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
   // ── Load profile ────────────────────────────────────────────────────────────
 
   useEffect(() => {
@@ -225,11 +250,21 @@ export default function SettingsPage() {
         email: localUser.email || '',
         company: localUser.company || localUser.companyName || '',
         role: localUser.role || '',
+        publicProfileEnabled: Boolean(localUser.publicProfileEnabled),
+        publicProfileSlug: localUser.publicProfileSlug || '',
+        publicProfileTitle: localUser.publicProfileTitle || '',
+        publicProfileBio: localUser.publicProfileBio || '',
       }));
     }
+  }, [user]);
 
+  useEffect(() => {
+    const localUser: any = user;
+    if (!localUser?.id) return;
+    if (lastLoadedUserIdRef.current === localUser.id) return;
+
+    lastLoadedUserIdRef.current = localUser.id;
     (async () => {
-      if (!localUser) return;
       setLoading(true);
       try {
         const [result, prefs] = await Promise.all([
@@ -249,20 +284,30 @@ export default function SettingsPage() {
             u.avatarUrl !== user.avatarUrl ||
             u.logoLightUrl !== user.logoLightUrl ||
             u.logoDarkUrl !== user.logoDarkUrl ||
-            u.watermarkUrl !== user.watermarkUrl
+            u.watermarkUrl !== user.watermarkUrl ||
+            u.publicProfileEnabled !== user.publicProfileEnabled ||
+            u.publicProfileSlug !== user.publicProfileSlug ||
+            u.publicProfileTitle !== user.publicProfileTitle ||
+            u.publicProfileBio !== user.publicProfileBio
           )
         ) {
           setUser({ ...user, ...u });
         }
-        setForm((prev) => ({
-          ...prev,
-          firstName: u.firstName || prev.firstName,
-          lastName: u.lastName || prev.lastName,
-          phoneNumber: u.phoneNumber || prev.phoneNumber,
-          email: u.email || prev.email,
-          company: u.company || u.companyName || prev.company,
-          role: u.role || prev.role,
-        }));
+        if (!profileFormDirtyRef.current) {
+          setForm((prev) => ({
+            ...prev,
+            firstName: u.firstName || prev.firstName,
+            lastName: u.lastName || prev.lastName,
+            phoneNumber: u.phoneNumber || prev.phoneNumber,
+            email: u.email || prev.email,
+            company: u.company || u.companyName || prev.company,
+            role: u.role || prev.role,
+            publicProfileEnabled: Boolean(u.publicProfileEnabled),
+            publicProfileSlug: u.publicProfileSlug || '',
+            publicProfileTitle: u.publicProfileTitle || '',
+            publicProfileBio: u.publicProfileBio || '',
+          }));
+        }
         if (prefs && Object.keys(prefs).length > 0) {
           setNotifPrefs((prev) => ({ ...prev, ...prefs }));
         }
@@ -283,6 +328,16 @@ export default function SettingsPage() {
   const handleSaveProfile = async () => {
     const localUser: any = user;
     if (!localUser) return;
+    const nextSlug = form.publicProfileSlug.trim();
+
+    if (form.publicProfileEnabled && !nextSlug) {
+      setProfileToast({
+        type: 'error',
+        message: 'Add a page URL slug before enabling your public page.',
+      });
+      return;
+    }
+
     setSavingProfile(true);
     setProfileToast(null);
     try {
@@ -290,9 +345,14 @@ export default function SettingsPage() {
         firstName: form.firstName,
         lastName: form.lastName,
         phoneNumber: form.phoneNumber,
-        company: form.company,
+        companyName: form.company,
+        publicProfileEnabled: form.publicProfileEnabled,
+        publicProfileSlug: nextSlug || null,
+        publicProfileTitle: form.publicProfileTitle.trim(),
+        publicProfileBio: form.publicProfileBio.trim(),
       });
       const updated = result.data || result.user || {};
+      profileFormDirtyRef.current = false;
       setUser(updated, localUser.token);
       setProfileToast({ type: 'success', message: 'Profile updated successfully!' });
     } catch (err: any) {
@@ -336,7 +396,7 @@ export default function SettingsPage() {
   const handleUploadAvatar = async (file: File) => {
     setUploadingAvatar(true);
     try {
-      const result = await UploadService.avatar(file);
+      const result: any = await UploadService.avatar(file);
       const nextAvatarUrl = result?.avatarUrl ?? result;
       setAvatarUrl(nextAvatarUrl);
       if (user) {
@@ -352,7 +412,7 @@ export default function SettingsPage() {
   const handleUploadLogoLight = async (file: File) => {
     setUploadingLogoLight(true);
     try {
-      const result = await UploadService.logoLight(file);
+      const result: any = await UploadService.logoLight(file);
       const nextLogoLightUrl = result?.logoLightUrl ?? result;
       setLogoLightUrl(nextLogoLightUrl);
       if (user) {
@@ -365,7 +425,7 @@ export default function SettingsPage() {
   const handleUploadLogoDark = async (file: File) => {
     setUploadingLogoDark(true);
     try {
-      const result = await UploadService.logoDark(file);
+      const result: any = await UploadService.logoDark(file);
       const nextLogoDarkUrl = result?.logoDarkUrl ?? result;
       setLogoDarkUrl(nextLogoDarkUrl);
       if (user) {
@@ -378,7 +438,7 @@ export default function SettingsPage() {
   const handleUploadWatermark = async (file: File) => {
     setUploadingWatermark(true);
     try {
-      const result = await UploadService.watermark(file);
+      const result: any = await UploadService.watermark(file);
       const nextWatermarkUrl = result?.watermarkUrl ?? result;
       setWatermarkUrl(nextWatermarkUrl);
       if (user) {
@@ -406,6 +466,16 @@ export default function SettingsPage() {
 
   const initials =
     (form.firstName?.[0] || '') + (form.lastName?.[0] || '') || 'U';
+  const normalizedRole = String(form.role || user?.role || '').toUpperCase();
+  const canManagePublicProfile = PUBLIC_PROFILE_ALLOWED_ROLES.has(normalizedRole);
+  const publicProfileUrl =
+    form.publicProfileSlug.trim().length > 0 ? `/agents/${form.publicProfileSlug.trim().toLowerCase()}` : null;
+  const defaultPublicProfileSlug = slugifyPublicProfile(
+    form.publicProfileSlug ||
+      form.company ||
+      `${form.firstName} ${form.lastName}` ||
+      (user?.email ? String(user.email).split('@')[0] : ''),
+  );
 
   return (
     <ProtectedRoute>
@@ -470,7 +540,7 @@ export default function SettingsPage() {
                   <FieldLabel>First Name</FieldLabel>
                   <Input
                     value={form.firstName}
-                    onChange={(e) => setForm((p) => ({ ...p, firstName: e.target.value }))}
+                    onChange={(e) => updateProfileForm('firstName', e.target.value)}
                     placeholder="Olu"
                     className="w-full"
                   />
@@ -479,7 +549,7 @@ export default function SettingsPage() {
                   <FieldLabel>Last Name</FieldLabel>
                   <Input
                     value={form.lastName}
-                    onChange={(e) => setForm((p) => ({ ...p, lastName: e.target.value }))}
+                    onChange={(e) => updateProfileForm('lastName', e.target.value)}
                     placeholder="Adeyemi"
                     className="w-full"
                   />
@@ -490,7 +560,7 @@ export default function SettingsPage() {
                 <Input
                   type="tel"
                   value={form.phoneNumber}
-                  onChange={(e) => setForm((p) => ({ ...p, phoneNumber: e.target.value }))}
+                  onChange={(e) => updateProfileForm('phoneNumber', e.target.value)}
                   placeholder="+234 803 123 4567"
                   className="w-full"
                 />
@@ -508,7 +578,7 @@ export default function SettingsPage() {
                 <FieldLabel>Company Name</FieldLabel>
                 <Input
                   value={form.company}
-                  onChange={(e) => setForm((p) => ({ ...p, company: e.target.value }))}
+                  onChange={(e) => updateProfileForm('company', e.target.value)}
                   placeholder="Adeyemi Properties Ltd"
                   className="w-full"
                 />
@@ -516,6 +586,101 @@ export default function SettingsPage() {
             </div>
             <SaveButton onClick={handleSaveProfile} loading={savingProfile} />
           </SectionCard>
+
+          {canManagePublicProfile && (
+            <SectionCard>
+              <SectionTitle icon={Link2} title="Public Agent Page" />
+              <div className="space-y-4">
+                <div className="flex items-start justify-between gap-4 rounded-xl border border-[#DCEAE8] bg-[#F8FBFA] px-4 py-4">
+                  <div>
+                    <p className="text-sm font-semibold text-[#101820]">Enable public page</p>
+                    <p className="mt-1 text-sm text-gray-600">
+                      Publish a shareable page at `/agents/your-slug` with your active listings and contact flow.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextEnabled = !form.publicProfileEnabled;
+                      if (nextEnabled && !form.publicProfileSlug.trim() && defaultPublicProfileSlug) {
+                        profileFormDirtyRef.current = true;
+                        setForm((prev) => ({
+                          ...prev,
+                          publicProfileEnabled: true,
+                          publicProfileSlug: defaultPublicProfileSlug,
+                        }));
+                        return;
+                      }
+
+                      updateProfileForm('publicProfileEnabled', nextEnabled);
+                    }}
+                    className={cn(
+                      'relative inline-flex h-7 w-12 shrink-0 rounded-full transition-colors',
+                      form.publicProfileEnabled ? 'bg-inda-teal' : 'bg-gray-300',
+                    )}
+                    aria-pressed={form.publicProfileEnabled}
+                  >
+                    <span
+                      className={cn(
+                        'absolute top-1 h-5 w-5 rounded-full bg-white transition-transform',
+                        form.publicProfileEnabled ? 'translate-x-6' : 'translate-x-1',
+                      )}
+                    />
+                  </button>
+                </div>
+
+                <div>
+                  <FieldLabel>Page URL Slug</FieldLabel>
+                  <Input
+                    value={form.publicProfileSlug}
+                    onChange={(e) =>
+                      updateProfileForm(
+                        'publicProfileSlug',
+                        slugifyPublicProfile(e.target.value),
+                      )
+                    }
+                    placeholder="adeyemi-properties"
+                    className="w-full"
+                  />
+                  <p className="mt-2 text-xs text-gray-500">
+                    Lowercase letters, numbers, and hyphens only.
+                  </p>
+                  {publicProfileUrl && (
+                    <p className="mt-2 text-sm text-[#4EA8A1]">
+                      Public URL:{' '}
+                      <Link href={publicProfileUrl} className="font-semibold hover:underline" target="_blank">
+                        {publicProfileUrl}
+                      </Link>
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <FieldLabel>Headline</FieldLabel>
+                  <Input
+                    value={form.publicProfileTitle}
+                    onChange={(e) => updateProfileForm('publicProfileTitle', e.target.value)}
+                    placeholder="Verified luxury homes in Lagos"
+                    className="w-full"
+                  />
+                </div>
+
+                <div>
+                  <FieldLabel>Bio</FieldLabel>
+                  <textarea
+                    value={form.publicProfileBio}
+                    onChange={(e) => updateProfileForm('publicProfileBio', e.target.value)}
+                    placeholder="Tell buyers what you specialise in, the locations you cover, and why they should trust you."
+                    rows={5}
+                    className="w-full rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-900 outline-none transition-colors focus:border-inda-teal"
+                  />
+                </div>
+              </div>
+              <SaveButton onClick={handleSaveProfile} loading={savingProfile}>
+                Save Public Page
+              </SaveButton>
+            </SectionCard>
+          )}
 
           {/* Branding & Marketing Assets */}
           <SectionCard>
