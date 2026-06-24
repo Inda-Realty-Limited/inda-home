@@ -7,6 +7,7 @@ import type { AppProps } from "next/app";
 import Head from "next/head";
 import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
+import { trackWebsiteVisit, shouldTrackWebsitePath, normalizeTrackedPath } from "@/utils/analytics";
 
 export default function App({ Component, pageProps }: AppProps) {
   const [queryClient] = useState(
@@ -36,6 +37,17 @@ export default function App({ Component, pageProps }: AppProps) {
       localStorage.setItem("inda_ref", ref.trim());
     }
   }, [router.isReady, router.query.ref]);
+
+  useEffect(() => {
+    if (!router.isReady) return;
+
+    const normalizedPath = normalizeTrackedPath(router.asPath || "/");
+    if (!shouldTrackWebsitePath(normalizedPath)) {
+      return;
+    }
+
+    void trackWebsiteVisit({ path: normalizedPath });
+  }, [router.isReady, router.asPath]);
 
   return (
     <ErrorBoundary>

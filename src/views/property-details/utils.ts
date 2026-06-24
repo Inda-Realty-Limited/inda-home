@@ -285,22 +285,29 @@ export const mapListingToPropertyDetail = (listing: any) => {
         }
     : undefined;
 
+  const location =
+    [
+      snapshot.fullAddress,
+      listing.fullAddress,
+      snapshot.address,
+      listing.address,
+      snapshot.microlocationStd,
+      listing.microlocationStd,
+      snapshot.microlocation,
+      listing.microlocation,
+      snapshot.lga,
+      listing.lga,
+      snapshot.state,
+      listing.state,
+    ].find((value): value is string => typeof value === "string" && value.trim().length > 0) || "Lagos";
+
   return {
     id: listing._id || listing.id || String(Math.random()),
     name:
       snapshot.title ||
       listing.title ||
       `${snapshot.bedrooms || listing.bedrooms || 0}-Bed ${propertyType || "Property"}`,
-    location:
-      snapshot.microlocationStd ||
-      listing.microlocationStd ||
-      snapshot.microlocation ||
-      listing.microlocation ||
-      snapshot.lga ||
-      listing.lga ||
-      snapshot.state ||
-      listing.state ||
-      "Lagos",
+    location,
     price: formatPrice(priceValue),
     priceNumeric: priceValue,
     images: images.length > 0 ? images : [], // Empty array - UI should handle "no images" state
